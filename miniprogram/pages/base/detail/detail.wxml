@@ -1,0 +1,49 @@
+<!--pages/base/detail/detail.wxml-->
+<view class="container">
+  <view class="card" wx:if="{{baseInfo}}">
+    <view class="base-name">{{baseInfo.baseName}}</view>
+    <view class="base-category">
+      {{baseInfo.category === 1 ? '水果种植' : baseInfo.category === 2 ? '蔬菜种植' : '其他农作'}}
+    </view>
+    <view class="base-address" wx:if="{{baseInfo.address}}">
+      <text class="label">地址：</text>
+      <text>{{baseInfo.address}}</text>
+    </view>
+    <view class="base-status">
+      <text class="status-badge" wx:if="{{baseInfo.auditStatus === 1}}">已审核</text>
+      <text class="status-badge pending" wx:else>待审核</text>
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="section-title">招聘岗位</view>
+    <view class="job-list" wx:if="{{jobs.length > 0}}">
+      <view 
+        class="job-item" 
+        wx:for="{{jobs}}" 
+        wx:key="id"
+        bindtap="goToJobDetail"
+        data-id="{{item.id}}"
+      >
+        <view class="job-title">{{item.jobTitle}}</view>
+        <view class="job-info">
+          <text class="job-pay">
+            {{item.payType === 'fixed' ? '固定工资' : item.payType === 'hourly' ? '时薪' : '计件'}}
+            {{item.payType === 'fixed' ? item.salaryAmount : item.payType === 'hourly' ? item.hourlyRate : item.unitPrice}}元
+          </text>
+          <text class="job-count">招聘{{item.recruitCount}}人</text>
+        </view>
+        <view class="job-status">
+          <text class="status-text" wx:if="{{item.status === 1}}">招聘中</text>
+          <text class="status-text" wx:else>已停止</text>
+        </view>
+      </view>
+    </view>
+    <view class="empty" wx:if="{{!loading && jobs.length === 0}}">
+      <text>暂无招聘岗位</text>
+    </view>
+    <view class="loading" wx:if="{{loading}}">
+      <text>加载中...</text>
+    </view>
+  </view>
+</view>

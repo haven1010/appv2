@@ -1,0 +1,8 @@
+
+{
+  "name": "采摘工智慧管理系统",
+  "description": "基于 Next.js + Tailwind CSS 的高级农业采摘工招聘、报名、签到及工资结算全流程管理系统。支持多角色权限控制、二维码核验、基地入驻及资源智能推荐。",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}

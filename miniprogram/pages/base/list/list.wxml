@@ -1,0 +1,61 @@
+<!--pages/base/list/list.wxml-->
+<view class="container">
+  <view class="filter-bar">
+    <view 
+      class="filter-item {{category === 0 ? 'active' : ''}}"
+      bindtap="filterByCategory"
+      data-category="0"
+    >
+      全部
+    </view>
+    <view 
+      class="filter-item {{category === 1 ? 'active' : ''}}"
+      bindtap="filterByCategory"
+      data-category="1"
+    >
+      水果
+    </view>
+    <view 
+      class="filter-item {{category === 2 ? 'active' : ''}}"
+      bindtap="filterByCategory"
+      data-category="2"
+    >
+      蔬菜
+    </view>
+    <view 
+      class="filter-item {{category === 3 ? 'active' : ''}}"
+      bindtap="filterByCategory"
+      data-category="3"
+    >
+      其他
+    </view>
+  </view>
+
+  <view class="base-list" wx:if="{{!loading && bases.length > 0}}">
+    <view 
+      class="base-item card" 
+      wx:for="{{bases}}" 
+      wx:key="id"
+      bindtap="goToDetail"
+      data-id="{{item.id}}"
+    >
+      <view class="base-name">{{item.baseName}}</view>
+      <view class="base-info">
+        <text class="base-category">{{item.category === 1 ? '水果' : item.category === 2 ? '蔬菜' : '其他'}}</text>
+        <text class="base-address" wx:if="{{item.address}}">{{item.address}}</text>
+      </view>
+      <view class="base-status">
+        <text class="status-text" wx:if="{{item.auditStatus === 1}}">已审核</text>
+        <text class="status-text pending" wx:else>待审核</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="empty" wx:if="{{!loading && bases.length === 0}}">
+    <text>暂无基地信息</text>
+  </view>
+
+  <view class="loading" wx:if="{{loading}}">
+    <text>加载中...</text>
+  </view>
+</view>

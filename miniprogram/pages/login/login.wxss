@@ -1,0 +1,22 @@
+/* pages/login/login.wxss */
+.title {
+  font-size: 48rpx;
+  font-weight: bold;
+  color: #333;
+  text-align: center;
+  margin-bottom: 10rpx;
+}
+
+.subtitle {
+  font-size: 26rpx;
+  color: #666;
+  text-align: center;
+  margin-bottom: 60rpx;
+}
+
+.link-text {
+  text-align: center;
+  color: #4ade80;
+  font-size: 28rpx;
+  margin-top: 30rpx;
+}

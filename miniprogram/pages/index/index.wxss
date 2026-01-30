@@ -1,0 +1,60 @@
+/* pages/index/index.wxss */
+.welcome-title {
+  font-size: 48rpx;
+  font-weight: bold;
+  color: #333;
+  text-align: center;
+  margin-bottom: 20rpx;
+}
+
+.welcome-desc {
+  font-size: 28rpx;
+  color: #666;
+  text-align: center;
+}
+
+.section-title {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 20rpx;
+}
+
+.base-list {
+  margin-top: 20rpx;
+}
+
+.base-item {
+  padding: 20rpx;
+  border-bottom: 2rpx solid #f0f0f0;
+  margin-bottom: 20rpx;
+}
+
+.base-item:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+.base-name {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 10rpx;
+}
+
+.base-category {
+  font-size: 26rpx;
+  color: #666;
+  margin-bottom: 10rpx;
+}
+
+.base-score {
+  font-size: 24rpx;
+  color: #4ade80;
+}
+
+.empty-text {
+  text-align: center;
+  color: #999;
+  padding: 40rpx 0;
+}

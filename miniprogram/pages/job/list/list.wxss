@@ -1,0 +1,7 @@
+/* pages/job/list/list.wxss */
+.empty {
+  text-align: center;
+  padding: 100rpx 0;
+  color: #999;
+  font-size: 28rpx;
+}

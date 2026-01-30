@@ -1,0 +1,37 @@
+<!--pages/index/index.wxml-->
+<view class="container">
+  <view class="card" wx:if="{{!userInfo}}">
+    <view class="welcome-title">欢迎使用采摘通</view>
+    <view class="welcome-desc">农业劳动力全生命周期管理平台</view>
+    <button class="btn-primary" bindtap="goToLogin" style="margin-top: 40rpx;">登录</button>
+    <button class="btn-primary" bindtap="goToRegister" style="margin-top: 20rpx; background-color: #3b82f6;">注册</button>
+  </view>
+
+  <view wx:if="{{userInfo}}">
+    <view class="card">
+      <view class="welcome-title">欢迎回来，{{userInfo.name}}</view>
+      <view class="welcome-desc">您的UID: {{userInfo.uid}}</view>
+    </view>
+
+    <view class="card" wx:if="{{recommendedBases.length > 0}}">
+      <view class="section-title">为您推荐</view>
+      <view class="base-list">
+        <view 
+          class="base-item" 
+          wx:for="{{recommendedBases}}" 
+          wx:key="id"
+          bindtap="goToBaseDetail"
+          data-id="{{item.id}}"
+        >
+          <view class="base-name">{{item.baseName}}</view>
+          <view class="base-category">{{item.categoryName}}</view>
+          <view class="base-score">匹配度: {{item.score}}分</view>
+        </view>
+      </view>
+    </view>
+
+    <view class="card" wx:if="{{recommendedBases.length === 0 && !loading}}">
+      <view class="empty-text">暂无推荐基地</view>
+    </view>
+  </view>
+</view>

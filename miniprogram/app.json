@@ -1,0 +1,59 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/login/login",
+    "pages/register/register",
+    "pages/profile/profile",
+    "pages/base/list/list",
+    "pages/base/detail/detail",
+    "pages/job/list/list",
+    "pages/job/detail/detail",
+    "pages/signup/signup",
+    "pages/qrcode/qrcode",
+    "pages/attendance/attendance",
+    "pages/salary/salary",
+    "pages/application/list/list"
+  ],
+  "window": {
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#4ade80",
+    "navigationBarTitleText": "采摘通",
+    "navigationBarTextStyle": "white",
+    "enablePullDownRefresh": true
+  },
+  "tabBar": {
+    "color": "#666666",
+    "selectedColor": "#4ade80",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "black",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "首页"
+      },
+      {
+        "pagePath": "pages/base/list/list",
+        "text": "基地"
+      },
+      {
+        "pagePath": "pages/qrcode/qrcode",
+        "text": "我的码"
+      },
+      {
+        "pagePath": "pages/profile/profile",
+        "text": "我的"
+      }
+    ]
+  },
+  "permission": {
+    "scope.camera": {
+      "desc": "用于扫描二维码和拍摄身份证"
+    }
+  },
+  "requiredPrivateInfos": [
+    "getLocation"
+  ],
+  "style": "v2",
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents"
+}

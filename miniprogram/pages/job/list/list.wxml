@@ -1,0 +1,6 @@
+<!--pages/job/list/list.wxml-->
+<view class="container">
+  <view class="empty">
+    <text>请从基地详情页查看岗位</text>
+  </view>
+</view>

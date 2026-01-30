@@ -1,0 +1,60 @@
+{
+  "name": "系统总管理员李",
+  "idCard": "110101187001011234",  
+  "phone": "13811138000",       
+  "roleKey": "super_admin",
+  "faceImgUrl": "",
+  "regionCode": 3301
+}'
+Response body
+Download
+{
+  "id": "10",
+  "uid": "UMJF49NU69B2B",
+  "name": "系统总管理员李",
+  "msg": "注册成功"
+}
+{
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Iuezu-e7n-aAu-euoeeQhuWRmOadjiIsInN1YiI6IjEwIiwicm9sZSI6InN1cGVyX2FkbWluIiwidWlkIjoiVU1KRjQ5TlU2OUIyQiIsImlhdCI6MTc2NjI4NDc3MSwiZXhwIjoxNzY2ODg5NTcxfQ.SdNgJVBkOd84gaVqc2p9samGYVCiLlD7YKe_C_b7PTI",
+  "user": {
+    "id": "10",
+    "name": "系统总管理员李",
+    "role": "super_admin",
+    "uid": "UMJF49NU69B2B",
+    "faceImgUrl": ""
+  }
+}
+Response body
+Download
+{
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IuadjuWbmyIsInN1YiI6IjgiLCJyb2xlIjoid29ya2VyIiwidWlkIjoiVU1KRjJWOEVTMjU5RCIsImlhdCI6MTc2NjI4MjMyMCwiZXhwIjoxNzY2ODg3MTIwfQ.0QK5LrckP6XATuBNXIPMpBACAQ71FLHaZegVBRRvtOs",
+  "user": {
+    "id": "8",
+    "name": "李四",
+    "role": "worker",
+    "uid": "UMJF2V8ES259D",
+    "faceImgUrl": ""
+  }
+}
+Response headers
+ access-control-allow-credentials: true 
+ access-control-allow-origin: * 
+ connection: keep-alive 
+ content-length: 326 
+ content-type: application/json; charset=utf-8 
+ date: Sun,21 Dec 2025 01:58:40 GMT 
+ etag: W/"146-SMTtddlrlHbClvj63YxcBqooHq4" 
+ keep-alive: timeout=5 
+ x-powered-by: Express	
+Response body
+Download
+{
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IueOi-e7j-eQhiIsInN1YiI6IjkiLCJyb2xlIjoiYmFzZV9tYW5hZ2VyIiwidWlkIjoiVU1KRjMxQzI0RUNEQSIsImlhdCI6MTc2NjI4NDAyNSwiZXhwIjoxNzY2ODg4ODI1fQ.cNT5IYHi4OFyAXlagyYrGsDyQn5ij0dxmOVHBVaazUY",
+  "user": {
+    "id": "9",
+    "name": "王经理",
+    "role": "base_manager",
+    "uid": "UMJF31C24ECDA",
+    "faceImgUrl": ""
+  }
+}

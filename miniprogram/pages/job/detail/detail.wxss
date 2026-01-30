@@ -1,0 +1,77 @@
+/* pages/job/detail/detail.wxss */
+.job-title {
+  font-size: 48rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 40rpx;
+}
+
+.job-info {
+  margin-bottom: 40rpx;
+}
+
+.info-item {
+  display: flex;
+  padding: 20rpx 0;
+  border-bottom: 2rpx solid #f0f0f0;
+}
+
+.info-item:last-child {
+  border-bottom: none;
+}
+
+.label {
+  font-size: 28rpx;
+  color: #666;
+  width: 200rpx;
+}
+
+.value {
+  font-size: 28rpx;
+  color: #333;
+  flex: 1;
+}
+
+.value.highlight {
+  color: #4ade80;
+  font-weight: bold;
+  font-size: 32rpx;
+}
+
+.job-description,
+.job-requirements {
+  margin-top: 40rpx;
+  padding-top: 40rpx;
+  border-top: 2rpx solid #f0f0f0;
+}
+
+.section-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 20rpx;
+}
+
+.job-status {
+  margin-top: 40rpx;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 8rpx 16rpx;
+  background-color: #4ade80;
+  color: white;
+  border-radius: 4rpx;
+  font-size: 24rpx;
+}
+
+.button-group {
+  margin-top: 40rpx;
+}
+
+.loading {
+  text-align: center;
+  padding: 60rpx 0;
+  color: #999;
+  font-size: 28rpx;
+}
