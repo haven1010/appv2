@@ -3,8 +3,9 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { DailySignup, SignupStatus } from './entities/daily-signup.entity';
 import { SecurityService } from '../common/services/security.service';
-import { SysUser } from '../user/entities/sys-user.entity';
+import { SysUser, UserRole } from '../user/entities/sys-user.entity';
 import { RecruitmentJob } from '../base/entities/recruitment-job.entity';
+import { BaseInfo } from '../base/entities/base-info.entity';
 import { SmsService } from '../common/services/sms.service';
 import { QrCodeService } from '../qrcode/qrcode.service';
 
@@ -19,6 +20,8 @@ export class AttendanceService {
     private userRepo: Repository<SysUser>,
     @InjectRepository(RecruitmentJob)
     private jobRepo: Repository<RecruitmentJob>,
+    @InjectRepository(BaseInfo)
+    private baseRepo: Repository<BaseInfo>,
     private securityService: SecurityService,
     private smsService: SmsService,
     private qrcodeService: QrCodeService,
@@ -256,5 +259,169 @@ export class AttendanceService {
     }
 
     return savedSignup;
+  }
+
+  /**
+   * 获取签到记录列表
+   */
+  async getRecords(query: any, user: { id: number; role?: string; roleKey?: UserRole }) {
+    const date = query.date || this.getTodayDateString();
+    const baseId = query.baseId ? Number(query.baseId) : null;
+    const status = query.status !== undefined ? Number(query.status) : null;
+    const role = user.role ?? user.roleKey;
+
+    // 构建查询条件
+    const qb = this.signupRepo
+      .createQueryBuilder('signup')
+      .leftJoinAndSelect('signup.user', 'user')
+      .leftJoinAndSelect('signup.base', 'base')
+      .leftJoinAndSelect('signup.job', 'job')
+      .where('signup.workDate = :date', { date });
+
+    // 基地管理员只能查看自己管理的基地
+    if (role === UserRole.BASE_MANAGER) {
+      // 基地管理员只能查看自己管理的基地
+      const ownedBases = await this.baseRepo.find({
+        where: { ownerId: user.id },
+        select: ['id'],
+      });
+      const baseIds = ownedBases.map(b => b.id);
+      if (baseIds.length === 0) {
+        return { records: [], total: 0 };
+      }
+      qb.andWhere('signup.baseId IN (:...baseIds)', { baseIds });
+    } else if (baseId) {
+      qb.andWhere('signup.baseId = :baseId', { baseId });
+    }
+
+    // 状态过滤
+    if (status !== null) {
+      qb.andWhere('signup.status = :status', { status });
+    }
+
+    qb.orderBy('signup.checkinTime', 'DESC')
+      .addOrderBy('signup.createdAt', 'DESC');
+
+    const [records, total] = await qb.getManyAndCount();
+
+    return {
+      records: records.map(r => ({
+        id: r.id,
+        userId: r.userId,
+        workerName: r.user?.name || '-',
+        workerUid: r.user?.uid || '-',
+        baseId: r.baseId,
+        baseName: r.base?.baseName || '-',
+        jobId: r.jobId,
+        jobTitle: r.job?.jobTitle || '-',
+        workDate: r.workDate,
+        status: r.status,
+        checkinTime: r.checkinTime,
+        isProxy: r.isProxy,
+        createdAt: r.createdAt,
+      })),
+      total,
+      date,
+    };
+  }
+
+  /**
+   * 获取考勤汇总统计
+   */
+  async getStats(query: any, user: { id: number; role?: string; roleKey?: UserRole }) {
+    const date = query.date || this.getTodayDateString();
+    const role = user.role ?? user.roleKey;
+
+    const qb = this.signupRepo
+      .createQueryBuilder('signup')
+      .where('signup.workDate = :date', { date });
+
+    // 基地管理员只能统计自己管理的基地
+    if (role === UserRole.BASE_MANAGER) {
+      const ownedBases = await this.baseRepo.find({
+        where: { ownerId: user.id },
+        select: ['id'],
+      });
+      const baseIds = ownedBases.map(b => b.id);
+      if (baseIds.length === 0) {
+        return {
+          checkedIn: 0,
+          absent: 0,
+          signedUp: 0,
+          total: 0,
+          attendanceRate: 0,
+          date,
+        };
+      }
+      qb.andWhere('signup.baseId IN (:...baseIds)', { baseIds });
+    }
+
+    const allRecords = await qb.getMany();
+
+    const checkedIn = allRecords.filter(r => r.status === SignupStatus.CHECKED_IN).length;
+    const absent = allRecords.filter(r => r.status === SignupStatus.ABSENT).length;
+    const signedUp = allRecords.filter(r => r.status === SignupStatus.SIGNED_UP).length;
+    const total = allRecords.length;
+    const attendanceRate = total > 0 ? Math.round((checkedIn / total) * 100) : 0;
+
+    return {
+      checkedIn,
+      absent,
+      signedUp,
+      total,
+      attendanceRate,
+      date,
+    };
+  }
+
+  /**
+   * 获取各基地的签到统计
+   */
+  async getBaseStats(query: any, user: { id: number; role?: string; roleKey?: UserRole }) {
+    const date = query.date || this.getTodayDateString();
+    const role = user.role ?? user.roleKey;
+
+    // 构建基地查询
+    let baseQb = this.baseRepo.createQueryBuilder('base');
+
+    // 基地管理员只能看到自己管理的基地
+    if (role === UserRole.BASE_MANAGER) {
+      baseQb.where('base.ownerId = :ownerId', { ownerId: user.id });
+    }
+
+    const bases = await baseQb.getMany();
+
+    if (bases.length === 0) {
+      return { bases: [], date };
+    }
+
+    const baseIds = bases.map(b => b.id);
+
+    // 查询每个基地的签到数据
+    const signups = await this.signupRepo
+      .createQueryBuilder('signup')
+      .where('signup.workDate = :date', { date })
+      .andWhere('signup.baseId IN (:...baseIds)', { baseIds })
+      .getMany();
+
+    // 按基地分组统计
+    const baseStats = bases.map(base => {
+      const baseSignups = signups.filter(s => s.baseId === base.id);
+      const present = baseSignups.filter(s => s.status === SignupStatus.CHECKED_IN).length;
+      const total = baseSignups.length;
+
+      return {
+        baseId: base.id,
+        baseName: base.baseName,
+        present,
+        total,
+        attendanceRate: total > 0 ? Math.round((present / total) * 100) : 0,
+      };
+    });
+
+    return {
+      bases: baseStats,
+      date,
+    };
   }
 }

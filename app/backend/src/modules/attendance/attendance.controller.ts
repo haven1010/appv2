@@ -1,7 +1,7 @@
-import { Controller, Post, Body, Get, UseGuards, Req } from '@nestjs/common';
+import { Controller, Post, Body, Get, UseGuards, Req, Query } from '@nestjs/common';
 import { AttendanceService } from './attendance.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse, ApiQuery } from '@nestjs/swagger';
 import { CheckInDto } from './dto/check-in.dto';
 import { SyncOfflineDto } from './dto/sync-offline.dto';
 import { CreateSignupDto } from './dto/create-signup.dto';
@@ -38,5 +38,28 @@ export class AttendanceController {
   @ApiOperation({ summary: '离线数据批量同步' })
   async syncOffline(@Body() body: SyncOfflineDto, @Req() req) {
     return this.attendanceService.syncOfflineRecords(body.records, req.user.id);
+  }
+
+  @Get('records')
+  @ApiOperation({ summary: '获取签到记录列表' })
+  @ApiQuery({ name: 'baseId', required: false, description: '基地ID，不传则查询所有基地' })
+  @ApiQuery({ name: 'date', required: false, description: '日期 YYYY-MM-DD，不传则查询今日' })
+  @ApiQuery({ name: 'status', required: false, description: '状态：0-已报名, 1-已签到, 2-缺勤' })
+  async getRecords(@Query() query: any, @Req() req) {
+    return this.attendanceService.getRecords(query, req.user);
+  }
+
+  @Get('stats')
+  @ApiOperation({ summary: '获取考勤汇总统计' })
+  @ApiQuery({ name: 'date', required: false, description: '日期 YYYY-MM-DD，不传则查询今日' })
+  async getStats(@Query() query: any, @Req() req) {
+    return this.attendanceService.getStats(query, req.user);
+  }
+
+  @Get('bases')
+  @ApiOperation({ summary: '获取各基地的签到统计' })
+  @ApiQuery({ name: 'date', required: false, description: '日期 YYYY-MM-DD，不传则查询今日' })
+  async getBaseStats(@Query() query: any, @Req() req) {
+    return this.attendanceService.getBaseStats(query, req.user);
   }
 }

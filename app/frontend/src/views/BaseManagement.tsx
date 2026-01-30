@@ -1,9 +1,9 @@
 import React, { useMemo, useState } from 'react';
-import {
-  Sprout,
-  MapPin,
+import { 
+  Sprout, 
+  MapPin, 
   Phone,
-  Plus,
+  Plus, 
   ClipboardCheck,
   CheckCircle2,
   Clock,
@@ -555,7 +555,7 @@ export default function BaseManagement() {
         <div className="flex items-center gap-3">
           {user?.role === UserRole.SUPER_ADMIN && (
             <div className="flex bg-slate-900 border border-slate-800 p-1 rounded-xl">
-              <button
+              <button 
                 type="button"
                 onClick={() => setActiveTab('list')}
                 className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${
@@ -566,7 +566,7 @@ export default function BaseManagement() {
               >
                 全部基地
               </button>
-              <button
+              <button 
                 type="button"
                 onClick={() => setActiveTab('audit')}
                 className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${
@@ -585,9 +585,9 @@ export default function BaseManagement() {
               onClick={handleApplyEntry}
               className="flex items-center gap-2 px-5 py-2 bg-emerald-500 hover:bg-emerald-400 text-white font-semibold rounded-xl transition-all shadow-lg shadow-emerald-500/20 active:scale-95"
             >
-              <Plus size={18} />
-              <span>申请入驻</span>
-            </button>
+            <Plus size={18} />
+            <span>申请入驻</span>
+          </button>
           )}
         </div>
       </div>
@@ -600,7 +600,7 @@ export default function BaseManagement() {
 
       <AnimatePresence mode="wait">
         {activeTab === 'list' ? (
-          <motion.div
+          <motion.div 
             key="list"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -629,18 +629,18 @@ export default function BaseManagement() {
                   key={base.id ?? i}
                   className="glass-card rounded-[32px] overflow-hidden group border-slate-800/40"
                 >
-                  <div className="h-40 bg-slate-900 relative">
+                <div className="h-40 bg-slate-900 relative">
                     <img
                       src={`https://picsum.photos/600/400?random=${(base.id ?? i) + 50}`}
                       className="w-full h-full object-cover opacity-30 group-hover:opacity-50 group-hover:scale-105 transition-all duration-700"
                       alt={base.name}
                     />
-                    <div className="absolute top-4 left-4">
-                      <div className="px-3 py-1 rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-[10px] text-white font-bold flex items-center gap-1.5">
+                  <div className="absolute top-4 left-4">
+                    <div className="px-3 py-1 rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-[10px] text-white font-bold flex items-center gap-1.5">
                         <Sprout size={12} /> {base.scale ?? '-'}
                       </div>
-                    </div>
-                    <div className="absolute top-4 right-4">
+                  </div>
+                  <div className="absolute top-4 right-4">
                       <span
                         className={`px-2 py-1 rounded-lg text-[10px] font-bold flex items-center gap-1.5 backdrop-blur-md ${
                           base.status === '已通过'
@@ -657,50 +657,50 @@ export default function BaseManagement() {
                         ) : (
                           <AlertCircle size={12} />
                         )}
-                        {base.status}
-                      </span>
-                    </div>
+                      {base.status}
+                    </span>
                   </div>
-                  <div className="p-6">
-                    <div className="flex justify-between items-start mb-4">
-                      <div>
+                </div>
+                <div className="p-6">
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
                         <h3 className="font-bold text-white text-lg group-hover:text-emerald-400 transition-colors leading-tight">
                           {base.name}
                         </h3>
-                        <div className="flex gap-2 mt-2">
+                      <div className="flex gap-2 mt-2">
                           <span className="text-[10px] text-slate-500 font-bold tracking-widest uppercase bg-slate-800/50 px-2 py-0.5 rounded">
                             {base.cat}
                           </span>
                         </div>
-                      </div>
                     </div>
-
-                    <div className="grid grid-cols-2 gap-3 mb-6">
-                      <div className="flex items-center gap-2 text-xs text-slate-500">
-                        <MapPin size={14} className="text-slate-600" />
-                        {base.region}
-                      </div>
-                      <div className="flex items-center gap-2 text-xs text-slate-500">
-                        <Phone size={14} className="text-slate-600" />
-                        {base.contact}
-                      </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-3 mb-6">
+                    <div className="flex items-center gap-2 text-xs text-slate-500">
+                      <MapPin size={14} className="text-slate-600" />
+                      {base.region}
                     </div>
+                    <div className="flex items-center gap-2 text-xs text-slate-500">
+                      <Phone size={14} className="text-slate-600" />
+                      {base.contact}
+                    </div>
+                  </div>
 
-                    <div className="flex gap-2">
+                  <div className="flex gap-2">
                       <button
                         type="button"
                         onClick={() => handleBaseDetail(base.id)}
                         className="flex-1 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 text-xs font-bold hover:bg-slate-800 transition-all"
                       >
-                        运营档案
-                      </button>
+                      运营档案
+                    </button>
                     </div>
-                  </div>
                 </div>
-              ))}
+              </div>
+            ))}
           </motion.div>
         ) : (
-          <motion.div
+          <motion.div 
             key="audit"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
