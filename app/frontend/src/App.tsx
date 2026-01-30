@@ -114,7 +114,7 @@ export default function App() {
               <Route path="bases" element={<BaseManagement />} />
 
               <Route path="attendance" element={
-                <ProtectedRoute roles={[UserRole.SUPER_ADMIN, UserRole.FIELD_ADMIN]}>
+                <ProtectedRoute roles={[UserRole.SUPER_ADMIN, UserRole.FIELD_ADMIN, UserRole.BASE_ADMIN]}>
                   <AttendanceManagement />
                 </ProtectedRoute>
               } />

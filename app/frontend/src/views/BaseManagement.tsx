@@ -326,107 +326,131 @@ function CreateJobModal({
             createJobMutation.mutate({ id: baseId, data: form as CreateJobDto });
           }}
         >
-          <input
-            required
-            placeholder="岗位名称"
-            value={form.jobTitle ?? ''}
-            onChange={(e) => setForm((f) => ({ ...f, jobTitle: e.target.value }))}
-            className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white placeholder-slate-500"
-          />
-          <select
-            value={form.payType ?? 2}
-            onChange={(e) =>
-              setForm((f) => ({ ...f, payType: Number(e.target.value) as 1 | 2 | 3 }))
-            }
-            className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white"
-          >
-            <option value={1}>固定工资</option>
-            <option value={2}>时薪</option>
-            <option value={3}>计件</option>
-          </select>
-          <p className="text-xs text-slate-500">
-            提示：根据类型填写下面的薪资字段（固定工资 / 时薪 / 计件单价与目标数量）。
-          </p>
-          <input
-            type="number"
-            min={1}
-            placeholder="招聘人数（计划招聘的总人数，如 20）"
-            value={form.recruitCount ?? ''}
-            onChange={(e) =>
-              setForm((f) => ({ ...f, recruitCount: Number(e.target.value) || 1 }))
-            }
-            className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white placeholder-slate-500"
-          />
+          <div>
+            <label className="block text-sm text-slate-400 mb-1.5">岗位名称</label>
+            <input
+              required
+              placeholder="如：采摘工、包装工"
+              value={form.jobTitle ?? ''}
+              onChange={(e) => setForm((f) => ({ ...f, jobTitle: e.target.value }))}
+              className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white placeholder-slate-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm text-slate-400 mb-1.5">薪资类型</label>
+            <select
+              value={form.payType ?? 2}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, payType: Number(e.target.value) as 1 | 2 | 3 }))
+              }
+              className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white"
+            >
+              <option value={1}>固定工资</option>
+              <option value={2}>时薪</option>
+              <option value={3}>计件</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm text-slate-400 mb-1.5">招聘人数</label>
+            <input
+              type="number"
+              min={1}
+              placeholder="计划招聘的总人数，如 20"
+              value={form.recruitCount ?? ''}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, recruitCount: Number(e.target.value) || 1 }))
+              }
+              className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white placeholder-slate-500"
+            />
+          </div>
           {form.payType === 1 && (
-            <input
-              type="number"
-              min={0}
-              step={0.01}
-              placeholder="固定工资（元/天）"
-              value={form.salaryAmount ?? ''}
-              onChange={(e) =>
-                setForm((f) => ({ ...f, salaryAmount: Number(e.target.value) }))
-              }
-              className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white placeholder-slate-500"
-            />
-          )}
-          {(form.payType === 2 || !form.payType) && (
-            <input
-              type="number"
-              min={0}
-              step={0.01}
-              placeholder="时薪（元/小时）"
-              value={form.hourlyRate ?? ''}
-              onChange={(e) =>
-                setForm((f) => ({ ...f, hourlyRate: Number(e.target.value) }))
-              }
-              className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white placeholder-slate-500"
-            />
-          )}
-          {form.payType === 3 && (
-            <>
+            <div>
+              <label className="block text-sm text-slate-400 mb-1.5">固定工资</label>
               <input
                 type="number"
                 min={0}
                 step={0.01}
-                placeholder="计件单价（元/件）"
-                value={form.unitPrice ?? ''}
+                placeholder="元/天，如 200"
+                value={form.salaryAmount ?? ''}
                 onChange={(e) =>
-                  setForm((f) => ({ ...f, unitPrice: Number(e.target.value) }))
+                  setForm((f) => ({ ...f, salaryAmount: Number(e.target.value) }))
                 }
                 className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white placeholder-slate-500"
               />
+            </div>
+          )}
+          {(form.payType === 2 || !form.payType) && (
+            <div>
+              <label className="block text-sm text-slate-400 mb-1.5">时薪</label>
               <input
                 type="number"
-                min={1}
-                step={1}
-                placeholder="目标数量（计件用，如 100）"
-                value={form.targetCount ?? ''}
+                min={0}
+                step={0.01}
+                placeholder="元/小时，如 25"
+                value={form.hourlyRate ?? ''}
                 onChange={(e) =>
-                  setForm((f) => ({ ...f, targetCount: Number(e.target.value) }))
+                  setForm((f) => ({ ...f, hourlyRate: Number(e.target.value) }))
                 }
                 className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white placeholder-slate-500"
               />
+            </div>
+          )}
+          {form.payType === 3 && (
+            <>
+              <div>
+                <label className="block text-sm text-slate-400 mb-1.5">计件单价</label>
+                <input
+                  type="number"
+                  min={0}
+                  step={0.01}
+                  placeholder="元/件，如 1.5"
+                  value={form.unitPrice ?? ''}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, unitPrice: Number(e.target.value) }))
+                  }
+                  className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white placeholder-slate-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-slate-400 mb-1.5">目标数量</label>
+                <input
+                  type="number"
+                  min={1}
+                  step={1}
+                  placeholder="计件用，如 100"
+                  value={form.targetCount ?? ''}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, targetCount: Number(e.target.value) }))
+                  }
+                  className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white placeholder-slate-500"
+                />
+              </div>
             </>
           )}
-          <textarea
-            placeholder="工作内容"
-            value={form.workContent ?? ''}
-            onChange={(e) =>
-              setForm((f) => ({ ...f, workContent: e.target.value }))
-            }
-            className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white placeholder-slate-500"
-            rows={2}
-          />
-          <textarea
-            placeholder="招聘要求"
-            value={form.requirements ?? ''}
-            onChange={(e) =>
-              setForm((f) => ({ ...f, requirements: e.target.value }))
-            }
-            className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white placeholder-slate-500"
-            rows={2}
-          />
+          <div>
+            <label className="block text-sm text-slate-400 mb-1.5">工作内容</label>
+            <textarea
+              placeholder="描述具体的工作内容和职责"
+              value={form.workContent ?? ''}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, workContent: e.target.value }))
+              }
+              className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white placeholder-slate-500"
+              rows={2}
+            />
+          </div>
+          <div>
+            <label className="block text-sm text-slate-400 mb-1.5">招聘要求</label>
+            <textarea
+              placeholder="描述对候选人的要求和条件"
+              value={form.requirements ?? ''}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, requirements: e.target.value }))
+              }
+              className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white placeholder-slate-500"
+              rows={2}
+            />
+          </div>
           <div className="flex gap-2 pt-2">
             <button
               type="button"

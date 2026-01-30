@@ -29,7 +29,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
     { name: '采摘工管理', icon: Users, path: '/workers', roles: [UserRole.SUPER_ADMIN, UserRole.FIELD_ADMIN, UserRole.AREA_ADMIN] },
     { name: '基地管理', icon: Sprout, path: '/bases', roles: Object.values(UserRole) },
     { name: '招聘信息', icon: Briefcase, path: '/jobs', roles: [UserRole.SUPER_ADMIN, UserRole.BASE_ADMIN, UserRole.AREA_ADMIN] },
-    { name: '现场签到', icon: ScanLine, path: '/attendance', roles: [UserRole.SUPER_ADMIN, UserRole.FIELD_ADMIN] },
+    { name: '现场签到', icon: ScanLine, path: '/attendance', roles: [UserRole.SUPER_ADMIN, UserRole.FIELD_ADMIN, UserRole.BASE_ADMIN] },
     { name: '工资结算', icon: CircleDollarSign, path: '/payroll', roles: [UserRole.SUPER_ADMIN, UserRole.BASE_ADMIN] },
   ];
 
