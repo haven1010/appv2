@@ -63,6 +63,58 @@ function formatVolume(record: SalaryRecord): string {
   return '1 天';
 }
 
+/** CSV 字段转义（含逗号、换行、双引号时用双引号包裹） */
+function escapeCsvField(value: string | number): string {
+  const s = String(value ?? '');
+  if (s.includes(',') || s.includes('"') || s.includes('\n') || s.includes('\r')) {
+    return `"${s.replace(/"/g, '""')}"`;
+  }
+  return s;
+}
+
+/** 将工资记录列表导出为 CSV 并触发下载 */
+function exportSalaryToCsv(records: SalaryRecord[], filename?: string) {
+  const headers = [
+    '单号',
+    '日期',
+    '采摘工',
+    '工号',
+    '基地',
+    '岗位',
+    '工作量/时长',
+    '单价',
+    '结算金额',
+    '支付状态',
+    '创建时间',
+  ];
+  const rows = records.map((r) => [
+    r.id,
+    r.workDate,
+    r.workerName,
+    r.workerUid,
+    r.baseName,
+    r.jobTitle,
+    formatVolume(r),
+    r.unitPriceSnapshot,
+    r.totalAmount,
+    SALARY_STATUS_LABEL[r.status] ?? '未知',
+    r.createdAt,
+  ]);
+  const csvLines = [
+    headers.map(escapeCsvField).join(','),
+    ...rows.map((row) => row.map(escapeCsvField).join(',')),
+  ];
+  const BOM = '\uFEFF';
+  const csv = BOM + csvLines.join('\r\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename || `工资结算报表_${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export default function PayrollView() {
   const { user } = useAuth();
   const [list, setList] = useState<SalaryRecord[]>([]);
@@ -75,6 +127,7 @@ export default function PayrollView() {
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [filterStatus, setFilterStatus] = useState<number | null>(null);
+  const [exporting, setExporting] = useState(false);
 
   const { data: rawBases = [] } = useBaseControllerFindAll({
     request:
@@ -127,6 +180,21 @@ export default function PayrollView() {
       )
     : list;
 
+  const handleExportReport = () => {
+    if (filteredList.length === 0) {
+      alert('当前无数据可导出，请先筛选或刷新后再试。');
+      return;
+    }
+    setExporting(true);
+    try {
+      const dateRange =
+        dateFrom && dateTo ? `${dateFrom}_${dateTo}` : new Date().toISOString().slice(0, 10);
+      exportSalaryToCsv(filteredList, `工资结算报表_${dateRange}.csv`);
+    } finally {
+      setExporting(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -143,9 +211,14 @@ export default function PayrollView() {
             <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
             刷新
           </button>
-          <button className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-100 rounded-xl transition-all border border-slate-700/50">
-            <Download size={18} />
-            <span>导出报表</span>
+          <button
+            onClick={handleExportReport}
+            disabled={loading || exporting || filteredList.length === 0}
+            className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-100 rounded-xl transition-all border border-slate-700/50 disabled:opacity-50 disabled:cursor-not-allowed"
+            title={filteredList.length === 0 ? '当前无数据可导出' : '导出当前筛选结果为 CSV'}
+          >
+            <Download size={18} className={exporting ? 'animate-pulse' : ''} />
+            <span>{exporting ? '导出中...' : '导出报表'}</span>
           </button>
           <button className="flex items-center gap-2 px-5 py-2 bg-emerald-500 hover:bg-emerald-400 text-white font-semibold rounded-xl transition-all shadow-lg shadow-emerald-500/20 active:scale-95">
             <CircleDollarSign size={18} />
