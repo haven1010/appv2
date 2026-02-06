@@ -1,0 +1,53 @@
+/* pages/profile/workHistory/workHistory.wxss */
+.page {
+  min-height: 100vh;
+  background: #020617;
+  padding: 24rpx;
+}
+
+.loading-box, .empty-box {
+  text-align: center;
+  color: #64748b;
+  padding: 80rpx 0;
+  font-size: 28rpx;
+}
+
+.record-list {
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+}
+
+.record-card {
+  background: rgba(15, 23, 42, 0.8);
+  border-radius: 20rpx;
+  padding: 32rpx;
+  border: 1rpx solid rgba(51, 65, 85, 0.6);
+}
+
+.record-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 16rpx;
+}
+
+.record-title {
+  font-size: 30rpx;
+  font-weight: bold;
+  color: #f1f5f9;
+}
+
+.record-status {
+  font-size: 22rpx;
+  padding: 6rpx 16rpx;
+  border-radius: 999rpx;
+}
+
+.status-ok { background: rgba(52, 211, 153, 0.2); color: #34d399; }
+.status-fail { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+.status-pending { background: rgba(245, 158, 11, 0.2); color: #f59e0b; }
+
+.record-date {
+  font-size: 24rpx;
+  color: #64748b;
+}

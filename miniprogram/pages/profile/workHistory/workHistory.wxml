@@ -1,0 +1,14 @@
+<!--pages/profile/workHistory/workHistory.wxml-->
+<view class="page">
+  <view wx:if="{{loading}}" class="loading-box">加载中…</view>
+  <view wx:elif="{{records.length === 0}}" class="empty-box">暂无签到记录</view>
+  <view wx:else class="record-list">
+    <view class="record-card" wx:for="{{records}}" wx:key="id">
+      <view class="record-header">
+        <text class="record-title">{{item.baseName}} · {{item.jobTitle}}</text>
+        <text class="record-status {{item.status === 1 ? 'status-ok' : item.status === 2 ? 'status-fail' : 'status-pending'}}">{{item.statusText}}</text>
+      </view>
+      <view class="record-date">{{item.workDate || '-'}}{{item.checkinTime ? ' · 签到 ' + item.checkinTime : ''}}</view>
+    </view>
+  </view>
+</view>

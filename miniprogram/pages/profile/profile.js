@@ -1,70 +1,99 @@
 // pages/profile/profile.js
 const app = getApp();
 
+function maskPhone(phone) {
+  if (!phone || phone.length < 7) return phone || '';
+  return phone.slice(0, 3) + '****' + phone.slice(-4);
+}
+
 Page({
   data: {
     userInfo: null,
+    profileData: null,
+    workerStats: null,
+    workRecords: [],
     loading: true,
+    workRecordsLoading: false,
   },
 
   onLoad() {
-    this.loadUserInfo();
+    this.checkLogin();
   },
 
   onShow() {
-    this.loadUserInfo();
+    this.loadProfile();
   },
 
-  async loadUserInfo() {
-    const token = wx.getStorageSync('token');
-    if (!token) {
+  onPullDownRefresh() {
+    this.loadProfile();
+    setTimeout(() => wx.stopPullDownRefresh(), 1500);
+  },
+
+  checkLogin() {
+    const userInfo = wx.getStorageSync('userInfo');
+    if (!userInfo) {
       wx.showModal({
         title: '提示',
         content: '请先登录',
         showCancel: false,
-        success: () => {
-          wx.switchTab({
-            url: '/pages/index/index'
-          });
-        }
+        success: () => wx.switchTab({ url: '/pages/index/index' }),
       });
       return;
     }
+    this.setData({ userInfo });
+  },
 
+  async loadProfile() {
+    const token = wx.getStorageSync('token');
+    if (!token) {
+      this.setData({ loading: false });
+      return;
+    }
     this.setData({ loading: true });
-
     try {
-      const res = await app.request({
-        url: '/user/profile',
-        method: 'GET',
-      });
-
+      const [profile, stats] = await Promise.all([
+        app.request({ url: '/user/profile', method: 'GET' }),
+        app.request({ url: '/salary/worker/stats', method: 'GET' }),
+      ]);
+      const p = profile || {};
       this.setData({
-        userInfo: res,
+        profileData: {
+          ...p,
+          phoneMasked: maskPhone(p.phone),
+          emergencyPhoneMasked: maskPhone(p.emergencyPhone),
+        },
+        workerStats: stats || { workDays: 0, pendingAmount: 0 },
         loading: false,
       });
-
-      // 更新本地存储
-      wx.setStorageSync('userInfo', res);
-      app.globalData.userInfo = res;
-
     } catch (err) {
-      console.error('加载用户信息失败:', err);
+      console.error('加载资料失败:', err);
       this.setData({ loading: false });
-      
-      if (err.message.includes('登录已过期')) {
-        wx.removeStorageSync('token');
-        wx.removeStorageSync('userInfo');
-        wx.switchTab({
-          url: '/pages/index/index'
-        });
-      }
     }
   },
 
-  goToLogin() {
+  async loadWorkRecords() {
+    this.setData({ workRecordsLoading: true });
+    try {
+      const res = await app.request({ url: '/attendance/worker/records', method: 'GET' });
+      const list = Array.isArray(res) ? res : [];
+      this.setData({ workRecords: list, workRecordsLoading: false });
+    } catch (err) {
+      this.setData({ workRecords: [], workRecordsLoading: false });
+    }
+  },
+
+  goBasicInfo() {
+    wx.navigateTo({ url: '/pages/profile/userInfo/userInfo' });
+  },
+
+  goSalaryCard() {
+    wx.navigateTo({ url: '/pages/profile/salaryCard/salaryCard' });
+  },
+
+  showWorkHistory() {
+    this.loadWorkRecords();
     wx.navigateTo({
-      url: '/pages/login/login'
+      url: '/pages/profile/workHistory/workHistory',
     });
   },
 
@@ -78,12 +107,9 @@ Page({
           wx.removeStorageSync('userInfo');
           app.globalData.token = null;
           app.globalData.userInfo = null;
-          
-          wx.switchTab({
-            url: '/pages/index/index'
-          });
+          wx.switchTab({ url: '/pages/index/index' });
         }
-      }
+      },
     });
   },
 });

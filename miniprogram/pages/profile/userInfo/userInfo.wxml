@@ -1,0 +1,35 @@
+<!--pages/profile/userInfo/userInfo.wxml-->
+<view class="container">
+  <view class="card" wx:if="{{profile}}">
+    <view class="form-group">
+      <view class="label">姓名</view>
+      <input class="input" placeholder="请输入姓名" value="{{form.name}}" bindinput="onInputName" />
+    </view>
+    <view class="form-group">
+      <view class="label">工号</view>
+      <view class="value">{{profile.uid || '-'}}</view>
+    </view>
+    <view class="form-group">
+      <view class="label">手机号</view>
+      <input class="input" type="number" placeholder="请输入手机号" value="{{form.phone}}" bindinput="onInputPhone" maxlength="11" />
+    </view>
+    <view class="form-group">
+      <view class="label">身份证号</view>
+      <view class="value">{{profile.idCardMasked || '-'}}</view>
+    </view>
+    <view class="form-group">
+      <view class="label">紧急联系人</view>
+      <input class="input" placeholder="请输入姓名及关系" value="{{form.emergencyContact}}" bindinput="onInputEmergencyContact" />
+    </view>
+    <view class="form-group">
+      <view class="label">联系人电话</view>
+      <input class="input" type="number" placeholder="请输入电话" value="{{form.emergencyPhone}}" bindinput="onInputEmergencyPhone" maxlength="11" />
+    </view>
+    <view class="form-group">
+      <view class="label">认证状态</view>
+      <view class="value">{{auditStatusText}}</view>
+    </view>
+  </view>
+
+  <button class="btn-save" bindtap="handleSave" loading="{{saving}}" wx:if="{{profile}}">保存修改</button>
+</view>

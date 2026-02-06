@@ -1,56 +1,50 @@
 <!--pages/profile/profile.wxml-->
-<view class="container">
-  <view class="card" wx:if="{{userInfo}}">
-    <view class="profile-header">
-      <view class="avatar">{{userInfo.name ? userInfo.name.charAt(0) : 'U'}}</view>
-      <view class="user-info">
-        <view class="user-name">{{userInfo.name}}</view>
-        <view class="user-uid">UID: {{userInfo.uid}}</view>
-      </view>
-    </view>
-
-    <view class="info-section">
-      <view class="info-item">
-        <text class="info-label">姓名</text>
-        <text class="info-value">{{userInfo.name}}</text>
-      </view>
-      <view class="info-item">
-        <text class="info-label">手机号</text>
-        <text class="info-value">{{userInfo.phone || '未设置'}}</text>
-      </view>
-      <view class="info-item">
-        <text class="info-label">角色</text>
-        <text class="info-value">{{userInfo.roleKey === 'worker' ? '工人' : userInfo.roleKey}}</text>
-      </view>
-      <view class="info-item" wx:if="{{userInfo.emergencyContact}}">
-        <text class="info-label">紧急联系人</text>
-        <text class="info-value">{{userInfo.emergencyContact}}</text>
-      </view>
-      <view class="info-item" wx:if="{{userInfo.emergencyPhone}}">
-        <text class="info-label">紧急联系人电话</text>
-        <text class="info-value">{{userInfo.emergencyPhone}}</text>
-      </view>
-      <view class="info-item">
-        <text class="info-label">信息审核状态</text>
-        <text class="info-value">
-          <text wx:if="{{userInfo.infoAuditStatus === 0}}" style="color: #f59e0b;">待审核</text>
-          <text wx:elif="{{userInfo.infoAuditStatus === 1}}" style="color: #4ade80;">已通过</text>
-          <text wx:else style="color: #ef4444;">已拒绝</text>
-        </text>
-      </view>
-    </view>
-
-    <view class="button-group">
-      <button class="btn-primary" bindtap="logout">退出登录</button>
+<view class="page">
+  <view class="profile-header">
+    <view class="avatar">{{userInfo.name ? userInfo.name[0] : '?'}}</view>
+    <view class="user-name">{{userInfo.name}}</view>
+    <view class="user-tags">
+      <text class="tag">实名采摘工</text>
+      <text class="tag uid">{{userInfo.uid}}</text>
     </view>
   </view>
 
-  <view class="card" wx:if="{{!userInfo && !loading}}">
-    <view class="empty-text">未登录</view>
-    <button class="btn-primary" bindtap="goToLogin" style="margin-top: 40rpx;">去登录</button>
+  <view class="menu-list">
+    <view class="menu-item" bindtap="goBasicInfo">
+      <view class="menu-left">
+        <text class="menu-icon">👤</text>
+        <text class="menu-label">基本信息</text>
+      </view>
+      <text class="menu-value">{{profileData ? (profileData.infoAuditStatus === 1 ? '已认证' : profileData.infoAuditStatus === 0 ? '待审核' : '未认证') : '-'}}</text>
+      <text class="menu-arrow">›</text>
+    </view>
+
+    <view class="menu-item" bindtap="goSalaryCard">
+      <view class="menu-left">
+        <text class="menu-icon">💳</text>
+        <text class="menu-label">薪资卡号</text>
+      </view>
+      <text class="menu-value">未绑定</text>
+      <text class="menu-arrow">›</text>
+    </view>
+
+    <view class="menu-item" bindtap="showWorkHistory">
+      <view class="menu-left">
+        <text class="menu-icon">📋</text>
+        <text class="menu-label">工作历程</text>
+      </view>
+      <text class="menu-value">{{workerStats ? workerStats.workDays + ' 天签到' : '0 天签到'}}</text>
+      <text class="menu-arrow">›</text>
+    </view>
+
+    <view class="menu-item">
+      <view class="menu-left">
+        <text class="menu-icon">⚙</text>
+        <text class="menu-label">设置</text>
+      </view>
+      <text class="menu-arrow">›</text>
+    </view>
   </view>
 
-  <view class="loading" wx:if="{{loading}}">
-    <text>加载中...</text>
-  </view>
+  <button class="btn-logout" bindtap="logout">退出当前账号</button>
 </view>

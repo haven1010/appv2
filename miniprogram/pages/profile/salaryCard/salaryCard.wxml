@@ -1,0 +1,8 @@
+<!--pages/profile/salaryCard/salaryCard.wxml-->
+<view class="container">
+  <view class="placeholder-card">
+    <text class="icon">💳</text>
+    <text class="title">薪资卡号</text>
+    <text class="desc">暂未绑定银行卡，该功能即将上线</text>
+  </view>
+</view>
