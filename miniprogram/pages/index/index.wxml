@@ -1,37 +1,110 @@
 <!--pages/index/index.wxml-->
-<view class="container">
-  <view class="card" wx:if="{{!userInfo}}">
-    <view class="welcome-title">欢迎使用采摘通</view>
-    <view class="welcome-desc">农业劳动力全生命周期管理平台</view>
-    <button class="btn-primary" bindtap="goToLogin" style="margin-top: 40rpx;">登录</button>
-    <button class="btn-primary" bindtap="goToRegister" style="margin-top: 20rpx; background-color: #3b82f6;">注册</button>
+<view class="page">
+  <view class="header">
+    <view class="logo-row">
+      <view class="logo">🌱</view>
+      <text class="title">采摘智工</text>
+    </view>
   </view>
 
-  <view wx:if="{{userInfo}}">
-    <view class="card">
-      <view class="welcome-title">欢迎回来，{{userInfo.name}}</view>
-      <view class="welcome-desc">您的UID: {{userInfo.uid}}</view>
-    </view>
+  <view wx:if="{{!userInfo}}" class="card welcome-card">
+    <view class="welcome-title">欢迎使用采摘通</view>
+    <view class="welcome-desc">农业劳动力全生命周期管理平台</view>
+    <button class="btn-primary" bindtap="goToLogin">登录</button>
+    <button class="btn-register" bindtap="goToRegister">注册</button>
+  </view>
 
-    <view class="card" wx:if="{{recommendedBases.length > 0}}">
-      <view class="section-title">为您推荐</view>
-      <view class="base-list">
-        <view 
-          class="base-item" 
-          wx:for="{{recommendedBases}}" 
-          wx:key="id"
-          bindtap="goToBaseDetail"
-          data-id="{{item.id}}"
-        >
-          <view class="base-name">{{item.baseName}}</view>
-          <view class="base-category">{{item.categoryName}}</view>
-          <view class="base-score">匹配度: {{item.score}}分</view>
+  <view wx:if="{{userInfo}}" class="content">
+    <view class="stats-card">
+      <view class="stats-header">
+        <view class="user-block">
+          <view class="avatar">{{userInfo.name ? userInfo.name[0] : '?'}}</view>
+          <view class="user-info">
+            <text class="user-name">{{userInfo.name}}</text>
+            <text class="user-uid">编号: {{userInfo.uid}}</text>
+          </view>
+        </view>
+        <view class="qr-btn" bindtap="goToQrcode">📱</view>
+      </view>
+      <view class="stats-grid">
+        <view class="stat-item">
+          <text class="stat-value">{{workerStats ? workerStats.workDays : '-'}}</text>
+          <text class="stat-label">已做天数</text>
+        </view>
+        <view class="stat-item border-mid">
+          <text class="stat-value green">¥{{workerStats ? (workerStats.pendingAmount || 0) : '0'}}</text>
+          <text class="stat-label">待收工资</text>
+        </view>
+        <view class="stat-item">
+          <text class="stat-value">-</text>
+          <text class="stat-label">信用评分</text>
         </view>
       </view>
     </view>
 
-    <view class="card" wx:if="{{recommendedBases.length === 0 && !loading}}">
-      <view class="empty-text">暂无推荐基地</view>
+    <view class="section">
+      <view class="section-title">推荐基地</view>
+      <view class="section-sub">根据匹配度推荐</view>
     </view>
+
+    <view wx:if="{{loading}}" class="loading-box">加载中...</view>
+
+    <view wx:elif="{{recommendedBases.length === 0}}" class="empty-box">暂无推荐基地，请稍后再看</view>
+
+    <view wx:else class="base-list">
+      <view
+        class="base-card"
+        wx:for="{{recommendedBases}}"
+        wx:key="id"
+        bindtap="showBaseJobs"
+        data-id="{{item.id}}"
+      >
+        <view class="base-header">
+          <view>
+            <text class="base-name">{{item.baseName}}</text>
+            <view class="base-meta">
+              <text class="base-cat">{{item.categoryName}}</text>
+              <text class="base-jobs">在招 {{item.activeJobsCount || 0}} 个岗位</text>
+            </view>
+          </view>
+          <text wx:if="{{item.score != null}}" class="base-score">匹配 {{item.score}}</text>
+        </view>
+        <view class="base-footer">
+          <text class="base-name-small">{{item.baseName}}</text>
+          <view class="btn-view">查看岗位</view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 岗位抽屉 -->
+  <view wx:if="{{selectedBaseId}}" class="drawer-mask" bindtap="closeJobDrawer"></view>
+  <view wx:if="{{selectedBaseId}}" class="drawer">
+    <view class="drawer-header">
+      <text class="drawer-title">在招岗位</text>
+      <text class="drawer-close" bindtap="closeJobDrawer">✕</text>
+    </view>
+    <scroll-view class="drawer-body" scroll-y>
+      <view wx:if="{{jobsLoading}}" class="loading-box">加载岗位…</view>
+      <view wx:elif="{{baseJobs.length === 0}}" class="empty-box">该基地暂无在招岗位</view>
+      <view wx:else class="job-list">
+        <view class="job-card" wx:for="{{baseJobs}}" wx:key="id">
+          <view class="job-header">
+            <text class="job-title">{{item.jobTitle || item.title}}</text>
+            <text class="job-salary">{{item.salaryText || '面议'}}</text>
+          </view>
+          <text wx:if="{{item.workContent}}" class="job-desc">{{item.workContent}}</text>
+          <button
+            class="btn-apply {{item.applied ? 'btn-applied' : ''}}"
+            disabled="{{applyLoading || item.applied}}"
+            bindtap="handleApply"
+            data-job-id="{{item.id}}"
+            data-base-id="{{selectedBaseId}}"
+          >
+            {{item.appliedText || '立即报名'}}
+          </button>
+        </view>
+      </view>
+    </scroll-view>
   </view>
 </view>

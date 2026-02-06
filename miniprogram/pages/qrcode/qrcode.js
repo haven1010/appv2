@@ -3,9 +3,10 @@ const app = getApp();
 
 Page({
   data: {
-    qrCodeUrl: '',
     qrContent: '',
-    loading: false,
+    qrImageUrl: '',
+    validDuration: '',
+    loading: true,
     userInfo: null,
   },
 
@@ -24,11 +25,7 @@ Page({
         title: '提示',
         content: '请先登录',
         showCancel: false,
-        success: () => {
-          wx.switchTab({
-            url: '/pages/index/index'
-          });
-        }
+        success: () => wx.switchTab({ url: '/pages/index/index' }),
       });
       return;
     }
@@ -38,45 +35,34 @@ Page({
   async loadQrCode() {
     const token = wx.getStorageSync('token');
     if (!token) {
+      this.setData({ loading: false });
       return;
     }
 
     this.setData({ loading: true });
 
     try {
-      const res = await app.request({
-        url: '/attendance/qrcode',
-        method: 'GET',
-      });
+      const res = await app.request({ url: '/attendance/qrcode', method: 'GET' });
+      const content = res.content || '';
+      const validDuration = res.validDuration || '24h';
+      const qrImageUrl = content
+        ? 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' + encodeURIComponent(content)
+        : '';
 
       this.setData({
-        qrContent: res.content,
-        qrCodeUrl: '', // 可以在这里生成二维码图片
+        qrContent: content,
+        qrImageUrl,
+        validDuration,
         loading: false,
       });
-
-      // 使用第三方库生成二维码图片（需要引入）
-      // 或者使用服务端生成二维码图片URL
-      
     } catch (err) {
       console.error('加载二维码失败:', err);
-      wx.showToast({
-        title: '加载失败',
-        icon: 'none',
-      });
+      wx.showToast({ title: '加载失败', icon: 'none' });
       this.setData({ loading: false });
     }
   },
 
   refreshQrCode() {
     this.loadQrCode();
-  },
-
-  saveQrCode() {
-    // 保存二维码到相册
-    wx.showToast({
-      title: '功能开发中',
-      icon: 'none',
-    });
   },
 });

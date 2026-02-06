@@ -15,7 +15,7 @@ App({
   globalData: {
     userInfo: null,
     token: null,
-    baseUrl: 'http://localhost:3001/api', // 开发环境API地址
+    baseUrl: 'http://10.30.59.238:3001/api', // 真机调试需使用局域网IP
     // baseUrl: 'https://your-domain.com/api', // 生产环境API地址
   },
   

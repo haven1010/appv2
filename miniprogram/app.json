@@ -4,6 +4,7 @@
     "pages/login/login",
     "pages/register/register",
     "pages/profile/profile",
+    "pages/applications/applications",
     "pages/base/list/list",
     "pages/base/detail/detail",
     "pages/job/list/list",
@@ -12,47 +13,30 @@
     "pages/qrcode/qrcode",
     "pages/attendance/attendance",
     "pages/salary/salary",
-    "pages/application/list/list"
+    "pages/profile/workHistory/workHistory","pages/profile/userInfo/userInfo","pages/profile/salaryCard/salaryCard"
   ],
   "window": {
     "backgroundTextStyle": "light",
-    "navigationBarBackgroundColor": "#4ade80",
-    "navigationBarTitleText": "采摘通",
+    "navigationBarBackgroundColor": "#020617",
+    "navigationBarTitleText": "采摘智工",
     "navigationBarTextStyle": "white",
+    "backgroundColor": "#020617",
     "enablePullDownRefresh": true
   },
   "tabBar": {
-    "color": "#666666",
-    "selectedColor": "#4ade80",
-    "backgroundColor": "#ffffff",
+    "color": "#64748b",
+    "selectedColor": "#34d399",
+    "backgroundColor": "#0f172a",
     "borderStyle": "black",
     "list": [
-      {
-        "pagePath": "pages/index/index",
-        "text": "首页"
-      },
-      {
-        "pagePath": "pages/base/list/list",
-        "text": "基地"
-      },
-      {
-        "pagePath": "pages/qrcode/qrcode",
-        "text": "我的码"
-      },
-      {
-        "pagePath": "pages/profile/profile",
-        "text": "我的"
-      }
+      { "pagePath": "pages/index/index", "text": "广场" },
+      { "pagePath": "pages/applications/applications", "text": "我的报名" },
+      { "pagePath": "pages/qrcode/qrcode", "text": "签到码" },
+      { "pagePath": "pages/profile/profile", "text": "我的" }
     ]
   },
-  "permission": {
-    "scope.camera": {
-      "desc": "用于扫描二维码和拍摄身份证"
-    }
-  },
-  "requiredPrivateInfos": [
-    "getLocation"
-  ],
+  "permission": { "scope.camera": { "desc": "用于扫描二维码和拍摄身份证" } },
+  "requiredPrivateInfos": ["getLocation"],
   "style": "v2",
   "sitemapLocation": "sitemap.json",
   "lazyCodeLoading": "requiredComponents"

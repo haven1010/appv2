@@ -1,34 +1,27 @@
 <!--pages/qrcode/qrcode.wxml-->
-<view class="container">
+<view class="page">
   <view class="card">
-    <view class="title">我的身份码</view>
-    <view class="subtitle">用于现场签到扫描</view>
+    <view class="qr-icon">📱</view>
+    <view class="title">考勤签到码</view>
+    <view class="subtitle">请向现场管理员出示此码</view>
 
-    <view class="qr-container" wx:if="{{!loading && qrContent}}">
-      <view class="qr-code">
-        <text class="qr-text">{{qrContent}}</text>
-        <view class="qr-tip">请向管理员出示此码</view>
-      </view>
+    <view class="qr-box" wx:if="{{!loading && qrImageUrl}}">
+      <image class="qr-image" src="{{qrImageUrl}}" mode="aspectFit" />
     </view>
 
-    <view class="loading" wx:if="{{loading}}">
-      <text>加载中...</text>
+    <view class="qr-box qr-loading" wx:if="{{loading}}">
+      <text>生成中…</text>
     </view>
 
-    <view class="button-group">
-      <button class="btn-primary" bindtap="refreshQrCode">刷新</button>
-      <button class="btn-secondary" bindtap="saveQrCode" style="margin-top: 20rpx;">保存到相册</button>
+    <view class="qr-box qr-error" wx:if="{{!loading && !qrImageUrl}}">
+      <text>加载失败，请刷新</text>
     </view>
 
-    <view class="info-box">
-      <view class="info-item">
-        <text class="info-label">姓名：</text>
-        <text class="info-value">{{userInfo.name}}</text>
-      </view>
-      <view class="info-item">
-        <text class="info-label">UID：</text>
-        <text class="info-value">{{userInfo.uid}}</text>
-      </view>
+    <view class="uid-box">
+      <text class="uid-text">{{userInfo.uid}}</text>
+      <text class="valid-text">有效期 {{validDuration}}</text>
     </view>
+
+    <button class="btn-refresh" bindtap="refreshQrCode">刷新</button>
   </view>
 </view>

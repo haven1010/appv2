@@ -1,25 +1,45 @@
 /* pages/base/detail/detail.wxss */
+.container {
+  padding: 20rpx;
+}
+
+.card {
+  background: #1e293b; 
+  border-radius: 20rpx;
+  padding: 30rpx;
+  margin-bottom: 24rpx;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
 .base-name {
-  font-size: 48rpx;
+  font-size: 40rpx;
   font-weight: bold;
-  color: #333;
+  color: #f1f5f9;
   margin-bottom: 20rpx;
 }
 
 .base-category {
-  font-size: 28rpx;
-  color: #4ade80;
-  margin-bottom: 20rpx;
+  font-size: 26rpx;
+  color: #34d399;
+  margin-bottom: 24rpx;
+  border: 1px solid #34d399;
+  display: inline-block;
+  padding: 4rpx 12rpx;
+  border-radius: 8rpx;
 }
 
 .base-address {
   font-size: 28rpx;
-  color: #666;
+  color: #94a3b8;
   margin-bottom: 20rpx;
+  display: flex;
+  align-items: flex-start;
 }
 
 .label {
   font-weight: bold;
+  color: #cbd5e1;
+  margin-right: 10rpx;
 }
 
 .base-status {
@@ -29,21 +49,24 @@
 .status-badge {
   display: inline-block;
   padding: 8rpx 16rpx;
-  background-color: #4ade80;
-  color: white;
-  border-radius: 4rpx;
+  background-color: rgba(52, 211, 153, 0.2);
+  color: #34d399;
+  border-radius: 8rpx;
   font-size: 24rpx;
 }
 
 .status-badge.pending {
-  background-color: #f59e0b;
+  background-color: rgba(245, 158, 11, 0.2);
+  color: #f59e0b;
 }
 
 .section-title {
-  font-size: 36rpx;
+  font-size: 32rpx;
   font-weight: bold;
-  color: #333;
+  color: #f1f5f9;
   margin-bottom: 30rpx;
+  border-left: 8rpx solid #34d399;
+  padding-left: 16rpx;
 }
 
 .job-list {
@@ -51,38 +74,39 @@
 }
 
 .job-item {
-  padding: 30rpx;
-  border-bottom: 2rpx solid #f0f0f0;
+  padding: 24rpx;
+  background: rgba(15, 23, 42, 0.5);
+  border-radius: 12rpx;
   margin-bottom: 20rpx;
+  border: 1px solid rgba(255, 255, 255, 0.02);
 }
 
 .job-item:last-child {
-  border-bottom: none;
   margin-bottom: 0;
 }
 
 .job-title {
-  font-size: 32rpx;
+  font-size: 30rpx;
   font-weight: bold;
-  color: #333;
-  margin-bottom: 20rpx;
+  color: #f1f5f9;
+  margin-bottom: 16rpx;
 }
 
 .job-info {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 20rpx;
+  margin-bottom: 12rpx;
 }
 
 .job-pay {
   font-size: 28rpx;
-  color: #4ade80;
+  color: #34d399;
   font-weight: bold;
 }
 
 .job-count {
   font-size: 26rpx;
-  color: #666;
+  color: #64748b;
 }
 
 .job-status {
@@ -91,12 +115,12 @@
 
 .status-text {
   font-size: 24rpx;
-  color: #4ade80;
+  color: #34d399;
 }
 
 .empty, .loading {
   text-align: center;
   padding: 60rpx 0;
-  color: #999;
-  font-size: 28rpx;
+  color: #64748b;
+  font-size: 26rpx;
 }
