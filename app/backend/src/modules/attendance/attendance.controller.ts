@@ -40,6 +40,13 @@ export class AttendanceController {
     return this.attendanceService.syncOfflineRecords(body.records, req.user.id);
   }
 
+  @Get('worker/records')
+  @ApiOperation({ summary: '采摘工端：获取个人签到/工作历程' })
+  @ApiQuery({ name: 'limit', required: false, description: '条数限制，默认50' })
+  async getWorkerRecords(@Query() query: any, @Req() req) {
+    return this.attendanceService.getWorkerSignupRecords(req.user.id, query.limit ? Number(query.limit) : 50);
+  }
+
   @Get('records')
   @ApiOperation({ summary: '获取签到记录列表' })
   @ApiQuery({ name: 'baseId', required: false, description: '基地ID，不传则查询所有基地' })

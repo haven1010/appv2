@@ -262,6 +262,28 @@ export class AttendanceService {
   }
 
   /**
+   * 采摘工端：获取个人签到/工作历程
+   */
+  async getWorkerSignupRecords(userId: number, limit = 50) {
+    const list = await this.signupRepo.find({
+      where: { userId },
+      relations: ['base', 'job'],
+      order: { workDate: 'DESC', createdAt: 'DESC' },
+      take: limit,
+    });
+    return list.map((r) => ({
+      id: r.id,
+      baseName: r.base?.baseName ?? '-',
+      jobTitle: r.job?.jobTitle ?? '-',
+      workDate: r.workDate,
+      status: r.status,
+      statusText: r.status === SignupStatus.CHECKED_IN ? '已签到' : r.status === SignupStatus.ABSENT ? '缺勤' : r.status === SignupStatus.CANCELLED ? '已取消' : '已报名',
+      checkinTime: r.checkinTime,
+      createdAt: r.createdAt,
+    }));
+  }
+
+  /**
    * 获取签到记录列表
    */
   async getRecords(query: any, user: { id: number; role?: string; roleKey?: UserRole }) {
