@@ -1,0 +1,51 @@
+<!--pages/applications/applications.wxml-->
+<view class="container">
+  <view class="section-title">我的报名进度</view>
+
+  <view wx:if="{{loading}}" class="loading-box">加载中...</view>
+
+  <view wx:elif="{{applications.length === 0}}" class="empty-box">暂无报名记录，去广场看看推荐岗位吧</view>
+
+  <view wx:else class="app-list">
+    <view
+      class="app-card"
+      wx:for="{{applications}}"
+      wx:key="id"
+      bindtap="goToDetail"
+      data-job-id="{{item.raw.jobId}}"
+      data-base-id="{{item.raw.baseId}}"
+    >
+      <view class="app-header">
+        <view class="app-title">{{item.title}}</view>
+        <view class="app-base">{{item.base}}</view>
+      </view>
+      <view class="app-status {{item.status === '已录取' ? 'status-ok' : item.status === '已拒绝' || item.status === '已取消' ? 'status-fail' : 'status-pending'}}">
+        {{item.status}}
+      </view>
+      <view class="app-date">报名日期: {{item.date}}</view>
+    </view>
+  </view>
+
+  <view class="section-title" style="margin-top: 40rpx;">待发放核对</view>
+
+  <view wx:if="{{pendingLoading}}" class="loading-box">加载中...</view>
+
+  <view wx:elif="{{workerPending.length === 0}}" class="empty-box">暂无待确认工资</view>
+
+  <view wx:else class="pending-list">
+    <view class="pending-card" wx:for="{{workerPending}}" wx:key="id">
+      <view class="pending-header">
+        <view class="pending-title">{{item.baseName}} · {{item.jobTitle}}</view>
+        <view class="pending-date">{{item.workDate ? item.workDate : '-'}}</view>
+      </view>
+      <view class="pending-amount">¥ {{item.totalAmountText}}</view>
+      <button
+        class="btn-confirm"
+        wx:if="{{item.status === 0}}"
+        bindtap="confirmSalary"
+        data-id="{{item.id}}"
+      >确认无误</button>
+      <view wx:else class="status-done">已确认</view>
+    </view>
+  </view>
+</view>
