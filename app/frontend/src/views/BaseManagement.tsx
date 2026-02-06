@@ -638,7 +638,7 @@ export default function BaseManagement() {
                   <div className="absolute top-4 left-4">
                     <div className="px-3 py-1 rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-[10px] text-white font-bold flex items-center gap-1.5">
                         <Sprout size={12} /> {base.scale ?? '-'}
-                      </div>
+                    </div>
                   </div>
                   <div className="absolute top-4 right-4">
                       <span
@@ -671,7 +671,7 @@ export default function BaseManagement() {
                           <span className="text-[10px] text-slate-500 font-bold tracking-widest uppercase bg-slate-800/50 px-2 py-0.5 rounded">
                             {base.cat}
                           </span>
-                        </div>
+                      </div>
                     </div>
                   </div>
                   
@@ -694,7 +694,7 @@ export default function BaseManagement() {
                       >
                       运营档案
                     </button>
-                    </div>
+                  </div>
                 </div>
               </div>
             ))}
