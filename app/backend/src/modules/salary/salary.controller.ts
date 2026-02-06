@@ -34,6 +34,27 @@ export class SalaryController {
     return this.salaryService.getStats(query, req.user);
   }
 
+  @Get('worker/stats')
+  @ApiOperation({ summary: '采摘工端：获取个人统计（已做天数、待收工资）' })
+  async getWorkerStats(@Req() req: any) {
+    return this.salaryService.getWorkerStats(req.user.id);
+  }
+
+  @Get('worker/pending')
+  @ApiOperation({ summary: '采摘工端：获取待确认工资列表' })
+  async getWorkerPending(@Req() req: any) {
+    return this.salaryService.getWorkerPendingList(req.user.id);
+  }
+
+  @Post('worker/:salaryId/confirm')
+  @ApiOperation({ summary: '采摘工端：确认工资无误' })
+  async workerConfirmSalary(
+    @Param('salaryId', ParseIntPipe) salaryId: number,
+    @Req() req: any,
+  ) {
+    return this.salaryService.workerConfirmSalary(salaryId, req.user.id);
+  }
+
   @Post('calculate/:signupId')
   @ApiOperation({ summary: '根据签到记录生成/更新工资草稿' })
   async calculateAndDraft(

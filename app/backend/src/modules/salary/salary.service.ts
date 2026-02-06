@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { LaborSalary, SalaryStatus } from './entities/labor-salary.entity';
@@ -150,5 +150,82 @@ export class SalaryService {
     }
 
     return { totalPaid, totalPending, paidCount, pendingCount };
+  }
+
+  /**
+   * 采摘工端：获取个人统计（已做天数、待收工资）
+   */
+  async getWorkerStats(userId: number) {
+    const workDays = await this.signupRepo.count({
+      where: { userId, status: SignupStatus.CHECKED_IN },
+    });
+
+    const pendingSalaries = await this.salaryRepo
+      .createQueryBuilder('salary')
+      .leftJoin('salary.signup', 'signup')
+      .where('signup.userId = :userId', { userId })
+      .andWhere('salary.status IN (:...statuses)', {
+        statuses: [SalaryStatus.PENDING, SalaryStatus.CONFIRMED],
+      })
+      .getMany();
+
+    const pendingAmount = pendingSalaries.reduce((sum, s) => sum + Number(s.totalAmount), 0);
+
+    return {
+      workDays,
+      pendingAmount: Math.round(pendingAmount * 100) / 100,
+    };
+  }
+
+  /**
+   * 采摘工端：获取待确认/待发放的工资列表（用于「待发放核对」）
+   */
+  async getWorkerPendingList(userId: number) {
+    const list = await this.salaryRepo
+      .createQueryBuilder('salary')
+      .leftJoinAndSelect('salary.signup', 'signup')
+      .leftJoinAndSelect('signup.base', 'base')
+      .leftJoinAndSelect('signup.job', 'job')
+      .where('signup.userId = :userId', { userId })
+      .andWhere('salary.status IN (:...statuses)', {
+        statuses: [SalaryStatus.PENDING, SalaryStatus.CONFIRMED],
+      })
+      .orderBy('salary.createdAt', 'DESC')
+      .getMany();
+
+    return list.map((s) => {
+      const signup = s.signup as any;
+      return {
+        id: s.id,
+        signupId: s.signupId,
+        workDate: signup?.workDate,
+        baseName: signup?.base?.baseName ?? '-',
+        jobTitle: signup?.job?.jobTitle ?? '-',
+        workDuration: Number(s.workDuration),
+        pieceCount: s.pieceCount,
+        totalAmount: Number(s.totalAmount),
+        status: s.status,
+        createdAt: s.createdAt,
+      };
+    });
+  }
+
+  /**
+   * 采摘工端：确认工资无误（将状态从 PENDING 改为 CONFIRMED）
+   */
+  async workerConfirmSalary(salaryId: number, userId: number) {
+    const salary = await this.salaryRepo.findOne({
+      where: { id: salaryId },
+      relations: ['signup'],
+    });
+    if (!salary) throw new NotFoundException('工资记录不存在');
+    if ((salary.signup as any)?.userId !== userId) {
+      throw new ForbiddenException('无权操作此记录');
+    }
+    if (salary.status !== SalaryStatus.PENDING) {
+      throw new BadRequestException('该记录已确认或已发放');
+    }
+    salary.status = SalaryStatus.CONFIRMED;
+    return this.salaryRepo.save(salary);
   }
 }
