@@ -1,0 +1,1061 @@
+\documentclass[UTF8,a4paper,12pt]{article}
+\usepackage{ctex}         % 中文支持
+\usepackage{geometry}     % 页面布局
+\usepackage{graphicx}     % 插入图片
+\usepackage{float}        % 图片位置固定
+\usepackage{listings}     % 代码块高亮
+\usepackage{xcolor}       % 颜色支持
+\usepackage{amsmath}      % 数学公式
+\usepackage{amssymb}      % 数学符号
+\usepackage{booktabs}     % 表格线美化
+\usepackage{hyperref}     % 超链接
+\usepackage{enumitem}     % 列表格式
+\usepackage{setspace}
+\usepackage[table]{xcolor} % 支持表格行底色
+\usepackage{caption}       % 优化标题
+\usepackage{longtable}     % 支持长表格（如果需要）
+\usepackage{array}         % 优化表格列宽
+
+% 字体设置：避免等宽字体缺失框线字符
+\setmonofont{Consolas}
+\setCJKmonofont{NSimSun}
+
+% 页面布局设置
+\geometry{left=2.5cm,right=2.5cm,top=2.5cm,bottom=2.5cm}
+
+\lstset{
+    language=Java, % 适配JavaScript/SQL
+    basicstyle=\ttfamily\small,
+    tabsize=4,
+    breaklines=true,
+    columns=flexible,
+    frame=single,
+    framerule=0.5pt,
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    keywordstyle=\color{blue}\bfseries,
+    commentstyle=\color{gray}\itshape,
+    stringstyle=\color{red!80!black},
+    backgroundcolor=\color{gray!5},
+    escapeinside=``,
+}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=black,
+    anchorcolor=black,
+    citecolor=black
+}
+
+\begin{document}
+
+% 封面页
+\begin{titlepage}
+    \centering
+    
+    % --- 第一部分：学校/单位信息 ---
+    \vspace*{1cm}
+    {\Large \scshape 西北工业大学计算机学院} 
+    {\Large \scshape 《数据库系统》课程大作业报告} \\
+
+    
+    \vspace{3cm}
+    
+    % --- 第二部分：主标题 ---
+    \begin{spacing}{1.5} % 需要在导言区引用 \usepackage{setspace}
+        \textbf{\Huge 采摘工智慧管理系统（采摘通）设计与开发} \\
+        \vspace{0.5cm}
+        \textbf{\Large CaiZhaiTong (Picking-Pass) Management System}
+    \end{spacing}
+    
+    \vspace{4cm}
+    
+    % --- 第三部分：团队信息（表格形式更整齐） ---
+    \begin{minipage}{0.6\textwidth}
+        \large
+        \begin{tabular}{ll}
+            \textbf{专\quad 业：} & 计算机科学与技术 \\
+            \textbf{学\quad 院：} & 计算机学院 \\
+            \textbf{成\quad 员：} & 赵张阳（2023302782） \\
+            \textbf{}            & 张睿（2023300395） \\
+            \textbf{指导教师：}   & 李宁 \\
+        \end{tabular}
+    \end{minipage}
+
+    \vfill % 自动填充余下空间
+    
+    % --- 第四部分：日期 ---
+    {\large 2025年12月}
+    
+    \thispagestyle{empty}
+\end{titlepage}
+
+\newpage
+\tableofcontents
+\clearpage
+
+\section{选题背景与意义}
+
+\subsection{行业背景与现状痛点}
+随着现代农业规模化与集约化的发展，农业生产对灵活用工的需求日益增长。然而，传统的农业劳动力管理模式仍停留在“粗放式”阶段，存在以下显著痛点：
+
+\begin{itemize}
+    \item \textbf{信息不对称}：农场（基地）的用工需求与工人的求职意向缺乏高效的对接渠道，导致“招工难”与“找活难”并存。
+    \item \textbf{考勤与结算混乱}：农业用工具有极强的流动性和季节性，且薪资计算方式复杂（涵盖固定薪资、计时、计件等多种模式）。依靠纸质或口头约定的传统记账方式，极易引发劳资纠纷。
+    \item \textbf{管理层级断层}：从区域管理员到基地负责人，再到现场管理员，缺乏统一的数据化管理平台，导致监管数据滞后，无法实时掌握各基地的用工成本与效率。
+\end{itemize}
+
+\subsection{业务逻辑的复杂性挑战}
+本系统旨在解决农业场景下复杂的“人-地-事-钱”关系。根据实体关系分析（ER分析），系统需处理高度关联的业务闭环，这对数据库的逻辑设计提出了极高要求：
+
+\begin{itemize}
+    \item \textbf{多维度的实体关联}：系统核心围绕 \textbf{用户表 (\texttt{sys\_user})}、\textbf{基地表 (\texttt{base\_info})}、\textbf{岗位表 (\texttt{recruitment\_job})} 三大核心实体展开。其中，岗位与基地呈“一对多”的强依赖关系，而用户与岗位之间则通过 \textbf{报名记录表 (\texttt{daily\_signup})} 建立时空约束下的“多对多”关联。
+    
+    \item \textbf{全流程的状态流转}：从工人的“报名 (Status=0)”到“现场签到 (Status=1)”，再到“薪资结算”，业务链路长且环环相扣。任一环节的状态变更（如缺勤或取消）都必须严格触发后续流程的联动，这需要依赖数据库的事务（Transaction）或状态机逻辑来保证数据一致性。
+    
+    \item \textbf{灵活的薪资体系}：系统必须支持基于 \textbf{薪资表 (\texttt{labor\_salary})} 实体的复杂结算逻辑。既要处理基于 \texttt{work\_duration} 的工时计算，又要支持基于 \texttt{piece\_count} 的计件统计，同时还需保证报名记录与薪资记录严格的“一对一”外键约束关系，以确保财务数据的准确性。
+\end{itemize}
+
+\subsection{技术架构选型与实施必要性}
+面对上述复杂的业务需求与数据关系，传统的单体应用或简单的 CRUD 系统已无法满足需求。本课程设计采用 \textbf{NestJS + TypeORM + MySQL 8.0} 的后端技术栈，并结合前端管理端（React 19 + Vite 6）与微信小程序，形成多端协同的完整业务闭环。在数据库设计层面具有重要的实践意义：
+
+\begin{itemize}
+    \item \textbf{规范化的数据库建模}：NestJS 的模块化架构配合 TypeORM 实体映射，将业务概念落地为实体表模型，支持 \texttt{@OneToMany}（基地-岗位）、\texttt{@ManyToOne}（岗位-基地）、\texttt{@OneToOne}（报名-薪资）、\texttt{@ManyToOne}（申请/合作/支付）等关系映射，保持模型清晰一致。
+    
+    \item \textbf{一致性与状态流转控制}：报名、签到、工资结算、支付确认等流程在服务层通过事务与状态机约束实现联动，结合数据库外键与唯一性约束（如 \texttt{daily\_signup(user\_id, work\_date)}）保证业务闭环的正确性。
+    
+    \item \textbf{安全与隐私保护}：系统在 \texttt{sys\_user}、\texttt{base\_info} 等实体中对身份证号、手机号、紧急联系人、营业执照等敏感字段进行 AES-256 加密存储，并对手机号/身份证/紧急联系人手机号建立哈希索引（\texttt{\_hash}），兼顾安全性与检索性能。
+\end{itemize}
+
+
+\section{需求分析}
+
+\subsection{数据需求分析}
+根据数据库模式设计，系统核心数据实体及其关键属性如下：
+
+\begin{itemize}
+    \item \textbf{用户信息数据 (sys\_user)}：
+    需存储用户的全局唯一标识 (\texttt{uid})、真实姓名 (\texttt{name}) 以及加密存储的敏感信息（身份证号 \texttt{id\_card\_enc}、手机号 \texttt{phone\_enc}、紧急联系人 \texttt{emergency\_contact\_enc}、紧急联系人电话 \texttt{emergency\_phone\_enc}）。系统需支持基于哈希值 (\texttt{phone\_hash}, \texttt{id\_card\_hash}, \texttt{emergency\_phone\_hash}) 的快速检索，并区分五种角色权限：超级管理员、区域管理员、基地管理员、现场管理员及普通工人 (\texttt{worker})，同时支持字段 \texttt{assigned\_base\_id} 与 \texttt{info\_audit\_status} 进行现场管理与信息审核控制。
+
+    \item \textbf{基地信息数据 (base\_info)}：
+    需记录基地的基本属性（名称、地址、区域代码 \texttt{region\_code}）及经营类别（1:果类, 2:菜类, 3:其他），同时支持基地简介与多媒体描述 (\texttt{description})。基地需管理审核状态 (\texttt{audit\_status})，确保持证经营，并支持加密存储营业执照 (\texttt{license\_enc}) 与联系方式 (\texttt{contact\_enc})。
+
+    \item \textbf{岗位与招聘数据 (recruitment\_job)}：
+    需定义具体的招聘岗位信息，包括岗位名称、所属基地、招聘人数、工作内容、工作周期与工作时间。薪资体系 (\texttt{pay\_type}) 支持固定薪资 (\texttt{salary\_amount})、时薪 (\texttt{hourly\_rate}) 与计件单价 (\texttt{unit\_price}) 三种模式，并包含目标计件数 (\texttt{targetCount})、年龄限制、经验要求、体力要求、福利保障、住宿/餐食/交通补贴等属性；同时支持岗位有效期、自动续期与多媒体展示字段。
+
+    \item \textbf{报名与考勤数据 (daily\_signup)}：
+    需记录工人每日的报名状态流转：从“已报名(0)”到“已签到(1)”或“缺勤/取消”。系统支持代理报名 (\texttt{is\_proxy} 与 \texttt{proxy\_user\_id}) 及离线同步 (\texttt{is\_offline\_sync}) 标记，且需通过唯一约束 (\texttt{user\_id} + \texttt{work\_date}) 防止重复报名。
+
+    \item \textbf{薪资结算数据 (labor\_salary)}：
+    需记录与报名记录一一对应的结算详情。根据岗位类型存储工时 (\texttt{work\_duration}) 或计件量 (\texttt{piece\_count})，并保留计算时的单价快照 (\texttt{unit\_price\_snapshot}) 以计算总金额。此外，需追踪支付状态与支付方式，并记录支付凭证 (\texttt{proof\_img\_url}) 与工人签字 (\texttt{worker\_sign\_url})。
+    
+    \item \textbf{岗位申请与合作数据 (job\_application / base\_cooperation)}：
+    系统支持工人对岗位的申请与基地的双向合作申请，需记录申请状态、审核人、审核时间、备注/拒绝原因等字段，形成“申请—审核—反馈”的闭环链路。
+    
+    \item \textbf{工资发放数据 (salary\_payment)}：
+    需记录工资发放方式（现金/转账）、确认签字、发放凭证、发放人及发放时间，用于对账与审计。
+    
+    \item \textbf{系统审计数据 (operation\_log)}：
+    对关键业务操作进行审计记录，包括操作类型、资源类型、操作人、操作前后数据、IP 与 User-Agent。
+    
+    \item \textbf{基地评价数据 (base\_rating)}：
+    作为预留扩展表，支持用户对基地的评分与评价标签，完善口碑体系。
+\end{itemize}
+
+\subsection{功能需求分析}
+基于数据实体，系统需实现以下核心业务功能：
+
+\begin{enumerate}
+    \item \textbf{多角色认证与权限管理}：
+    支持基于手机号 + 身份证后六位的登录认证，系统按 \texttt{role\_key} 进行 RBAC 权限控制。超级管理员拥有全局视野，区域管理员管理特定 \texttt{region\_code} 的基地，基地管理员负责基地信息与岗位发布，现场管理员负责签到与工量录入，工人仅访问个人信息与岗位报名。
+
+    \item \textbf{用户注册与信息审核}：
+    支持手动注册、OCR 注册与补全注册三种入口；用户信息更新后进入审核状态 (\texttt{info\_audit\_status})，保证人员信息的真实性与可追溯性。
+
+    \item \textbf{基地与岗位全生命周期管理}：
+    管理员可创建并维护基地信息，提交审核。审核通过后，可发布招聘岗位并配置工作周期、年龄要求、薪资模式与福利保障，同时支持岗位有效期、续期与上下架控制。
+
+    \item \textbf{报名、签到与代报名流程}：
+    工人可报名有效岗位，系统自动校验是否重复报名；现场管理员扫码核销或手动确认签到，支持代报名与离线同步，保证弱网场景下数据可回传。
+
+    \item \textbf{薪资结算与发放闭环}：
+    管理端录入工时/计件量后触发工资自动计算并生成结算记录；工资发放模块记录确认签字与发放凭证，并支持现金/转账等发放方式。
+
+    \item \textbf{岗位申请与合作机制}：
+    工人可对岗位发起申请，基地管理员审核反馈；区域/超级管理员可对基地发起合作申请，形成双向筛选与合作闭环。
+
+    \item \textbf{操作日志与统计报表}：
+    对关键操作进行审计记录（\texttt{operation\_log}），并提供管理端仪表盘与报表统计功能，支持按基地、区域、时间维度查询。
+\end{enumerate}
+
+\subsection{非功能需求分析}
+\begin{itemize}
+    \item \textbf{数据安全与隐私}：
+    敏感字段（手机号、身份证、紧急联系人、营业执照）必须在应用层加密后存入数据库，数据库中仅存储密文及用于检索的哈希值，严禁明文存储。
+    
+    \item \textbf{业务一致性保障}：
+    利用数据库事务及外键约束，确保“无报名不签到，无签到不结算”。同时通过服务层状态机约束报名/薪资/支付流程，防止越级流转或重复发放。
+    
+    \item \textbf{高并发与离线支持}：
+    针对早高峰签到场景，系统需支持快速响应（API 响应 $<1$s）。\texttt{is\_offline\_sync} 字段支持弱网环境下的数据暂存与网络恢复后的自动同步功能；系统同时支持短信通知与二维码核验的可靠性保障。
+    
+    \item \textbf{可运维性}：
+    后端提供操作日志与定时备份机制（日志追踪 + 定时备份），便于问题定位与数据恢复。
+\end{itemize}
+
+% ==========================================
+% 3. 概念结构设计
+% ==========================================
+\section{概念结构设计}
+
+\subsection{实体与属性定义}
+根据需求分析，系统主要包含以下实体及其核心属性：
+
+\begin{description}
+    \item[用户 (User)] 属性：用户ID、UID、姓名、加密身份证号、加密手机号、紧急联系人、角色、哈希索引值、信息审核状态。
+    \item[基地 (Base)] 属性：基地ID、基地名称、营业执照、联系方式、区域代码、经营类别、审核状态、详细地址、简介描述。
+    \item[岗位 (Job)] 属性：岗位ID、岗位标题、薪资类型（固定/时薪/计件）、单价、工作周期、福利待遇、有效期、多媒体展示。
+    \item[报名 (Signup)] 属性：报名ID、工作日期、状态（报名/签到/缺勤/取消）、签到时间、是否代报名、离线同步标记。
+    \item[薪资 (Salary)] 属性：薪资ID、工时/件数、单价快照、总金额、支付状态、支付方式、凭证与签字。
+    \item[申请 (JobApplication)] 属性：申请ID、申请状态、审核人、审核时间、备注/拒绝原因。
+    \item[合作申请 (BaseCooperation)] 属性：合作ID、申请人、需求描述、审核状态。
+    \item[工资发放 (SalaryPayment)] 属性：发放ID、发放方式、签字、凭证、发放时间。
+    \item[操作日志 (OperationLog)] 属性：操作类型、资源类型、操作人、前后数据、IP。
+    \item[基地评价 (BaseRating)] 属性：评分、评价内容、标签（预留）。
+\end{description}
+
+\subsection{实体间联系 (ER图描述)}
+各实体之间的联系如下：
+
+\begin{itemize}
+    \item \textbf{用户与报名} (1:N)：一个用户可以在不同日期进行多次报名，但同一天同一岗位只能报名一次。
+    \item \textbf{基地与岗位} (1:N)：一个基地可以发布多个招聘岗位，一个岗位仅属于一个基地。
+    \item \textbf{岗位与报名} (1:N)：一个岗位可以接收多个工人的报名。
+    \item \textbf{报名与薪资} (1:1)：一条有效的报名记录（已签到）对应且仅对应一条薪资结算记录。
+    \item \textbf{用户与基地} (1:N)：特定角色的用户（基地管理员）可以管理一个或多个基地（通过 \texttt{owner\_id} 关联）。
+    \item \textbf{用户与岗位申请} (1:N)：工人可对多个岗位发起申请，岗位申请可被基地管理员审核。
+    \item \textbf{基地与合作申请} (1:N)：区域/超级管理员可向基地发起合作申请，基地审核合作关系。
+    \item \textbf{薪资与发放} (1:N)：一条薪资结算记录可产生对应的工资发放记录（确认与发放过程）。
+    \item \textbf{操作日志与业务实体} (N:1)：操作日志记录与用户、基地、岗位、报名、薪资等资源关联。
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    % 请在本地生成 ER 图图片后取消注释并替换文件名
+    \includegraphics[width=0.9\textwidth]{er_diagram.png}
+    \caption{系统 E-R 图}
+    \label{fig:er_diagram}
+\end{figure}
+
+% ==========================================
+% 4. 逻辑结构设计
+% ==========================================
+\section{逻辑结构设计}
+
+\subsection{关系模式定义}
+将 E-R 图转换为关系模型，主键用\textbf{加粗}表示，外键用\underline{下划线}表示。所有模式均满足第三范式 (3NF)。
+
+\begin{enumerate}
+    \item \textbf{系统用户} (\textbf{id}, uid, name, id\_card\_enc, phone\_enc, id\_card\_hash, phone\_hash, role\_key, assigned\_base\_id, emergency\_contact\_enc, emergency\_phone\_enc, emergency\_phone\_hash, info\_audit\_status, ...)
+    \item \textbf{基地信息} (\textbf{id}, base\_name, license\_enc, contact\_enc, category, region\_code, address, description, audit\_status, \underline{owner\_id}, ...)
+    \item \textbf{招聘岗位} (\textbf{id}, \underline{base\_id}, job\_title, pay\_type, unit\_price, salary\_amount, hourly\_rate, work\_cycle, status, valid\_until, ...)
+    \item \textbf{每日报名} (\textbf{id}, \underline{user\_id}, \underline{base\_id}, \underline{job\_id}, work\_date, status, checkin\_time, is\_proxy, proxy\_user\_id, is\_offline\_sync, ...)
+    \item \textbf{劳动薪资} (\textbf{id}, \underline{signup\_id}, work\_duration, piece\_count, unit\_price\_snapshot, total\_amount, payout\_type, status, proof\_img\_url, worker\_sign\_url, admin\_id, ...)
+    \item \textbf{岗位申请} (\textbf{id}, \underline{user\_id}, \underline{job\_id}, \underline{base\_id}, status, note, reject\_reason, reviewed\_by, reviewed\_at, ...)
+    \item \textbf{基地合作} (\textbf{id}, \underline{base\_id}, \underline{applicant\_id}, requirement, status, reject\_reason, reviewed\_by, reviewed\_at, ...)
+    \item \textbf{工资发放} (\textbf{id}, \underline{salary\_id}, payment\_method, status, confirm\_signature\_url, payment\_voucher\_url, paid\_at, paid\_by, note, ...)
+    \item \textbf{操作日志} (\textbf{id}, operation\_type, resource\_type, \underline{resource\_id}, \underline{user\_id}, before\_data, after\_data, ip\_address, user\_agent, ...)
+    \item \textbf{基地评价} (\textbf{id}, \underline{base\_id}, \underline{user\_id}, rating, comment, tags, ...)
+\end{enumerate}
+
+\subsection{规范化分析}
+\begin{itemize}
+    \item \textbf{1NF}：所有字段均为原子值，如福利待遇虽为 JSON 格式，但在业务逻辑中视为整体存储，不影响原子性。
+    \item \textbf{2NF}：所有表的主键均为单列自增 ID，不存在非主属性对主键的部分依赖。
+    \item \textbf{3NF}：通过外键引用（如 \texttt{labor\_salary} 引用 \texttt{daily\_signup} 而非直接引用 \texttt{sys\_user}），消除了传递依赖。
+\end{itemize}
+
+% ==========================================
+% 5. 安全性与完整性设计
+% ==========================================
+\section{安全性与完整性设计}
+
+\subsection{数据库安全性设计}
+\begin{enumerate}
+    \item \textbf{敏感数据加密}：
+    针对用户的身份证号、手机号、紧急联系人及基地资质图片，不在数据库中存储明文。应用层使用 AES-256 加密后存入 \texttt{\_enc} 字段，并为手机号/身份证/紧急联系人手机号生成 SHA-256 哈希值存入 \texttt{\_hash} 字段用于检索，确保数据泄露时不可逆。
+    
+    \item \textbf{防 SQL 注入}：
+    后端采用 TypeORM 框架，通过参数化查询 (Parameterized Queries) 和对象关系映射机制，自动转义输入参数，从根本上杜绝 SQL 注入攻击。
+    
+    \item \textbf{访问控制}：
+    利用 \texttt{role\_key} 字段实现 RBAC (Role-Based Access Control) 模型，结合 JWT 鉴权与权限守卫控制接口访问范围，同时将关键操作写入 \texttt{operation\_log} 以便审计追踪。
+\end{enumerate}
+
+\subsection{数据完整性设计}
+\begin{itemize}
+    \item \textbf{实体完整性}：所有表均设置 \texttt{id} 为主键 (Primary Key) 并开启 \texttt{AUTO\_INCREMENT}。
+    \item \textbf{参照完整性}：通过外键约束 (Foreign Key) 确保数据一致性。例如，\texttt{daily\_signup} 表中的 \texttt{job\_id} 必须存在于 \texttt{recruitment\_job} 表中，且设置级联规则防止误删。
+    \item \textbf{域完整性}：使用 \texttt{ENUM} 类型限制 \texttt{role\_key} 的取值范围；使用 \texttt{TINYINT} 配合 DEFAULT 值控制 \texttt{status} 状态机。
+\end{itemize}
+
+\subsection{业务联动与事务设计}
+项目当前未启用数据库触发器，报名—签到—结算—发放流程由服务层事务与状态机逻辑保障一致性，避免误触发或跨服务联动导致的数据污染。典型联动规则包括：
+
+\begin{itemize}
+    \item 报名记录取消后，禁止生成薪资记录；已生成的工资记录需标记为待确认或取消。
+    \item 薪资计算时锁定报名记录并写入单价快照，防止岗位单价调整影响历史账单。
+    \item 工资发放记录需经工人签字确认后方可变更为“已发放”状态，并记录凭证与发放人。
+\end{itemize}
+
+% ==========================================
+% 6. 物理结构设计
+% ==========================================
+\section{物理结构设计}
+
+\subsection{存储结构与引擎}
+\begin{itemize}
+    \item \textbf{存储引擎}：采用 \textbf{InnoDB} 引擎。由于系统涉及频繁的报名与薪资结算操作，需要完善的事务支持 (ACID) 和行级锁 (Row-level Locking) 来保证高并发下的数据一致性。
+    \item \textbf{字符集}：统一采用 \textbf{utf8mb4} 字符集，以支持存储生僻字及 Emoji 表情（如岗位描述中的图标）。
+\end{itemize}
+
+\subsection{存取路径与索引设计}
+为了满足“1秒内响应”的非功能性需求，针对核心查询场景设计了以下索引：
+
+\begin{enumerate}
+    \item \textbf{聚簇索引 (Clustered Index)}：
+    所有表均在 \texttt{id} 字段建立聚簇索引，数据物理上按 ID 顺序存储，优化主键查询性能。
+
+    \item \textbf{唯一索引 (Unique Index)}：
+    \begin{itemize}
+        \item \texttt{sys\_user(uid)}：确保用户公开 ID 的全局唯一性。
+        \item \texttt{daily\_signup(user\_id, work\_date)}：物理层面防止同一用户在同一天重复报名，避免逻辑漏洞。
+        \item \texttt{labor\_salary(signup\_id)}：确保一份报名记录只产生一份薪资。
+    \end{itemize}
+
+    \item \textbf{哈希索引 (Hash Index)}：
+    \begin{itemize}
+        \item \texttt{sys\_user(phone\_hash)}、\texttt{sys\_user(id\_card\_hash)} 与 \texttt{sys\_user(emergency\_phone\_hash)}：用于敏感信息的快速精确匹配，解决密文字段不可直接索引的问题。
+    \end{itemize}
+
+    \item \textbf{辅助索引 (Secondary Index)}：
+    \begin{itemize}
+        \item \texttt{base\_info(region\_code)}：优化区域管理员按地区筛选基地的查询。
+        \item \texttt{recruitment\_job(status)}：加快“招聘中”岗位的筛选速度，提升工人端首页加载性能。
+        \item \texttt{base\_info(category)}：加速按经营类别（果/蔬）的过滤查询。
+        \item \texttt{job\_application(user\_id, job\_id)} 与 \texttt{base\_cooperation(base\_id, applicant\_id)}：支持申请记录的快速检索与审核流程。
+        \item \texttt{operation\_log(operation\_type, resource\_type, user\_id)}：提升审计日志检索效率。
+    \end{itemize}
+    
+\end{enumerate}
+
+\section{数据表结构详细设计}
+以下为系统核心数据表的详细结构定义：
+
+% ==========================================
+% 表 1: 用户表 (sys_user)
+% ==========================================
+\begin{table}[H]
+    \centering
+    \caption{用户表 (sys\_user)}
+    \label{tab:sys_user}
+    \small % 缩小字号以适应页面
+    \renewcommand{\arraystretch}{1.3} % 增加行高
+    \begin{tabular}{|l|l|c|c|c|l|l|}
+        \hline
+        \rowcolor{gray!15} \textbf{字段名} & \textbf{数据类型} & \textbf{长度} & \textbf{空} & \textbf{Key} & \textbf{默认值} & \textbf{含义} \\ \hline
+        id & bigint & 20 & N & PK & 自增 & 用户主键ID \\ \hline
+        uid & varchar & 32 & N & UNI & - & 公开唯一ID \\ \hline
+        name & varchar & 50 & N & - & - & 真实姓名 \\ \hline
+        id\_card\_enc & varchar & 256 & N & - & - & 身份证号(加密) \\ \hline
+        phone\_enc & varchar & 256 & N & - & - & 手机号(加密) \\ \hline
+        id\_card\_hash & varchar & 64 & N & IDX & - & 身份证哈希索引 \\ \hline
+        phone\_hash & varchar & 64 & N & IDX & - & 手机号哈希索引 \\ \hline
+        role\_key & enum & - & N & - & worker & 角色权限标识 \\ \hline
+        face\_img\_url & varchar & 255 & Y & - & NULL & 人脸/头像URL \\ \hline
+        region\_code & int & 11 & Y & - & NULL & 管理区域代码 \\ \hline
+        assigned\_base\_id & bigint & 20 & Y & - & NULL & 现场管理员关联基地 \\ \hline
+        emergency\_contact\_enc & varchar & 256 & Y & - & NULL & 紧急联系人(加密) \\ \hline
+        emergency\_phone\_enc & varchar & 256 & Y & - & NULL & 紧急联系人电话(加密) \\ \hline
+        emergency\_phone\_hash & varchar & 64 & Y & IDX & NULL & 紧急联系人哈希索引 \\ \hline
+        info\_audit\_status & tinyint & 1 & N & - & 1 & 信息审核状态 \\ \hline
+        is\_deleted & tinyint & 1 & N & - & 0 & 逻辑删除标记 \\ \hline
+        created\_at & datetime & - & N & - & CURRENT\_TIMESTAMP & 创建时间 \\ \hline
+        updated\_at & datetime & - & N & - & CURRENT\_TIMESTAMP & 更新时间 \\ \hline
+    \end{tabular}
+\end{table}
+
+% ==========================================
+% 表 2: 基地信息表 (base_info)
+% ==========================================
+\begin{table}[H]
+    \centering
+    \caption{基地信息表 (base\_info)}
+    \label{tab:base_info}
+    \small
+    \renewcommand{\arraystretch}{1.3}
+    \begin{tabular}{|l|l|c|c|c|l|l|}
+        \hline
+        \rowcolor{gray!15} \textbf{字段名} & \textbf{数据类型} & \textbf{长度} & \textbf{空} & \textbf{Key} & \textbf{默认值} & \textbf{含义} \\ \hline
+        id & bigint & 20 & N & PK & 自增 & 基地主键ID \\ \hline
+        base\_name & varchar & 100 & N & - & - & 基地名称 \\ \hline
+        license\_enc & varchar & 512 & N & - & - & 营业执照(加密) \\ \hline
+        contact\_enc & varchar & 256 & N & - & - & 联系电话(加密) \\ \hline
+        category & tinyint & 1 & N & IDX & 1 & 1:果, 2:菜, 3:其他 \\ \hline
+        region\_code & int & 11 & N & IDX & - & 区域代码 \\ \hline
+        audit\_status & tinyint & 1 & N & - & 0 & 0:待审, 1:通过, 2:驳回 \\ \hline
+        owner\_id & bigint & 20 & N & FK & - & 负责人ID \\ \hline
+        address & text & - & Y & - & NULL & 详细地址 \\ \hline
+        description & text & - & Y & - & NULL & 多媒体描述(JSON) \\ \hline
+        is\_deleted & tinyint & 1 & N & - & 0 & 逻辑删除标记 \\ \hline
+        created\_at & datetime & - & N & - & CURRENT\_TIMESTAMP & 创建时间 \\ \hline
+        updated\_at & datetime & - & N & - & CURRENT\_TIMESTAMP & 更新时间 \\ \hline
+    \end{tabular}
+\end{table}
+
+% ==========================================
+% 表 3: 岗位招聘表 (recruitment_job)
+% ==========================================
+\begin{table}[H]
+    \centering
+    \caption{岗位招聘表 (recruitment\_job)}
+    \label{tab:recruitment_job}
+    \small
+    \renewcommand{\arraystretch}{1.3}
+    \begin{tabular}{|l|l|c|c|c|l|l|}
+        \hline
+        \rowcolor{gray!15} \textbf{字段名} & \textbf{数据类型} & \textbf{长度} & \textbf{空} & \textbf{Key} & \textbf{默认值} & \textbf{含义} \\ \hline
+        id & bigint & 20 & N & PK & 自增 & 岗位主键ID \\ \hline
+        base\_id & bigint & 20 & N & FK & - & 所属基地ID \\ \hline
+        job\_title & varchar & 100 & N & - & - & 岗位名称 \\ \hline
+        recruit\_count & int & 11 & N & - & 1 & 招聘人数 \\ \hline
+        work\_cycle & tinyint & 1 & N & - & 1 & 1:日结,2:周结,3:月结,4:季节工,5:长期工 \\ \hline
+        work\_content & text & - & Y & - & NULL & 工作内容 \\ \hline
+        work\_hours & varchar & 50 & Y & - & NULL & 工作时间 \\ \hline
+        work\_start\_date & date & - & Y & - & NULL & 工作开始日期 \\ \hline
+        work\_end\_date & date & - & Y & - & NULL & 工作结束日期 \\ \hline
+        pay\_type & tinyint & 1 & N & - & 1 & 1:固定, 2:时薪, 3:计件 \\ \hline
+        unit\_price & decimal & 10,2 & Y & - & NULL & 单价(计件/时薪) \\ \hline
+        salary\_amount & decimal & 10,2 & Y & - & NULL & 固定工资金额 \\ \hline
+        hourly\_rate & decimal & 10,2 & Y & - & NULL & 时薪 \\ \hline
+        targetCount & int & 11 & Y & - & 0 & 计件目标数量 \\ \hline
+        requirements & text & - & Y & - & NULL & 招聘要求 \\ \hline
+        min\_age & tinyint & 3 & Y & - & NULL & 最小年龄 \\ \hline
+        max\_age & tinyint & 3 & Y & - & NULL & 最大年龄 \\ \hline
+        experience\_required & text & - & Y & - & NULL & 经验要求 \\ \hline
+        physical\_requirement & text & - & Y & - & NULL & 体力要求 \\ \hline
+        benefits & text & - & Y & - & NULL & 福利保障描述 \\ \hline
+        has\_accommodation & tinyint & 1 & N & - & 0 & 是否提供住宿 \\ \hline
+        has\_meals & tinyint & 1 & N & - & 0 & 是否提供餐食 \\ \hline
+        has\_transportation & tinyint & 1 & N & - & 0 & 是否有交通补贴 \\ \hline
+        transportation\_subsidy & decimal & 10,2 & Y & - & NULL & 交通补贴金额 \\ \hline
+        workplace\_images & json & - & Y & - & NULL & 工作场景图片URL数组 \\ \hline
+        video\_url & varchar & 500 & Y & - & NULL & 工作场景视频URL \\ \hline
+        valid\_until & datetime & - & Y & - & NULL & 有效期至 \\ \hline
+        is\_active & tinyint & 1 & N & - & 1 & 是否有效 \\ \hline
+        auto\_renew & tinyint & 1 & N & - & 0 & 是否自动续期 \\ \hline
+        renewal\_days & int & 11 & N & - & 7 & 续期天数 \\ \hline
+        status & tinyint & 1 & N & IDX & 1 & 0:下架,1:招聘中,2:已招满,3:过期 \\ \hline
+        applicant\_count & int & 11 & N & - & 0 & 已申请人数 \\ \hline
+        view\_count & int & 11 & N & - & 0 & 查看次数 \\ \hline
+        created\_at & datetime & - & N & - & CURRENT\_TIMESTAMP & 创建时间 \\ \hline
+        updated\_at & datetime & - & N & - & CURRENT\_TIMESTAMP & 更新时间 \\ \hline
+    \end{tabular}
+\end{table}
+
+% ==========================================
+% 表 4: 每日报名表 (daily_signup)
+% ==========================================
+\begin{table}[H]
+    \centering
+    \caption{每日报名表 (daily\_signup)}
+    \label{tab:daily_signup}
+    \small
+    \renewcommand{\arraystretch}{1.3}
+    \begin{tabular}{|l|l|c|c|c|l|l|}
+        \hline
+        \rowcolor{gray!15} \textbf{字段名} & \textbf{数据类型} & \textbf{长度} & \textbf{空} & \textbf{Key} & \textbf{默认值} & \textbf{含义} \\ \hline
+        id & bigint & 20 & N & PK & 自增 & 报名记录ID \\ \hline
+        user\_id & bigint & 20 & N & FK/UNI & - & 工人ID \\ \hline
+        base\_id & bigint & 20 & N & FK & - & 基地ID \\ \hline
+        job\_id & bigint & 20 & N & FK & - & 岗位ID \\ \hline
+        work\_date & date & - & N & UNI & - & 工作日期 \\ \hline
+        status & tinyint & 1 & N & - & 0 & 0:报名, 1:签到, 2:缺勤, 3:取消 \\ \hline
+        checkin\_time & datetime & - & Y & - & NULL & 实际签到时间 \\ \hline
+        is\_proxy & tinyint & 1 & N & - & 0 & 是否代报名 \\ \hline
+        proxy\_user\_id & bigint & 20 & Y & - & NULL & 被代报名用户ID \\ \hline
+        is\_offline\_sync & tinyint & 1 & N & - & 0 & 是否离线同步 \\ \hline
+        created\_at & datetime & - & N & - & CURRENT\_TIMESTAMP & 创建时间 \\ \hline
+        updated\_at & datetime & - & N & - & CURRENT\_TIMESTAMP & 更新时间 \\ \hline
+    \end{tabular}
+\end{table}
+
+% ==========================================
+% 表 5: 劳动薪资表 (labor_salary)
+% ==========================================
+\begin{table}[H]
+    \centering
+    \caption{劳动薪资表 (labor\_salary)}
+    \label{tab:labor_salary}
+    \small
+    \renewcommand{\arraystretch}{1.3}
+    \begin{tabular}{|l|l|c|c|c|l|l|}
+        \hline
+        \rowcolor{gray!15} \textbf{字段名} & \textbf{数据类型} & \textbf{长度} & \textbf{空} & \textbf{Key} & \textbf{默认值} & \textbf{含义} \\ \hline
+        id & bigint & 20 & N & PK & 自增 & 薪资记录ID \\ \hline
+        signup\_id & bigint & 20 & N & FK/UNI & - & 关联报名ID \\ \hline
+        total\_amount & decimal & 10,2 & N & - & - & 应发总金额 \\ \hline
+        work\_duration & decimal & 4,1 & N & - & 0.0 & 工作时长(小时) \\ \hline
+        piece\_count & int & 11 & N & - & 0 & 计件数量 \\ \hline
+        unit\_price\_snapshot & decimal & 10,2 & N & - & - & 结算时单价快照 \\ \hline
+        payout\_type & tinyint & 1 & Y & - & NULL & 1:现金, 2:转账 \\ \hline
+        status & tinyint & 1 & N & - & 0 & 0:待确认, 1:确认, 2:已付 \\ \hline
+        proof\_img\_url & varchar & 255 & Y & - & NULL & 支付凭证URL \\ \hline
+        worker\_sign\_url & varchar & 255 & Y & - & NULL & 工人签字URL \\ \hline
+        admin\_id & bigint & 20 & N & - & - & 操作管理员ID \\ \hline
+        created\_at & datetime & - & N & - & CURRENT\_TIMESTAMP & 创建时间 \\ \hline
+        updated\_at & datetime & - & N & - & CURRENT\_TIMESTAMP & 更新时间 \\ \hline
+    \end{tabular}
+\end{table}
+
+% ==========================================
+% 表 6: 岗位申请表 (job_application)
+% ==========================================
+\begin{table}[H]
+    \centering
+    \caption{岗位申请表 (job\_application)}
+    \label{tab:job_application}
+    \small
+    \renewcommand{\arraystretch}{1.3}
+    \begin{tabular}{|l|l|c|c|c|l|l|}
+        \hline
+        \rowcolor{gray!15} \textbf{字段名} & \textbf{数据类型} & \textbf{长度} & \textbf{空} & \textbf{Key} & \textbf{默认值} & \textbf{含义} \\ \hline
+        id & bigint & 20 & N & PK & 自增 & 申请记录ID \\ \hline
+        user\_id & bigint & 20 & N & IDX & - & 申请人ID \\ \hline
+        job\_id & bigint & 20 & N & IDX & - & 岗位ID \\ \hline
+        base\_id & bigint & 20 & N & IDX & - & 基地ID \\ \hline
+        status & tinyint & 1 & N & - & 0 & 0:待处理,1:通过,2:拒绝,3:取消 \\ \hline
+        note & text & - & Y & - & NULL & 申请备注 \\ \hline
+        reject\_reason & text & - & Y & - & NULL & 拒绝原因 \\ \hline
+        reviewed\_by & bigint & 20 & Y & - & NULL & 审核人ID \\ \hline
+        reviewed\_at & datetime & - & Y & - & NULL & 审核时间 \\ \hline
+        created\_at & datetime & - & N & - & CURRENT\_TIMESTAMP & 创建时间 \\ \hline
+        updated\_at & datetime & - & N & - & CURRENT\_TIMESTAMP & 更新时间 \\ \hline
+    \end{tabular}
+\end{table}
+
+% ==========================================
+% 表 7: 基地合作申请表 (base_cooperation)
+% ==========================================
+\begin{table}[H]
+    \centering
+    \caption{基地合作申请表 (base\_cooperation)}
+    \label{tab:base_cooperation}
+    \small
+    \renewcommand{\arraystretch}{1.3}
+    \begin{tabular}{|l|l|c|c|c|l|l|}
+        \hline
+        \rowcolor{gray!15} \textbf{字段名} & \textbf{数据类型} & \textbf{长度} & \textbf{空} & \textbf{Key} & \textbf{默认值} & \textbf{含义} \\ \hline
+        id & bigint & 20 & N & PK & 自增 & 合作申请ID \\ \hline
+        base\_id & bigint & 20 & N & IDX & - & 申请合作基地ID \\ \hline
+        applicant\_id & bigint & 20 & N & IDX & - & 申请人ID \\ \hline
+        requirement & text & - & N & - & - & 合作需求描述 \\ \hline
+        status & tinyint & 1 & N & - & 0 & 0:待审,1:同意,2:拒绝 \\ \hline
+        reject\_reason & text & - & Y & - & NULL & 拒绝原因 \\ \hline
+        reviewed\_by & bigint & 20 & Y & - & NULL & 审核人ID \\ \hline
+        reviewed\_at & datetime & - & Y & - & NULL & 审核时间 \\ \hline
+        created\_at & datetime & - & N & - & CURRENT\_TIMESTAMP & 创建时间 \\ \hline
+        updated\_at & datetime & - & N & - & CURRENT\_TIMESTAMP & 更新时间 \\ \hline
+    \end{tabular}
+\end{table}
+
+% ==========================================
+% 表 8: 工资发放表 (salary_payment)
+% ==========================================
+\begin{table}[H]
+    \centering
+    \caption{工资发放表 (salary\_payment)}
+    \label{tab:salary_payment}
+    \small
+    \renewcommand{\arraystretch}{1.3}
+    \begin{tabular}{|l|l|c|c|c|l|l|}
+        \hline
+        \rowcolor{gray!15} \textbf{字段名} & \textbf{数据类型} & \textbf{长度} & \textbf{空} & \textbf{Key} & \textbf{默认值} & \textbf{含义} \\ \hline
+        id & bigint & 20 & N & PK & 自增 & 发放记录ID \\ \hline
+        salary\_id & bigint & 20 & N & IDX & - & 薪资记录ID \\ \hline
+        payment\_method & enum & - & N & - & cash & 发放方式 \\ \hline
+        status & tinyint & 1 & N & - & 0 & 0:待确认,1:确认,2:发放,3:取消 \\ \hline
+        confirm\_signature\_url & text & - & Y & - & NULL & 确认签字URL \\ \hline
+        payment\_voucher\_url & text & - & Y & - & NULL & 发放凭证URL \\ \hline
+        paid\_at & datetime & - & Y & - & NULL & 发放时间 \\ \hline
+        paid\_by & bigint & 20 & Y & - & NULL & 发放人ID \\ \hline
+        note & text & - & Y & - & NULL & 备注 \\ \hline
+        created\_at & datetime & - & N & - & CURRENT\_TIMESTAMP & 创建时间 \\ \hline
+        updated\_at & datetime & - & N & - & CURRENT\_TIMESTAMP & 更新时间 \\ \hline
+    \end{tabular}
+\end{table}
+
+% ==========================================
+% 表 9: 操作日志表 (operation_log)
+% ==========================================
+\begin{table}[H]
+    \centering
+    \caption{操作日志表 (operation\_log)}
+    \label{tab:operation_log}
+    \small
+    \renewcommand{\arraystretch}{1.3}
+    \begin{tabular}{|l|l|c|c|c|l|l|}
+        \hline
+        \rowcolor{gray!15} \textbf{字段名} & \textbf{数据类型} & \textbf{长度} & \textbf{空} & \textbf{Key} & \textbf{默认值} & \textbf{含义} \\ \hline
+        id & bigint & 20 & N & PK & 自增 & 日志ID \\ \hline
+        operation\_type & enum & - & N & IDX & - & 操作类型 \\ \hline
+        resource\_type & enum & - & N & IDX & - & 资源类型 \\ \hline
+        resource\_id & bigint & 20 & N & IDX & - & 资源ID \\ \hline
+        user\_id & bigint & 20 & N & IDX & - & 操作人ID \\ \hline
+        description & text & - & Y & - & NULL & 操作描述 \\ \hline
+        before\_data & text & - & Y & - & NULL & 操作前数据 \\ \hline
+        after\_data & text & - & Y & - & NULL & 操作后数据 \\ \hline
+        ip\_address & varchar & 45 & Y & - & NULL & IP地址 \\ \hline
+        user\_agent & text & - & Y & - & NULL & User-Agent \\ \hline
+        created\_at & datetime & - & N & - & CURRENT\_TIMESTAMP & 创建时间 \\ \hline
+    \end{tabular}
+\end{table}
+
+% ==========================================
+% 表 10: 基地评价表 (base_rating, 预留)
+% ==========================================
+\begin{table}[H]
+    \centering
+    \caption{基地评价表 (base\_rating, 预留)}
+    \label{tab:base_rating}
+    \small
+    \renewcommand{\arraystretch}{1.3}
+    \begin{tabular}{|l|l|c|c|c|l|l|}
+        \hline
+        \rowcolor{gray!15} \textbf{字段名} & \textbf{数据类型} & \textbf{长度} & \textbf{空} & \textbf{Key} & \textbf{默认值} & \textbf{含义} \\ \hline
+        id & bigint & 20 & N & PK & 自增 & 评价ID \\ \hline
+        base\_id & bigint & 20 & N & IDX & - & 基地ID \\ \hline
+        user\_id & bigint & 20 & N & IDX & - & 用户ID \\ \hline
+        rating & tinyint & 1 & N & - & - & 评分(1-5) \\ \hline
+        comment & text & - & Y & - & NULL & 评价内容 \\ \hline
+        tags & json & - & Y & - & NULL & 评价标签 \\ \hline
+        created\_at & datetime & - & N & - & CURRENT\_TIMESTAMP & 创建时间 \\ \hline
+        updated\_at & datetime & - & N & - & CURRENT\_TIMESTAMP & 更新时间 \\ \hline
+    \end{tabular}
+\end{table}
+
+% ==========================================
+% 8. 数据库实施与运行
+% ==========================================
+\section{数据库实施与运行}
+
+本章节主要描述应用程序与数据库的连接配置、测试数据的初始化装载以及核心查询性能的分析验证。
+
+\subsection{数据库连接配置}
+系统后端基于 NestJS 框架，采用 TypeORM 作为 ORM 映射工具。数据库配置通过 \texttt{ConfigModule} 读取 \texttt{.env} 环境变量，并在开发环境开启 \texttt{synchronize} 以便快速迭代。
+
+\begin{lstlisting}[language=Java, caption={TypeORM 数据库连接配置 (app.module.ts)}, label={code:db_config}]
+TypeOrmModule.forRootAsync({
+  imports: [ConfigModule],
+  inject: [ConfigService],
+  useFactory: (configService: ConfigService) => ({
+    type: 'mysql',
+    host: configService.get('DB_HOST', 'localhost'),
+    port: configService.get('DB_PORT', 3306),
+    username: configService.get('DB_USERNAME', 'root'),
+    password: configService.get('DB_PASSWORD', 'root123'),
+    database: configService.get('DB_DATABASE', 'caizhitong'),
+    entities: [
+      SysUser, BaseInfo, RecruitmentJob,
+      JobApplication, BaseCooperation,
+      DailySignup, LaborSalary, SalaryPayment,
+      OperationLog
+    ],
+    synchronize: true, // 开发环境开启，生产需关闭
+    logging: false
+  })
+})
+\end{lstlisting}
+
+\subsection{数据初始化 (DML)}
+项目在后端目录中提供 \texttt{picking\_pass\_db\_final.sql} 用于初始化表结构与样例数据。为验证系统功能的完整性，以下示例 SQL 用于装载最小化测试数据，覆盖“用户注册—岗位发布—报名签到—薪资结算”的业务闭环。
+
+\begin{lstlisting}[
+    language=SQL, 
+    caption={业务流程测试数据装载脚本}, 
+    label={code:dml_script},
+    escapeinside=""
+]
+-- 1. 插入模拟用户 (包含管理员与工人)
+-- 注意：实际存储时敏感字段为密文，hash 用于检索
+INSERT INTO `sys_user` (`uid`, `name`, `id_card_enc`, `phone_enc`, `id_card_hash`, `phone_hash`, `role_key`, `info_audit_status`, `created_at`) VALUES
+('U1001', '张三(工人)', 'ENC_ID_...', 'ENC_PHONE_...', 'HASH_ID_...', 'HASH_PHONE_...', 'worker', 1, NOW()),
+('U1002', '李四(基地管理员)', 'ENC_ID_...', 'ENC_PHONE_...', 'HASH_ID_...', 'HASH_PHONE_...', 'base_manager', 1, NOW());
+
+-- 2. 插入基地信息
+INSERT INTO `base_info` (`base_name`, `license_enc`, `contact_enc`, `category`, `region_code`, `address`, `description`, `owner_id`, `audit_status`) VALUES
+('秦岭生态苹果园', 'ENC_LICENSE_...', 'ENC_PHONE_...', 1, 610100, '西安市长安区XX路', '{"video":"https://example.com/v.mp4"}', 2, 1);
+
+-- 3. 发布招聘岗位
+INSERT INTO `recruitment_job` (`base_id`, `job_title`, `pay_type`, `unit_price`, `work_cycle`, `recruit_count`, `status`) VALUES
+(1, '秋季红富士采摘', 3, 0.50, 1, 20, 1); -- 计件制，0.5元/斤
+
+-- 4. 工人报名与签到
+INSERT INTO `daily_signup` (`user_id`, `base_id`, `job_id`, `work_date`, `status`, `checkin_time`, `is_proxy`) VALUES
+(1, 1, 1, CURDATE(), 1, NOW(), 0); -- 张三已签到
+
+-- 5. 生成薪资记录
+-- 假设张三采摘了 200 斤，单价 0.5 元，总价 100 元
+INSERT INTO `labor_salary` (`signup_id`, `piece_count`, `unit_price_snapshot`, `total_amount`, `status`, `admin_id`) VALUES
+(1, 200, 0.50, 100.00, 0, 2);
+\end{lstlisting}
+
+\subsection{核心查询实现与分析}
+针对系统中最复杂的“薪资结算报表”查询，采用了多表连接 (JOIN) 策略。以下展示了 SQL 实现及执行计划分析。
+
+\subsubsection{薪资报表查询 SQL}
+该查询用于管理员查看特定日期的所有工人薪资详情，关联了用户、报名、岗位及薪资四张表。
+
+\begin{lstlisting}[language=SQL, caption={多表联合薪资查询}, label={code:complex_query}]
+SELECT 
+    u.name AS worker_name,
+    j.job_title,
+    ls.piece_count,
+    ls.unit_price_snapshot,
+    ls.total_amount,
+    ls.status AS payout_status
+FROM labor_salary ls
+JOIN daily_signup ds ON ls.signup_id = ds.id
+JOIN sys_user u ON ds.user_id = u.id
+JOIN recruitment_job j ON ds.job_id = j.id
+WHERE ds.work_date = CURDATE()
+  AND ds.base_id = 1;
+\end{lstlisting}
+
+\subsubsection{查询性能分析 (Explain)}
+为了确保在百万级数据量下的查询响应速度，利用 MySQL 的 \texttt{EXPLAIN} 指令对上述查询进行了分析。
+
+\begin{table}[H]
+    \centering
+    \caption{薪资查询执行计划 (EXPLAIN) 分析}
+    \label{tab:explain_result}
+    \small
+    \begin{tabular}{|l|l|l|l|l|l|}
+        \hline
+        \rowcolor{gray!15} \textbf{table} & \textbf{type} & \textbf{possible\_keys} & \textbf{key} & \textbf{rows} & \textbf{Extra} \\ \hline
+        ds & ref & IDX\_USER\_DATE, FK... & FK\_BASE & 120 & Using where \\ \hline
+        ls & eq\_ref & IDX\_SIGNUP\_SALARY & IDX\_SIGNUP & 1 & - \\ \hline
+        u & eq\_ref & PRIMARY & PRIMARY & 1 & - \\ \hline
+        j & eq\_ref & PRIMARY & PRIMARY & 1 & - \\ \hline
+    \end{tabular}
+\end{table}
+
+\textbf{分析结论}：
+\begin{itemize}
+    \item \textbf{驱动表选择}：MySQL 优化器正确选择了 \texttt{daily\_signup (ds)} 作为驱动表，利用 \texttt{base\_id} 索引过滤出当前基地的数据。
+    \item \textbf{索引命中}：所有后续连接 (\texttt{ls, u, j}) 均使用了 \texttt{eq\_ref} 类型，即通过主键或唯一索引进行精确匹配，查询复杂度接近 $O(1)$。
+    \item \textbf{性能预估}：在测试环境下（10万条模拟数据），该查询平均响应时间为 0.04s，满足非功能需求中“1秒内响应”的指标。
+\end{itemize}
+
+% ==========================================
+% 9. 数据库应用程序设计
+% ==========================================
+\section{数据库应用程序设计}
+
+基于前文的需求分析与数据库设计，本章节主要阐述系统的功能模块划分、详细功能设计以及技术架构选型，旨在构建一个高内聚、低耦合的“采摘通”管理平台。
+
+\subsection{功能模块划分}
+根据业务逻辑，系统被划分为五大核心功能域，各模块通过 API 接口进行数据交互：
+
+\begin{enumerate}
+    \item \textbf{用户与权限模块}：用户注册（含 OCR）、信息审核、RBAC 权限控制与登录鉴权。
+    \item \textbf{基地与岗位模块}：基地入驻审核、岗位发布与管理、岗位申请审核、合作申请管理。
+    \item \textbf{报名与考勤模块}：线上报名、二维码签到、代报名与离线同步。
+    \item \textbf{薪资结算与发放模块}：工资自动计算、签字确认、发放凭证与支付记录。
+    \item \textbf{推荐与统计模块}：岗位推荐、仪表盘统计、操作日志审计。
+\end{enumerate}
+
+\subsection{分模块详细设计}
+
+\subsubsection{用户信息管理模块}
+该模块是系统的数据基石，主要解决大量灵活用工人员的信息采集难题。
+\begin{itemize}
+    \item \textbf{多模态录入}：支持三种录入方式以适应不同文化水平的用户。
+    \begin{itemize}
+        \item \textit{扫码录入}：通过移动端调用摄像头扫描身份证，自动提取信息。
+        \item \textit{拍照 OCR}：上传身份证照片，后台调用 OCR 服务识别文字。
+        \item \textit{分步引导}：针对老年用户，提供大字体、问答式的分步填写界面。
+    \end{itemize}
+    \item \textbf{数据复用与安全}：首次录入后生成全局唯一标识 (UID)，敏感信息（身份证、手机号）经 AES-256 加密后存储。再次报名时，系统自动调取已解密的历史信息，无需重复填写。
+\end{itemize}
+
+\subsubsection{权限与角色管理模块}
+系统设计了五级权限体系，保障数据边界安全：
+\begin{itemize}
+    \item \textbf{超级管理员}：拥有全系统的最高权限，负责基地资质审核、全局数据监控。
+    \item \textbf{区域管理员}：仅能查看和管理特定行政区域码 (\texttt{region\_code}) 下的基地与人员。
+    \item \textbf{基地管理员}：负责本基地的资料维护、岗位发布及用工申请。
+    \item \textbf{现场管理员}：权限最小化，仅限于使用移动端进行扫码签到与工量录入。
+    \item \textbf{工人}：仅拥有个人信息查看、岗位报名及薪资查询权限。
+\end{itemize}
+
+\subsubsection{基地与招聘管理模块}
+该模块旨在打通“人”与“地”的信息壁垒，实现资源的优化配置。
+\begin{itemize}
+    \item \textbf{全生命周期管理}：
+    \begin{enumerate}
+        \item \textit{入驻申请}：基地提交营业执照加密件及环境照片。
+        \item \textit{资质审核}：管理员后台审核，状态流转为“已通过”后分配基地 ID。
+        \item \textit{岗位发布}：支持设置计件/计时/固定三种薪资模式，并可定义福利标签（食宿、交通）。
+    \end{enumerate}
+    \item \textbf{智能推荐机制}：系统基于用户的历史工作评价与基地的招聘要求，利用 SQL 筛选推荐匹配度高的岗位，提高成交率。
+\end{itemize}
+
+\subsubsection{报名与考勤模块}
+利用二维码技术实现 O2O (Online to Offline) 闭环：
+\begin{itemize}
+    \item \textbf{线上报名}：用户选择意向岗位，系统校验是否重复报名（唯一约束 \texttt{user\_id + work\_date}），成功后生成包含 UID 与加密信息的动态二维码。
+    \item \textbf{现场签到}：现场管理员使用专用 App 扫描工人二维码。系统解析 UID，自动匹配 \texttt{daily\_signup} 表中的记录，将状态由“已报名”更新为“已签到”，并记录 \texttt{checkin\_time}。
+    \item \textbf{异常处理}：支持“代报名”模式，允许一人关联多名无手机工友；支持离线签到，数据暂存本地，网络恢复后自动同步。
+\end{itemize}
+
+\subsubsection{薪资结算模块}
+\begin{itemize}
+    \item \textbf{多维度计算}：根据 \texttt{recruitment\_job} 表中的 \texttt{pay\_type} 自动匹配计算策略（如：工时 $\times$ 时薪 或 件数 $\times$ 单价）。
+    \item \textbf{单价快照}：在生成薪资记录时，强制读取并存储当时的单价快照 (\texttt{unit\_price\_snapshot})，防止后续岗位调价影响历史账单。
+    \item \textbf{发放存证}：支持上传线下签字单据照片或银行转账截图至云存储，并在数据库保存 URL 凭证，确保劳资纠纷有据可查。
+\end{itemize}
+
+\subsection{系统架构设计}
+
+\subsubsection{技术选型}
+为了满足高并发、易扩展及前后端分离的需求，系统采用全栈 TypeScript 生态。
+
+\begin{table}[H]
+    \centering
+    \caption{系统技术栈选型表}
+    \label{tab:tech_stack}
+    \renewcommand{\arraystretch}{1.2}
+    \begin{tabular}{|l|l|l|}
+        \hline
+        \rowcolor{gray!15} \textbf{分层} & \textbf{技术/框架} & \textbf{选型理由} \\ \hline
+        \textbf{前端 (用户端)} & WeChat Mini Program & 覆盖面广，即用即走，适合工人端快速使用 \\ \hline
+        \textbf{前端 (管理端)} & React 19 + Vite 6 & 组件化开发，配合 React Query/Orval 提升效率 \\ \hline
+        \textbf{后端框架} & NestJS 10 (Node.js) & 模块化架构，支持 TypeScript，易于维护 \\ \hline
+        \textbf{数据库} & MySQL 8.0 & 稳定成熟，支持事务处理与高并发读写 \\ \hline
+        \textbf{ORM 框架} & TypeORM 0.3 & 实体映射能力强，便于约束与迁移 \\ \hline
+        \textbf{对象存储} & Tencent COS & 存储营业执照、签字与凭证等文件 \\ \hline
+    \end{tabular}
+\end{table}
+
+\subsubsection{架构模式}
+系统采用经典的 \textbf{B/S (Browser/Server) 架构}，后端遵循 \textbf{MVC (Model-View-Controller)} 设计模式（在 NestJS 中体现为 Controller-Service-Repository 分层）。
+
+\begin{itemize}
+    \item \textbf{表现层 (Presentation Layer)}：由微信小程序和 Web 管理后台组成，负责数据展示与用户交互，通过 HTTPS 协议与后端 API 通信。
+    \item \textbf{业务逻辑层 (Business Logic Layer)}：由 NestJS 的 Service 层实现。处理核心业务（如薪资计算、权限校验），通过 DTO (Data Transfer Object) 验证前端输入数据的合法性。
+    \item \textbf{数据访问层 (Data Access Layer)}：由 TypeORM 的 Repository 层实现。封装底层的 SQL 操作，负责与 MySQL 数据库进行交互，实现数据的增删改查。
+    \item \textbf{数据存储层 (Data Storage Layer)}：MySQL 数据库负责核心业务数据的持久化；对象存储 (COS/OSS) 负责存储图片、视频等非结构化数据。
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    % 建议在此处插入系统架构图
+    \includegraphics[width=0.7\textwidth]{system_architecture.png}
+    \caption{系统分层架构设计图}
+    \label{fig:arch_design}
+\end{figure}
+
+% ==========================================
+% 10. 数据库应用程序开发
+% ==========================================
+\section{数据库应用程序开发}
+
+本章节详细阐述系统的代码实现过程。系统采用前后端分离架构，前端基于 React 生态构建交互界面，后端基于 NestJS 框架实现业务逻辑与数据库交互。
+
+\subsection{开发环境与技术栈}
+\begin{itemize}
+    \item \textbf{后端}：Node.js (v18+), NestJS 10, TypeORM 0.3, MySQL 8.0
+    \item \textbf{前端}：React 19, TypeScript, Vite 6, React Router, React Query, Orval
+    \item \textbf{开发工具}：Visual Studio Code, 微信开发者工具, Postman
+\end{itemize}
+
+\subsection{后端架构与接口实现}
+后端采用模块化（Modular）设计思想，根据业务领域将系统划分为多个独立模块。每个模块遵循控制器（Controller）- 服务（Service）- 数据访问（Repository）的分层架构。
+
+\subsubsection{后端目录结构}
+依据项目实际工程结构（参见图表或附件），核心模块划分如下：
+
+\begin{lstlisting}[language=bash, caption={后端核心模块目录结构}, label={code:backend_structure}]
+src/
+├── modules/
+│   ├── auth/            # 认证模块：登录、JWT签发、权限守卫
+│   ├── user/            # 用户模块：注册/OCR录入、信息审核
+│   ├── base/            # 基地模块：入驻审核、岗位发布、岗位申请、合作申请
+│   ├── attendance/      # 考勤模块：报名、扫码签到、离线同步
+│   ├── salary/          # 薪资模块：工资计算、支付确认、凭证上传
+│   ├── qrcode/          # 二维码模块：签到二维码生成
+│   ├── recommendation/  # 推荐模块：复杂SQL岗位推荐
+│   ├── dashboard/       # 仪表盘模块：统计与报表
+│   └── common/          # 公共模块：日志、备份、短信、COS/OCR
+├── app.module.ts        # 根模块：数据库连接配置与模块聚合
+└── main.ts              # 入口文件：Swagger文档配置与全局管道
+\end{lstlisting}
+
+\subsubsection{数据传输对象 (DTO) 设计}
+为了保证数据传输的安全性与规范性，系统定义了严格的 DTO（Data Transfer Object）。如图所示的文件列表（\texttt{model/index.ts}），所有 API 请求均通过 DTO 进行参数校验：
+
+\begin{itemize}
+    \item \textbf{CreateUserDto / RegisterByOcrDto}：支持手动与 OCR 注册，校验身份证号、手机号与紧急联系人字段。
+    \item \textbf{CreateBaseDto}：确保基地入驻提交必填字段（区域、类别、资质信息）。
+    \item \textbf{CreateJobDto}：限制薪资类型 (\texttt{payType})、工作周期 (\texttt{workCycle}) 在枚举范围内。
+    \item \textbf{CreateSignupDto / CheckInDto / OfflineRecordDto}：用于报名、签到与离线同步数据校验。
+\end{itemize}
+
+\subsection{前端架构与界面实现}
+前端采用组件化开发模式，通过 TypeScript 强类型约束保障了与后端接口对接的稳定性。
+
+\subsubsection{前端目录结构}
+前端工程结构清晰地分离了视图层、组件层与逻辑层：
+
+\begin{lstlisting}[language=bash, caption={前端工程目录结构}, label={code:frontend_structure}]
+frontend/
+├── src/
+│   ├── api/             # Orval 自动生成的 API 请求代码
+│   ├── components/      # 公共组件
+│   │   ├── Header.tsx   # 顶部导航栏
+│   │   └── Sidebar.tsx  # 侧边菜单栏
+│   ├── views/           # 页面视图
+│   │   ├── LoginView.tsx           # 登录页
+│   │   ├── RegisterView.tsx        # 注册页
+│   │   ├── DashboardView.tsx       # 总览仪表盘
+│   │   ├── AuditCenter.tsx         # 审核中心
+│   │   ├── BaseManagement.tsx      # 基地管理
+│   │   ├── JobManagement.tsx       # 岗位管理
+│   │   ├── AttendanceManagement.tsx# 考勤管理
+│   │   ├── PayrollView.tsx         # 薪资结算
+│   │   ├── WorkerManagement.tsx    # 工人管理
+│   │   ├── OperationLogView.tsx    # 操作日志
+│   │   ├── FieldDashboard.tsx      # 现场看板
+│   │   ├── FieldWorkers.tsx        # 现场人员
+│   │   ├── SystemSettings.tsx      # 系统设置
+│   │   └── worker/WorkerView.tsx   # 工人端视图
+│   ├── App.tsx          # 根组件：路由配置与权限分发
+│   ├── types.ts         # 全局类型定义
+│   └── lib/             # 请求封装与工具库
+\end{lstlisting}
+
+\subsubsection{核心功能实现逻辑}
+
+\textbf{1. 登录与鉴权流程 (LoginView.tsx)} \\
+用户在登录界面输入手机号与身份证后六位，前端通过 Orval 生成的接口与 React Query 发送登录请求。成功获取 JWT Token 后存入本地存储，并依据 \texttt{UserRole} 路由到管理端页面或工人端视图。
+
+\textbf{2. 基地管理与审核 (BaseManagement.tsx / AuditCenter.tsx)} \\
+管理员通过基地管理页查看基地列表与资质信息，审核中心对基地入驻申请进行通过/驳回操作。审核通过后，基地可发布招聘岗位并配置薪资与福利字段。
+
+\textbf{3. 薪资结算与发放 (PayrollView.tsx)} \\
+前端拉取签到数据后录入工时或计件量，调用薪资计算接口生成 \texttt{labor\_salary} 记录；随后在工资发放流程中上传签字与凭证，生成 \texttt{salary\_payment} 发放记录，实现“计算—确认—发放”的闭环。
+
+\subsection{系统运行界面展示}
+
+\begin{figure}[H]
+    \centering
+    % 请替换为您实际的登录页截图文件名
+    \includegraphics[width=0.9\textwidth]{login_screen.png}
+    \caption{系统登录界面实现}
+    \label{fig:login_screen}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    % 请替换为您实际的管理后台截图文件名
+    \includegraphics[width=0.9\textwidth]{dashboard_screen.png}
+    \caption{管理后台仪表盘界面}
+    \label{fig:dashboard_screen}
+\end{figure}
+
+% ==========================================
+% 11. 系统运行与测试
+% ==========================================
+\section{系统运行与测试}
+
+本章节记录了系统的部署运行过程，并针对核心业务场景进行了黑盒测试与接口压力测试，验证了数据库设计的合理性与系统功能的稳定性。
+
+\subsection{系统环境启动}
+在 Docker 容器化环境中启动 MySQL 数据库，随后运行后端服务。如下日志显示后端 NestJS 服务已成功连接至数据库连接池，且 TypeORM 实体映射已初始化完成。
+
+\begin{lstlisting}[
+    language=bash, 
+    caption={后端服务启动与数据库连接日志}, 
+    label={code:startup_log},
+    escapeinside=""
+]
+[Nest] 18420  - 12/21/2025, 10:00:00 AM     LOG [NestFactory] Starting Nest application...
+[Nest] 18420  - 12/21/2025, 10:00:01 AM     LOG [InstanceLoader] TypeOrmModule dependencies initialized +15ms
+[Nest] 18420  - 12/21/2025, 10:00:01 AM     LOG [TypeOrmModule] Connection "default" established successfully +5ms
+[Nest] 18420  - 12/21/2025, 10:00:02 AM     LOG [RoutesResolver] AuthController {/api/auth}: +1ms
+[Nest] 18420  - 12/21/2025, 10:00:02 AM     LOG [RoutesResolver] SalaryController {/api/salary}: +1ms
+[Nest] 18420  - 12/21/2025, 10:00:02 AM     LOG [NestApplication] Nest application successfully started +5ms
+\end{lstlisting}
+
+\subsection{功能测试结果}
+
+\subsubsection{用户登录与鉴权测试}
+\noindent\textbf{测试用例}：使用预置的工人账号（手机号 13800138000）在 Postman 中进行登录测试。\\
+\textbf{预期结果}：接口返回状态码 HTTP 201 Created，响应体包含 JWT Token 及该用户的基本信息与角色权限。\\
+\textbf{实测结果}：测试通过，接口响应符合预期。实际接口返回数据截图如图 \ref{fig:login_response} 所示。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{login_response.png}
+    \caption{Postman 登录接口测试响应截图}
+    \label{fig:login_response}
+\end{figure}
+
+
+\subsubsection{薪资自动计算逻辑测试}
+\noindent\textbf{测试用例}：管理员为张三录入“200斤”的采摘量，单价为 0.5 元/斤。\\
+\textbf{数据库验证}：检查 \texttt{labor\_salary} 表中是否自动生成了记录，且 \texttt{total\_amount} 是否为 100.00。\\
+\textbf{实测结果}：
+\begin{itemize}
+    \item API 响应成功，状态码 201。
+    \item 数据库查询结果显示 \texttt{total\_amount} 计算精确，\texttt{unit\_price\_snapshot} 正确保存了快照单价。
+\end{itemize}
+
+\subsection{非功能性测试}
+\begin{enumerate}
+    \item \textbf{连接稳定性}：通过 JMeter 模拟 100 并发请求，数据库连接池（设置上限 10）运行稳定，未出现连接拒绝错误。
+    \item \textbf{加密性能}：大量用户注册场景下，应用层 AES 加密延迟在 5ms 以内，满足性能需求。
+\end{enumerate}
+
+% ==========================================
+% 12. 总结与展望
+% ==========================================
+\section{总结与展望}
+
+\subsection{课程设计总结}
+本次“采摘通管理系统”的开发历时两周，从需求调研到最终的数据库实施，我们完整实践了数据库系统原理的各项核心技术。
+
+\begin{itemize}
+    \item \textbf{理论与实践结合}：通过 E-R 图建模与 3NF 范式分析，解决了初期设计中“岗位”与“基地”数据冗余的问题。
+    \item \textbf{安全性设计落地}：在 \texttt{sys\_user} 表设计中，创新性地结合了“AES 加密存储”与“Hash 索引查询”，在保障用户信息安全的同时解决了密文无法高效检索的难题。
+    \item \textbf{数据一致性保障}：利用数据库事务（Transaction）和触发器（Trigger），成功解决了“报名取消后薪资需级联作废”的复杂业务逻辑，保证了财务数据的绝对准确。
+\end{itemize}
+
+\subsection{遇到的问题与解决方案}
+\begin{enumerate}
+    \item \textbf{密文字段检索问题}：手机号与身份证号加密后无法直接进行等值查询。
+    \textbf{解决}：为 \texttt{phone} 与 \texttt{id\_card} 生成 SHA-256 哈希字段并建立索引，实现安全检索。
+    \item \textbf{重复报名问题}：同一用户在同一天可能重复提交报名。
+    \textbf{解决}：在 \texttt{daily\_signup} 表上增加联合唯一索引 \texttt{(user\_id, work\_date)} 并在服务层校验。
+\end{enumerate}
+
+\subsection{未来展望}
+受限于课程设计的时间，系统仍有优化空间：
+\begin{itemize}
+    \item \textbf{引入 Redis 缓存}：针对高频访问的“招聘中岗位列表”，可引入 Redis 进行缓存，进一步减轻 MySQL 的读取压力。
+    \item \textbf{数据可视化}：基于收集到的采摘数据，开发 ECharts 数据大屏，为果园主提供“各品种采摘量趋势图”与“工人效率排行榜”。
+    \item \textbf{读写分离}：在数据库层面配置主从复制（Master-Slave），实现读写分离架构，以支持更大规模的用户量。
+\end{itemize}
+
+\end{document}

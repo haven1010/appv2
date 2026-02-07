@@ -1,0 +1,91 @@
+\documentclass[UTF8,a4paper]{ctexart}
+
+\usepackage{geometry}
+\usepackage{setspace}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{graphicx}
+\usepackage{booktabs}
+
+% Page layout
+\geometry{left=2.5cm,right=2.5cm,top=2cm,bottom=2cm}
+\setlength{\parindent}{2em}
+\setstretch{1.5}
+
+% Fonts
+\setCJKmainfont{SimSun}
+\ctexset{
+  section = {format=\heiti\zihao{2}},
+  subsection = {format=\heiti\zihao{3}},
+  subsubsection = {format=\heiti\zihao{4}}
+}
+
+% Footer page number (centered, small-five)
+\pagestyle{fancy}
+\fancyhf{}
+\fancyfoot[C]{\songti\zihao{5}\thepage}
+
+\begin{document}
+\songti\zihao{-4}
+
+\begin{titlepage}
+\thispagestyle{empty}
+
+\begin{center}
+  \vspace*{2cm}
+  {\heiti\zihao{3} 西北工业大学《移动应用开发》}\\[1.5em]
+  {\heiti\zihao{2} 大作业报告}
+\end{center}
+
+\vspace{5cm}
+
+\noindent
+题目：
+
+\vspace{2cm}
+
+\noindent
+\begin{tabular}{@{}ll}
+学生姓名：& XXX\\
+学号：& XXXXXXXX\\
+班级：& XX班\\
+指导教师：& XXX\\
+提交日期：& XXXX年XX月XX日
+\end{tabular}
+\end{titlepage}
+
+\section{选题依据}
+本项目为“采摘工智慧管理系统/采摘通（Picking-Pass）”，面向农业生产基地与采摘工人的用工场景，解决传统园区“招工难、考勤乱、结算慢”的痛点。系统覆盖岗位发布、工人报名、扫码核销到薪资自动结算的全流程，既贴近真实生产管理需求，也具备明确的数据库应用背景。项目强调数据驱动与流程闭环：通过二维码签到与工时记录打通用工统计，基于历史数据与岗位画像进行智能推荐；对敏感信息采用“密文存储+Hash索引”方案保护隐私，同时保证检索性能；数据库层面使用触发器保障业务一致性。该项目与《数据库系统》课程的范式设计、事务一致性、索引与安全等核心知识高度相关，具有较强的工程实践和创新价值。
+
+\section{设计思路}
+项目采用前后端分离的 B/S 架构，包含 Web 管理端、移动管理端以及微信小程序端，形成多角色、多端协同的业务体系。总体目标是实现“用工信息全生命周期管理”：从基地入驻、岗位发布、工人报名、现场签到、工时记录到工资结算与发放，形成可追溯的数据闭环。
+
+技术选型方面：后端使用 NestJS + TypeORM + MySQL 8.0，提供模块化业务能力与 API 文档（Swagger）；前端使用 React + Vite + TypeScript + TailwindCSS；小程序端负责报名、签到与信息查询。权限体系采用 RBAC 角色模型（超级管理员、区域管理员、基地管理员、现场管理员、工人），并配合操作日志实现审计追溯。数据库遵循 3NF 设计，核心表包括用户、基地、岗位、考勤、工资及合作申请等，配合触发器与单价快照机制，确保历史数据一致性。系统模块划分清晰，包括用户信息管理、基地管理、岗位申请、考勤签到、薪资结算、智能推荐与公共服务等。
+
+\section{实现过程}
+1) \textbf{环境与数据库初始化}：配置 Node.js 与 MySQL 环境，创建数据库并导入初始化 SQL；设置后端环境变量，启动 NestJS 服务与前端开发服务器。\\
+2) \textbf{核心业务模块实现}：完善用户信息管理（含紧急联系人与审核流程），实现三种录入方式（手动、OCR、分步引导）；加入 AES-256 加密存储与 Hash 索引检索；实现基地入驻审核、岗位发布、岗位申请与双向选择机制；考勤模块支持报名确认短信、动态二维码签到及离线同步；工资结算支持固定/计件/时薪三种策略，生成工资确认单并记录支付凭证。\\
+3) \textbf{系统增强与扩展}：实现操作日志与自动备份机制；预留地图服务与评价系统接口；补充智能推荐模块，基于区域、历史偏好与活跃岗位进行加权推荐。\\
+4) \textbf{测试与联调}：依据测试指南与联调清单完成多角色测试，包括注册登录、基地审核、岗位发布/申请、签到与结算等；部分展示型页面采用静态数据或 mock 数据，核心链路均可用。
+
+关键难点及解决方法：其一是敏感信息加密与高效查询的平衡，采用“密文存储+Hash索引”解决；其二是二维码签到与离线同步的一致性问题，通过离线缓存与批量同步接口处理；其三是工资计算策略多样化，使用策略模式并保留单价快照防篡改。
+
+\section{对课程的建议}
+建议在课程中增加真实业务案例的数据建模与范式设计练习，强化“需求—ER 模型—表结构—索引/触发器”的完整训练；同时适当增加接口与前后端联调的实践环节，让数据库设计与业务实现结合更紧密；可提供更细化的测试清单模板与评分标准，帮助同学更系统地完成验证与总结。
+
+\section{附录}
+1. 核心代码片段（关键功能实现代码，标注说明）：\\
+\quad 后端模块：\texttt{app/backend/src/modules/user/}、\texttt{attendance/}、\texttt{salary/}、\texttt{base/}、\texttt{recommendation/}。\\
+\quad 触发器与数据库：\texttt{app/backend/picking\_pass\_db\_final.sql}。\\
+2. 小程序运行截图/演示视频链接（含运行环境、核心功能演示画面）：待补充。\\
+3. 参考文献（开发过程中参考的官方文档、技术博客等）：\\
+\quad NestJS 官方文档、TypeORM 官方文档、MySQL 8.0 文档、微信小程序开发文档。
+
+\vspace{1em}
+
+格式要求：\\
+- 字体与字号：标题（一级标题：黑体二号，二级标题：黑体三号，三级标题：黑体四号）；正文（宋体小四，行间距：1.5倍）；页码（页脚居中，宋体小五）。\\
+- 排版要求：正文段落首行缩进2字符，左右页边距均为2.5厘米，上下页边距均为2厘米；图表需标注编号与名称（如“图1 智能体整体架构图”“表1 核心功能测试用例表”），图表名称居中位于图表下方。\\
+- 原创性要求：报告内容需为学生独立撰写，严禁抄袭；核心代码需为自主开发，若参考他人代码需注明出处。
+
+\end{document}
