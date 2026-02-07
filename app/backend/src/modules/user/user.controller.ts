@@ -1,5 +1,5 @@
 
-import { Controller, Post, Body, Get, Patch, UseGuards, Req, Param, ParseIntPipe } from '@nestjs/common';
+import { Controller, Post, Body, Get, Patch, Delete, UseGuards, Req, Param, Query, ParseIntPipe } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -19,6 +19,10 @@ export class UserController {
   @Post('register')
   @ApiOperation({ summary: '用户注册/实名录入（手动填写）' })
   async register(@Body() createUserDto: CreateUserDto) {
+    // 阻止使用已废弃的 region_admin 角色注册
+    if (createUserDto.roleKey === 'region_admin' as any) {
+      createUserDto.roleKey = 'super_admin' as any;
+    }
     const user = await this.userService.create(createUserDto);
     return {
       id: user.id,
@@ -71,6 +75,28 @@ export class UserController {
     };
   }
 
+  @Get('list')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: '获取用户列表（管理端）' })
+  async getList(@Query() query: { role?: string; status?: string; keyword?: string; page?: string; pageSize?: string }) {
+    return this.userService.getList({
+      role: query.role || undefined,
+      status: query.status !== undefined ? Number(query.status) : undefined,
+      keyword: query.keyword || undefined,
+      page: query.page ? Number(query.page) : 1,
+      pageSize: query.pageSize ? Number(query.pageSize) : 20,
+    });
+  }
+
+  @Get('stats')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: '获取用户统计数据' })
+  async getUserStats() {
+    return this.userService.getUserStats();
+  }
+
   @Get('profile')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
@@ -92,10 +118,20 @@ export class UserController {
   @ApiBearerAuth()
   @ApiOperation({ summary: '审核用户信息更新' })
   async auditInfo(
+    @Req() req,
     @Param('id', ParseIntPipe) userId: number,
     @Body('status') status: number,
     @Body('reason') reason?: string,
   ) {
-    return this.userService.auditInfo(userId, status, reason);
+    return this.userService.auditInfo(userId, status, reason, req.user.id);
+  }
+
+  @Delete(':id')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: '删除用户（软删除）' })
+  async deleteUser(@Req() req, @Param('id', ParseIntPipe) userId: number) {
+    await this.userService.softDelete(userId, req.user.id);
+    return { msg: '已删除' };
   }
 }

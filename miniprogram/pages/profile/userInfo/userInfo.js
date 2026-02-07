@@ -30,12 +30,11 @@ Page({
         const auditStatusText = res.infoAuditStatus === 1 ? '已认证' : res.infoAuditStatus === 0 ? '待审核' : '未认证';
         const idCardMasked = res.idCard ? res.idCard.replace(/^(.{6})(?:\d+)(.{4})$/, '$1********$2') : '';
         this.setData({
-          profile: {
-            ...res,
+          profile: Object.assign({}, res, {
             phoneMasked: maskPhone(res.phone),
             emergencyPhoneMasked: maskPhone(res.emergencyPhone),
-            idCardMasked,
-          },
+            idCardMasked: idCardMasked,
+          }),
           form: {
             name: res.name || '',
             phone: res.phone || '',

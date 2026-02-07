@@ -7,9 +7,10 @@ import { SalaryPaymentService } from './services/salary-payment.service';
 import { SalaryController } from './salary.controller';
 import { DailySignup } from '../attendance/entities/daily-signup.entity';
 import { BaseInfo } from '../base/entities/base-info.entity';
+import { SysUser } from '../user/entities/sys-user.entity';
 
 @Module({
-    imports: [TypeOrmModule.forFeature([LaborSalary, SalaryPayment, DailySignup, BaseInfo])],
+    imports: [TypeOrmModule.forFeature([LaborSalary, SalaryPayment, DailySignup, BaseInfo, SysUser])],
     controllers: [SalaryController],
     providers: [SalaryService, SalaryPaymentService],
     exports: [SalaryService, SalaryPaymentService],

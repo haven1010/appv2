@@ -56,7 +56,8 @@ export class AuthService {
         name: user.name,
         role: user.roleKey,
         uid: user.uid,
-        faceImgUrl: user.faceImgUrl
+        faceImgUrl: user.faceImgUrl,
+        assignedBaseId: user.assignedBaseId || null,
       }
     };
   }

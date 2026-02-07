@@ -1,0 +1,109 @@
+<!--pages/field/home/home.wxml-->
+<view class="page">
+  <!-- 头部 -->
+  <view class="header">
+    <view class="logo-row">
+      <view class="logo">F</view>
+      <text class="title">现场管理工作台</text>
+    </view>
+    <view class="welcome" wx:if="{{userInfo}}">
+      <text class="welcome-text">你好，{{userInfo.name}}</text>
+    </view>
+  </view>
+
+  <!-- 加载中 -->
+  <view class="loading-box" wx:if="{{loading}}">
+    <text>加载中...</text>
+  </view>
+
+  <!-- 错误提示 -->
+  <view class="error-card" wx:elif="{{error}}">
+    <text class="error-icon">⚠</text>
+    <text class="error-msg">{{error}}</text>
+    <view class="btn-retry" bindtap="loadData">重试</view>
+  </view>
+
+  <block wx:else>
+    <!-- 基地信息卡片 -->
+    <view class="base-card" wx:if="{{baseInfo}}">
+      <view class="base-card-header">
+        <view class="base-badge">管辖基地</view>
+      </view>
+      <view class="base-name">{{baseInfo.name || '基地 #' + baseId}}</view>
+      <view class="base-detail-row">
+        <text class="base-detail-label">地址</text>
+        <text class="base-detail-val">{{baseInfo.address || '-'}}</text>
+      </view>
+      <view class="base-detail-row">
+        <text class="base-detail-label">类型</text>
+        <text class="base-detail-val">{{baseInfo.category || '-'}}</text>
+      </view>
+      <view class="base-detail-row">
+        <text class="base-detail-label">联系人</text>
+        <text class="base-detail-val">{{baseInfo.contactPerson || '-'}} {{baseInfo.contactPhone || ''}}</text>
+      </view>
+    </view>
+
+    <!-- 今日考勤统计 -->
+    <view class="stats-card">
+      <view class="section-title-row">
+        <text class="section-title">今日考勤</text>
+      </view>
+      <view class="stats-grid">
+        <view class="stat-item">
+          <text class="stat-value green">{{stats.checkedIn}}</text>
+          <text class="stat-label">已签到</text>
+        </view>
+        <view class="stat-item border-mid">
+          <text class="stat-value orange">{{stats.pending}}</text>
+          <text class="stat-label">待签到</text>
+        </view>
+        <view class="stat-item border-mid">
+          <text class="stat-value red">{{stats.absent}}</text>
+          <text class="stat-label">缺勤</text>
+        </view>
+        <view class="stat-item">
+          <text class="stat-value">{{stats.rate}}</text>
+          <text class="stat-label">签到率</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 快捷操作 -->
+    <view class="actions">
+      <view class="action-btn scan-btn" bindtap="goScan">
+        <text class="action-icon">📷</text>
+        <text class="action-text">扫码签到</text>
+        <text class="action-desc">扫描工人二维码完成签到</text>
+      </view>
+      <view class="action-btn records-btn" bindtap="goRecords">
+        <text class="action-icon">📋</text>
+        <text class="action-text">考勤记录</text>
+        <text class="action-desc">查看今日签到明细</text>
+      </view>
+    </view>
+
+    <!-- 最近签到记录 -->
+    <view class="recent-section" wx:if="{{recentRecords.length > 0}}">
+      <view class="section-title-row">
+        <text class="section-title">最近签到</text>
+        <text class="section-link" bindtap="goRecords">查看全部 ›</text>
+      </view>
+      <view class="record-list">
+        <view class="record-item" wx:for="{{recentRecords}}" wx:key="id">
+          <view class="record-avatar">{{item.user ? item.user.name[0] : '?'}}</view>
+          <view class="record-info">
+            <text class="record-name">{{item.user ? item.user.name : item.userName || '未知'}}</text>
+            <text class="record-time">{{item.checkinTime || item.createdAt || '-'}}</text>
+          </view>
+          <view class="record-status success">已签到</view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 无数据时 -->
+    <view class="empty-box" wx:if="{{!loading && !baseInfo && !error}}">
+      <text>暂无基地信息</text>
+    </view>
+  </block>
+</view>

@@ -131,7 +131,7 @@ export default function PayrollView() {
 
   const { data: rawBases = [] } = useBaseControllerFindAll({
     request:
-      user?.role === UserRole.BASE_ADMIN
+      user?.role === UserRole.BASE_MANAGER
         ? { params: { ownerId: user.id } }
         : user?.role === UserRole.SUPER_ADMIN
           ? { params: { showAll: true } }

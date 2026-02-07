@@ -73,7 +73,7 @@ export default function JobManagement() {
 
   const { data: rawBases = [], isLoading: basesLoading } = useBaseControllerFindAll({
     request:
-      user?.role === UserRole.BASE_ADMIN
+      user?.role === UserRole.BASE_MANAGER
         ? { params: { ownerId: user.id } }
         : user?.role === UserRole.SUPER_ADMIN
         ? { params: { showAll: true } }
@@ -131,7 +131,7 @@ export default function JobManagement() {
     queryFn: async () => {
       if (!selectedJob?.id) return [];
       const res = await AXIOS_INSTANCE.get(`/api/base/jobs/${selectedJob.id}/applications`);
-      return Array.isArray(res) ? res : [];
+      return Array.isArray(res.data) ? res.data : [];
     },
   });
 

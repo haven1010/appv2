@@ -1,2 +1,74 @@
-<!--pages/salary/salary.wxml-->
-<text>pages/salary/salary.wxml</text>
+<view class="container">
+  <view class="header">
+    <text class="title">薪资明细</text>
+    <text class="subtitle">查看与确认工资记录</text>
+  </view>
+
+  <view wx:if="{{loading}}" class="loading">
+    <view class="loading-spinner"></view>
+    <text class="loading-text">加载中...</text>
+  </view>
+
+  <block wx:else>
+    <!-- Stats Cards -->
+    <view wx:if="{{stats}}" class="stats-row">
+      <view class="stat-card">
+        <text class="stat-value">{{stats.totalDays || 0}}</text>
+        <text class="stat-label">累计工作天数</text>
+      </view>
+      <view class="stat-card accent">
+        <text class="stat-value">¥{{stats.totalEarned || '0.00'}}</text>
+        <text class="stat-label">累计收入</text>
+      </view>
+      <view class="stat-card warn">
+        <text class="stat-value">¥{{stats.pendingAmount || '0.00'}}</text>
+        <text class="stat-label">待发放</text>
+      </view>
+    </view>
+
+    <!-- Pending List -->
+    <view class="section">
+      <text class="section-title">待确认工资</text>
+
+      <view wx:if="{{pendingList.length === 0}}" class="empty-section">
+        <text class="empty-text">暂无待确认的工资记录</text>
+      </view>
+
+      <view wx:else class="salary-list">
+        <view
+          wx:for="{{pendingList}}"
+          wx:key="id"
+          class="salary-card"
+        >
+          <view class="salary-top">
+            <view class="salary-info">
+              <text class="salary-base">{{item.baseName || '基地'}}</text>
+              <text class="salary-date">{{item.workDate || '-'}}</text>
+            </view>
+            <text class="salary-amount">¥{{item.totalAmount || item.amount || '0.00'}}</text>
+          </view>
+
+          <view class="salary-detail">
+            <text wx:if="{{item.jobTitle}}" class="detail-item">岗位: {{item.jobTitle}}</text>
+            <text wx:if="{{item.workHours}}" class="detail-item">工时: {{item.workHours}}h</text>
+            <text wx:if="{{item.pieceCount}}" class="detail-item">计件: {{item.pieceCount}}</text>
+          </view>
+
+          <view class="salary-bottom">
+            <text class="salary-status {{item.status === 'paid' || item.status === 2 ? 'paid' : item.status === 'confirmed' || item.status === 1 ? 'confirmed' : 'pending'}}">
+              {{item.status === 'paid' || item.status === 2 ? '已发放' : item.status === 'confirmed' || item.status === 1 ? '已确认' : '待确认'}}
+            </text>
+            <view
+              wx:if="{{item.status === 'draft' || item.status === 0}}"
+              class="confirm-btn"
+              bindtap="confirmSalary"
+              data-id="{{item.id}}"
+            >
+              确认工资
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+  </block>
+</view>

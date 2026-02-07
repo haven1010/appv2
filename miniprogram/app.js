@@ -15,7 +15,8 @@ App({
   globalData: {
     userInfo: null,
     token: null,
-    baseUrl: 'http://10.30.59.238:3001/api', // 真机调试需使用局域网IP
+    baseUrl: 'http://127.0.0.1:3001/api', // 模拟器用 127.0.0.1；真机调试改为局域网IP
+    // baseUrl: 'http://10.30.59.238:3001/api', // 真机调试使用局域网IP
     // baseUrl: 'https://your-domain.com/api', // 生产环境API地址
   },
   
@@ -28,11 +29,10 @@ App({
         url: this.globalData.baseUrl + options.url,
         method: options.method || 'GET',
         data: options.data || {},
-        header: {
+        header: Object.assign({
           'Content-Type': 'application/json',
-          'Authorization': token ? `Bearer ${token}` : '',
-          ...options.header,
-        },
+          'Authorization': token ? ('Bearer ' + token) : '',
+        }, options.header || {}),
         success: (res) => {
           // 把所有 2xx 状态都当作成功（例如：POST 默认是 201）
           if (res.statusCode >= 200 && res.statusCode < 300) {

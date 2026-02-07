@@ -4,10 +4,24 @@ import { EncryptionTransformer } from '../../common/transformers/encryption.tran
 
 export enum UserRole {
   SUPER_ADMIN = 'super_admin',
+  /** @deprecated 已废弃，历史数据兼容，登录时按 SUPER_ADMIN 权限处理 */
   REGION_ADMIN = 'region_admin',
   BASE_MANAGER = 'base_manager',
   FIELD_MANAGER = 'field_manager',
   WORKER = 'worker',
+}
+
+/** 注册/前端可选的有效角色（排除废弃的 REGION_ADMIN） */
+export const VALID_REGISTER_ROLES: UserRole[] = [
+  UserRole.SUPER_ADMIN,
+  UserRole.BASE_MANAGER,
+  UserRole.FIELD_MANAGER,
+  UserRole.WORKER,
+];
+
+/** 判断角色是否具有超级管理员权限（含已废弃的 REGION_ADMIN） */
+export function isSuperAdmin(role: string): boolean {
+  return role === UserRole.SUPER_ADMIN || role === UserRole.REGION_ADMIN;
 }
 
 @Entity('sys_user')
@@ -77,6 +91,10 @@ export class SysUser {
   @ApiProperty({ description: '区域代码 (管理员专用)', required: false, nullable: true })
   @Column({ name: 'region_code', type: 'int', nullable: true, comment: 'For Region Admins' })
   regionCode: number;
+
+  @ApiProperty({ description: '关联基地ID (现场管理员专用)', required: false, nullable: true })
+  @Column({ name: 'assigned_base_id', type: 'bigint', nullable: true, comment: 'For Field Managers - assigned base' })
+  assignedBaseId: number;
 
   @ApiProperty({ description: '紧急联系人信息', required: false, nullable: true })
   @Column({ 

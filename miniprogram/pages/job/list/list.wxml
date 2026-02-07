@@ -1,6 +1,59 @@
-<!--pages/job/list/list.wxml-->
 <view class="container">
-  <view class="empty">
-    <text>请从基地详情页查看岗位</text>
+  <view class="header">
+    <text class="title">{{baseName ? baseName + ' - 招聘岗位' : '全部招聘岗位'}}</text>
+    <text class="subtitle">共 {{jobs.length}} 个岗位</text>
+  </view>
+
+  <view wx:if="{{loading}}" class="loading">
+    <view class="loading-spinner"></view>
+    <text class="loading-text">加载中...</text>
+  </view>
+
+  <view wx:elif="{{jobs.length === 0}}" class="empty">
+    <text class="empty-icon">📋</text>
+    <text class="empty-text">暂无招聘岗位</text>
+    <text class="empty-hint">请稍后再来查看</text>
+  </view>
+
+  <view wx:else class="job-list">
+    <view
+      wx:for="{{jobs}}"
+      wx:key="id"
+      class="job-card"
+      bindtap="goToDetail"
+      data-id="{{item.id}}"
+    >
+      <view class="job-top">
+        <text class="job-title">{{item.jobTitle || item.title || '-'}}</text>
+        <text class="job-salary">{{item.salaryAmount || '-'}}元/{{item.payType == 1 ? '天' : item.payType == 2 ? '小时' : '件'}}</text>
+      </view>
+
+      <view wx:if="{{item.baseName}}" class="job-base">
+        <text class="base-tag">{{item.baseName}}</text>
+      </view>
+
+      <view class="job-info">
+        <text class="info-item">招聘 {{item.headcount || item.count || '-'}} 人</text>
+        <text class="info-item">{{item.workDateRange || '时间待定'}}</text>
+      </view>
+
+      <view wx:if="{{item.requirements || item.description}}" class="job-desc">
+        <text>{{item.requirements || item.description}}</text>
+      </view>
+
+      <view class="job-bottom">
+        <text class="status {{item.status === 'recruiting' || item.status === 1 ? 'status-open' : 'status-closed'}}">
+          {{item.status === 'recruiting' || item.status === 1 ? '招聘中' : '已关闭'}}
+        </text>
+        <view
+          class="apply-btn"
+          catchtap="applyJob"
+          data-id="{{item.id}}"
+          data-baseid="{{item.baseId}}"
+        >
+          立即报名
+        </view>
+      </view>
+    </view>
   </view>
 </view>

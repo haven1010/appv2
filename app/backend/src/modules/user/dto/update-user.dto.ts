@@ -1,4 +1,4 @@
-import { IsString, IsOptional } from 'class-validator';
+import { IsString, IsOptional, IsNumber } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class UpdateUserDto {
@@ -26,4 +26,9 @@ export class UpdateUserDto {
   @IsOptional()
   @IsString()
   faceImgUrl?: string;
+
+  @ApiProperty({ example: 1, required: false, description: '关联基地ID（现场管理员专用）' })
+  @IsOptional()
+  @IsNumber()
+  assignedBaseId?: number;
 }

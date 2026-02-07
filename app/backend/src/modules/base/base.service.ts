@@ -9,6 +9,8 @@ import { JobApplicationService } from './services/job-application.service';
 import { BaseCooperationService } from './services/base-cooperation.service';
 import { ApplicationStatus } from './entities/job-application.entity';
 import { CooperationStatus } from './entities/base-cooperation.entity';
+import { OperationLogService } from '../common/services/operation-log.service';
+import { OperationType, ResourceType } from '../common/entities/operation-log.entity';
 
 @Injectable()
 export class BaseService {
@@ -21,6 +23,7 @@ export class BaseService {
     private jobRepo: Repository<RecruitmentJob>,
     private jobApplicationService: JobApplicationService,
     private baseCooperationService: BaseCooperationService,
+    private operationLogService: OperationLogService,
   ) { }
 
   // ========== 基地相关方法 ==========
@@ -89,10 +92,23 @@ export class BaseService {
       throw new BadRequestException('审核状态必须是 0（待审核）, 1（通过）或 2（拒绝）');
     }
 
+    const beforeStatus = base.auditStatus;
     base.auditStatus = statusNum;
     const result = await this.baseRepo.save(base);
 
     this.logger.log(`[审核基地] 完成: id=${id}, 新状态=${result.auditStatus}`);
+
+    // 记录审核操作日志
+    this.operationLogService.log(
+      OperationType.AUDIT,
+      ResourceType.BASE,
+      id,
+      0, // 没有传入操作者，暂用0
+      `基地审核: ${base.baseName}, ${beforeStatus} -> ${statusNum}`,
+      { auditStatus: beforeStatus },
+      { auditStatus: statusNum },
+    ).catch(() => {});
+
     return result;
   }
 
@@ -476,6 +492,10 @@ export class BaseService {
   /** 当前用户的岗位申请列表（工人端「我的报名」） */
   async getApplicationsByUser(userId: number) {
     return this.jobApplicationService.getApplicationsByUser(userId);
+  }
+
+  async getApplicationsByBase(baseId: number, status?: number) {
+    return this.jobApplicationService.getApplicationsByBase(baseId, status as ApplicationStatus);
   }
 
   async reviewApplication(applicationId: number, status: number, reviewedBy: number, rejectReason?: string) {

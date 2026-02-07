@@ -13,7 +13,13 @@
     "pages/qrcode/qrcode",
     "pages/attendance/attendance",
     "pages/salary/salary",
-    "pages/profile/workHistory/workHistory","pages/profile/userInfo/userInfo","pages/profile/salaryCard/salaryCard"
+    "pages/profile/workHistory/workHistory",
+    "pages/profile/userInfo/userInfo",
+    "pages/profile/salaryCard/salaryCard",
+    "pages/field/home/home",
+    "pages/field/scan/scan",
+    "pages/field/records/records",
+    "pages/field/profile/profile"
   ],
   "window": {
     "backgroundTextStyle": "light",
@@ -24,6 +30,7 @@
     "enablePullDownRefresh": true
   },
   "tabBar": {
+    "custom": true,
     "color": "#64748b",
     "selectedColor": "#34d399",
     "backgroundColor": "#0f172a",
@@ -32,10 +39,13 @@
       { "pagePath": "pages/index/index", "text": "广场" },
       { "pagePath": "pages/applications/applications", "text": "我的报名" },
       { "pagePath": "pages/qrcode/qrcode", "text": "签到码" },
-      { "pagePath": "pages/profile/profile", "text": "我的" }
+      { "pagePath": "pages/profile/profile", "text": "我的" },
+      { "pagePath": "pages/field/home/home", "text": "工作台" },
+      { "pagePath": "pages/field/scan/scan", "text": "扫码签到" },
+      { "pagePath": "pages/field/records/records", "text": "考勤记录" },
+      { "pagePath": "pages/field/profile/profile", "text": "我的(管理)" }
     ]
   },
-  "permission": { "scope.camera": { "desc": "用于扫描二维码和拍摄身份证" } },
   "requiredPrivateInfos": ["getLocation"],
   "style": "v2",
   "sitemapLocation": "sitemap.json",

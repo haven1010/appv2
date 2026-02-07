@@ -9,7 +9,6 @@ import { motion } from 'framer-motion';
 const ROLE_OPTIONS: { value: CreateUserDtoRoleKey; label: string }[] = [
   { value: CreateUserDtoRoleKey.worker, label: '采摘工' },
   { value: CreateUserDtoRoleKey.base_manager, label: '基地管理员' },
-  { value: CreateUserDtoRoleKey.region_admin, label: '基地区域管理员' },
   { value: CreateUserDtoRoleKey.field_manager, label: '现场管理员' },
   { value: CreateUserDtoRoleKey.super_admin, label: '超级管理员' },
 ];
@@ -52,6 +51,7 @@ export default function RegisterView() {
       roleKey: form.roleKey,
     };
     if (form.regionCode != null && form.regionCode !== '') payload.regionCode = Number(form.regionCode);
+    if ((form as any).assignedBaseId != null) (payload as any).assignedBaseId = Number((form as any).assignedBaseId);
     if (form.faceImgUrl) payload.faceImgUrl = form.faceImgUrl;
     if (form.emergencyContact?.trim()) (payload as any).emergencyContact = form.emergencyContact.trim();
     if (form.emergencyPhone?.trim()) (payload as any).emergencyPhone = form.emergencyPhone.trim();
@@ -123,7 +123,7 @@ export default function RegisterView() {
               ))}
             </select>
           </div>
-          {(form.roleKey === CreateUserDtoRoleKey.region_admin || form.roleKey === CreateUserDtoRoleKey.super_admin) && (
+          {form.roleKey === CreateUserDtoRoleKey.super_admin && (
             <div>
               <label className="block text-slate-400 text-sm mb-1.5">区域代码（选填）</label>
               <input
@@ -131,6 +131,18 @@ export default function RegisterView() {
                 placeholder="如 3301"
                 value={form.regionCode ?? ''}
                 onChange={(e) => setForm((f) => ({ ...f, regionCode: e.target.value === '' ? undefined : Number(e.target.value) }))}
+                className="w-full bg-slate-950/50 border border-slate-700 rounded-xl py-3 px-4 text-white focus:outline-none focus:border-emerald-500 placeholder:text-slate-500"
+              />
+            </div>
+          )}
+          {form.roleKey === CreateUserDtoRoleKey.field_manager && (
+            <div>
+              <label className="block text-slate-400 text-sm mb-1.5">关联基地ID（现场管理员需填）</label>
+              <input
+                type="number"
+                placeholder="请输入关联基地ID"
+                value={(form as any).assignedBaseId ?? ''}
+                onChange={(e) => setForm((f) => ({ ...f, assignedBaseId: e.target.value === '' ? undefined : Number(e.target.value) }))}
                 className="w-full bg-slate-950/50 border border-slate-700 rounded-xl py-3 px-4 text-white focus:outline-none focus:border-emerald-500 placeholder:text-slate-500"
               />
             </div>

@@ -1,9 +1,11 @@
 import { Injectable, BadRequestException, ConflictException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { SysUser } from './entities/sys-user.entity';
+import { Repository, Like, In } from 'typeorm';
+import { SysUser, UserRole } from './entities/sys-user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { SecurityService } from '../common/services/security.service';
+import { OperationLogService } from '../common/services/operation-log.service';
+import { OperationType, ResourceType } from '../common/entities/operation-log.entity';
 import * as crypto from 'crypto';
 
 @Injectable()
@@ -12,6 +14,7 @@ export class UserService {
     @InjectRepository(SysUser)
     private userRepository: Repository<SysUser>,
     private securityService: SecurityService,
+    private operationLogService: OperationLogService,
   ) { }
 
   async create(createUserDto: CreateUserDto): Promise<SysUser> {
@@ -115,13 +118,125 @@ export class UserService {
     return this.userRepository.save(user);
   }
 
-  async auditInfo(userId: number, status: number, reason?: string): Promise<SysUser> {
+  async auditInfo(userId: number, status: number, reason?: string, operatorId?: number): Promise<SysUser> {
     const user = await this.userRepository.findOne({ where: { id: userId } });
     if (!user) {
       throw new NotFoundException('用户不存在');
     }
 
+    const beforeStatus = user.infoAuditStatus;
     user.infoAuditStatus = status;
-    return this.userRepository.save(user);
+    const saved = await this.userRepository.save(user);
+
+    // 记录审核操作日志
+    this.operationLogService.log(
+      OperationType.AUDIT,
+      ResourceType.USER,
+      userId,
+      operatorId || 0,
+      `用户审核: ${beforeStatus} -> ${status}${reason ? `, 原因: ${reason}` : ''}`,
+      { infoAuditStatus: beforeStatus },
+      { infoAuditStatus: status },
+    ).catch(() => {}); // fire-and-forget
+
+    return saved;
+  }
+
+  /**
+   * 获取用户列表（管理端）
+   * 支持按角色、审核状态、关键字筛选，分页
+   */
+  async getList(query: {
+    role?: string;
+    status?: number;
+    keyword?: string;
+    page?: number;
+    pageSize?: number;
+  }) {
+    const { role, status, keyword, page = 1, pageSize = 20 } = query;
+
+    const qb = this.userRepository
+      .createQueryBuilder('user')
+      .where('user.isDeleted = :isDeleted', { isDeleted: false })
+      .orderBy('user.createdAt', 'DESC');
+
+    if (role) {
+      qb.andWhere('user.roleKey = :role', { role });
+    }
+
+    if (status !== undefined && status !== null) {
+      qb.andWhere('user.infoAuditStatus = :status', { status: Number(status) });
+    }
+
+    if (keyword) {
+      // 搜索姓名（明文字段）或 UID
+      qb.andWhere('(user.name LIKE :kw OR user.uid LIKE :kw)', { kw: `%${keyword}%` });
+    }
+
+    const total = await qb.getCount();
+    const list = await qb
+      .skip((page - 1) * pageSize)
+      .take(pageSize)
+      .getMany();
+
+    return {
+      list: list.map((u) => ({
+        id: u.id,
+        uid: u.uid,
+        name: u.name,
+        phone: u.phone,
+        idCard: u.idCard,
+        roleKey: u.roleKey,
+        emergencyContact: u.emergencyContact,
+        emergencyPhone: u.emergencyPhone,
+        infoAuditStatus: u.infoAuditStatus,
+        regionCode: u.regionCode,
+        assignedBaseId: u.assignedBaseId,
+        createdAt: u.createdAt,
+        updatedAt: u.updatedAt,
+      })),
+      total,
+      page: Number(page),
+      pageSize: Number(pageSize),
+    };
+  }
+
+  /**
+   * 获取用户统计数据（按角色计数）
+   */
+  async getUserStats() {
+    const totalWorkers = await this.userRepository.count({
+      where: { roleKey: UserRole.WORKER, isDeleted: false },
+    });
+    const totalAdmins = await this.userRepository.count({
+      where: { roleKey: In([UserRole.SUPER_ADMIN, UserRole.REGION_ADMIN, UserRole.FIELD_MANAGER, UserRole.BASE_MANAGER]), isDeleted: false },
+    });
+    const pendingAudit = await this.userRepository.count({
+      where: { infoAuditStatus: 0, isDeleted: false },
+    });
+    const totalUsers = await this.userRepository.count({
+      where: { isDeleted: false },
+    });
+
+    return { totalWorkers, totalAdmins, pendingAudit, totalUsers };
+  }
+
+  /**
+   * 删除用户（软删除）
+   */
+  async softDelete(userId: number, operatorId?: number): Promise<void> {
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    if (!user) throw new NotFoundException('用户不存在');
+    user.isDeleted = true;
+    await this.userRepository.save(user);
+
+    // 记录删除操作日志
+    this.operationLogService.log(
+      OperationType.DELETE,
+      ResourceType.USER,
+      userId,
+      operatorId || 0,
+      `软删除用户: ${user.name} (${user.uid})`,
+    ).catch(() => {});
   }
 }

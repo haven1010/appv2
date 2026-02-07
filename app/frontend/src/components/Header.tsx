@@ -15,11 +15,11 @@ export default function Header() {
 
   const getRoleLabel = (role: string) => {
     const labels: Record<string, string> = {
-      SUPER_ADMIN: '超级管理员',
-      FIELD_ADMIN: '现场管理员',
-      BASE_ADMIN: '基地管理员',
-      AREA_ADMIN: '区域管理员',
-      WORKER: '采摘工'
+      super_admin: '超级管理员',
+      region_admin: '超级管理员',
+      base_manager: '基地管理员',
+      field_manager: '现场管理员',
+      worker: '采摘工',
     };
     return labels[role] || role;
   };

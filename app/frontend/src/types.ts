@@ -14,17 +14,25 @@ import {
 export const UserRole = {
   SUPER_ADMIN: SysUserRoleKey.super_admin,
 
-  // 注意：截图显示后端叫 region_admin，对应你之前的 AREA_ADMIN
-  AREA_ADMIN: SysUserRoleKey.region_admin,
+  BASE_MANAGER: SysUserRoleKey.base_manager,
 
-  BASE_ADMIN: SysUserRoleKey.base_manager,
-
-  // ⚠️ 请确认 sysUserRoleKey.ts 里有没有 field_manager
-  // 如果报错说找不到 field_manager，说明后端没定义这个角色，请暂时注释掉下面这行
-  FIELD_ADMIN: 'field_manager' as any, // 暂时强转，防止后端没生成导致报错
+  FIELD_MANAGER: 'field_manager' as SysUserRoleKey,
 
   WORKER: SysUserRoleKey.worker,
+
+  // === 废弃角色别名（兼容旧代码引用） ===
+  /** @deprecated 使用 SUPER_ADMIN 代替 */
+  AREA_ADMIN: SysUserRoleKey.region_admin,
+  /** @deprecated 使用 BASE_MANAGER 代替 */
+  BASE_ADMIN: SysUserRoleKey.base_manager,
+  /** @deprecated 使用 FIELD_MANAGER 代替 */
+  FIELD_ADMIN: 'field_manager' as SysUserRoleKey,
 } as const;
+
+/** 判断角色是否具有超级管理员权限（含已废弃的 region_admin） */
+export function isSuperAdminRole(role: string | undefined): boolean {
+  return role === UserRole.SUPER_ADMIN || role === 'region_admin';
+}
 
 // 导出类型：取上面对象的值作为类型
 // 结果就是: 'super_admin' | 'region_admin' | 'base_manager' | 'worker'
@@ -41,6 +49,7 @@ export interface User extends Omit<SysUser, 'roleKey'> {
   // 前端扩展
   token?: string;
   access_token?: string;
+  assignedBaseId?: number | null;
 }
 
 // ==========================================

@@ -94,4 +94,20 @@ export class JobApplicationService {
       order: { createdAt: 'DESC' },
     });
   }
+
+  /**
+   * 获取某基地的所有岗位申请（现场管理员查看本基地人员）
+   * 可按状态过滤
+   */
+  async getApplicationsByBase(baseId: number, status?: ApplicationStatus): Promise<JobApplication[]> {
+    const where: any = { baseId };
+    if (status !== undefined && status !== null) {
+      where.status = status;
+    }
+    return this.applicationRepo.find({
+      where,
+      relations: ['user', 'job', 'base'],
+      order: { createdAt: 'DESC' },
+    });
+  }
 }

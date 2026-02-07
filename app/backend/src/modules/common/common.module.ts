@@ -8,6 +8,7 @@ import { TencentCosService } from './services/tencent-cos.service';
 import { TencentOcrService } from './services/tencent-ocr.service';
 import { SmsService } from './services/sms.service';
 import { OperationLogService } from './services/operation-log.service';
+import { OperationLogController } from './controllers/operation-log.controller';
 import { BackupService } from './services/backup.service';
 import { OperationLog } from './entities/operation-log.entity';
 
@@ -18,6 +19,7 @@ import { OperationLog } from './entities/operation-log.entity';
     ScheduleModule.forRoot(),
     TypeOrmModule.forFeature([OperationLog]),
   ],
+  controllers: [OperationLogController],
   providers: [
     SecurityService,
     TencentCosService,

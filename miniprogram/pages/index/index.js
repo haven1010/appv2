@@ -29,6 +29,10 @@ Page({
   },
 
   onShow() {
+    const tabBar = this.getTabBar && this.getTabBar();
+    if (tabBar) {
+      tabBar.setData({ selected: 0 });
+    }
     this.checkLogin();
   },
 
@@ -99,9 +103,11 @@ Page({
         url: `/base/${baseId}/jobs`,
         method: 'GET',
       });
-      const jobs = Array.isArray(res) ? res.map(j => {
-        const applied = apps.some(a => (a.jobId === j.id || a.jobId == j.id) && (a.baseId === parseInt(baseId) || a.baseId == baseId) && (a.status === 0 || a.status === 1));
-        return { ...j, salaryText: formatSalary(j), applied, appliedText: applied ? (apps.find(a => (a.jobId === j.id || a.jobId == j.id) && a.baseId == baseId)?.status === 1 ? '已录取' : '已申请') : '立即报名' };
+      var jobs = Array.isArray(res) ? res.map(function(j) {
+        var applied = apps.some(function(a) { return (a.jobId === j.id || a.jobId == j.id) && (a.baseId === parseInt(baseId) || a.baseId == baseId) && (a.status === 0 || a.status === 1); });
+        var matchApp = apps.find(function(a) { return (a.jobId === j.id || a.jobId == j.id) && a.baseId == baseId; });
+        var appliedText = applied ? ((matchApp && matchApp.status === 1) ? '已录取' : '已申请') : '立即报名';
+        return Object.assign({}, j, { salaryText: formatSalary(j), applied: applied, appliedText: appliedText });
       }) : [];
       this.setData({ baseJobs: jobs, jobsLoading: false });
     } catch (err) {

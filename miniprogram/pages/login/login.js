@@ -54,11 +54,18 @@ Page({
         icon: 'success',
       });
 
-      // 返回上一页或跳转到首页
+      // 根据角色跳转不同首页
+      const role = res.user && res.user.role;
       setTimeout(() => {
-        wx.switchTab({
-          url: '/pages/index/index'
-        });
+        if (role === 'field_manager') {
+          wx.switchTab({
+            url: '/pages/field/home/home'
+          });
+        } else {
+          wx.switchTab({
+            url: '/pages/index/index'
+          });
+        }
       }, 1500);
 
     } catch (err) {

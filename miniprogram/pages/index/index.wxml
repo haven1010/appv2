@@ -93,7 +93,11 @@
             <text class="job-title">{{item.jobTitle || item.title}}</text>
             <text class="job-salary">{{item.salaryText || '面议'}}</text>
           </view>
-          <text wx:if="{{item.workContent}}" class="job-desc">{{item.workContent}}</text>
+          <text wx:if="{{item.workContent || item.description}}" class="job-desc">{{item.workContent || item.description}}</text>
+          <view class="job-tags" wx:if="{{item.headcount || item.workHours}}">
+            <text class="job-tag" wx:if="{{item.headcount}}">招{{item.headcount}}人</text>
+            <text class="job-tag" wx:if="{{item.workHours}}">{{item.workHours}}</text>
+          </view>
           <button
             class="btn-apply {{item.applied ? 'btn-applied' : ''}}"
             disabled="{{applyLoading || item.applied}}"

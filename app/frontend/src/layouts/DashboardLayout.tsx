@@ -1,7 +1,8 @@
 // src/layouts/DashboardLayout.tsx
 import React from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { useAuth } from '@/App'; // 确保这里能引用到 useAuth
+import { useAuth } from '@/App';
+import { UserRole, isSuperAdminRole } from '@/types';
 import {
     LayoutDashboard,
     Sprout,
@@ -9,8 +10,28 @@ import {
     ClipboardCheck,
     Wallet,
     LogOut,
-    Briefcase
+    Briefcase,
+    ShieldCheck,
+    ScrollText,
+    Settings,
 } from 'lucide-react';
+
+// 角色中文映射
+const ROLE_LABEL: Record<string, string> = {
+    super_admin: '超级管理员',
+    region_admin: '超级管理员',
+    base_manager: '基地管理员',
+    field_manager: '现场管理员',
+    worker: '采摘工',
+};
+
+interface MenuItem {
+    icon: React.ElementType;
+    label: string;
+    path: string;
+    roles: string[];
+    section?: string; // 分组标题
+}
 
 export default function DashboardLayout() {
     const { user, logout } = useAuth();
@@ -22,16 +43,38 @@ export default function DashboardLayout() {
         navigate('/login');
     };
 
-    // 侧边栏菜单配置
-    // 注意：path 必须和 App.tsx 里的路由路径对应
-    const menuItems = [
-        { icon: LayoutDashboard, label: '概览', path: '/dashboard' },
-        { icon: Sprout, label: '基地管理', path: '/dashboard/bases' },
-        { icon: Briefcase, label: '招聘管理', path: '/dashboard/jobs' },
-        { icon: ClipboardCheck, label: '考勤管理', path: '/dashboard/attendance' },
-        { icon: Wallet, label: '薪资结算', path: '/dashboard/payroll' },
-        { icon: Users, label: '人员管理', path: '/dashboard/workers' },
+    const role = user?.role as string;
+    const isAdmin = isSuperAdminRole(role);
+
+    // 完整菜单定义 - 按角色分组
+    const allMenuItems: MenuItem[] = [
+        // ===== 超级管理员专属：平台管理 =====
+        { icon: LayoutDashboard, label: '数据概览', path: '/dashboard', roles: [UserRole.SUPER_ADMIN, UserRole.BASE_MANAGER], section: isAdmin ? '平台管理' : '主菜单' },
+        { icon: ShieldCheck, label: '审核中心', path: '/dashboard/audit', roles: [UserRole.SUPER_ADMIN] },
+        { icon: Users, label: '用户管理', path: '/dashboard/workers', roles: [UserRole.SUPER_ADMIN] },
+        { icon: ScrollText, label: '操作日志', path: '/dashboard/logs', roles: [UserRole.SUPER_ADMIN] },
+        { icon: Settings, label: '系统设置', path: '/dashboard/settings', roles: [UserRole.SUPER_ADMIN] },
+
+        // ===== 业务管理（基地管理员的核心，超级管理员也可查看） =====
+        { icon: Sprout, label: '基地管理', path: '/dashboard/bases', roles: [UserRole.SUPER_ADMIN, UserRole.BASE_MANAGER], section: isAdmin ? '业务查看' : undefined },
+        { icon: Briefcase, label: '招聘管理', path: '/dashboard/jobs', roles: [UserRole.SUPER_ADMIN, UserRole.BASE_MANAGER] },
+        { icon: ClipboardCheck, label: '考勤管理', path: '/dashboard/attendance', roles: [UserRole.SUPER_ADMIN, UserRole.BASE_MANAGER] },
+        { icon: Wallet, label: '薪资结算', path: '/dashboard/payroll', roles: [UserRole.SUPER_ADMIN, UserRole.BASE_MANAGER] },
+
+        // ===== 现场管理员专属 =====
+        { icon: LayoutDashboard, label: '工作台', path: '/dashboard', roles: [UserRole.FIELD_MANAGER], section: '现场管理' },
+        { icon: ClipboardCheck, label: '扫码签到', path: '/dashboard/attendance', roles: [UserRole.FIELD_MANAGER] },
+        { icon: Users, label: '基地人员', path: '/dashboard/field-workers', roles: [UserRole.FIELD_MANAGER] },
     ];
+
+    // 过滤菜单
+    const menuItems = allMenuItems.filter(item => {
+        if (isAdmin) return item.roles.includes(UserRole.SUPER_ADMIN);
+        return item.roles.includes(role as any);
+    });
+
+    // 渲染带分组标题的菜单
+    let lastSection = '';
 
     return (
         <div className="flex h-screen bg-[#020617] text-white overflow-hidden">
@@ -48,24 +91,34 @@ export default function DashboardLayout() {
                 </div>
 
                 <div className="flex-1 overflow-y-auto p-4 space-y-1">
-                    <div className="px-4 py-2 mb-2">
-                        <p className="text-xs font-semibold text-slate-500 uppercase">主菜单</p>
-                    </div>
                     {menuItems.map((item) => {
-                        // 判断当前路径是否激活
                         const isActive = location.pathname === item.path;
+                        let sectionHeader = null;
+
+                        // 渲染分组标题
+                        if (item.section && item.section !== lastSection) {
+                            lastSection = item.section;
+                            sectionHeader = (
+                                <div key={`section-${item.section}`} className="px-4 py-2 mt-3 mb-1">
+                                    <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">{item.section}</p>
+                                </div>
+                            );
+                        }
+
                         return (
-                            <Link
-                                key={item.path}
-                                to={item.path}
-                                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group ${isActive
-                                        ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-900/20'
-                                        : 'text-slate-400 hover:bg-slate-800 hover:text-white'
-                                    }`}
-                            >
-                                <item.icon size={20} className={isActive ? 'text-white' : 'text-slate-500 group-hover:text-white transition-colors'} />
-                                <span className="font-medium">{item.label}</span>
-                            </Link>
+                            <React.Fragment key={item.path + item.label}>
+                                {sectionHeader}
+                                <Link
+                                    to={item.path}
+                                    className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group ${isActive
+                                            ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-900/20'
+                                            : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                                        }`}
+                                >
+                                    <item.icon size={20} className={isActive ? 'text-white' : 'text-slate-500 group-hover:text-white transition-colors'} />
+                                    <span className="font-medium text-sm">{item.label}</span>
+                                </Link>
+                            </React.Fragment>
                         );
                     })}
                 </div>
@@ -79,7 +132,7 @@ export default function DashboardLayout() {
                             </div>
                             <div className="overflow-hidden">
                                 <p className="text-sm font-medium truncate w-24">{user?.name || '管理员'}</p>
-                                <p className="text-xs text-slate-500 truncate">在线</p>
+                                <p className="text-xs text-slate-500 truncate">{ROLE_LABEL[role] || '管理员'}</p>
                             </div>
                         </div>
                         <button
@@ -98,8 +151,6 @@ export default function DashboardLayout() {
                 {/* 顶部背景光晕 */}
                 <div className="absolute top-0 left-0 w-full h-96 bg-emerald-500/5 rounded-full blur-[120px] pointer-events-none"></div>
 
-                {/* 真正的内容容器 */}
-                {/* 🔥 Outlet 非常重要，它负责渲染子路由（比如 BaseManagement） */}
                 <div className="flex-1 overflow-auto p-4 md:p-8 relative z-0 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
                     <Outlet />
                 </div>

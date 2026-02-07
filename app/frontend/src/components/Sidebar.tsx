@@ -10,10 +10,13 @@ import {
   Briefcase, 
   ChevronLeft, 
   ChevronRight,
-  Sprout
+  Sprout,
+  ShieldCheck,
+  ScrollText,
+  Settings,
 } from 'lucide-react';
 import { useAuth } from '../App';
-import { UserRole } from '../types';
+import { UserRole, isSuperAdminRole } from '../types';
 import { cn } from '../lib/utils';
 
 interface SidebarProps {
@@ -25,12 +28,18 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
   const { user } = useAuth();
 
   const menuItems = [
-    { name: '控制台', icon: LayoutDashboard, path: '/dashboard', roles: Object.values(UserRole) },
-    { name: '采摘工管理', icon: Users, path: '/workers', roles: [UserRole.SUPER_ADMIN, UserRole.FIELD_ADMIN, UserRole.AREA_ADMIN] },
-    { name: '基地管理', icon: Sprout, path: '/bases', roles: Object.values(UserRole) },
-    { name: '招聘信息', icon: Briefcase, path: '/jobs', roles: [UserRole.SUPER_ADMIN, UserRole.BASE_ADMIN, UserRole.AREA_ADMIN] },
-    { name: '现场签到', icon: ScanLine, path: '/attendance', roles: [UserRole.SUPER_ADMIN, UserRole.FIELD_ADMIN, UserRole.BASE_ADMIN] },
-    { name: '工资结算', icon: CircleDollarSign, path: '/payroll', roles: [UserRole.SUPER_ADMIN, UserRole.BASE_ADMIN] },
+    { name: '数据概览', icon: LayoutDashboard, path: '/dashboard', roles: [UserRole.SUPER_ADMIN, UserRole.BASE_MANAGER, UserRole.FIELD_MANAGER] },
+    // 超级管理员专属
+    { name: '审核中心', icon: ShieldCheck, path: '/dashboard/audit', roles: [UserRole.SUPER_ADMIN] },
+    { name: '用户管理', icon: Users, path: '/dashboard/workers', roles: [UserRole.SUPER_ADMIN] },
+    { name: '操作日志', icon: ScrollText, path: '/dashboard/logs', roles: [UserRole.SUPER_ADMIN] },
+    { name: '系统设置', icon: Settings, path: '/dashboard/settings', roles: [UserRole.SUPER_ADMIN] },
+    // 业务管理
+    { name: '基地管理', icon: Sprout, path: '/dashboard/bases', roles: [UserRole.SUPER_ADMIN, UserRole.BASE_MANAGER] },
+    { name: '招聘管理', icon: Briefcase, path: '/dashboard/jobs', roles: [UserRole.SUPER_ADMIN, UserRole.BASE_MANAGER] },
+    { name: '考勤管理', icon: ScanLine, path: '/dashboard/attendance', roles: [UserRole.SUPER_ADMIN, UserRole.FIELD_MANAGER, UserRole.BASE_MANAGER] },
+    { name: '薪资结算', icon: CircleDollarSign, path: '/dashboard/payroll', roles: [UserRole.SUPER_ADMIN, UserRole.BASE_MANAGER] },
+    { name: '人员管理', icon: Users, path: '/dashboard/workers', roles: [UserRole.FIELD_MANAGER] },
   ];
 
   const filteredItems = menuItems.filter(item => user && item.roles.includes(user.role));

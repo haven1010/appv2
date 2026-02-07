@@ -44,13 +44,17 @@ export class AuthController {
       throw new UnauthorizedException('凭证无效，请检查手机号或密码是否正确。');
     }
 
-    // 假设 authService.login 返回的是 { access_token: string }
-    // 我们需要把它和 user 组合在一起返回
+    // authService.login 生成 JWT token
     const tokenResult = await this.authService.login(user);
 
+    // 返回 token + 完整用户信息，并添加 role 字段（由 roleKey 映射）
+    // 前端使用 user.role 来判断角色
     return {
       access_token: tokenResult.access_token,
-      user: user
-    };
+      user: {
+        ...user,
+        role: user.roleKey,
+      },
+    } as any;
   }
 }

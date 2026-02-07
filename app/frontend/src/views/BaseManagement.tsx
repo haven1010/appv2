@@ -490,7 +490,7 @@ export default function BaseManagement() {
       request:
         user?.role === UserRole.SUPER_ADMIN
           ? { params: { showAll: true } }
-          : user?.role === UserRole.BASE_ADMIN
+          : user?.role === UserRole.BASE_MANAGER
           ? { params: { ownerId: user.id } }
           : undefined,
     });
@@ -579,7 +579,7 @@ export default function BaseManagement() {
               </button>
             </div>
           )}
-          {(user?.role === UserRole.BASE_ADMIN || user?.role === UserRole.AREA_ADMIN) && (
+          {(user?.role === UserRole.BASE_MANAGER) && (
             <button
               type="button"
               onClick={handleApplyEntry}

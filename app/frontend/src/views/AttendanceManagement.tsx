@@ -102,26 +102,67 @@ export default function AttendanceManagement() {
     fetchData();
   }, [selectedDate, selectedBaseId]);
 
+  // 手动输入签到模式（用于没有扫码枪时手动输入二维码内容或 UID）
+  const [manualInput, setManualInput] = useState('');
+  const [checkinLoading, setCheckinLoading] = useState(false);
+  const [checkinError, setCheckinError] = useState<string | null>(null);
+
+  // 确定现场管理员的基地 ID
+  const [fieldBaseId, setFieldBaseId] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (user?.role === 'field_manager') {
+      // 从考勤 bases 接口获取关联基地
+      AXIOS_INSTANCE.get('/api/attendance/bases', { params: { date: selectedDate } })
+        .then((res) => {
+          const bases = res.data.bases || [];
+          if (bases.length > 0) setFieldBaseId(bases[0].baseId);
+        })
+        .catch(() => {});
+    }
+  }, [user, selectedDate]);
+
   const handleStartScan = () => {
     setIsScanning(true);
-    // Simulate camera access
-    setTimeout(() => {
-      handleScanSuccess();
-    }, 2500);
+    setCheckinError(null);
   };
 
-  const handleScanSuccess = () => {
-    setLastScanned({
-      name: '张三',
-      uid: 'UID99021',
-      job: '采摘组长',
-      base: '红旗生态农场',
-      time: new Date().toLocaleTimeString(),
-      status: 'PRESENT'
-    });
-    setIsScanning(false);
-    // 刷新数据
-    fetchData();
+  const handleManualCheckin = async () => {
+    const qrContent = manualInput.trim();
+    if (!qrContent) return;
+
+    // 确定使用哪个基地 ID
+    const checkinBaseId = fieldBaseId || selectedBaseId;
+    if (!checkinBaseId) {
+      setCheckinError('请先选择签到基地');
+      return;
+    }
+
+    setCheckinLoading(true);
+    setCheckinError(null);
+    try {
+      const res = await AXIOS_INSTANCE.post('/api/attendance/checkin', {
+        qrContent,
+        baseId: checkinBaseId,
+      });
+      const record = res.data;
+      setLastScanned({
+        name: record.user?.name || '签到成功',
+        uid: record.user?.uid || '-',
+        job: record.job?.jobTitle || '-',
+        base: baseStats.find(b => b.baseId === checkinBaseId)?.baseName || `基地#${checkinBaseId}`,
+        time: new Date().toLocaleTimeString(),
+        status: 'PRESENT',
+      });
+      setIsScanning(false);
+      setManualInput('');
+      fetchData();
+    } catch (e: any) {
+      const msg = e?.response?.data?.message || '签到失败';
+      setCheckinError(Array.isArray(msg) ? msg[0] : msg);
+    } finally {
+      setCheckinLoading(false);
+    }
   };
 
   const getStatusLabel = (status: number) => {
@@ -191,7 +232,7 @@ export default function AttendanceManagement() {
         <div className="lg:col-span-2 space-y-6">
           <div className="glass-card rounded-3xl p-8 border border-slate-800/60 flex flex-col items-center justify-center min-h-[400px]">
             {isScanning ? (
-              <div className="flex flex-col items-center gap-6 w-full max-w-sm">
+              <div className="flex flex-col items-center gap-6 w-full max-w-md">
                 <div className="relative w-64 h-64 border-2 border-emerald-500 rounded-3xl overflow-hidden shadow-2xl shadow-emerald-500/20">
                   <div className="absolute inset-0 bg-slate-900 flex items-center justify-center">
                     <Camera size={48} className="text-emerald-500/20 animate-pulse" />
@@ -199,15 +240,52 @@ export default function AttendanceManagement() {
                   <div className="absolute top-0 left-0 w-full h-1 bg-emerald-500 animate-scan-line"></div>
                 </div>
                 <div className="text-center">
-                  <p className="text-emerald-400 font-bold mb-2">正在扫描二维码...</p>
-                  <p className="text-slate-500 text-sm italic">请对准采摘工手机上的个人专属码</p>
+                  <p className="text-emerald-400 font-bold mb-2">扫码签到</p>
+                  <p className="text-slate-500 text-sm">请将二维码内容粘贴到下方输入框完成签到</p>
                 </div>
-                <button 
-                  onClick={() => setIsScanning(false)}
-                  className="px-6 py-2 bg-slate-800 text-slate-300 rounded-xl hover:bg-slate-700 transition-all"
-                >
-                  取消扫描
-                </button>
+                {/* Manual QR input */}
+                <div className="w-full space-y-3">
+                  <textarea
+                    value={manualInput}
+                    onChange={(e) => setManualInput(e.target.value)}
+                    placeholder="粘贴二维码内容..."
+                    className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 resize-none"
+                    rows={3}
+                  />
+                  {user?.role !== 'field_manager' && !fieldBaseId && (
+                    <select
+                      value={selectedBaseId || ''}
+                      onChange={(e) => setSelectedBaseId(e.target.value ? Number(e.target.value) : null)}
+                      className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2 text-sm text-slate-300"
+                    >
+                      <option value="">选择签到基地</option>
+                      {baseStats.map((b) => (
+                        <option key={b.baseId} value={b.baseId}>{b.baseName}</option>
+                      ))}
+                    </select>
+                  )}
+                  {checkinError && (
+                    <div className="text-rose-400 text-sm bg-rose-500/10 rounded-xl px-4 py-2 border border-rose-500/20">
+                      {checkinError}
+                    </div>
+                  )}
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => { setIsScanning(false); setCheckinError(null); setManualInput(''); }}
+                      className="flex-1 py-3 bg-slate-800 text-slate-300 rounded-xl hover:bg-slate-700 transition-all font-medium"
+                    >
+                      取消
+                    </button>
+                    <button
+                      onClick={handleManualCheckin}
+                      disabled={checkinLoading || !manualInput.trim()}
+                      className="flex-1 py-3 bg-emerald-500 hover:bg-emerald-400 text-white rounded-xl font-bold transition-all shadow-lg shadow-emerald-500/20 disabled:opacity-50 flex items-center justify-center gap-2"
+                    >
+                      {checkinLoading && <Loader2 className="animate-spin" size={16} />}
+                      确认签到
+                    </button>
+                  </div>
+                </div>
               </div>
             ) : lastScanned ? (
               <motion.div 

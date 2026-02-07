@@ -5,7 +5,8 @@ import { LaborSalary, SalaryStatus } from './entities/labor-salary.entity';
 import { DailySignup, SignupStatus } from '../attendance/entities/daily-signup.entity';
 import { BaseInfo } from '../base/entities/base-info.entity';
 import { SalaryCalculatorFactory } from './services/salary-calculator.strategy';
-import { UserRole } from '../user/entities/sys-user.entity';
+import { UserRole, isSuperAdmin } from '../user/entities/sys-user.entity';
+import { SysUser } from '../user/entities/sys-user.entity';
 
 @Injectable()
 export class SalaryService {
@@ -16,6 +17,8 @@ export class SalaryService {
     private signupRepo: Repository<DailySignup>,
     @InjectRepository(BaseInfo)
     private baseRepo: Repository<BaseInfo>,
+    @InjectRepository(SysUser)
+    private userRepo: Repository<SysUser>,
   ) {}
 
   async calculateAndDraft(signupId: number, input: { duration?: number; count?: number }, adminId: number) {
@@ -71,6 +74,13 @@ export class SalaryService {
       const baseIds = ownedBases.map((b) => b.id);
       if (baseIds.length === 0) return { list: [], total: 0 };
       qb.andWhere('signup.baseId IN (:...baseIds)', { baseIds });
+    } else if (role === UserRole.FIELD_MANAGER) {
+      const fm = await this.userRepo.findOne({ where: { id: user.id } });
+      if (fm?.assignedBaseId) {
+        qb.andWhere('signup.baseId = :assignedBaseId', { assignedBaseId: fm.assignedBaseId });
+      } else {
+        return { list: [], total: 0 };
+      }
     } else if (baseId) {
       qb.andWhere('signup.baseId = :baseId', { baseId });
     }
@@ -126,6 +136,13 @@ export class SalaryService {
         return { totalPaid: 0, totalPending: 0, paidCount: 0, pendingCount: 0 };
       }
       qb.andWhere('signup.baseId IN (:...baseIds)', { baseIds });
+    } else if (role === UserRole.FIELD_MANAGER) {
+      const fm = await this.userRepo.findOne({ where: { id: user.id } });
+      if (fm?.assignedBaseId) {
+        qb.andWhere('signup.baseId = :assignedBaseId', { assignedBaseId: fm.assignedBaseId });
+      } else {
+        return { totalPaid: 0, totalPending: 0, paidCount: 0, pendingCount: 0 };
+      }
     } else if (baseId) {
       qb.andWhere('signup.baseId = :baseId', { baseId });
     }

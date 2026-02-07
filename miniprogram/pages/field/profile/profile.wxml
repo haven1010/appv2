@@ -1,0 +1,85 @@
+<!--pages/field/profile/profile.wxml-->
+<view class="page">
+  <!-- 头部 -->
+  <view class="profile-header">
+    <view class="avatar">{{userInfo.name ? userInfo.name[0] : '?'}}</view>
+    <view class="user-name">{{userInfo.name || '未登录'}}</view>
+    <view class="user-tags">
+      <text class="tag role-tag">现场管理员</text>
+      <text class="tag uid-tag" wx:if="{{userInfo.uid}}">{{userInfo.uid}}</text>
+    </view>
+  </view>
+
+  <!-- 加载中 -->
+  <view class="loading-box" wx:if="{{loading}}">
+    <text>加载中...</text>
+  </view>
+
+  <block wx:else>
+    <!-- 关联基地 -->
+    <view class="info-card">
+      <view class="card-title">关联基地</view>
+      <view class="card-content" wx:if="{{profileData.assignedBaseId}}">
+        <view class="base-row">
+          <text class="base-icon">📍</text>
+          <view class="base-info">
+            <text class="base-name">{{baseName || '基地名称未获取'}}</text>
+            <text class="base-id">基地ID: {{profileData.assignedBaseId}}</text>
+          </view>
+        </view>
+      </view>
+      <view class="card-content empty" wx:else>
+        <text class="empty-text">未关联基地，请联系管理员分配</text>
+      </view>
+    </view>
+
+    <!-- 个人信息 -->
+    <view class="info-card">
+      <view class="card-title">个人信息</view>
+      <view class="info-row">
+        <text class="info-label">姓名</text>
+        <text class="info-value">{{profileData.name || userInfo.name || '-'}}</text>
+      </view>
+      <view class="info-row">
+        <text class="info-label">手机号</text>
+        <text class="info-value">{{profileData.phoneMasked || '-'}}</text>
+      </view>
+      <view class="info-row">
+        <text class="info-label">角色</text>
+        <text class="info-value">现场管理员</text>
+      </view>
+      <view class="info-row" wx:if="{{profileData.regionCode}}">
+        <text class="info-label">地区编码</text>
+        <text class="info-value">{{profileData.regionCode}}</text>
+      </view>
+    </view>
+
+    <!-- 功能菜单 -->
+    <view class="menu-list">
+      <view class="menu-item" bindtap="">
+        <view class="menu-left">
+          <text class="menu-icon">📷</text>
+          <text class="menu-label">扫码签到</text>
+        </view>
+        <text class="menu-arrow">›</text>
+      </view>
+      <view class="menu-item" bindtap="">
+        <view class="menu-left">
+          <text class="menu-icon">📋</text>
+          <text class="menu-label">考勤记录</text>
+        </view>
+        <text class="menu-arrow">›</text>
+      </view>
+      <view class="menu-item">
+        <view class="menu-left">
+          <text class="menu-icon">⚙</text>
+          <text class="menu-label">设置</text>
+        </view>
+        <text class="menu-arrow">›</text>
+      </view>
+    </view>
+  </block>
+
+  <!-- 退出登录 -->
+  <button class="btn-logout" bindtap="logout">退出当前账号</button>
+</view>

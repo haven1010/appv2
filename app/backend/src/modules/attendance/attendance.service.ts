@@ -3,11 +3,13 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { DailySignup, SignupStatus } from './entities/daily-signup.entity';
 import { SecurityService } from '../common/services/security.service';
-import { SysUser, UserRole } from '../user/entities/sys-user.entity';
+import { SysUser, UserRole, isSuperAdmin } from '../user/entities/sys-user.entity';
 import { RecruitmentJob } from '../base/entities/recruitment-job.entity';
 import { BaseInfo } from '../base/entities/base-info.entity';
 import { SmsService } from '../common/services/sms.service';
 import { QrCodeService } from '../qrcode/qrcode.service';
+import { OperationLogService } from '../common/services/operation-log.service';
+import { OperationType, ResourceType } from '../common/entities/operation-log.entity';
 
 @Injectable()
 export class AttendanceService {
@@ -25,6 +27,7 @@ export class AttendanceService {
     private securityService: SecurityService,
     private smsService: SmsService,
     private qrcodeService: QrCodeService,
+    private operationLogService: OperationLogService,
   ) { }
 
   /**
@@ -118,8 +121,17 @@ export class AttendanceService {
     signup.checkinTime = new Date();
 
     const saved = await this.signupRepo.save(signup);
-    // 【修复】日志改为使用 name 和 uid
     this.logger.log(`[签到成功] 用户: ${user.name} (UID: ${user.uid}), 基地ID: ${baseId}`);
+
+    // 记录签到操作日志
+    this.operationLogService.log(
+      OperationType.CHECKIN,
+      ResourceType.SIGNUP,
+      saved.id,
+      user.id,
+      `扫码签到: ${user.name} (${user.uid}), 基地ID: ${baseId}`,
+    ).catch(() => {});
+
     return saved;
   }
 
@@ -302,7 +314,6 @@ export class AttendanceService {
 
     // 基地管理员只能查看自己管理的基地
     if (role === UserRole.BASE_MANAGER) {
-      // 基地管理员只能查看自己管理的基地
       const ownedBases = await this.baseRepo.find({
         where: { ownerId: user.id },
         select: ['id'],
@@ -312,6 +323,14 @@ export class AttendanceService {
         return { records: [], total: 0 };
       }
       qb.andWhere('signup.baseId IN (:...baseIds)', { baseIds });
+    } else if (role === UserRole.FIELD_MANAGER) {
+      // 现场管理员只看关联基地
+      const fm = await this.userRepo.findOne({ where: { id: user.id } });
+      if (fm?.assignedBaseId) {
+        qb.andWhere('signup.baseId = :assignedBaseId', { assignedBaseId: fm.assignedBaseId });
+      } else {
+        return { records: [], total: 0 };
+      }
     } else if (baseId) {
       qb.andWhere('signup.baseId = :baseId', { baseId });
     }
@@ -366,16 +385,16 @@ export class AttendanceService {
       });
       const baseIds = ownedBases.map(b => b.id);
       if (baseIds.length === 0) {
-        return {
-          checkedIn: 0,
-          absent: 0,
-          signedUp: 0,
-          total: 0,
-          attendanceRate: 0,
-          date,
-        };
+        return { checkedIn: 0, absent: 0, signedUp: 0, total: 0, attendanceRate: 0, date };
       }
       qb.andWhere('signup.baseId IN (:...baseIds)', { baseIds });
+    } else if (role === UserRole.FIELD_MANAGER) {
+      const fm = await this.userRepo.findOne({ where: { id: user.id } });
+      if (fm?.assignedBaseId) {
+        qb.andWhere('signup.baseId = :assignedBaseId', { assignedBaseId: fm.assignedBaseId });
+      } else {
+        return { checkedIn: 0, absent: 0, signedUp: 0, total: 0, attendanceRate: 0, date };
+      }
     }
 
     const allRecords = await qb.getMany();
@@ -409,6 +428,13 @@ export class AttendanceService {
     // 基地管理员只能看到自己管理的基地
     if (role === UserRole.BASE_MANAGER) {
       baseQb.where('base.ownerId = :ownerId', { ownerId: user.id });
+    } else if (role === UserRole.FIELD_MANAGER) {
+      const fm = await this.userRepo.findOne({ where: { id: user.id } });
+      if (fm?.assignedBaseId) {
+        baseQb.where('base.id = :assignedBaseId', { assignedBaseId: fm.assignedBaseId });
+      } else {
+        return { bases: [], date };
+      }
     }
 
     const bases = await baseQb.getMany();

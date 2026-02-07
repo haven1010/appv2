@@ -17,6 +17,10 @@ Page({
   },
 
   onShow() {
+    const tabBar = this.getTabBar && this.getTabBar();
+    if (tabBar) {
+      tabBar.setData({ selected: 1 });
+    }
     this.loadData();
   },
 
@@ -44,14 +48,16 @@ Page({
     try {
       const res = await app.request({ url: '/base/applications/me', method: 'GET' });
       const list = Array.isArray(res) ? res : [];
-      const applications = list.map(item => ({
-        id: item.id,
-        title: item.job?.jobTitle || '岗位',
-        base: item.base?.baseName || '基地',
-        status: STATUS_MAP[item.status] || '审核中',
-        date: item.createdAt ? new Date(item.createdAt).toLocaleDateString() : '',
-        raw: item,
-      }));
+      var applications = list.map(function(item) {
+        return {
+          id: item.id,
+          title: (item.job && item.job.jobTitle) || '岗位',
+          base: (item.base && item.base.baseName) || '基地',
+          status: STATUS_MAP[item.status] || '审核中',
+          date: item.createdAt ? new Date(item.createdAt).toLocaleDateString() : '',
+          raw: item,
+        };
+      });
       this.setData({ applications, loading: false });
     } catch (err) {
       console.error('加载报名列表失败:', err);
@@ -63,13 +69,14 @@ Page({
     try {
       const res = await app.request({ url: '/salary/worker/pending', method: 'GET' });
       const list = Array.isArray(res) ? res : [];
-      const workerPending = list.map(item => ({
-        ...item,
-        totalAmountText:
-          item.totalAmount != null
-            ? Number(item.totalAmount).toFixed(2)
-            : '0.00',
-      }));
+      var workerPending = list.map(function(item) {
+        return Object.assign({}, item, {
+          totalAmountText:
+            item.totalAmount != null
+              ? Number(item.totalAmount).toFixed(2)
+              : '0.00',
+        });
+      });
       this.setData({ workerPending, pendingLoading: false });
     } catch (err) {
       console.error('加载待发放失败:', err);

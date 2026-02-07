@@ -3,6 +3,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { SalaryPayment, PaymentMethod, PaymentStatus } from '../entities/salary-payment.entity';
 import { LaborSalary, SalaryStatus } from '../entities/labor-salary.entity';
+import { OperationLogService } from '../../common/services/operation-log.service';
+import { OperationType, ResourceType } from '../../common/entities/operation-log.entity';
 
 @Injectable()
 export class SalaryPaymentService {
@@ -13,6 +15,7 @@ export class SalaryPaymentService {
     private paymentRepo: Repository<SalaryPayment>,
     @InjectRepository(LaborSalary)
     private salaryRepo: Repository<LaborSalary>,
+    private operationLogService: OperationLogService,
   ) {}
 
   async createPayment(
@@ -36,7 +39,17 @@ export class SalaryPaymentService {
       paidBy,
     });
 
-    return this.paymentRepo.save(payment);
+    const saved = await this.paymentRepo.save(payment);
+
+    this.operationLogService.log(
+      OperationType.PAYMENT,
+      ResourceType.SALARY,
+      salaryId,
+      paidBy,
+      `创建薪资支付: salaryId=${salaryId}, method=${paymentMethod}`,
+    ).catch(() => {});
+
+    return saved;
   }
 
   async confirmPayment(
@@ -76,7 +89,17 @@ export class SalaryPaymentService {
       await this.salaryRepo.save(salary);
     }
 
-    return this.paymentRepo.save(payment);
+    const saved = await this.paymentRepo.save(payment);
+
+    this.operationLogService.log(
+      OperationType.PAYMENT,
+      ResourceType.SALARY,
+      payment.salaryId,
+      paidBy,
+      `完成薪资支付: paymentId=${paymentId}`,
+    ).catch(() => {});
+
+    return saved;
   }
 
   async getPaymentsBySalary(salaryId: number): Promise<SalaryPayment[]> {

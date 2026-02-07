@@ -167,6 +167,17 @@ export class BaseController {
     return this.baseService.getJobApplications(jobId);
   }
 
+  @ApiOperation({ summary: '获取某基地的全部申请（现场管理员查看本基地人员）' })
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @Get(':id/applications')
+  async getBaseApplications(
+    @Param('id', ParseIntPipe) baseId: number,
+    @Query('status') status?: string,
+  ) {
+    return this.baseService.getApplicationsByBase(baseId, status !== undefined ? Number(status) : undefined);
+  }
+
   @ApiOperation({ summary: '审核岗位申请' })
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)

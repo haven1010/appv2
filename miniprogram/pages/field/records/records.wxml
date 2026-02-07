@@ -1,0 +1,55 @@
+<!--pages/field/records/records.wxml-->
+<view class="page">
+  <!-- 头部 -->
+  <view class="records-header">
+    <text class="records-title">考勤记录</text>
+    <text class="records-base" wx:if="{{baseName}}">{{baseName}}</text>
+  </view>
+
+  <!-- 日期切换器 -->
+  <view class="date-switcher">
+    <view class="date-btn" bindtap="prevDay">‹</view>
+    <picker mode="date" value="{{selectedDate}}" end="{{selectedDate}}" bindchange="onDateChange">
+      <view class="date-display">
+        <text class="date-label">{{dateLabel}}</text>
+        <text class="date-value">{{selectedDate}}</text>
+      </view>
+    </picker>
+    <view class="date-btn" bindtap="nextDay">›</view>
+  </view>
+
+  <!-- 统计条 -->
+  <view class="count-bar">
+    <text class="count-text">共 <text class="count-num">{{totalCount}}</text> 条签到记录</text>
+  </view>
+
+  <!-- 加载中 -->
+  <view class="loading-box" wx:if="{{loading}}">
+    <text>加载中...</text>
+  </view>
+
+  <!-- 记录列表 -->
+  <view class="record-list" wx:elif="{{records.length > 0}}">
+    <view class="record-item" wx:for="{{records}}" wx:key="id">
+      <view class="record-left">
+        <view class="record-avatar">{{item.displayAvatar}}</view>
+        <view class="record-idx">{{index + 1}}</view>
+      </view>
+      <view class="record-center">
+        <text class="record-name">{{item.displayName}}</text>
+        <text class="record-detail" wx:if="{{item.user && item.user.uid}}">UID: {{item.user.uid}}</text>
+        <text class="record-detail" wx:if="{{item.job && item.job.title}}">岗位: {{item.job.title}}</text>
+      </view>
+      <view class="record-right">
+        <text class="record-time">{{item.displayTime}}</text>
+        <text class="record-status checked">已签到</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 空状态 -->
+  <view class="empty-box" wx:elif="{{!loading}}">
+    <text class="empty-icon">📋</text>
+    <text class="empty-text">{{dateLabel}}暂无签到记录</text>
+  </view>
+</view>

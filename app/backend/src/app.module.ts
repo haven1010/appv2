@@ -23,6 +23,8 @@ import { SalaryModule } from './modules/salary/salary.module';
 import { QrCodeModule } from './modules/qrcode/qrcode.module';
 import { RecommendationModule } from './modules/recommendation/recommendation.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { DashboardModule } from './modules/dashboard/dashboard.module';
+import { CommonModule } from './modules/common/common.module';
 
 @Module({
   imports: [
@@ -85,6 +87,8 @@ import { AuthModule } from './modules/auth/auth.module';
       },
     }),
 
+    // 公共模块（OperationLogService、SecurityService 等）
+    CommonModule,
     // 所有业务模块（都不需要再 forFeature 了！）
     UserModule,
     BaseModule,
@@ -93,6 +97,7 @@ import { AuthModule } from './modules/auth/auth.module';
     QrCodeModule,
     RecommendationModule,
     AuthModule,
+    DashboardModule,
   ],
   controllers: [AppController],
   providers: [AppService],

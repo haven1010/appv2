@@ -1,0 +1,32 @@
+<!--custom-tab-bar/index.wxml-->
+<view class="tab-bar">
+  <!-- 采摘工导航 -->
+  <block wx:if="{{role !== 'field_manager'}}">
+    <view
+      wx:for="{{workerList}}"
+      wx:key="pagePath"
+      class="tab-bar-item {{selected === index ? 'active' : ''}}"
+      data-path="{{item.pagePath}}"
+      data-index="{{index}}"
+      bindtap="switchTab"
+    >
+      <text class="tab-icon-text">{{item.icon}}</text>
+      <text class="tab-text">{{item.text}}</text>
+    </view>
+  </block>
+
+  <!-- 现场管理员导航 -->
+  <block wx:else>
+    <view
+      wx:for="{{fieldList}}"
+      wx:key="pagePath"
+      class="tab-bar-item {{selected === index ? 'active' : ''}}"
+      data-path="{{item.pagePath}}"
+      data-index="{{index}}"
+      bindtap="switchTab"
+    >
+      <text class="tab-icon-text">{{item.icon}}</text>
+      <text class="tab-text">{{item.text}}</text>
+    </view>
+  </block>
+</view>

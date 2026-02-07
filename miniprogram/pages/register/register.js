@@ -10,43 +10,51 @@ Page({
     emergencyPhone: '',
     loading: false,
     error: '',
+    // 焦点状态
+    nameFocus: false,
+    idCardFocus: false,
+    phoneFocus: false,
   },
 
   onInputName(e) {
-    this.setData({ name: e.detail.value });
+    this.setData({ name: e.detail.value, error: '' });
   },
-
   onInputIdCard(e) {
-    this.setData({ idCard: e.detail.value });
+    this.setData({ idCard: e.detail.value, error: '' });
   },
-
   onInputPhone(e) {
-    this.setData({ phone: e.detail.value });
+    this.setData({ phone: e.detail.value, error: '' });
   },
-
   onInputEmergencyContact(e) {
     this.setData({ emergencyContact: e.detail.value });
   },
-
   onInputEmergencyPhone(e) {
     this.setData({ emergencyPhone: e.detail.value });
   },
 
+  // 焦点事件
+  onNameFocus() { this.setData({ nameFocus: true }); },
+  onNameBlur() { this.setData({ nameFocus: false }); },
+  onIdCardFocus() { this.setData({ idCardFocus: true }); },
+  onIdCardBlur() { this.setData({ idCardFocus: false }); },
+  onPhoneFocus() { this.setData({ phoneFocus: true }); },
+  onPhoneBlur() { this.setData({ phoneFocus: false }); },
+
   async handleRegister() {
     const { name, idCard, phone, emergencyContact, emergencyPhone } = this.data;
-    
-    if (!name || !idCard || !phone) {
-      this.setData({ error: '请填写姓名、身份证号和手机号' });
+
+    if (!name.trim()) {
+      this.setData({ error: '请输入真实姓名' });
       return;
     }
 
-    if (idCard.length !== 18) {
-      this.setData({ error: '身份证号必须是18位' });
+    if (!idCard || idCard.length !== 18) {
+      this.setData({ error: '请输入完整的18位身份证号码' });
       return;
     }
 
-    if (phone.length !== 11) {
-      this.setData({ error: '手机号必须是11位' });
+    if (!phone || phone.length !== 11) {
+      this.setData({ error: '请输入正确的11位手机号码' });
       return;
     }
 
@@ -57,7 +65,7 @@ Page({
         url: '/user/register',
         method: 'POST',
         data: {
-          name,
+          name: name.trim(),
           idCard,
           phone,
           roleKey: 'worker',
@@ -69,18 +77,21 @@ Page({
       wx.showToast({
         title: '注册成功',
         icon: 'success',
+        duration: 1500,
       });
 
-      // 自动登录
       setTimeout(() => {
         wx.navigateBack();
       }, 1500);
-
     } catch (err) {
-      this.setData({ 
+      this.setData({
         error: err.message || '注册失败，请检查信息是否正确',
-        loading: false 
+        loading: false,
       });
     }
+  },
+
+  goToLogin() {
+    wx.navigateBack();
   },
 });

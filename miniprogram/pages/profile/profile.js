@@ -21,6 +21,10 @@ Page({
   },
 
   onShow() {
+    const tabBar = this.getTabBar && this.getTabBar();
+    if (tabBar) {
+      tabBar.setData({ selected: 3 });
+    }
     this.loadProfile();
   },
 
@@ -51,17 +55,18 @@ Page({
     }
     this.setData({ loading: true });
     try {
-      const [profile, stats] = await Promise.all([
+      var results = await Promise.all([
         app.request({ url: '/user/profile', method: 'GET' }),
         app.request({ url: '/salary/worker/stats', method: 'GET' }),
       ]);
+      var profile = results[0];
+      var stats = results[1];
       const p = profile || {};
       this.setData({
-        profileData: {
-          ...p,
+        profileData: Object.assign({}, p, {
           phoneMasked: maskPhone(p.phone),
           emergencyPhoneMasked: maskPhone(p.emergencyPhone),
-        },
+        }),
         workerStats: stats || { workDays: 0, pendingAmount: 0 },
         loading: false,
       });

@@ -1,66 +1,72 @@
-// pages/salary/salary.js
+const app = getApp();
+
 Page({
-
-  /**
-   * 页面的初始数据
-   */
   data: {
-
+    stats: null,
+    pendingList: [],
+    loading: true,
   },
 
-  /**
-   * 生命周期函数--监听页面加载
-   */
-  onLoad(options) {
-
+  onLoad() {
+    this.loadSalaryData();
   },
 
-  /**
-   * 生命周期函数--监听页面初次渲染完成
-   */
-  onReady() {
-
-  },
-
-  /**
-   * 生命周期函数--监听页面显示
-   */
   onShow() {
-
+    this.loadSalaryData();
   },
 
-  /**
-   * 生命周期函数--监听页面隐藏
-   */
-  onHide() {
-
-  },
-
-  /**
-   * 生命周期函数--监听页面卸载
-   */
-  onUnload() {
-
-  },
-
-  /**
-   * 页面相关事件处理函数--监听用户下拉动作
-   */
   onPullDownRefresh() {
-
+    this.loadSalaryData();
+    setTimeout(() => wx.stopPullDownRefresh(), 1000);
   },
 
-  /**
-   * 页面上拉触底事件的处理函数
-   */
-  onReachBottom() {
+  async loadSalaryData() {
+    this.setData({ loading: true });
 
+    try {
+      var results = await Promise.all([
+        app.request({ url: '/salary/worker/stats', method: 'GET' }).catch(function() { return null; }),
+        app.request({ url: '/salary/worker/pending', method: 'GET' }).catch(function() { return []; }),
+      ]);
+      var stats = results[0];
+      var pendingList = results[1];
+
+      this.setData({
+        stats: stats || { totalDays: 0, totalEarned: 0, pendingAmount: 0 },
+        pendingList: Array.isArray(pendingList) ? pendingList : [],
+        loading: false,
+      });
+    } catch (err) {
+      console.error('加载薪资数据失败:', err);
+      wx.showToast({ title: '加载失败', icon: 'none' });
+      this.setData({ loading: false });
+    }
   },
 
-  /**
-   * 用户点击右上角分享
-   */
-  onShareAppMessage() {
+  async confirmSalary(e) {
+    const salaryId = e.currentTarget.dataset.id;
 
-  }
-})
+    wx.showModal({
+      title: '确认工资',
+      content: '确认后表示您认可该笔工资金额，是否继续？',
+      success: async (res) => {
+        if (!res.confirm) return;
+
+        wx.showLoading({ title: '确认中...' });
+        try {
+          await app.request({
+            url: '/salary/' + salaryId + '/worker-confirm',
+            method: 'PATCH',
+          });
+          wx.hideLoading();
+          wx.showToast({ title: '确认成功', icon: 'success' });
+          this.loadSalaryData();
+        } catch (err) {
+          wx.hideLoading();
+          console.error('确认工资失败:', err);
+          wx.showToast({ title: err.message || '确认失败', icon: 'none' });
+        }
+      },
+    });
+  },
+});

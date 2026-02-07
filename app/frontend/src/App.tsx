@@ -11,14 +11,20 @@ import DashboardLayout from './layouts/DashboardLayout'; // 之前创建的通�
 // --- 业务页面 ---
 import LoginView from './views/LoginView';
 import RegisterView from './views/RegisterView';
-import BaseManagement from './views/BaseManagement'; // 刚刚重构好的基地页面
-// 下面这些如果还没写好，可以先用简单的占位组件代替
+import BaseManagement from './views/BaseManagement';
 import DashboardView from './views/DashboardView';
 import AttendanceManagement from './views/AttendanceManagement';
 import JobManagement from './views/JobManagement';
 import PayrollView from './views/PayrollView';
 import WorkerManagement from './views/WorkerManagement';
 import WorkerView from './views/worker/WorkerView';
+// --- 超级管理员专属页面 ---
+import AuditCenter from './views/AuditCenter';
+import OperationLogView from './views/OperationLogView';
+import SystemSettings from './views/SystemSettings';
+// --- 现场管理员专属页面 ---
+import FieldDashboard from './views/FieldDashboard';
+import FieldWorkers from './views/FieldWorkers';
 
 // --- 1. 初始化 React Query 客户端 ---
 const queryClient = new QueryClient({
@@ -60,7 +66,14 @@ const ProtectedRoute = ({ children, roles }: { children?: React.ReactNode, roles
   return children ? <>{children}</> : <Outlet />;
 };
 
-// --- 4. 主应用组件 ---
+// --- 4. Dashboard Index (根据角色选择不同首页) ---
+function DashboardIndex() {
+  const { user } = useAuth();
+  if (user?.role === UserRole.FIELD_MANAGER) return <FieldDashboard />;
+  return <DashboardView />;
+}
+
+// --- 5. 主应用组件 ---
 export default function App() {
   // 从 localStorage 初始化用户状态
   const [user, setUser] = useState<User | null>(() => {
@@ -107,33 +120,57 @@ export default function App() {
                 </ProtectedRoute>
               }
             >
-              {/* 默认子路由: 概览 */}
-              <Route index element={<DashboardView />} />
+              {/* 默认子路由: 概览（现场管理员使用专属工作台） */}
+              <Route index element={<DashboardIndex />} />
+
+              {/* 超级管理员专属 */}
+              <Route path="audit" element={
+                <ProtectedRoute roles={[UserRole.SUPER_ADMIN]}>
+                  <AuditCenter />
+                </ProtectedRoute>
+              } />
+              <Route path="logs" element={
+                <ProtectedRoute roles={[UserRole.SUPER_ADMIN]}>
+                  <OperationLogView />
+                </ProtectedRoute>
+              } />
+              <Route path="settings" element={
+                <ProtectedRoute roles={[UserRole.SUPER_ADMIN]}>
+                  <SystemSettings />
+                </ProtectedRoute>
+              } />
 
               {/* 业务子路由 */}
               <Route path="bases" element={<BaseManagement />} />
 
               <Route path="attendance" element={
-                <ProtectedRoute roles={[UserRole.SUPER_ADMIN, UserRole.FIELD_ADMIN, UserRole.BASE_ADMIN]}>
+                <ProtectedRoute roles={[UserRole.SUPER_ADMIN, UserRole.FIELD_MANAGER, UserRole.BASE_MANAGER]}>
                   <AttendanceManagement />
                 </ProtectedRoute>
               } />
 
               <Route path="payroll" element={
-                <ProtectedRoute roles={[UserRole.SUPER_ADMIN, UserRole.BASE_ADMIN]}>
+                <ProtectedRoute roles={[UserRole.SUPER_ADMIN, UserRole.BASE_MANAGER]}>
                   <PayrollView />
                 </ProtectedRoute>
               } />
 
               <Route path="workers" element={
-                <ProtectedRoute roles={[UserRole.SUPER_ADMIN, UserRole.FIELD_ADMIN, UserRole.AREA_ADMIN]}>
+                <ProtectedRoute roles={[UserRole.SUPER_ADMIN, UserRole.FIELD_MANAGER]}>
                   <WorkerManagement />
                 </ProtectedRoute>
               } />
 
               <Route path="jobs" element={
-                <ProtectedRoute roles={[UserRole.SUPER_ADMIN, UserRole.BASE_ADMIN]}>
+                <ProtectedRoute roles={[UserRole.SUPER_ADMIN, UserRole.BASE_MANAGER]}>
                   <JobManagement />
+                </ProtectedRoute>
+              } />
+
+              {/* 现场管理员专属 */}
+              <Route path="field-workers" element={
+                <ProtectedRoute roles={[UserRole.FIELD_MANAGER]}>
+                  <FieldWorkers />
                 </ProtectedRoute>
               } />
             </Route>
