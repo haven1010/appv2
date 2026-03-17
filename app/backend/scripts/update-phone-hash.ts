@@ -17,7 +17,7 @@ async function updatePhoneHash() {
   });
   
   const configService = new ConfigService();
-  const securityService = new SecurityService(configService);
+  const securityService = new SecurityService();
 
   const connection = await createConnection({
     type: 'mysql',
@@ -66,4 +66,3 @@ async function updatePhoneHash() {
 }
 
 updatePhoneHash().catch(console.error);
-

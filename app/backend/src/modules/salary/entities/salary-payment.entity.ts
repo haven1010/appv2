@@ -1,4 +1,4 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn, Index } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn, Index, OneToOne } from 'typeorm';
 import { LaborSalary } from './labor-salary.entity';
 import { SysUser } from '../../user/entities/sys-user.entity';
 
@@ -19,8 +19,8 @@ export class SalaryPayment {
   @PrimaryGeneratedColumn({ type: 'bigint' })
   id: number;
 
-  @Index()
-  @Column({ name: 'salary_id', type: 'bigint', comment: '工资记录ID' })
+  @Index('UQ_salary_payment_salary_id', { unique: true })
+  @Column({ name: 'salary_id', type: 'bigint', unique: true, comment: '工资记录ID' })
   salaryId: number;
 
   @Column({ 
@@ -52,11 +52,11 @@ export class SalaryPayment {
   @Column({ type: 'text', nullable: true, comment: '备注' })
   note: string;
 
-  @ManyToOne(() => LaborSalary)
+  @OneToOne(() => LaborSalary, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'salary_id' })
   salary: LaborSalary;
 
-  @ManyToOne(() => SysUser)
+  @ManyToOne(() => SysUser, { nullable: true, onDelete: 'SET NULL' })
   @JoinColumn({ name: 'paid_by' })
   payer: SysUser;
 

@@ -32,6 +32,11 @@ export class SalaryPaymentService {
       throw new BadRequestException('工资记录未确认，无法创建支付记录');
     }
 
+    const existingPayment = await this.paymentRepo.findOne({ where: { salaryId } });
+    if (existingPayment) {
+      throw new BadRequestException('该工资记录已存在支付单');
+    }
+
     const payment = this.paymentRepo.create({
       salaryId,
       paymentMethod,

@@ -17,8 +17,9 @@ export class CreateUserDto {
   phone: string;
 
   @ApiProperty({ example: 'worker', enum: UserRole, description: '角色' })
+  @IsOptional()
   @IsEnum(UserRole)
-  roleKey: UserRole;
+  roleKey?: UserRole;
 
   @ApiProperty({ example: 'https://bucket.cos.region.myqcloud.com/face.jpg', required: false })
   @IsOptional()

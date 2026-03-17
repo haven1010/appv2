@@ -38,6 +38,7 @@ import { CommonModule } from './modules/common/common.module';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
+        const isProduction = process.env.NODE_ENV === 'production';
         // 调试：打印当前实际使用的数据库配置，避免 .env 未生效导致的困惑
         const dbConfig = {
           host: configService.get<string>('DB_HOST', 'localhost'),
@@ -46,9 +47,14 @@ import { CommonModule } from './modules/common/common.module';
           password: configService.get<string>('DB_PASSWORD', 'root123'),
           database: configService.get<string>('DB_DATABASE', 'caizhitong'),
         };
+        const synchronize = configService.get<string>('DB_SYNCHRONIZE', 'false') === 'true' && !isProduction;
+
+        if (!configService.get<string>('AES_KEY')) {
+          throw new Error('AES_KEY is required');
+        }
 
         // 只在本地开发环境下打印，避免生产环境泄露配置
-        if (process.env.NODE_ENV !== 'production') {
+        if (!isProduction) {
           // 密码只显示前几位，防止完整泄露
           const maskedPassword = dbConfig.password
             ? dbConfig.password.slice(0, 2) + '***'
@@ -60,6 +66,7 @@ import { CommonModule } from './modules/common/common.module';
             username: dbConfig.username,
             password: maskedPassword,
             database: dbConfig.database,
+            synchronize,
           });
         }
 
@@ -81,7 +88,7 @@ import { CommonModule } from './modules/common/common.module';
             SalaryPayment,
             OperationLog,
           ],
-          synchronize: true, // 生产环境一定要关
+          synchronize,
           logging: false,
         };
       },

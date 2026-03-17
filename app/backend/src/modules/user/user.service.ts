@@ -1,6 +1,6 @@
-import { Injectable, BadRequestException, ConflictException, NotFoundException } from '@nestjs/common';
+import { Injectable, ConflictException, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Like, In } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import { SysUser, UserRole } from './entities/sys-user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { SecurityService } from '../common/services/security.service';
@@ -16,6 +16,22 @@ export class UserService {
     private securityService: SecurityService,
     private operationLogService: OperationLogService,
   ) { }
+
+  private rethrowDuplicateKey(error: any): never {
+    if (error?.code === 'ER_DUP_ENTRY') {
+      const message = String(error?.sqlMessage || error?.message || '');
+      if (message.includes('UQ_sys_user_phone_hash')) {
+        throw new ConflictException('手机号已被注册');
+      }
+      if (message.includes('UQ_sys_user_id_card_hash')) {
+        throw new ConflictException('身份证号已被注册');
+      }
+      if (message.includes('IDX_5ad5e9aa3873d6537196e01353') || message.includes('uid')) {
+        throw new ConflictException('UID 生成冲突，请重试');
+      }
+    }
+    throw error;
+  }
 
   async create(createUserDto: CreateUserDto): Promise<SysUser> {
     // 1. Calculate Hash for Uniqueness Check (Since DB column is encrypted)
@@ -48,13 +64,41 @@ export class UserService {
     const user = this.userRepository.create({
       ...createUserDto,
       uid,
+      roleKey: createUserDto.roleKey || UserRole.WORKER,
       idCardHash,
       phoneHash,
       emergencyPhoneHash,
       infoAuditStatus: 1, // 首次录入默认通过审核
     });
 
-    return this.userRepository.save(user);
+    try {
+      return await this.userRepository.save(user);
+    } catch (error) {
+      this.rethrowDuplicateKey(error);
+    }
+  }
+
+  async createSuperAdmin(createUserDto: CreateUserDto, operatorId: number): Promise<SysUser> {
+    const bootstrapSuperAdmin = await this.userRepository.findOne({
+      where: {
+        roleKey: UserRole.SUPER_ADMIN,
+        isDeleted: false,
+      },
+      order: { id: 'ASC' },
+    });
+
+    if (!bootstrapSuperAdmin) {
+      throw new NotFoundException('系统中不存在可用于授权的超级管理员');
+    }
+
+    if (bootstrapSuperAdmin.id !== operatorId) {
+      throw new ForbiddenException('仅首个超级管理员可以创建次级超级管理员');
+    }
+
+    return this.create({
+      ...createUserDto,
+      roleKey: UserRole.SUPER_ADMIN,
+    });
   }
 
   async findByPhone(phone: string): Promise<SysUser | undefined> {
@@ -115,7 +159,11 @@ export class UserService {
     }
 
     Object.assign(user, updateDto);
-    return this.userRepository.save(user);
+    try {
+      return await this.userRepository.save(user);
+    } catch (error) {
+      this.rethrowDuplicateKey(error);
+    }
   }
 
   async auditInfo(userId: number, status: number, reason?: string, operatorId?: number): Promise<SysUser> {

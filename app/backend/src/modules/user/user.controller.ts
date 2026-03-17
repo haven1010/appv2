@@ -1,5 +1,5 @@
 
-import { Controller, Post, Body, Get, Patch, Delete, UseGuards, Req, Param, Query, ParseIntPipe } from '@nestjs/common';
+import { Controller, Post, Body, Get, Patch, Delete, UseGuards, Req, Param, Query, ParseIntPipe, BadRequestException } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -7,6 +7,9 @@ import { RegisterByOcrDto } from './dto/register-by-ocr.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { TencentOcrService } from '../common/services/tencent-ocr.service';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { UserRole } from './entities/sys-user.entity';
 
 @ApiTags('用户管理')
 @Controller('user')
@@ -19,10 +22,10 @@ export class UserController {
   @Post('register')
   @ApiOperation({ summary: '用户注册/实名录入（手动填写）' })
   async register(@Body() createUserDto: CreateUserDto) {
-    // 阻止使用已废弃的 region_admin 角色注册
-    if (createUserDto.roleKey === 'region_admin' as any) {
-      createUserDto.roleKey = 'super_admin' as any;
+    if (createUserDto.roleKey && createUserDto.roleKey !== UserRole.WORKER) {
+      throw new BadRequestException('公开注册只允许创建 worker 角色');
     }
+    createUserDto.roleKey = UserRole.WORKER;
     const user = await this.userService.create(createUserDto);
     return {
       id: user.id,
@@ -44,7 +47,7 @@ export class UserController {
         name: ocrResult.name,
         idCard: ocrResult.idNum,
         phone: '', // 需要用户补充
-        roleKey: dto.roleKey || 'worker' as any,
+        roleKey: UserRole.WORKER,
         emergencyContact: dto.emergencyContact,
         emergencyPhone: dto.emergencyPhone,
       };
@@ -66,6 +69,10 @@ export class UserController {
   @Post('register/complete')
   @ApiOperation({ summary: '完成OCR注册（补充完整信息）' })
   async completeOcrRegister(@Body() createUserDto: CreateUserDto) {
+    if (createUserDto.roleKey && createUserDto.roleKey !== UserRole.WORKER) {
+      throw new BadRequestException('公开注册只允许创建 worker 角色');
+    }
+    createUserDto.roleKey = UserRole.WORKER;
     const user = await this.userService.create(createUserDto);
     return {
       id: user.id,
@@ -75,8 +82,45 @@ export class UserController {
     };
   }
 
+  @Post('admin')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: '管理员创建用户' })
+  async createByAdmin(@Body() createUserDto: CreateUserDto) {
+    if (
+      !createUserDto.roleKey ||
+      ![UserRole.BASE_MANAGER, UserRole.FIELD_MANAGER, UserRole.WORKER].includes(createUserDto.roleKey)
+    ) {
+      throw new BadRequestException('管理员创建仅允许 base_manager、field_manager 或 worker');
+    }
+    const user = await this.userService.create(createUserDto);
+    return {
+      id: user.id,
+      uid: user.uid,
+      name: user.name,
+      msg: '创建成功',
+    };
+  }
+
+  @Post('admin/super-admin')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: '首个超级管理员创建次级超级管理员' })
+  async createSecondarySuperAdmin(@Req() req, @Body() createUserDto: CreateUserDto) {
+    const user = await this.userService.createSuperAdmin(createUserDto, req.user.id);
+    return {
+      id: user.id,
+      uid: user.uid,
+      name: user.name,
+      msg: '创建成功',
+    };
+  }
+
   @Get('list')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN)
   @ApiBearerAuth()
   @ApiOperation({ summary: '获取用户列表（管理端）' })
   async getList(@Query() query: { role?: string; status?: string; keyword?: string; page?: string; pageSize?: string }) {
@@ -90,7 +134,8 @@ export class UserController {
   }
 
   @Get('stats')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN)
   @ApiBearerAuth()
   @ApiOperation({ summary: '获取用户统计数据' })
   async getUserStats() {
@@ -114,7 +159,8 @@ export class UserController {
   }
 
   @Patch(':id/audit')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN)
   @ApiBearerAuth()
   @ApiOperation({ summary: '审核用户信息更新' })
   async auditInfo(
@@ -127,7 +173,8 @@ export class UserController {
   }
 
   @Delete(':id')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN)
   @ApiBearerAuth()
   @ApiOperation({ summary: '删除用户（软删除）' })
   async deleteUser(@Req() req, @Param('id', ParseIntPipe) userId: number) {

@@ -1,6 +1,7 @@
 
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, OneToOne, JoinColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, OneToOne, JoinColumn, ManyToOne } from 'typeorm';
 import { DailySignup } from '../../attendance/entities/daily-signup.entity';
+import { SysUser } from '../../user/entities/sys-user.entity';
 
 export enum PayoutType {
   CASH = 1,
@@ -61,6 +62,10 @@ export class LaborSalary {
 
   @Column({ name: 'admin_id', type: 'bigint' })
   adminId: number;
+
+  @ManyToOne(() => SysUser, { onDelete: 'RESTRICT' })
+  @JoinColumn({ name: 'admin_id' })
+  admin: SysUser;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

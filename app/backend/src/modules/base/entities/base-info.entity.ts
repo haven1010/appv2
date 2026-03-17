@@ -1,8 +1,9 @@
 
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, Index, OneToMany } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, Index, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
 import { EncryptionTransformer } from '../../common/transformers/encryption.transformer';
 import { RecruitmentJob } from './recruitment-job.entity';
 import { DailySignup } from '../../attendance/entities/daily-signup.entity';
+import { SysUser } from '../../user/entities/sys-user.entity';
 
 export enum BaseCategory {
   FRUIT = 1,
@@ -70,6 +71,10 @@ export class BaseInfo {
 
   @Column({ name: 'owner_id', type: 'bigint' })
   ownerId: number;
+
+  @ManyToOne(() => SysUser, { onDelete: 'RESTRICT' })
+  @JoinColumn({ name: 'owner_id' })
+  owner: SysUser;
 
   @OneToMany(() => RecruitmentJob, (job) => job.base)
   jobs: RecruitmentJob[];

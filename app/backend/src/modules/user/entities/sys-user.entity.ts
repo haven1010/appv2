@@ -1,6 +1,7 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, Index } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, Index, JoinColumn, ManyToOne } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger'; // 🔥 关键引入
 import { EncryptionTransformer } from '../../common/transformers/encryption.transformer';
+import { BaseInfo } from '../../base/entities/base-info.entity';
 
 export enum UserRole {
   SUPER_ADMIN = 'super_admin',
@@ -63,13 +64,13 @@ export class SysUser {
   // --- Search Indexes (Hash) ---
   // 🔥 哈希字段通常不需要暴露给前端，所以不加 @ApiProperty
 
-  @Index()
+  @Index('UQ_sys_user_id_card_hash', { unique: true })
   @Column({ name: 'id_card_hash', length: 64, comment: 'SHA256 Hash of ID Card for Search' })
   idCardHash: string;
 
-  @Index()
-  @Column({ name: 'phone_hash', length: 64, comment: 'SHA256 Hash of Phone for Search' })
-  phoneHash: string;
+  @Index('UQ_sys_user_phone_hash', { unique: true })
+  @Column({ name: 'phone_hash', length: 64, nullable: true, comment: 'SHA256 Hash of Phone for Search' })
+  phoneHash: string | null;
 
   @ApiProperty({
     description: '用户角色',
@@ -96,6 +97,10 @@ export class SysUser {
   @Column({ name: 'assigned_base_id', type: 'bigint', nullable: true, comment: 'For Field Managers - assigned base' })
   assignedBaseId: number;
 
+  @ManyToOne(() => BaseInfo, { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'assigned_base_id' })
+  assignedBase?: BaseInfo;
+
   @ApiProperty({ description: '紧急联系人信息', required: false, nullable: true })
   @Column({ 
     name: 'emergency_contact_enc', 
@@ -118,7 +123,7 @@ export class SysUser {
 
   @Index()
   @Column({ name: 'emergency_phone_hash', length: 64, nullable: true, comment: 'Hash of Emergency Phone for Search' })
-  emergencyPhoneHash: string;
+  emergencyPhoneHash: string | null;
 
   @ApiProperty({ description: '信息审核状态', enum: [0, 1, 2], example: 1 })
   @Column({ 

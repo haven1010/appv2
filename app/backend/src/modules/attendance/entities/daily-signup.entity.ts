@@ -12,7 +12,7 @@ export enum SignupStatus {
 }
 
 @Entity('daily_signup')
-@Index(['userId', 'workDate'], { unique: true })
+@Index(['userId', 'baseId', 'workDate'], { unique: true })
 export class DailySignup {
   @PrimaryGeneratedColumn({ type: 'bigint' })
   id: number;
@@ -57,6 +57,10 @@ export class DailySignup {
 
   @Column({ name: 'proxy_user_id', type: 'bigint', nullable: true })
   proxyUserId: number;
+
+  @ManyToOne(() => SysUser, { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'proxy_user_id' })
+  proxyUser?: SysUser;
 
   @Column({ name: 'is_offline_sync', default: false })
   isOfflineSync: boolean;
