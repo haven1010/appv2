@@ -1,4 +1,4 @@
-\documentclass[UTF8,a4paper]{ctexart}
+\documentclass[UTF8,a4paper,fontset=none]{ctexart}
 
 \usepackage{geometry}
 \usepackage{setspace}
@@ -6,14 +6,26 @@
 \usepackage{titlesec}
 \usepackage{graphicx}
 \usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{xurl}
 
 % Page layout
 \geometry{left=2.5cm,right=2.5cm,top=2cm,bottom=2cm}
 \setlength{\parindent}{2em}
 \setstretch{1.5}
+\setlength{\tabcolsep}{3pt}
 
 % Fonts
-\setCJKmainfont{SimSun}
+\setCJKmainfont[AutoFakeBold=2]{华文宋体}
+\setCJKsansfont{冬青黑体简体中文}
+\setCJKmonofont{冬青黑体简体中文}
+\setCJKfamilyfont{zhsong}{华文宋体}
+\setCJKfamilyfont{zhhei}{冬青黑体简体中文}
+\newcommand{\songti}{\CJKfamily{zhsong}}
+\newcommand{\heiti}{\CJKfamily{zhhei}}
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\newcommand{\field}[1]{\path{#1}}
 \ctexset{
   section = {format=\heiti\zihao{2}},
   subsection = {format=\heiti\zihao{3}},
@@ -61,6 +73,299 @@
 项目采用前后端分离的 B/S 架构，包含 Web 管理端、移动管理端以及微信小程序端，形成多角色、多端协同的业务体系。总体目标是实现“用工信息全生命周期管理”：从基地入驻、岗位发布、工人报名、现场签到、工时记录到工资结算与发放，形成可追溯的数据闭环。
 
 技术选型方面：后端使用 NestJS + TypeORM + MySQL 8.0，提供模块化业务能力与 API 文档（Swagger）；前端使用 React + Vite + TypeScript + TailwindCSS；小程序端负责报名、签到与信息查询。权限体系采用 RBAC 角色模型（超级管理员、区域管理员、基地管理员、现场管理员、工人），并配合操作日志实现审计追溯。数据库遵循 3NF 设计，核心表包括用户、基地、岗位、考勤、工资及合作申请等，配合触发器与单价快照机制，确保历史数据一致性。系统模块划分清晰，包括用户信息管理、基地管理、岗位申请、考勤签到、薪资结算、智能推荐与公共服务等。
+
+\subsection{数据库表清单}
+根据当前实际数据库 \texttt{pickpass\_db} 的在线结构，系统现有 9 张核心业务表，具体如下：
+
+\begin{tabular}{p{4cm}p{9.5cm}}
+\toprule
+表名 & 主要作用 \\
+\midrule
+\texttt{sys\_user} & 用户表，存储工人、基地管理员、现场管理员、超级管理员等角色信息，以及手机号、身份证、紧急联系人等敏感字段的密文与 Hash 索引。 \\
+\texttt{base\_info} & 基地信息表，存储基地名称、区域、联系方式、营业执照、审核状态、所属负责人等基础信息。 \\
+\texttt{recruitment\_job} & 岗位招聘表，存储岗位名称、所属基地、招聘人数、薪资类型、工时要求、福利与有效期等招聘信息。 \\
+\texttt{daily\_signup} & 报名与签到表，记录工人按日期对应的岗位报名、签到状态、签到时间、代报名与离线同步情况。 \\
+\texttt{labor\_salary} & 工资结算表，记录每次签到对应的工时、计件数、单价快照、总金额、发放状态及经办管理员。 \\
+\texttt{salary\_payment} & 工资发放表，记录工资确认、发放方式、支付凭证、确认签字、发放时间与发放人信息。 \\
+\texttt{job\_application} & 岗位申请表，记录工人对岗位的申请、审核状态、备注、拒绝原因及审核时间。 \\
+\texttt{base\_cooperation} & 基地合作申请表，记录合作申请人、目标基地、合作需求、审核结果与审核信息。 \\
+\texttt{operation\_log} & 操作日志表，记录用户在系统中的创建、修改、审核、支付、签到等关键操作，用于审计追溯。 \\
+\bottomrule
+\end{tabular}
+
+各表之间的核心关系为：\texttt{sys\_user} 与 \texttt{base\_info} 通过负责人字段关联，\texttt{base\_info} 与 \texttt{recruitment\_job} 构成“一基地对多岗位”，\texttt{daily\_signup} 连接用户、基地与岗位，\texttt{labor\_salary} 基于签到记录生成，\texttt{salary\_payment} 再对工资记录进行支付确认，从而形成“用户—岗位—签到—结算—发放”的完整业务链路。
+
+\subsection{表结构说明}
+下面按照当前数据库中的真实表结构，对各张表的字段进行完整说明。
+
+\subsubsection{\texttt{sys\_user}（用户表）}
+\small
+\begin{longtable}{@{}L{2.8cm}L{2.4cm}L{3.0cm}L{6.0cm}@{}}
+\toprule
+字段名 & 数据类型 & 约束 & 含义 \\
+\midrule
+\endfirsthead
+\toprule
+字段名 & 数据类型 & 约束 & 含义 \\
+\midrule
+\endhead
+\field{id} & bigint & 主键，自增 & 用户主键 ID。 \\
+\field{uid} & varchar(32) & 非空，唯一 & 对外展示的用户唯一编号。 \\
+\field{name} & varchar(50) & 非空 & 用户真实姓名。 \\
+\field{id_card_enc} & varchar(256) & 非空 & 身份证号密文。 \\
+\field{phone_enc} & varchar(256) & 非空 & 手机号密文。 \\
+\field{id_card_hash} & varchar(64) & 非空，唯一索引 & 身份证号 Hash，用于检索与去重。 \\
+\field{role_key} & enum & 非空，默认 \field{worker} & 用户角色，如工人、基地管理员、超级管理员。 \\
+\field{face_img_url} & varchar(255) & 可空 & 人脸或头像图片地址。 \\
+\field{region_code} & int & 可空 & 所属区域代码。 \\
+\field{is_deleted} & tinyint & 非空，默认 0 & 逻辑删除标记。 \\
+\field{created_at} & datetime(6) & 非空，默认当前时间 & 创建时间。 \\
+\field{updated_at} & datetime(6) & 非空，自动更新 & 更新时间。 \\
+\field{phone_hash} & varchar(64) & 非空，唯一索引 & 手机号 Hash，用于登录检索与去重。 \\
+\field{assigned_base_id} & bigint & 可空，外键 & 现场管理员对应的基地 ID。 \\
+\field{emergency_contact_enc} & varchar(256) & 可空 & 紧急联系人信息密文。 \\
+\field{emergency_phone_enc} & varchar(256) & 可空 & 紧急联系人电话密文。 \\
+\field{emergency_phone_hash} & varchar(64) & 可空，索引 & 紧急联系人电话 Hash。 \\
+\field{info_audit_status} & tinyint & 非空，默认 1 & 信息审核状态：0 待审，1 通过，2 拒绝。 \\
+\bottomrule
+\end{longtable}
+\normalsize
+
+\subsubsection{\texttt{base\_info}（基地信息表）}
+\small
+\begin{longtable}{@{}L{2.8cm}L{2.4cm}L{3.0cm}L{6.0cm}@{}}
+\toprule
+字段名 & 数据类型 & 约束 & 含义 \\
+\midrule
+\endfirsthead
+\toprule
+字段名 & 数据类型 & 约束 & 含义 \\
+\midrule
+\endhead
+\field{id} & bigint & 主键，自增 & 基地主键 ID。 \\
+\field{base_name} & varchar(100) & 非空 & 基地名称。 \\
+\field{license_enc} & varchar(512) & 非空 & 营业执照或资质图片密文。 \\
+\field{contact_enc} & varchar(256) & 非空 & 联系电话密文。 \\
+\field{category} & tinyint & 非空，默认 1 & 基地类别，如水果、蔬菜等。 \\
+\field{region_code} & int & 非空 & 基地所属区域代码。 \\
+\field{address} & text & 可空 & 基地详细地址。 \\
+\field{description} & text & 可空 & 基地描述信息，可存 JSON 文本。 \\
+\field{audit_status} & tinyint & 非空，默认 0 & 审核状态：0 待审，1 通过，2 拒绝。 \\
+\field{owner_id} & bigint & 非空，外键 & 基地负责人用户 ID。 \\
+\field{is_deleted} & tinyint & 非空，默认 0 & 逻辑删除标记。 \\
+\field{created_at} & datetime(6) & 非空，默认当前时间 & 创建时间。 \\
+\field{updated_at} & datetime(6) & 非空，自动更新 & 更新时间。 \\
+\bottomrule
+\end{longtable}
+\normalsize
+
+\subsubsection{\texttt{recruitment\_job}（岗位招聘表）}
+\small
+\begin{longtable}{@{}L{2.8cm}L{2.4cm}L{3.0cm}L{6.0cm}@{}}
+\toprule
+字段名 & 数据类型 & 约束 & 含义 \\
+\midrule
+\endfirsthead
+\toprule
+字段名 & 数据类型 & 约束 & 含义 \\
+\midrule
+\endhead
+\field{id} & bigint & 主键，自增 & 岗位主键 ID。 \\
+\field{base_id} & bigint & 非空，外键 & 所属基地 ID。 \\
+\field{pay_type} & tinyint & 非空，默认 1 & 薪资类型：固定、时薪、计件。 \\
+\field{unit_price} & decimal(10,2) & 可空 & 单价。 \\
+\field{targetCount} & int & 可空，默认 0 & 目标数量。 \\
+\field{requirements} & text & 可空 & 招聘要求。 \\
+\field{status} & tinyint & 非空，默认 1 & 岗位状态。 \\
+\field{valid_until} & datetime & 可空 & 有效期截止时间。 \\
+\field{created_at} & datetime(6) & 非空，默认当前时间 & 创建时间。 \\
+\field{updated_at} & datetime(6) & 非空，自动更新 & 更新时间。 \\
+\field{recruit_count} & int & 非空，默认 1 & 招聘人数。 \\
+\field{work_cycle} & tinyint & 非空，默认 1 & 结算或工作周期。 \\
+\field{work_content} & text & 可空 & 工作内容。 \\
+\field{work_hours} & varchar(50) & 可空 & 工作时间段。 \\
+\field{work_start_date} & date & 可空 & 开工日期。 \\
+\field{work_end_date} & date & 可空 & 截止日期。 \\
+\field{salary_amount} & decimal(10,2) & 可空 & 固定工资金额。 \\
+\field{hourly_rate} & decimal(10,2) & 可空 & 时薪。 \\
+\field{min_age} & tinyint & 可空 & 最小年龄。 \\
+\field{max_age} & tinyint & 可空 & 最大年龄。 \\
+\field{experience_required} & text & 可空 & 经验要求。 \\
+\field{physical_requirement} & text & 可空 & 体力要求。 \\
+\field{benefits} & text & 可空 & 福利描述。 \\
+\field{has_accommodation} & tinyint & 非空，默认 0 & 是否包住宿。 \\
+\field{has_meals} & tinyint & 非空，默认 0 & 是否包餐。 \\
+\field{has_transportation} & tinyint & 非空，默认 0 & 是否提供交通补贴。 \\
+\field{transportation_subsidy} & decimal(10,2) & 可空 & 交通补贴金额。 \\
+\field{workplace_images} & json & 可空 & 工作场景图片列表。 \\
+\field{video_url} & varchar(500) & 可空 & 视频地址。 \\
+\field{is_active} & tinyint & 非空，默认 1 & 是否有效。 \\
+\field{auto_renew} & tinyint & 非空，默认 0 & 是否自动续期。 \\
+\field{renewal_days} & int & 非空，默认 7 & 续期天数。 \\
+\field{applicant_count} & int & 非空，默认 0 & 已申请人数。 \\
+\field{view_count} & int & 非空，默认 0 & 浏览次数。 \\
+\field{job_title} & varchar(100) & 非空 & 岗位名称。 \\
+\bottomrule
+\end{longtable}
+\normalsize
+
+\subsubsection{\texttt{daily\_signup}（报名签到表）}
+\small
+\begin{longtable}{@{}L{2.8cm}L{2.4cm}L{3.0cm}L{6.0cm}@{}}
+\toprule
+字段名 & 数据类型 & 约束 & 含义 \\
+\midrule
+\endfirsthead
+\toprule
+字段名 & 数据类型 & 约束 & 含义 \\
+\midrule
+\endhead
+\field{id} & bigint & 主键，自增 & 报名签到记录 ID。 \\
+\field{user_id} & bigint & 非空，外键 & 工人用户 ID。 \\
+\field{base_id} & bigint & 非空，外键 & 基地 ID。 \\
+\field{job_id} & bigint & 非空，外键 & 岗位 ID。 \\
+\field{work_date} & date & 非空 & 工作日期。 \\
+\field{status} & tinyint & 非空，默认 0 & 状态：已报名、已签到、缺勤、取消。 \\
+\field{checkin_time} & datetime & 可空 & 实际签到时间。 \\
+\field{is_proxy} & tinyint & 非空，默认 0 & 是否代报名。 \\
+\field{proxy_user_id} & bigint & 可空，外键 & 代报名人用户 ID。 \\
+\field{is_offline_sync} & tinyint & 非空，默认 0 & 是否离线同步导入。 \\
+\field{created_at} & datetime(6) & 非空，默认当前时间 & 创建时间。 \\
+\field{updated_at} & datetime(6) & 非空，自动更新 & 更新时间。 \\
+\bottomrule
+\end{longtable}
+\normalsize
+
+\subsubsection{\texttt{labor\_salary}（工资结算表）}
+\small
+\begin{longtable}{@{}L{2.8cm}L{2.4cm}L{3.0cm}L{6.0cm}@{}}
+\toprule
+字段名 & 数据类型 & 约束 & 含义 \\
+\midrule
+\endfirsthead
+\toprule
+字段名 & 数据类型 & 约束 & 含义 \\
+\midrule
+\endhead
+\field{id} & bigint & 主键，自增 & 工资记录 ID。 \\
+\field{signup_id} & bigint & 非空，唯一，外键 & 对应签到记录 ID。 \\
+\field{work_duration} & decimal(4,1) & 非空，默认 0.0 & 工时。 \\
+\field{piece_count} & int & 非空，默认 0 & 计件数量。 \\
+\field{unit_price_snapshot} & decimal(10,2) & 非空 & 结算时单价快照。 \\
+\field{total_amount} & decimal(10,2) & 非空 & 工资总额。 \\
+\field{payout_type} & tinyint & 可空 & 发放方式类型。 \\
+\field{status} & tinyint & 非空，默认 0 & 结算状态：待确认、已确认、已支付。 \\
+\field{proof_img_url} & varchar(255) & 可空 & 证明图片地址。 \\
+\field{worker_sign_url} & varchar(255) & 可空 & 工人签字图片地址。 \\
+\field{admin_id} & bigint & 非空，外键 & 经办管理员 ID。 \\
+\field{created_at} & datetime(6) & 非空，默认当前时间 & 创建时间。 \\
+\field{updated_at} & datetime(6) & 非空，自动更新 & 更新时间。 \\
+\bottomrule
+\end{longtable}
+\normalsize
+
+\subsubsection{\texttt{salary\_payment}（工资发放表）}
+\small
+\begin{longtable}{@{}L{2.8cm}L{2.4cm}L{3.0cm}L{6.0cm}@{}}
+\toprule
+字段名 & 数据类型 & 约束 & 含义 \\
+\midrule
+\endfirsthead
+\toprule
+字段名 & 数据类型 & 约束 & 含义 \\
+\midrule
+\endhead
+\field{id} & bigint & 主键，自增 & 支付记录 ID。 \\
+\field{salary_id} & bigint & 非空，唯一，外键 & 对应工资记录 ID。 \\
+\field{paymentMethod} & enum & 非空 & 支付方式：现金或转账。 \\
+\field{status} & tinyint & 非空，默认 0 & 支付状态。 \\
+\field{confirm_signature_url} & text & 可空 & 确认签字图片地址。 \\
+\field{payment_voucher_url} & text & 可空 & 支付凭证图片地址。 \\
+\field{paid_at} & datetime & 可空 & 发放时间。 \\
+\field{paid_by} & bigint & 可空，外键 & 发放人用户 ID。 \\
+\field{note} & text & 可空 & 备注。 \\
+\field{created_at} & datetime(6) & 非空，默认当前时间 & 创建时间。 \\
+\field{updated_at} & datetime(6) & 非空，自动更新 & 更新时间。 \\
+\bottomrule
+\end{longtable}
+\normalsize
+
+\subsubsection{\texttt{job\_application}（岗位申请表）}
+\small
+\begin{longtable}{@{}L{2.8cm}L{2.4cm}L{3.0cm}L{6.0cm}@{}}
+\toprule
+字段名 & 数据类型 & 约束 & 含义 \\
+\midrule
+\endfirsthead
+\toprule
+字段名 & 数据类型 & 约束 & 含义 \\
+\midrule
+\endhead
+\field{id} & bigint & 主键，自增 & 申请记录 ID。 \\
+\field{user_id} & bigint & 非空，外键 & 申请人用户 ID。 \\
+\field{job_id} & bigint & 非空，外键 & 目标岗位 ID。 \\
+\field{base_id} & bigint & 非空，外键 & 目标基地 ID。 \\
+\field{status} & tinyint & 非空，默认 0 & 审核状态。 \\
+\field{note} & text & 可空 & 申请备注。 \\
+\field{rejectReason} & text & 可空 & 拒绝原因。 \\
+\field{reviewed_by} & bigint & 可空 & 审核人 ID。 \\
+\field{reviewed_at} & datetime & 可空 & 审核时间。 \\
+\field{created_at} & datetime(6) & 非空，默认当前时间 & 创建时间。 \\
+\field{updated_at} & datetime(6) & 非空，自动更新 & 更新时间。 \\
+\bottomrule
+\end{longtable}
+\normalsize
+
+\subsubsection{\texttt{base\_cooperation}（基地合作申请表）}
+\small
+\begin{longtable}{@{}L{2.8cm}L{2.4cm}L{3.0cm}L{6.0cm}@{}}
+\toprule
+字段名 & 数据类型 & 约束 & 含义 \\
+\midrule
+\endfirsthead
+\toprule
+字段名 & 数据类型 & 约束 & 含义 \\
+\midrule
+\endhead
+\field{id} & bigint & 主键，自增 & 合作申请 ID。 \\
+\field{base_id} & bigint & 非空，外键 & 目标基地 ID。 \\
+\field{applicant_id} & bigint & 非空，外键 & 申请人用户 ID。 \\
+\field{requirement} & text & 非空 & 合作需求描述。 \\
+\field{status} & tinyint & 非空，默认 0 & 审核状态。 \\
+\field{rejectReason} & text & 可空 & 拒绝原因。 \\
+\field{reviewed_by} & bigint & 可空 & 审核人 ID。 \\
+\field{reviewed_at} & datetime & 可空 & 审核时间。 \\
+\field{created_at} & datetime(6) & 非空，默认当前时间 & 创建时间。 \\
+\field{updated_at} & datetime(6) & 非空，自动更新 & 更新时间。 \\
+\bottomrule
+\end{longtable}
+\normalsize
+
+\subsubsection{\texttt{operation\_log}（操作日志表）}
+\small
+\begin{longtable}{@{}L{2.8cm}L{2.4cm}L{3.0cm}L{6.0cm}@{}}
+\toprule
+字段名 & 数据类型 & 约束 & 含义 \\
+\midrule
+\endfirsthead
+\toprule
+字段名 & 数据类型 & 约束 & 含义 \\
+\midrule
+\endhead
+\field{id} & bigint & 主键，自增 & 日志记录 ID。 \\
+\field{operationType} & enum & 非空 & 操作类型，如创建、修改、审核、支付等。 \\
+\field{resourceType} & enum & 非空 & 资源类型，如用户、基地、岗位、签到、工资。 \\
+\field{resource_id} & bigint & 非空 & 被操作资源 ID。 \\
+\field{user_id} & bigint & 非空 & 操作人用户 ID。 \\
+\field{description} & text & 可空 & 操作描述。 \\
+\field{before_data} & text & 可空 & 变更前数据。 \\
+\field{after_data} & text & 可空 & 变更后数据。 \\
+\field{ip_address} & varchar(45) & 可空 & 操作来源 IP。 \\
+\field{user_agent} & text & 可空 & 客户端标识信息。 \\
+\field{created_at} & datetime(6) & 非空，默认当前时间 & 操作时间。 \\
+\bottomrule
+\end{longtable}
+\normalsize
 
 \section{实现过程}
 1) \textbf{环境与数据库初始化}：配置 Node.js 与 MySQL 环境，创建数据库并导入初始化 SQL；设置后端环境变量，启动 NestJS 服务与前端开发服务器。\\
