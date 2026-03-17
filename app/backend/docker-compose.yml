@@ -1,6 +1,4 @@
 
-version: '3.8'
-
 services:
   mysql:
     image: mysql:8.0
@@ -42,32 +40,6 @@ services:
     networks:
       - pickpass_net
     command: server /data --console-address ":9001"
-
-  backend:
-    build:
-      context: backend
-      dockerfile: Dockerfile
-    container_name: pickpass_backend
-    ports:
-      - "3000:3000"
-    environment:
-      - DB_HOST=mysql
-      - DB_PORT=3306
-      - DB_USERNAME=pickpass_user
-      - DB_PASSWORD=pickpass_password
-      - DB_DATABASE=pickpass_db
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-      - JWT_SECRET=PICKPASS_PROD_SECRET_KEY_2023
-      - AES_KEY=01234567890123456789012345678901
-      - AES_IV=0123456789012345
-      - COS_BUCKET=pickpass-bucket
-      - COS_REGION=ap-shanghai
-    depends_on:
-      - mysql
-      - redis
-    networks:
-      - pickpass_net
 
 networks:
   pickpass_net:
