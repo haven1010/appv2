@@ -1,3 +1,8 @@
+/**
+ * Layer: Backend Service
+ * Responsibility: Implements the Recommendation application service for the Recommendation module, including business rules, side effects, and persistence coordination.
+ * Notes: Keep comments focused on intent, invariants, side effects, and cross-module contracts.
+ */
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -8,6 +13,10 @@ import { JobStatus } from '../base/entities/recruitment-job.entity';
 import { RecommendationResultDto } from './dto/recommendation-result.dto';
 
 @Injectable()
+/**
+ * 推荐服务负责为工人生成基地推荐结果。
+ * 当前版本采用规则加权，而不是机器学习模型，因此权重与原因都应保持可解释。
+ */
 export class RecommendationService {
   constructor(
     @InjectRepository(BaseInfo)
@@ -19,11 +28,14 @@ export class RecommendationService {
   ) { }
 
   /**
-   * 核心推荐算法
+   * 核心推荐算法。
    * 权重分配:
-   * 1. 区域匹配 (40%): 同城/同区
-   * 2. 历史偏好 (30%): 根据用户过去报名的基地类型
-   * 3. 活跃岗位 (30%): 基地当前是否有正在招聘的岗位
+   * 1. 区域匹配 40%
+   * 2. 历史偏好 30%
+   * 3. 活跃岗位 30%
+   * 输出要求:
+   * 1. 只返回得分大于 0 的基地。
+   * 2. 结果必须携带可解释推荐理由，便于前端展示。
    */
   async recommendForUser(userId: number): Promise<RecommendationResultDto[]> {
     // 1. 获取用户信息
@@ -103,7 +115,10 @@ export class RecommendationService {
       .map(item => this.mapToDto(item.base, item.score, item.reasons, item.activeJobsCount));
   }
 
-  // 辅助方法：将实体转换为 DTO
+  /**
+   * 将基地实体和打分结果映射成前端消费的推荐 DTO。
+   * 该方法会尽量从描述 JSON 中提取封面图，解析失败时回落到默认占位图。
+   */
   private mapToDto(base: BaseInfo, score: number, reasons: string[], activeJobsCount: number): RecommendationResultDto {
     const categoryMap = {
       [BaseCategory.FRUIT]: '水果种植',

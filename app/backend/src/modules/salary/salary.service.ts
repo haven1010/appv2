@@ -1,3 +1,8 @@
+/**
+ * Layer: Backend Service
+ * Responsibility: Implements the Salary application service for the Salary module, including business rules, side effects, and persistence coordination.
+ * Notes: Keep comments focused on intent, invariants, side effects, and cross-module contracts.
+ */
 import { Injectable, BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -9,6 +14,10 @@ import { UserRole, isSuperAdmin } from '../user/entities/sys-user.entity';
 import { SysUser } from '../user/entities/sys-user.entity';
 
 @Injectable()
+/**
+ * 薪资服务负责计薪草稿生成、工资列表查询、统计口径计算和工人确认流程。
+ * 其核心职责是把签到记录和岗位计薪规则稳定地转换成可审核工资单。
+ */
 export class SalaryService {
   constructor(
     @InjectRepository(LaborSalary)
@@ -21,6 +30,10 @@ export class SalaryService {
     private userRepo: Repository<SysUser>,
   ) {}
 
+  /**
+   * 基于签到记录和岗位计薪策略生成或更新工资草稿。
+   * 该方法会覆盖同一报名记录已有的草稿，以保证重复计算结果可收敛。
+   */
   async calculateAndDraft(signupId: number, input: { duration?: number; count?: number }, adminId: number) {
     const signup = await this.signupRepo.findOne({ where: { id: signupId }, relations: ['job'] });
     if (!signup) throw new BadRequestException('Signup record not found');
@@ -52,7 +65,11 @@ export class SalaryService {
   }
 
   /**
-   * 获取工资记录列表（支持按基地、日期、状态筛选；基地管理员仅看自己基地）
+   * 获取工资记录列表。
+   * 角色差异:
+   * 1. 基地管理员只能查看自己基地。
+   * 2. 现场管理员只能查看分配基地。
+   * 3. 其余角色按显式筛选条件查询。
    */
   async getList(query: any, user: { id: number; role?: string; roleKey?: UserRole }) {
     const role = user.role ?? user.roleKey;
@@ -117,7 +134,7 @@ export class SalaryService {
   }
 
   /**
-   * 获取薪资汇总统计（基地管理员仅统计自己基地）
+   * 获取薪资汇总统计，并复用与列表一致的角色范围隔离规则。
    */
   async getStats(query: any, user: { id: number; role?: string; roleKey?: UserRole }) {
     const role = user.role ?? user.roleKey;
@@ -170,7 +187,7 @@ export class SalaryService {
   }
 
   /**
-   * 采摘工端：获取个人统计（已做天数、待收工资）
+   * 采摘工端获取个人统计，包括已做工天数和待确认/待发放金额。
    */
   async getWorkerStats(userId: number) {
     const workDays = await this.signupRepo.count({
@@ -195,7 +212,7 @@ export class SalaryService {
   }
 
   /**
-   * 采摘工端：获取待确认/待发放的工资列表（用于「待发放核对」）
+   * 采摘工端获取待确认和待发放工资列表，用于支付前核对。
    */
   async getWorkerPendingList(userId: number) {
     const list = await this.salaryRepo
@@ -228,7 +245,7 @@ export class SalaryService {
   }
 
   /**
-   * 采摘工端：确认工资无误（将状态从 PENDING 改为 CONFIRMED）
+   * 允许工人确认工资无误，并将状态从 `PENDING` 推进到 `CONFIRMED`。
    */
   async workerConfirmSalary(salaryId: number, userId: number) {
     const salary = await this.salaryRepo.findOne({

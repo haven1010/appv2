@@ -1,3 +1,8 @@
+/**
+ * Layer: Backend Service
+ * Responsibility: Implements the Base application service for the Base module, including business rules, side effects, and persistence coordination.
+ * Notes: Keep comments focused on intent, invariants, side effects, and cross-module contracts.
+ */
 import { Injectable, NotFoundException, Logger, ConflictException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -14,6 +19,10 @@ import { OperationType, ResourceType } from '../common/entities/operation-log.en
 import { SysUser, UserRole } from '../user/entities/sys-user.entity';
 
 @Injectable()
+/**
+ * 基地服务负责基地、岗位、申请和合作流程的主业务编排。
+ * 它是基地域的聚合根服务，统一处理权限校验、状态流转和日志副作用。
+ */
 export class BaseService {
   private readonly logger = new Logger(BaseService.name);
 
@@ -31,6 +40,10 @@ export class BaseService {
 
   // ========== 基地相关方法 ==========
 
+  /**
+   * 创建基地并保证名称、负责人角色与软删除复用规则同时成立。
+   * 若数据库唯一键被并发写入触发，这里会转换成可读的业务冲突错误。
+   */
   async create(createBaseDto: CreateBaseDto, ownerId: number): Promise<BaseInfo> {
     this.logger.log(`[创建基地] 开始: ${createBaseDto.baseName}, 所有者: ${ownerId}`);
 
@@ -88,6 +101,10 @@ export class BaseService {
     }
   }
 
+  /**
+   * 审核基地状态，并记录状态变更日志。
+   * 这里只负责状态流转，不负责更细的跨组织审批编排。
+   */
   async audit(id: number, status: any): Promise<BaseInfo> {
     this.logger.log(`[审核基地] 开始: id=${id}, status=${status}`);
 
@@ -123,6 +140,10 @@ export class BaseService {
     return result;
   }
 
+  /**
+   * 按查询条件拉取基地列表。
+   * 默认仅返回审核通过且未删除的基地，管理端可通过 `showAll` 放宽该约束。
+   */
   async findAll(query: any): Promise<BaseInfo[]> {
     this.logger.log(`[查询基地列表] 参数: ${JSON.stringify(query)}`);
 
@@ -169,6 +190,12 @@ export class BaseService {
 
   // ========== 招聘岗位相关方法 ==========
 
+  /**
+   * 在指定基地下创建招聘岗位。
+   * 前置条件:
+   * 1. 基地存在且已审核通过。
+   * 2. 薪资字段、年龄区间和日期区间满足业务约束。
+   */
   async createJob(baseId: number, createJobDto: CreateJobDto, userId: number): Promise<RecruitmentJob> {
     this.logger.log(`[发布招聘] 开始: baseId=${baseId}, userId=${userId}`);
 
@@ -224,6 +251,9 @@ export class BaseService {
     }
   }
 
+  /**
+   * 校验不同计薪方式对应的必填字段，防止岗位进入不可结算状态。
+   */
   private validateSalaryFields(dto: CreateJobDto): void {
     switch (dto.payType) {
       case PayType.FIXED:
@@ -249,6 +279,9 @@ export class BaseService {
     }
   }
 
+  /**
+   * 校验年龄区间和工作日期区间，避免生成逻辑自相矛盾的岗位定义。
+   */
   private validateJobRanges(dto: CreateJobDto): void {
     if (
       dto.minAge !== undefined
@@ -269,6 +302,9 @@ export class BaseService {
     }
   }
 
+  /**
+   * 根据计薪方式清理互斥字段，保证库中只保留当前模式真正生效的工资配置。
+   */
   private cleanSalaryFields(jobData: any, payType: PayType): void {
     switch (payType) {
       case PayType.FIXED:
@@ -288,6 +324,9 @@ export class BaseService {
     }
   }
 
+  /**
+   * 获取某基地的岗位列表，并支持按状态和招聘有效性过滤。
+   */
   async getJobsByBase(baseId: number, query: any = {}): Promise<RecruitmentJob[]> {
     this.logger.log(`[查询基地岗位] baseId=${baseId}, query=${JSON.stringify(query)}`);
 
@@ -335,6 +374,10 @@ export class BaseService {
     return job;
   }
 
+  /**
+   * 更新岗位状态。
+   * 该方法负责基地所有权校验，避免非岗位归属方修改招聘开关。
+   */
   async updateJobStatus(jobId: number, status: JobStatus, userId: number): Promise<RecruitmentJob> {
     this.logger.log(`[更新岗位状态] jobId=${jobId}, status=${status}`);
 
@@ -392,6 +435,9 @@ export class BaseService {
     return renewedJob;
   }
 
+  /**
+   * 聚合基地维度的岗位与申请统计，用于管理端看板和运营视图。
+   */
   async getBaseStatistics(baseId: number): Promise<any> {
     this.logger.log(`[获取基地统计] baseId=${baseId}`);
 
@@ -439,6 +485,10 @@ export class BaseService {
     };
   }
 
+  /**
+   * 检查基地名称是否可用。
+   * 这里会同时拦截已存在名称和历史软删除后不可复用的名称。
+   */
   async checkBaseNameAvailability(baseName: string): Promise<{ available: boolean; message: string }> {
     const name = baseName.trim();
 
@@ -489,6 +539,10 @@ export class BaseService {
       .getMany();
   }
 
+  /**
+   * 批量停用已过期岗位，供定时任务或后台维护入口调用。
+   * 返回值用于运维统计本轮实际停用的岗位数量。
+   */
   async deactivateExpiredJobs(): Promise<{ deactivated: number }> {
     const now = new Date();
     const expiredDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);

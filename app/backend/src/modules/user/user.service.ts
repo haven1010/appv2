@@ -1,3 +1,8 @@
+/**
+ * Layer: Backend Service
+ * Responsibility: Implements the User application service for the User module, including business rules, side effects, and persistence coordination.
+ * Notes: Keep comments focused on intent, invariants, side effects, and cross-module contracts.
+ */
 import { Injectable, BadRequestException, ConflictException, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
@@ -10,6 +15,10 @@ import { BaseInfo } from '../base/entities/base-info.entity';
 import * as crypto from 'crypto';
 
 @Injectable()
+/**
+ * 用户服务负责账号生命周期、身份唯一性、角色约束和审核状态流转。
+ * 该服务同时承担数据库唯一键异常到业务错误的翻译职责。
+ */
 export class UserService {
   constructor(
     @InjectRepository(SysUser)
@@ -20,6 +29,9 @@ export class UserService {
     private operationLogService: OperationLogService,
   ) { }
 
+  /**
+   * 将底层数据库唯一键冲突翻译成稳定的业务异常，避免控制器泄露数据库实现细节。
+   */
   private rethrowDuplicateKey(error: any): never {
     if (error?.code === 'ER_DUP_ENTRY') {
       const message = String(error?.sqlMessage || error?.message || '');
@@ -36,6 +48,12 @@ export class UserService {
     throw error;
   }
 
+  /**
+   * 校验角色与基地绑定关系。
+   * 约束:
+   * 1. `field_manager` 必须绑定存在的基地。
+   * 2. 非 `field_manager` 不允许携带 `assignedBaseId`。
+   */
   private async validateAssignedBase(roleKey: UserRole, assignedBaseId?: number): Promise<void> {
     if (roleKey === UserRole.FIELD_MANAGER) {
       if (!assignedBaseId) {
@@ -54,6 +72,12 @@ export class UserService {
     }
   }
 
+  /**
+   * 创建用户并完成敏感字段 hash 计算、唯一性校验和默认审核状态初始化。
+   * 副作用:
+   * 1. 写入 `sys_user`。
+   * 2. 依赖实体 transformer 在持久化阶段执行字段加密。
+   */
   async create(createUserDto: CreateUserDto): Promise<SysUser> {
     const roleKey = createUserDto.roleKey || UserRole.WORKER;
     await this.validateAssignedBase(roleKey, createUserDto.assignedBaseId);
@@ -102,6 +126,10 @@ export class UserService {
     }
   }
 
+  /**
+   * 仅允许首个超级管理员继续扩展超级管理员账号。
+   * 该约束用于避免任意高权限用户横向复制超级权限。
+   */
   async createSuperAdmin(createUserDto: CreateUserDto, operatorId: number): Promise<SysUser> {
     const bootstrapSuperAdmin = await this.userRepository.findOne({
       where: {
@@ -125,6 +153,11 @@ export class UserService {
     });
   }
 
+  /**
+   * 通过手机号查找用户。
+   * 注意:
+   * 这里查询的是 `phoneHash`，不是手机号明文，以保持密文字段的可检索性与唯一性。
+   */
   async findByPhone(phone: string): Promise<SysUser | undefined> {
     // 使用 phoneHash 查询（唯一正确的方式）
     const phoneHash = this.securityService.hash(phone);
@@ -156,6 +189,10 @@ export class UserService {
     return this.userRepository.findOne({ where: { uid } });
   }
 
+  /**
+   * 更新用户资料，并在必要时重算 hash 与回退审核状态。
+   * 当更新涉及手机号或紧急联系人时，服务会强制重新进入待审核。
+   */
   async update(userId: number, updateDto: any): Promise<SysUser> {
     const user = await this.userRepository.findOne({ where: { id: userId } });
     if (!user) {
@@ -194,6 +231,9 @@ export class UserService {
     }
   }
 
+  /**
+   * 更新实名资料审核状态，并写入操作日志形成审计轨迹。
+   */
   async auditInfo(userId: number, status: number, reason?: string, operatorId?: number): Promise<SysUser> {
     const user = await this.userRepository.findOne({ where: { id: userId } });
     if (!user) {
@@ -219,8 +259,8 @@ export class UserService {
   }
 
   /**
-   * 获取用户列表（管理端）
-   * 支持按角色、审核状态、关键字筛选，分页
+   * 获取管理端用户列表。
+   * 支持角色、审核状态、关键字和分页筛选，并返回适合前端直接消费的扁平化结构。
    */
   async getList(query: {
     role?: string;
@@ -278,7 +318,7 @@ export class UserService {
   }
 
   /**
-   * 获取用户统计数据（按角色计数）
+   * 获取用户总量、工人数量、管理员数量和待审核数量等概览指标。
    */
   async getUserStats() {
     const totalWorkers = await this.userRepository.count({
@@ -298,7 +338,8 @@ export class UserService {
   }
 
   /**
-   * 删除用户（软删除）
+   * 对用户执行软删除，并补写操作日志。
+   * 该方法不会物理删除记录，以保留审计与历史关联数据。
    */
   async softDelete(userId: number, operatorId?: number): Promise<void> {
     const user = await this.userRepository.findOne({ where: { id: userId } });

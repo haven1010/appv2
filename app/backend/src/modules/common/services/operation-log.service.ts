@@ -1,15 +1,28 @@
+/**
+ * Layer: Backend Service
+ * Responsibility: Implements the Operation Log application service for the Common module, including business rules, side effects, and persistence coordination.
+ * Notes: Keep comments focused on intent, invariants, side effects, and cross-module contracts.
+ */
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { OperationLog, OperationType, ResourceType } from '../entities/operation-log.entity';
 
 @Injectable()
+/**
+ * 操作日志服务负责统一落审计日志，并提供检索和统计查询。
+ * 所有写入都应该经过该服务，以保证日志结构和序列化策略保持一致。
+ */
 export class OperationLogService {
   constructor(
     @InjectRepository(OperationLog)
     private logRepository: Repository<OperationLog>,
   ) {}
 
+  /**
+   * 写入一条操作日志。
+   * 这里会将前后状态快照序列化为 JSON 文本，保证日志结构在查询侧稳定可回放。
+   */
   async log(
     operationType: OperationType,
     resourceType: ResourceType,
@@ -36,6 +49,10 @@ export class OperationLogService {
     return this.logRepository.save(log);
   }
 
+  /**
+   * 按资源类型、资源 ID 或操作人查询最近日志。
+   * 该方法适合详情页附近的轻量追溯，不负责复杂分页。
+   */
   async getLogs(
     resourceType?: ResourceType,
     resourceId?: number,
@@ -60,7 +77,7 @@ export class OperationLogService {
   }
 
   /**
-   * 分页查询操作日志（管理端）
+   * 分页查询操作日志列表，供管理端检索与审计使用。
    */
   async getLogsPaginated(query: {
     operationType?: string;
@@ -100,7 +117,7 @@ export class OperationLogService {
   }
 
   /**
-   * 获取操作日志统计
+   * 聚合操作日志总量、今日新增量和按操作类型划分的统计摘要。
    */
   async getLogStats() {
     const total = await this.logRepository.count();

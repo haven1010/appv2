@@ -1,3 +1,8 @@
+/**
+ * Layer: Backend Service
+ * Responsibility: Implements the Attendance application service for the Attendance module, including business rules, side effects, and persistence coordination.
+ * Notes: Keep comments focused on intent, invariants, side effects, and cross-module contracts.
+ */
 import { Injectable, BadRequestException, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -12,6 +17,10 @@ import { OperationLogService } from '../common/services/operation-log.service';
 import { OperationType, ResourceType } from '../common/entities/operation-log.entity';
 
 @Injectable()
+/**
+ * 签到服务负责报名、签到、离线同步和签到统计。
+ * 这里同时串联二维码、安全加密、短信发送与操作日志等跨模块副作用。
+ */
 export class AttendanceService {
   private readonly logger = new Logger(AttendanceService.name);
 
@@ -31,7 +40,8 @@ export class AttendanceService {
   ) { }
 
   /**
-   * 辅助方法：获取当前本地日期的 YYYY-MM-DD 格式
+   * 获取当前本地日期的 `YYYY-MM-DD` 字符串。
+   * 该格式被作为报名和签到表的逻辑工作日主键之一。
    */
   private getTodayDateString(): string {
     const date = new Date();
@@ -42,8 +52,8 @@ export class AttendanceService {
   }
 
   /**
-   * 生成身份码
-   * 格式: Encrypted(UID|Timestamp)
+   * 生成用户签到二维码载荷。
+   * 编码格式为 `Encrypted(UID|Timestamp)`，用于现场扫码时的身份确认和时效校验。
    */
   async generateUserQrCode(userId: number): Promise<{ content: string, validDuration: string }> {
     const user = await this.userRepo.findOne({ where: { id: userId } });
@@ -63,7 +73,11 @@ export class AttendanceService {
   }
 
   /**
-   * 处理现场扫码签到
+   * 处理现场扫码签到。
+   * 前置条件:
+   * 1. 二维码可解密且未过期。
+   * 2. 用户在目标基地当日存在报名记录。
+   * 副作用: 更新签到状态与签到时间，并写入操作日志。
    */
   async checkIn(qrContent: string, baseId: number): Promise<DailySignup> {
     // 1. 解密
@@ -136,7 +150,8 @@ export class AttendanceService {
   }
 
   /**
-   * 处理离线批量同步
+   * 批量同步离线签到记录。
+   * 该流程采用逐条容错策略，单条失败不会中断整批同步。
    */
   async syncOfflineRecords(records: any[], adminId: number) {
     const results = [];
@@ -182,6 +197,10 @@ export class AttendanceService {
     };
   }
 
+  /**
+   * 创建当日报名记录，并在成功后尝试发送签到二维码短信。
+   * 代报名会复用同一套工作日与基地唯一性约束。
+   */
   async signup(userId: number, dto: any): Promise<DailySignup> {
     const { baseId, jobId, proxyUserIds } = dto;
     // 如果没传日期，默认报今天的名
@@ -276,6 +295,9 @@ export class AttendanceService {
   /**
    * 采摘工端：获取个人签到/工作历程
    */
+  /**
+   * 获取工人自己的报名与签到历史，供个人端展示近期工作记录。
+   */
   async getWorkerSignupRecords(userId: number, limit = 50) {
     const list = await this.signupRepo.find({
       where: { userId },
@@ -297,6 +319,9 @@ export class AttendanceService {
 
   /**
    * 获取签到记录列表
+   */
+  /**
+   * 获取管理端签到记录列表，并根据角色自动施加可见范围隔离。
    */
   async getRecords(query: any, user: { id: number; role?: string; roleKey?: UserRole }) {
     const date = query.date || this.getTodayDateString();
@@ -369,6 +394,9 @@ export class AttendanceService {
   /**
    * 获取考勤汇总统计
    */
+  /**
+   * 获取签到概览统计，包括报名数、签到数和到场率等摘要指标。
+   */
   async getStats(query: any, user: { id: number; role?: string; roleKey?: UserRole }) {
     const date = query.date || this.getTodayDateString();
     const role = user.role ?? user.roleKey;
@@ -417,6 +445,9 @@ export class AttendanceService {
 
   /**
    * 获取各基地的签到统计
+   */
+  /**
+   * 获取基地维度的签到聚合结果，用于现场管理和基地经营分析。
    */
   async getBaseStats(query: any, user: { id: number; role?: string; roleKey?: UserRole }) {
     const date = query.date || this.getTodayDateString();

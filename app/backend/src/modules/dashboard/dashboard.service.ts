@@ -1,3 +1,8 @@
+/**
+ * Layer: Backend Service
+ * Responsibility: Implements the Dashboard application service for the Dashboard module, including business rules, side effects, and persistence coordination.
+ * Notes: Keep comments focused on intent, invariants, side effects, and cross-module contracts.
+ */
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -13,6 +18,10 @@ interface ReqUser {
 }
 
 @Injectable()
+/**
+ * 看板服务负责将多个业务表聚合成角色隔离后的运营指标。
+ * 它不修改业务状态，只输出适合前端直接展示的统计视图。
+ */
 export class DashboardService {
   constructor(
     @InjectRepository(SysUser)
@@ -33,8 +42,8 @@ export class DashboardService {
   }
 
   /**
-   * 获取当前用户可见的基地 ID 列表（用于数据隔离）
-   * 超级管理员返回 null（表示不限制）
+   * 解析当前用户可见的基地范围。
+   * 返回 `null` 表示全局可见，返回空数组表示当前角色没有任何可见基地。
    */
   private async getScopedBaseIds(user: ReqUser): Promise<number[] | null> {
     const role = user.role ?? user.roleKey;
@@ -57,7 +66,7 @@ export class DashboardService {
   }
 
   /**
-   * 聚合 Dashboard 统计数据（按角色过滤）
+   * 聚合首页核心统计指标，并按角色自动做数据范围隔离。
    */
   async getStats(user: ReqUser) {
     const today = this.getTodayDateString();
@@ -156,7 +165,7 @@ export class DashboardService {
   }
 
   /**
-   * 最近7天签到趋势（按角色过滤）
+   * 获取最近 7 天的签到和工资趋势数据，用于看板折线或面积图。
    */
   async getWeeklyTrend(user: ReqUser) {
     const scopedBaseIds = await this.getScopedBaseIds(user);
@@ -205,7 +214,7 @@ export class DashboardService {
   }
 
   /**
-   * 基地类型占比
+   * 统计基地类型分布，用于类别占比图表展示。
    */
   async getCategoryDistribution() {
     const bases = await this.baseRepo.find({ where: { isDeleted: false } });
@@ -222,7 +231,7 @@ export class DashboardService {
   }
 
   /**
-   * 最新入驻基地
+   * 获取最近入驻基地列表，用于管理端动态摘要卡片。
    */
   async getRecentBases(limit = 5) {
     const bases = await this.baseRepo.find({
