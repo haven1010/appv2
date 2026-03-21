@@ -1,4 +1,8 @@
-
+/**
+ * Layer: Backend Module
+ * Responsibility: Defines provider wiring, repository exposure, and dependency composition for the Auth module.
+ * Notes: Keep comments focused on intent, invariants, side effects, and cross-module contracts.
+ */
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';

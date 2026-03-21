@@ -1,3 +1,8 @@
+/**
+ * Layer: Frontend Types
+ * Responsibility: Defines shared type contracts reused across views, API adapters, and client-side state transitions.
+ * Notes: Keep comments focused on intent, invariants, side effects, and cross-module contracts.
+ */
 // src/types.ts
 
 import {

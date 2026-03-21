@@ -1,3 +1,8 @@
+/**
+ * Layer: Persistence Entity
+ * Responsibility: Defines the Salary Payment persistence mapping and documents how the Salary model is stored in the relational schema.
+ * Notes: Keep comments focused on intent, invariants, side effects, and cross-module contracts.
+ */
 import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn, Index, OneToOne } from 'typeorm';
 import { LaborSalary } from './labor-salary.entity';
 import { SysUser } from '../../user/entities/sys-user.entity';

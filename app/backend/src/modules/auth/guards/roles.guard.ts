@@ -1,4 +1,8 @@
-
+/**
+ * Layer: Backend Guard
+ * Responsibility: Implements the Roles authorization check that runs before protected Auth routes execute.
+ * Notes: Keep comments focused on intent, invariants, side effects, and cross-module contracts.
+ */
 import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { UserRole } from '../../user/entities/sys-user.entity';

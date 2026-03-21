@@ -1,3 +1,8 @@
+/**
+ * Layer: Persistence Entity
+ * Responsibility: Defines the Job Application persistence mapping and documents how the Base model is stored in the relational schema.
+ * Notes: Keep comments focused on intent, invariants, side effects, and cross-module contracts.
+ */
 import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn, Index } from 'typeorm';
 import { SysUser } from '../../user/entities/sys-user.entity';
 import { RecruitmentJob } from './recruitment-job.entity';

@@ -1,3 +1,8 @@
+/**
+ * Layer: Backend Controller
+ * Responsibility: Implements the Operation Log transport boundary for the Common module and delegates business work to application services.
+ * Notes: Keep comments focused on intent, invariants, side effects, and cross-module contracts.
+ */
 import { Controller, Get, UseGuards, Query } from '@nestjs/common';
 import { OperationLogService } from '../services/operation-log.service';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';

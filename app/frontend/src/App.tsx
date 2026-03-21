@@ -1,3 +1,8 @@
+/**
+ * Layer: Frontend Root
+ * Responsibility: Composes top-level routes, providers, and shell behavior for the web management console.
+ * Notes: Keep comments focused on intent, invariants, side effects, and cross-module contracts.
+ */
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';

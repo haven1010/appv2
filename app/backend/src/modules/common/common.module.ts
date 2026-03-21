@@ -1,4 +1,8 @@
-
+/**
+ * Layer: Backend Module
+ * Responsibility: Defines provider wiring, repository exposure, and dependency composition for the Common module.
+ * Notes: Keep comments focused on intent, invariants, side effects, and cross-module contracts.
+ */
 import { Global, Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';

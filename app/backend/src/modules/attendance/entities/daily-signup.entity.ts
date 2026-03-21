@@ -1,3 +1,8 @@
+/**
+ * Layer: Persistence Entity
+ * Responsibility: Defines the Daily Signup persistence mapping and documents how the Attendance model is stored in the relational schema.
+ * Notes: Keep comments focused on intent, invariants, side effects, and cross-module contracts.
+ */
 import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, Index, ManyToOne, JoinColumn, OneToOne } from 'typeorm';
 import { SysUser } from '../../user/entities/sys-user.entity';
 import { BaseInfo } from '../../base/entities/base-info.entity';

@@ -1,3 +1,8 @@
+/**
+ * Layer: Mini Program Bootstrap
+ * Responsibility: Initializes global state, shared helpers, and launch-time behavior for the WeChat mini program.
+ * Notes: Keep comments focused on intent, invariants, side effects, and cross-module contracts.
+ */
 // app.js
 App({
   onLaunch() {

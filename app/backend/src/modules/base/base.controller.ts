@@ -1,3 +1,8 @@
+/**
+ * Layer: Backend Controller
+ * Responsibility: Implements the Base transport boundary for the Base module and delegates business work to application services.
+ * Notes: Keep comments focused on intent, invariants, side effects, and cross-module contracts.
+ */
 import {
   Controller,
   Get,

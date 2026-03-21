@@ -1,4 +1,8 @@
-
+/**
+ * Layer: Frontend View
+ * Responsibility: Implements the Attendance Management screen and coordinates user interaction, page state, and API-driven data binding.
+ * Notes: Keep comments focused on intent, invariants, side effects, and cross-module contracts.
+ */
 import React, { useState, useRef, useEffect } from 'react';
 import { 
   Scan, 

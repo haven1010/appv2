@@ -1,3 +1,8 @@
+/**
+ * Layer: Backend DTO
+ * Responsibility: Defines the Sync Offline validation contract for data crossing the Attendance module boundary.
+ * Notes: Keep comments focused on intent, invariants, side effects, and cross-module contracts.
+ */
 import { IsNotEmpty, IsString, IsNumber, IsArray, ValidateNested, IsOptional, IsDateString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';

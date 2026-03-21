@@ -1,3 +1,8 @@
+/**
+ * Layer: Backend Controller
+ * Responsibility: Implements the Dashboard transport boundary for the Dashboard module and delegates business work to application services.
+ * Notes: Keep comments focused on intent, invariants, side effects, and cross-module contracts.
+ */
 import { Controller, Get, UseGuards, Req } from '@nestjs/common';
 import { DashboardService } from './dashboard.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';

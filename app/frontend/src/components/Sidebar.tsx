@@ -1,4 +1,8 @@
-
+/**
+ * Layer: Frontend Component
+ * Responsibility: Implements the reusable Sidebar component used by the management console presentation layer.
+ * Notes: Keep comments focused on intent, invariants, side effects, and cross-module contracts.
+ */
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { 

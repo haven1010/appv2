@@ -1,4 +1,8 @@
-
+/**
+ * Layer: Persistence Entity
+ * Responsibility: Defines the Base Info persistence mapping and documents how the Base model is stored in the relational schema.
+ * Notes: Keep comments focused on intent, invariants, side effects, and cross-module contracts.
+ */
 import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, Index, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
 import { EncryptionTransformer } from '../../common/transformers/encryption.transformer';
 import { RecruitmentJob } from './recruitment-job.entity';

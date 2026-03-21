@@ -1,4 +1,8 @@
-
+/**
+ * Layer: Frontend Infrastructure
+ * Responsibility: Implements the Utils helper that centralizes shared client-side plumbing for the web console.
+ * Notes: Keep comments focused on intent, invariants, side effects, and cross-module contracts.
+ */
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 

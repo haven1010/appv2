@@ -1,4 +1,8 @@
-
+/**
+ * Layer: Backend Controller
+ * Responsibility: Implements the User transport boundary for the User module and delegates business work to application services.
+ * Notes: Keep comments focused on intent, invariants, side effects, and cross-module contracts.
+ */
 import { Controller, Post, Body, Get, Patch, Delete, UseGuards, Req, Param, Query, ParseIntPipe, BadRequestException } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';

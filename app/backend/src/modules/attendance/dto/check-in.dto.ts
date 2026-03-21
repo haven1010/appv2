@@ -1,3 +1,8 @@
+/**
+ * Layer: Backend DTO
+ * Responsibility: Defines the Check In validation contract for data crossing the Attendance module boundary.
+ * Notes: Keep comments focused on intent, invariants, side effects, and cross-module contracts.
+ */
 import { IsNotEmpty, IsString, IsNumber } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 

@@ -1,4 +1,8 @@
-
+/**
+ * Layer: Source File
+ * Responsibility: Owns the Salary Calculator hand-written source and should document intent, invariants, and integration boundaries.
+ * Notes: Keep comments focused on intent, invariants, side effects, and cross-module contracts.
+ */
 import { PayType } from '../../base/entities/recruitment-job.entity';
 
 export interface SalaryCalculationInput {

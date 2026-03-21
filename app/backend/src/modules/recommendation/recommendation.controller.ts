@@ -1,3 +1,8 @@
+/**
+ * Layer: Backend Controller
+ * Responsibility: Implements the Recommendation transport boundary for the Recommendation module and delegates business work to application services.
+ * Notes: Keep comments focused on intent, invariants, side effects, and cross-module contracts.
+ */
 import { Controller, Get, UseGuards, Req, Query } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse, ApiQuery } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';

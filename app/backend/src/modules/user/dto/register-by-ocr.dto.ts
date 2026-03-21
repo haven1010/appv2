@@ -1,3 +1,8 @@
+/**
+ * Layer: Backend DTO
+ * Responsibility: Defines the Register By Ocr validation contract for data crossing the User module boundary.
+ * Notes: Keep comments focused on intent, invariants, side effects, and cross-module contracts.
+ */
 import { IsString, IsEnum, IsOptional } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { UserRole } from '../entities/sys-user.entity';

@@ -1,3 +1,8 @@
+/**
+ * Layer: Frontend View
+ * Responsibility: Implements the Worker View screen and coordinates user interaction, page state, and API-driven data binding.
+ * Notes: Keep comments focused on intent, invariants, side effects, and cross-module contracts.
+ */
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {

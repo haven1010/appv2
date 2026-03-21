@@ -1,3 +1,8 @@
+/**
+ * Layer: Frontend View
+ * Responsibility: Implements the Job Management screen and coordinates user interaction, page state, and API-driven data binding.
+ * Notes: Keep comments focused on intent, invariants, side effects, and cross-module contracts.
+ */
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   Plus,

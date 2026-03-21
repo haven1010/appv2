@@ -1,3 +1,8 @@
+/**
+ * Layer: Mini Program Component
+ * Responsibility: Coordinates custom tab bar rendering, selection state, and shared navigation behavior across mini program pages.
+ * Notes: Keep comments focused on intent, invariants, side effects, and cross-module contracts.
+ */
 // custom-tab-bar/index.js
 const app = getApp();
 

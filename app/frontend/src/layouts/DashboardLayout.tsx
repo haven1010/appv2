@@ -1,3 +1,8 @@
+/**
+ * Layer: Frontend Layout
+ * Responsibility: Defines the Dashboard Layout shell that composes navigation chrome and shared page structure for the web console.
+ * Notes: Keep comments focused on intent, invariants, side effects, and cross-module contracts.
+ */
 // src/layouts/DashboardLayout.tsx
 import React from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';

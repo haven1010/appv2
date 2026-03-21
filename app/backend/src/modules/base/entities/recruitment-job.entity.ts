@@ -1,3 +1,8 @@
+/**
+ * Layer: Persistence Entity
+ * Responsibility: Defines the Recruitment Job persistence mapping and documents how the Base model is stored in the relational schema.
+ * Notes: Keep comments focused on intent, invariants, side effects, and cross-module contracts.
+ */
 import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn, Index } from 'typeorm';
 import { BaseInfo } from './base-info.entity';
 

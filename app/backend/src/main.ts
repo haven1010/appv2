@@ -1,3 +1,8 @@
+/**
+ * Layer: Backend Bootstrap
+ * Responsibility: Bootstraps the NestJS runtime, global middleware, and startup behavior for the backend application.
+ * Notes: Keep comments focused on intent, invariants, side effects, and cross-module contracts.
+ */
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';

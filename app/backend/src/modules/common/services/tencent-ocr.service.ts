@@ -1,4 +1,8 @@
-
+/**
+ * Layer: Backend Service
+ * Responsibility: Implements the Tencent Ocr application service for the Common module, including business rules, side effects, and persistence coordination.
+ * Notes: Keep comments focused on intent, invariants, side effects, and cross-module contracts.
+ */
 import { Injectable, Logger, HttpException, HttpStatus } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as tencentcloud from 'tencentcloud-sdk-nodejs';

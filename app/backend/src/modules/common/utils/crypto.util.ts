@@ -1,3 +1,8 @@
+/**
+ * Layer: Backend Utility
+ * Responsibility: Provides the Crypto helper used by shared infrastructure without owning business workflow state.
+ * Notes: Keep comments focused on intent, invariants, side effects, and cross-module contracts.
+ */
 import * as crypto from 'crypto';
 
 const CURRENT_ENCRYPTION_VERSION = 'v2';

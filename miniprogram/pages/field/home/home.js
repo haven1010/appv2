@@ -1,3 +1,8 @@
+/**
+ * Layer: Mini Program Page
+ * Responsibility: Implements the Home page lifecycle, local interaction state, and backend integration for the WeChat client.
+ * Notes: Keep comments focused on intent, invariants, side effects, and cross-module contracts.
+ */
 // pages/field/home/home.js
 const app = getApp();
 

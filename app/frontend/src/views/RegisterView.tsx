@@ -1,3 +1,8 @@
+/**
+ * Layer: Frontend View
+ * Responsibility: Implements the Register View screen and coordinates user interaction, page state, and API-driven data binding.
+ * Notes: Keep comments focused on intent, invariants, side effects, and cross-module contracts.
+ */
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useUserControllerRegister } from '@/api/generated/用户管理/用户管理';

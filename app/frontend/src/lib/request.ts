@@ -1,3 +1,8 @@
+/**
+ * Layer: Frontend Infrastructure
+ * Responsibility: Implements the Request helper that centralizes shared client-side plumbing for the web console.
+ * Notes: Keep comments focused on intent, invariants, side effects, and cross-module contracts.
+ */
 // frontend/src/lib/request.ts
 
 // 如果你用了环境变量

@@ -1,3 +1,8 @@
+/**
+ * Layer: Backend DTO
+ * Responsibility: Defines the Login validation contract for data crossing the Auth module boundary.
+ * Notes: Keep comments focused on intent, invariants, side effects, and cross-module contracts.
+ */
 // 文件: auth/dto/login.dto.ts
 import { ApiProperty } from '@nestjs/swagger';
 import { IsString, IsNotEmpty } from 'class-validator';

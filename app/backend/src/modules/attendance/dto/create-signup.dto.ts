@@ -1,3 +1,8 @@
+/**
+ * Layer: Backend DTO
+ * Responsibility: Defines the Create Signup validation contract for data crossing the Attendance module boundary.
+ * Notes: Keep comments focused on intent, invariants, side effects, and cross-module contracts.
+ */
 import { IsNotEmpty, IsNumber, IsOptional, IsDateString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 

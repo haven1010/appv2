@@ -1,4 +1,8 @@
-
+/**
+ * Layer: Backend DTO
+ * Responsibility: Defines the Create Base validation contract for data crossing the Base module boundary.
+ * Notes: Keep comments focused on intent, invariants, side effects, and cross-module contracts.
+ */
 import { IsString, IsEnum, IsNumber, IsOptional } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { BaseCategory } from '../entities/base-info.entity';

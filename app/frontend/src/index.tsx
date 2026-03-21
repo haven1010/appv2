@@ -1,4 +1,8 @@
-
+/**
+ * Layer: Frontend Bootstrap
+ * Responsibility: Bootstraps the React runtime and mounts the root application tree for the management console.
+ * Notes: Keep comments focused on intent, invariants, side effects, and cross-module contracts.
+ */
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';

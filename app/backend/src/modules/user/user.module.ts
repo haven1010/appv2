@@ -1,3 +1,8 @@
+/**
+ * Layer: Backend Module
+ * Responsibility: Defines provider wiring, repository exposure, and dependency composition for the User module.
+ * Notes: Keep comments focused on intent, invariants, side effects, and cross-module contracts.
+ */
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserController } from './user.controller';

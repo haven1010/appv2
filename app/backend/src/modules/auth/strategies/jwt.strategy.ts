@@ -1,4 +1,8 @@
-
+/**
+ * Layer: Authentication Strategy
+ * Responsibility: Implements the Jwt credential resolution flow used by NestJS and Passport integration points.
+ * Notes: Keep comments focused on intent, invariants, side effects, and cross-module contracts.
+ */
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { PassportStrategy } from '@nestjs/passport';
 import { Injectable } from '@nestjs/common';

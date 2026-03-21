@@ -1,3 +1,8 @@
+/**
+ * Layer: Persistence Entity
+ * Responsibility: Defines the Operation Log persistence mapping and documents how the Common model is stored in the relational schema.
+ * Notes: Keep comments focused on intent, invariants, side effects, and cross-module contracts.
+ */
 import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, Index } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 

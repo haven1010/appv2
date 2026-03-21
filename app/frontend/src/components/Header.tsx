@@ -1,4 +1,8 @@
-
+/**
+ * Layer: Frontend Component
+ * Responsibility: Implements the reusable Header component used by the management console presentation layer.
+ * Notes: Keep comments focused on intent, invariants, side effects, and cross-module contracts.
+ */
 import React from 'react';
 import { Bell, Search, LogOut, User } from 'lucide-react';
 import { useAuth } from '../App';

@@ -1,4 +1,8 @@
-
+/**
+ * Layer: Backend Service
+ * Responsibility: Implements the Tencent Cos application service for the Common module, including business rules, side effects, and persistence coordination.
+ * Notes: Keep comments focused on intent, invariants, side effects, and cross-module contracts.
+ */
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as COS from 'cos-nodejs-sdk-v5';

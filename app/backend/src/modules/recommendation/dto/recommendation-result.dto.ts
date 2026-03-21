@@ -1,3 +1,8 @@
+/**
+ * Layer: Backend DTO
+ * Responsibility: Defines the Recommendation Result validation contract for data crossing the Recommendation module boundary.
+ * Notes: Keep comments focused on intent, invariants, side effects, and cross-module contracts.
+ */
 import { ApiProperty } from '@nestjs/swagger';
 
 export class RecommendationResultDto {

@@ -1,3 +1,8 @@
+/**
+ * Layer: Backend Root Module
+ * Responsibility: Composes global infrastructure and feature modules, and owns the top-level dependency graph for the backend.
+ * Notes: Keep comments focused on intent, invariants, side effects, and cross-module contracts.
+ */
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
