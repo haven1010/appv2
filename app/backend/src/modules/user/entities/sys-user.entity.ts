@@ -121,7 +121,7 @@ export class SysUser {
   })
   emergencyPhone: string;
 
-  @Index()
+  @Index('IDX_sys_user_emergency_phone_hash')
   @Column({ name: 'emergency_phone_hash', length: 64, nullable: true, comment: 'Hash of Emergency Phone for Search' })
   emergencyPhoneHash: string | null;
 

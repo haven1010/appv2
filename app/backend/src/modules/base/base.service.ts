@@ -11,6 +11,7 @@ import { ApplicationStatus } from './entities/job-application.entity';
 import { CooperationStatus } from './entities/base-cooperation.entity';
 import { OperationLogService } from '../common/services/operation-log.service';
 import { OperationType, ResourceType } from '../common/entities/operation-log.entity';
+import { SysUser, UserRole } from '../user/entities/sys-user.entity';
 
 @Injectable()
 export class BaseService {
@@ -21,6 +22,8 @@ export class BaseService {
     private baseRepo: Repository<BaseInfo>,
     @InjectRepository(RecruitmentJob)
     private jobRepo: Repository<RecruitmentJob>,
+    @InjectRepository(SysUser)
+    private userRepo: Repository<SysUser>,
     private jobApplicationService: JobApplicationService,
     private baseCooperationService: BaseCooperationService,
     private operationLogService: OperationLogService,
@@ -35,6 +38,14 @@ export class BaseService {
     const baseName = createBaseDto.baseName.trim();
     if (!baseName) {
       throw new BadRequestException('基地名称不能为空');
+    }
+
+    const owner = await this.userRepo.findOne({ where: { id: ownerId, isDeleted: false } });
+    if (!owner) {
+      throw new NotFoundException('基地负责人不存在');
+    }
+    if (owner.roleKey !== UserRole.BASE_MANAGER) {
+      throw new BadRequestException('只有 base_manager 可以创建基地');
     }
 
     // 2. 检查名称是否已存在（包括软删除）
@@ -177,6 +188,7 @@ export class BaseService {
     }
 
     this.validateSalaryFields(createJobDto);
+    this.validateJobRanges(createJobDto);
 
     const jobData: any = {
       ...createJobDto,
@@ -234,6 +246,26 @@ export class BaseService {
         break;
       default:
         throw new BadRequestException(`无效的薪资类型: ${dto.payType}`);
+    }
+  }
+
+  private validateJobRanges(dto: CreateJobDto): void {
+    if (
+      dto.minAge !== undefined
+      && dto.maxAge !== undefined
+      && dto.minAge !== null
+      && dto.maxAge !== null
+      && dto.minAge > dto.maxAge
+    ) {
+      throw new BadRequestException('最小年龄不能大于最大年龄');
+    }
+
+    if (
+      dto.workStartDate
+      && dto.workEndDate
+      && new Date(dto.workStartDate).getTime() > new Date(dto.workEndDate).getTime()
+    ) {
+      throw new BadRequestException('工作开始日期不能晚于工作结束日期');
     }
   }
 

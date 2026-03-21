@@ -22,6 +22,7 @@ export class BaseInfo {
   @PrimaryGeneratedColumn({ type: 'bigint' })
   id: number;
 
+  @Index('UQ_base_info_base_name', { unique: true })
   @Column({ name: 'base_name', length: 100, comment: 'Base Name' })
   baseName: string;
 

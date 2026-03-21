@@ -41,7 +41,7 @@ export class JobApplication {
   rejectReason: string;
 
   @Column({ name: 'reviewed_by', type: 'bigint', nullable: true, comment: '审核人ID' })
-  reviewedBy: number;
+  reviewedBy: number | null;
 
   @Column({ name: 'reviewed_at', type: 'datetime', nullable: true, comment: '审核时间' })
   reviewedAt: Date;
@@ -57,6 +57,10 @@ export class JobApplication {
   @ManyToOne(() => BaseInfo)
   @JoinColumn({ name: 'base_id' })
   base: BaseInfo;
+
+  @ManyToOne(() => SysUser, { nullable: true, onDelete: 'RESTRICT' })
+  @JoinColumn({ name: 'reviewed_by' })
+  reviewer?: SysUser;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

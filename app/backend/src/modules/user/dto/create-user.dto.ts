@@ -1,5 +1,5 @@
 
-import { IsString, IsEnum, IsOptional } from 'class-validator';
+import { IsString, IsEnum, IsOptional, IsNumber } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { UserRole } from '../entities/sys-user.entity';
 
@@ -32,6 +32,7 @@ export class CreateUserDto {
 
   @ApiProperty({ example: 1, required: false, description: '关联基地ID（现场管理员专用）' })
   @IsOptional()
+  @IsNumber()
   assignedBaseId?: number;
 
   @ApiProperty({ example: '李四-配偶', description: '紧急联系人（姓名及关系）', required: false })

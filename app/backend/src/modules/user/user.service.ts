@@ -1,4 +1,4 @@
-import { Injectable, ConflictException, ForbiddenException, NotFoundException } from '@nestjs/common';
+import { Injectable, BadRequestException, ConflictException, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
 import { SysUser, UserRole } from './entities/sys-user.entity';
@@ -6,6 +6,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { SecurityService } from '../common/services/security.service';
 import { OperationLogService } from '../common/services/operation-log.service';
 import { OperationType, ResourceType } from '../common/entities/operation-log.entity';
+import { BaseInfo } from '../base/entities/base-info.entity';
 import * as crypto from 'crypto';
 
 @Injectable()
@@ -13,6 +14,8 @@ export class UserService {
   constructor(
     @InjectRepository(SysUser)
     private userRepository: Repository<SysUser>,
+    @InjectRepository(BaseInfo)
+    private baseRepository: Repository<BaseInfo>,
     private securityService: SecurityService,
     private operationLogService: OperationLogService,
   ) { }
@@ -33,7 +36,28 @@ export class UserService {
     throw error;
   }
 
+  private async validateAssignedBase(roleKey: UserRole, assignedBaseId?: number): Promise<void> {
+    if (roleKey === UserRole.FIELD_MANAGER) {
+      if (!assignedBaseId) {
+        throw new BadRequestException('field_manager 必须绑定 assignedBaseId');
+      }
+
+      const base = await this.baseRepository.findOne({ where: { id: assignedBaseId } });
+      if (!base) {
+        throw new BadRequestException('assignedBaseId 对应的基地不存在');
+      }
+      return;
+    }
+
+    if (assignedBaseId != null) {
+      throw new BadRequestException('只有 field_manager 可以设置 assignedBaseId');
+    }
+  }
+
   async create(createUserDto: CreateUserDto): Promise<SysUser> {
+    const roleKey = createUserDto.roleKey || UserRole.WORKER;
+    await this.validateAssignedBase(roleKey, createUserDto.assignedBaseId);
+
     // 1. Calculate Hash for Uniqueness Check (Since DB column is encrypted)
     const idCardHash = this.securityService.hash(createUserDto.idCard);
     const phoneHash = this.securityService.hash(createUserDto.phone);
@@ -64,7 +88,7 @@ export class UserService {
     const user = this.userRepository.create({
       ...createUserDto,
       uid,
-      roleKey: createUserDto.roleKey || UserRole.WORKER,
+      roleKey,
       idCardHash,
       phoneHash,
       emergencyPhoneHash,
@@ -136,6 +160,10 @@ export class UserService {
     const user = await this.userRepository.findOne({ where: { id: userId } });
     if (!user) {
       throw new NotFoundException('用户不存在');
+    }
+
+    if (updateDto.assignedBaseId !== undefined) {
+      await this.validateAssignedBase(user.roleKey, updateDto.assignedBaseId);
     }
 
     // 如果更新手机号，需要重新计算hash

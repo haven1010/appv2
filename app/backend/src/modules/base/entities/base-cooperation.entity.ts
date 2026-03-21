@@ -35,7 +35,7 @@ export class BaseCooperation {
   rejectReason: string;
 
   @Column({ name: 'reviewed_by', type: 'bigint', nullable: true, comment: '审核人ID' })
-  reviewedBy: number;
+  reviewedBy: number | null;
 
   @Column({ name: 'reviewed_at', type: 'datetime', nullable: true, comment: '审核时间' })
   reviewedAt: Date;
@@ -47,6 +47,10 @@ export class BaseCooperation {
   @ManyToOne(() => SysUser)
   @JoinColumn({ name: 'applicant_id' })
   applicant: SysUser;
+
+  @ManyToOne(() => SysUser, { nullable: true, onDelete: 'RESTRICT' })
+  @JoinColumn({ name: 'reviewed_by' })
+  reviewer?: SysUser;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
