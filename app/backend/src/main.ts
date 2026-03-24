@@ -8,10 +8,12 @@ import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import * as dotenv from 'dotenv';
+import { join } from 'path';
+import { NestExpressApplication } from '@nestjs/platform-express';
 dotenv.config();
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   // 1. 设置全局路由前缀 (必须在 Swagger 配置之前)
   // 所有接口变成: http://localhost:3001/api/xxx
@@ -56,6 +58,10 @@ async function bootstrap() {
     transform: true, // 自动类型转换 (例如把 id string 转为 number)
     forbidNonWhitelisted: true, // 如果有多余参数则报错
   }));
+
+  app.useStaticAssets(join(process.cwd(), 'uploads'), {
+    prefix: '/uploads/',
+  });
 
   // 4. Swagger 文档配置
   const config = new DocumentBuilder()

@@ -62,6 +62,7 @@ app/backend/dist/
 app/backend/node_modules/
 app/backend/.env
 app/backend/backups/
+app/backend/uploads/
 
 # Frontend specific
 app/frontend/dist/
