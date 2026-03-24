@@ -3,13 +3,19 @@
  * Responsibility: Implements the Attendance transport boundary for the Attendance module and delegates business work to application services.
  * Notes: Keep comments focused on intent, invariants, side effects, and cross-module contracts.
  */
-import { Controller, Post, Body, Get, UseGuards, Req, Query } from '@nestjs/common';
+import { Controller, Post, Body, Get, UseGuards, Req, Query, Patch, Param, ParseIntPipe, UseInterceptors, UploadedFile, BadRequestException } from '@nestjs/common';
 import { AttendanceService } from './attendance.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse, ApiQuery } from '@nestjs/swagger';
 import { CheckInDto } from './dto/check-in.dto';
 import { SyncOfflineDto } from './dto/sync-offline.dto';
 import { CreateSignupDto } from './dto/create-signup.dto';
+import { CreateOfflineAttendanceEventDto } from './dto/create-offline-attendance-event.dto';
+import { ReviewOfflineAttendanceEventDto } from './dto/review-offline-attendance-event.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { extname, join } from 'path';
+import { mkdirSync } from 'fs';
 
 @ApiTags('签到管理')
 @Controller('attendance')
@@ -17,6 +23,8 @@ import { CreateSignupDto } from './dto/create-signup.dto';
 @ApiBearerAuth()
 export class AttendanceController {
   constructor(private attendanceService: AttendanceService) { }
+
+  private static readonly offlineEvidenceDir = join(process.cwd(), 'uploads', 'offline-evidence');
 
   @Post('signup')
   @ApiOperation({ summary: '工人报名岗位 (创建待签到记录)' })
@@ -43,6 +51,77 @@ export class AttendanceController {
   @ApiOperation({ summary: '离线数据批量同步' })
   async syncOffline(@Body() body: SyncOfflineDto, @Req() req) {
     return this.attendanceService.syncOfflineRecords(body.records, req.user.id, { request: req, userId: req.user.id });
+  }
+
+  @Post('offline-events')
+  @ApiOperation({ summary: '提交离线补签到事件' })
+  async createOfflineEvent(@Body() dto: CreateOfflineAttendanceEventDto, @Req() req) {
+    return this.attendanceService.createOfflineAttendanceEvent(dto, req.user, { request: req, userId: req.user.id });
+  }
+
+  @Get('offline-events')
+  @ApiOperation({ summary: '查询离线补签到事件列表' })
+  async getOfflineEvents(@Query() query: any, @Req() req) {
+    return this.attendanceService.getOfflineAttendanceEvents(query, req.user);
+  }
+
+  @Get('offline-events/stats')
+  @ApiOperation({ summary: '查询离线补签到统计' })
+  async getOfflineEventStats(@Query() query: any, @Req() req) {
+    return this.attendanceService.getOfflineAttendanceEventStats(query, req.user);
+  }
+
+  @Post('offline-events/evidence')
+  @ApiOperation({ summary: '上传离线补签到证据附件' })
+  @UseInterceptors(FileInterceptor('file', {
+    storage: diskStorage({
+      destination: (_req, _file, cb) => {
+        mkdirSync(AttendanceController.offlineEvidenceDir, { recursive: true });
+        cb(null, AttendanceController.offlineEvidenceDir);
+      },
+      filename: (_req, file, cb) => {
+        const timestamp = `${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+        const safeName = file.originalname.replace(/[^a-zA-Z0-9._-]/g, '_');
+        cb(null, `${timestamp}${extname(safeName) || ''}`);
+      },
+    }),
+    fileFilter: (_req, file, cb) => {
+      if (file.mimetype.startsWith('image/') || file.mimetype === 'application/pdf') {
+        return cb(null, true);
+      }
+      return cb(new BadRequestException('仅支持图片或 PDF 附件'), false);
+    },
+    limits: { fileSize: 10 * 1024 * 1024 },
+  }))
+  async uploadOfflineEvidence(@UploadedFile() file: any, @Req() req) {
+    if (!file) {
+      throw new BadRequestException('请上传文件');
+    }
+
+    const publicBaseUrl = process.env.PUBLIC_API_BASE_URL?.replace(/\/$/, '')
+      || `${req.protocol}://${req.get('host')}`;
+
+    return {
+      url: `${publicBaseUrl}/uploads/offline-evidence/${file.filename}`,
+      name: file.originalname,
+      size: file.size,
+      type: file.mimetype,
+    };
+  }
+
+  @Patch('offline-events/:id/review')
+  @ApiOperation({ summary: '审核离线补签到事件' })
+  async reviewOfflineEvent(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: ReviewOfflineAttendanceEventDto,
+    @Req() req,
+  ) {
+    return this.attendanceService.reviewOfflineAttendanceEvent(
+      id,
+      body,
+      req.user,
+      { request: req, userId: req.user.id },
+    );
   }
 
   @Get('worker/records')

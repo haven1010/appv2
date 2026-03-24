@@ -3,10 +3,15 @@
  * Responsibility: Implements the Attendance application service for the Attendance module, including business rules, side effects, and persistence coordination.
  * Notes: Keep comments focused on intent, invariants, side effects, and cross-module contracts.
  */
-import { Injectable, BadRequestException, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, BadRequestException, Logger, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { DailySignup, SignupStatus } from './entities/daily-signup.entity';
+import {
+  OfflineAttendanceEvent,
+  OfflineAttendanceEventStatus,
+  OfflineAttendanceRiskLevel,
+} from './entities/offline-attendance-event.entity';
 import { SecurityService } from '../common/services/security.service';
 import { SysUser, UserRole, isSuperAdmin } from '../user/entities/sys-user.entity';
 import { RecruitmentJob } from '../base/entities/recruitment-job.entity';
@@ -15,6 +20,8 @@ import { SmsService } from '../common/services/sms.service';
 import { QrCodeService } from '../qrcode/qrcode.service';
 import { OperationLogService, OperationLogContext } from '../common/services/operation-log.service';
 import { OperationType, ResourceType } from '../common/entities/operation-log.entity';
+import { CreateOfflineAttendanceEventDto } from './dto/create-offline-attendance-event.dto';
+import { ReviewOfflineAttendanceEventDto } from './dto/review-offline-attendance-event.dto';
 
 @Injectable()
 /**
@@ -27,6 +34,8 @@ export class AttendanceService {
   constructor(
     @InjectRepository(DailySignup)
     private signupRepo: Repository<DailySignup>,
+    @InjectRepository(OfflineAttendanceEvent)
+    private offlineEventRepo: Repository<OfflineAttendanceEvent>,
     @InjectRepository(SysUser)
     private userRepo: Repository<SysUser>,
     @InjectRepository(RecruitmentJob)
@@ -57,6 +66,310 @@ export class AttendanceService {
     const offset = date.getTimezoneOffset() * 60000;
     const localDate = new Date(date.getTime() - offset);
     return localDate.toISOString().split('T')[0];
+  }
+
+  private getLocalDateString(value: Date): string {
+    const offset = value.getTimezoneOffset() * 60000;
+    return new Date(value.getTime() - offset).toISOString().split('T')[0];
+  }
+
+  private resolveRole(user: { role?: string; roleKey?: UserRole }): string | undefined {
+    return user.role ?? user.roleKey;
+  }
+
+  private createGeneratedOfflineRecordId(): string {
+    return `offline-${Date.now()}-${Math.floor(Math.random() * 10000)
+      .toString()
+      .padStart(4, '0')}`;
+  }
+
+  private normalizeOccurredAt(value?: string, fallbackDate?: string): Date {
+    if (value) {
+      return new Date(value);
+    }
+
+    if (fallbackDate) {
+      return new Date(`${fallbackDate}T08:00:00`);
+    }
+
+    return new Date();
+  }
+
+  private async getScopedBaseIds(user: { id: number; role?: string; roleKey?: UserRole }): Promise<number[] | null> {
+    const role = this.resolveRole(user);
+    if (!role) return [];
+
+    if (isSuperAdmin(role)) {
+      return null;
+    }
+
+    if (role === UserRole.BASE_MANAGER) {
+      const ownedBases = await this.baseRepo.find({ where: { ownerId: user.id }, select: ['id'] });
+      return ownedBases.map((item) => Number(item.id));
+    }
+
+    if (role === UserRole.FIELD_MANAGER) {
+      const operator = await this.userRepo.findOne({ where: { id: user.id } });
+      return operator?.assignedBaseId ? [Number(operator.assignedBaseId)] : [];
+    }
+
+    return [];
+  }
+
+  private async assertCanSubmitOfflineForBase(user: { id: number; role?: string; roleKey?: UserRole }, baseId: number) {
+    const normalizedBaseId = Number(baseId);
+    const role = this.resolveRole(user);
+    if (!role || role === UserRole.WORKER) {
+      throw new ForbiddenException('当前角色无权提交离线补签到');
+    }
+
+    const scopedBaseIds = await this.getScopedBaseIds(user);
+    if (scopedBaseIds !== null && !scopedBaseIds.includes(normalizedBaseId)) {
+      throw new ForbiddenException('无权为该基地提交离线补签到');
+    }
+  }
+
+  private async assertCanReviewOfflineForBase(user: { id: number; role?: string; roleKey?: UserRole }, baseId: number) {
+    const normalizedBaseId = Number(baseId);
+    const role = this.resolveRole(user);
+    if (!role || role === UserRole.WORKER || role === UserRole.FIELD_MANAGER) {
+      throw new ForbiddenException('当前角色无权审核离线补签到');
+    }
+
+    const scopedBaseIds = await this.getScopedBaseIds(user);
+    if (scopedBaseIds !== null && !scopedBaseIds.includes(normalizedBaseId)) {
+      throw new ForbiddenException('无权审核该基地的离线补签到');
+    }
+  }
+
+  private async evaluateOfflineEventDraft(
+    manager: any,
+    draft: {
+      workerUid: string;
+      baseId: number;
+      jobId: number | null;
+      workDate: string;
+      occurredAt: Date;
+    },
+  ) {
+    const worker = await manager.findOne(SysUser, {
+      where: { uid: draft.workerUid, isDeleted: false },
+    });
+
+    if (!worker) {
+      return {
+        worker: null,
+        existingSignup: null,
+        normalizedJobId: draft.jobId,
+        autoApply: false,
+        riskLevel: OfflineAttendanceRiskLevel.HIGH,
+        validationMessage: '未找到工人信息，需要人工审核',
+      };
+    }
+
+    const existingSignup = await manager.findOne(DailySignup, {
+      where: {
+        userId: worker.id,
+        baseId: draft.baseId,
+        workDate: draft.workDate,
+      },
+      lock: { mode: 'pessimistic_write' },
+    });
+
+    const ageMs = Date.now() - draft.occurredAt.getTime();
+    if (ageMs > 36 * 60 * 60 * 1000) {
+      return {
+        worker,
+        existingSignup,
+        normalizedJobId: draft.jobId ?? existingSignup?.jobId ?? null,
+        autoApply: false,
+        riskLevel: OfflineAttendanceRiskLevel.HIGH,
+        validationMessage: '补录时间超过36小时，需要人工审核',
+      };
+    }
+
+    if (existingSignup?.status === SignupStatus.CHECKED_IN) {
+      return {
+        worker,
+        existingSignup,
+        normalizedJobId: draft.jobId ?? existingSignup.jobId,
+        autoApply: false,
+        riskLevel: OfflineAttendanceRiskLevel.HIGH,
+        validationMessage: '该工人当日已存在签到记录，需要人工复核',
+      };
+    }
+
+    if (draft.jobId) {
+      const job = await manager.findOne(RecruitmentJob, { where: { id: draft.jobId } });
+      if (!job || Number(job.baseId) !== Number(draft.baseId)) {
+        return {
+          worker,
+          existingSignup,
+          normalizedJobId: draft.jobId,
+          autoApply: false,
+          riskLevel: OfflineAttendanceRiskLevel.HIGH,
+          validationMessage: '岗位与基地不匹配，需要人工审核',
+        };
+      }
+
+      if (existingSignup && Number(existingSignup.jobId) !== Number(draft.jobId)) {
+        return {
+          worker,
+          existingSignup,
+          normalizedJobId: draft.jobId,
+          autoApply: false,
+          riskLevel: OfflineAttendanceRiskLevel.HIGH,
+          validationMessage: '补录岗位与既有报名岗位不一致，需要人工审核',
+        };
+      }
+    }
+
+    if (!existingSignup) {
+      return {
+        worker,
+        existingSignup: null,
+        normalizedJobId: draft.jobId,
+        autoApply: false,
+        riskLevel: OfflineAttendanceRiskLevel.HIGH,
+        validationMessage: draft.jobId
+          ? '未找到当日报名记录，需审核后补录'
+          : '未找到当日报名记录且缺少岗位信息，需人工审核',
+      };
+    }
+
+    return {
+      worker,
+      existingSignup,
+      normalizedJobId: draft.jobId ?? existingSignup.jobId,
+      autoApply: true,
+      riskLevel: OfflineAttendanceRiskLevel.LOW,
+      validationMessage: '命中当日报名记录，已自动补签到',
+    };
+  }
+
+  private async applyOfflineEventToSignup(
+    manager: any,
+    event: OfflineAttendanceEvent,
+    worker: SysUser | null,
+    reviewedBy: number,
+    nextStatus: OfflineAttendanceEventStatus,
+    reviewNote?: string,
+  ) {
+    const resolvedWorker = worker ?? (event.workerId
+      ? await manager.findOne(SysUser, { where: { id: event.workerId, isDeleted: false } })
+      : await manager.findOne(SysUser, { where: { uid: event.workerUid, isDeleted: false } }));
+
+    if (!resolvedWorker) {
+      throw new BadRequestException('未找到工人信息，无法通过补录');
+    }
+
+    const signupRepo = manager.getRepository(DailySignup);
+    const jobRepo = manager.getRepository(RecruitmentJob);
+    let signup = await signupRepo.findOne({
+      where: {
+        userId: resolvedWorker.id,
+        baseId: event.baseId,
+        workDate: event.workDate,
+      },
+      lock: { mode: 'pessimistic_write' },
+    });
+    const signupBefore = signup
+      ? {
+          existed: true,
+          status: signup.status,
+          checkinTime: signup.checkinTime,
+          isOfflineSync: signup.isOfflineSync,
+        }
+      : {
+          existed: false,
+          status: null,
+          checkinTime: null,
+          isOfflineSync: false,
+        };
+    let signupChanged = false;
+
+    const effectiveJobId = event.jobId ?? signup?.jobId ?? null;
+    if (!signup && !effectiveJobId) {
+      throw new BadRequestException('缺少岗位信息，无法补录未报名工人的签到');
+    }
+
+    if (effectiveJobId) {
+      const job = await jobRepo.findOne({ where: { id: effectiveJobId } });
+      if (!job || Number(job.baseId) !== Number(event.baseId)) {
+        throw new BadRequestException('补录岗位与基地不匹配，无法通过');
+      }
+      if (signup && Number(signup.jobId) !== Number(effectiveJobId)) {
+        throw new BadRequestException('已有报名记录的岗位与补录岗位不一致，无法通过');
+      }
+    }
+
+    if (!signup) {
+      signup = signupRepo.create({
+        userId: resolvedWorker.id,
+        baseId: event.baseId,
+        jobId: effectiveJobId!,
+        workDate: event.workDate,
+        status: SignupStatus.CHECKED_IN,
+        checkinTime: event.occurredAt,
+        isProxy: false,
+        isOfflineSync: true,
+      });
+      signup = await signupRepo.save(signup);
+      signupChanged = true;
+    } else if (signup.status !== SignupStatus.CHECKED_IN) {
+      signup.status = SignupStatus.CHECKED_IN;
+      signup.checkinTime = event.occurredAt;
+      signup.isOfflineSync = true;
+      signup = await signupRepo.save(signup);
+      signupChanged = true;
+    }
+
+    event.workerId = resolvedWorker.id;
+    event.jobId = effectiveJobId;
+    event.appliedSignupId = signup.id;
+    event.status = nextStatus;
+    event.reviewedBy = reviewedBy;
+    event.reviewedAt = new Date();
+    event.validationMessage = reviewNote || event.validationMessage;
+
+    const savedEvent = await manager.save(OfflineAttendanceEvent, event);
+    return { event: savedEvent, signup, worker: resolvedWorker, signupBefore, signupChanged };
+  }
+
+  private async logOfflineSignupApplied(params: {
+    operatorId: number;
+    event: OfflineAttendanceEvent;
+    signup: DailySignup;
+    signupBefore: {
+      existed: boolean;
+      status: number | null;
+      checkinTime: Date | null;
+      isOfflineSync: boolean;
+    };
+    request?: OperationLogContext['request'];
+    decision: 'auto_approved' | 'approved';
+  }) {
+    await this.operationLogService.logWithContext({
+      operationType: OperationType.CHECKIN,
+      resourceType: ResourceType.SIGNUP,
+      resourceId: params.signup.id,
+      userId: params.operatorId,
+      request: params.request,
+      description: `离线补签到落库: eventId=${params.event.id}, signupId=${params.signup.id}, decision=${params.decision}`,
+      beforeData: {
+        status: params.signupBefore.status,
+        checkinTime: params.signupBefore.checkinTime,
+        isOfflineSync: params.signupBefore.isOfflineSync,
+        existed: params.signupBefore.existed,
+      },
+      afterData: {
+        status: params.signup.status,
+        checkinTime: params.signup.checkinTime,
+        isOfflineSync: params.signup.isOfflineSync,
+        offlineEventId: params.event.id,
+        existed: true,
+      },
+    });
   }
 
   /**
@@ -197,77 +510,363 @@ export class AttendanceService {
    * 该流程采用逐条容错策略，单条失败不会中断整批同步。
    */
   async syncOfflineRecords(records: any[], adminId: number, context?: OperationLogContext) {
+    const operator = await this.userRepo.findOne({ where: { id: adminId, isDeleted: false } });
     const results = [];
-    const today = this.getTodayDateString();
 
-    for (const record of records) {
+    for (let index = 0; index < records.length; index += 1) {
+      const record = records[index];
       try {
-        // 离线数据通常只有 uid
-        const user = await this.userRepo.findOne({ where: { uid: record.uid } });
-        if (!user) {
-          results.push({ uid: record.uid, status: 'error', msg: 'User not found' });
-          continue;
-        }
+        const event = await this.createOfflineAttendanceEvent({
+          offlineRecordId: record.offlineRecordId || `legacy-${adminId}-${index}-${Date.now()}`,
+          deviceId: record.deviceId || `legacy-sync-${adminId}`,
+          workerUid: record.uid,
+          baseId: Number(record.baseId),
+          jobId: record.jobId ? Number(record.jobId) : undefined,
+          workDate: record.date,
+          occurredAt: record.checkinTime,
+          evidenceNote: record.evidenceNote,
+        }, operator ?? ({ id: adminId, roleKey: UserRole.SUPER_ADMIN } as any), context);
 
-        // 使用记录中的日期，如果没有则默认为今天
-        const dateToSync = record.date || today;
-
-        const syncResult = await this.dataSource.transaction(async (manager) => {
-          const lockedSignup = await manager.findOne(DailySignup, {
-            where: { userId: user.id, baseId: record.baseId, workDate: dateToSync },
-            lock: { mode: 'pessimistic_write' },
-          });
-
-          if (!lockedSignup) {
-            return null;
-          }
-
-          if (lockedSignup.status === SignupStatus.CHECKED_IN) {
-            return { signup: lockedSignup, changed: false };
-          }
-
-          lockedSignup.status = SignupStatus.CHECKED_IN;
-          lockedSignup.checkinTime = record.checkinTime ? new Date(record.checkinTime) : new Date();
-          lockedSignup.isOfflineSync = true;
-          const saved = await manager.save(DailySignup, lockedSignup);
-          return { signup: saved, changed: true };
+        results.push({
+          uid: record.uid,
+          status: event.status === OfflineAttendanceEventStatus.PENDING_REVIEW ? 'pending_review' : 'success',
+          eventId: event.id,
+          msg: event.validationMessage,
         });
-
-        if (syncResult?.signup) {
-          if (!syncResult.changed) {
-            results.push({ uid: record.uid, status: 'skipped', msg: 'Already checked in' });
-          } else {
-            results.push({ uid: record.uid, status: 'success' });
-            await this.operationLogService.logWithContext({
-              operationType: OperationType.CHECKIN,
-              resourceType: ResourceType.SIGNUP,
-              resourceId: syncResult.signup.id,
-              userId: adminId,
-              request: context?.request,
-              description: `离线同步签到: ${record.uid}, 基地ID: ${record.baseId}`,
-              beforeData: {
-                status: SignupStatus.SIGNED_UP,
-                isOfflineSync: false,
-              },
-              afterData: {
-                status: syncResult.signup.status,
-                isOfflineSync: syncResult.signup.isOfflineSync,
-                checkinTime: syncResult.signup.checkinTime,
-              },
-            });
-          }
-        } else {
-          // 严格模式：没有报名记录则报错
-          results.push({ uid: record.uid, status: 'error', msg: 'No signup record' });
-        }
       } catch (e) {
         results.push({ uid: record.uid, status: 'error', msg: e.message });
       }
     }
+
     return {
       total: records.length,
-      results
+      results,
     };
+  }
+
+  async createOfflineAttendanceEvent(
+    dto: CreateOfflineAttendanceEventDto,
+    operator: { id: number; role?: string; roleKey?: UserRole },
+    context?: OperationLogContext,
+  ) {
+    const baseId = Number(dto.baseId);
+    await this.assertCanSubmitOfflineForBase(operator, baseId);
+
+    const occurredAt = this.normalizeOccurredAt(dto.occurredAt, dto.workDate);
+    const workDate = dto.workDate || this.getLocalDateString(occurredAt);
+    const deviceId = dto.deviceId?.trim() || 'web-manual';
+    const offlineRecordId = dto.offlineRecordId?.trim() || this.createGeneratedOfflineRecordId();
+    const workerUid = dto.workerUid.trim();
+    const jobId = dto.jobId ? Number(dto.jobId) : null;
+
+    const transactionResult = await this.dataSource.transaction(async (manager) => {
+      const existing = await manager.findOne(OfflineAttendanceEvent, {
+        where: { deviceId, offlineRecordId },
+        relations: ['base', 'job', 'submitter', 'reviewer'],
+      });
+      if (existing) {
+        return {
+          event: existing,
+          created: false,
+        };
+      }
+
+      const evaluation = await this.evaluateOfflineEventDraft(manager, {
+        workerUid,
+        baseId,
+        jobId,
+        workDate,
+        occurredAt,
+      });
+
+      let event = manager.create(OfflineAttendanceEvent, {
+        offlineRecordId,
+        deviceId,
+        workerUid,
+        workerId: evaluation.worker?.id ?? null,
+        baseId,
+        jobId: evaluation.normalizedJobId ?? null,
+        workDate,
+        occurredAt,
+        submittedBy: operator.id,
+        status: evaluation.autoApply
+          ? OfflineAttendanceEventStatus.AUTO_APPROVED
+          : OfflineAttendanceEventStatus.PENDING_REVIEW,
+        riskLevel: evaluation.riskLevel,
+        validationMessage: evaluation.validationMessage,
+        evidenceNote: dto.evidenceNote?.trim() || null,
+        evidenceJson: JSON.stringify({
+          note: dto.evidenceNote?.trim() || null,
+          clientOccurredAt: dto.occurredAt || null,
+          attachments: Array.isArray(dto.evidenceAttachments) ? dto.evidenceAttachments : [],
+        }),
+        payloadJson: JSON.stringify(dto),
+      });
+
+      event = await manager.save(OfflineAttendanceEvent, event);
+
+      if (!evaluation.autoApply || !evaluation.worker) {
+        return {
+          event,
+          created: true,
+        };
+      }
+
+      const applied = await this.applyOfflineEventToSignup(
+        manager,
+        event,
+        evaluation.worker,
+        operator.id,
+        OfflineAttendanceEventStatus.AUTO_APPROVED,
+        evaluation.validationMessage,
+      );
+
+      if (applied.signupChanged) {
+        await this.logOfflineSignupApplied({
+          operatorId: operator.id,
+          event: applied.event,
+          signup: applied.signup,
+          signupBefore: applied.signupBefore,
+          request: context?.request,
+          decision: 'auto_approved',
+        });
+      }
+
+      return {
+        event: applied.event,
+        created: true,
+      };
+    });
+
+    if (transactionResult.created) {
+      await this.operationLogService.logWithContext({
+        operationType: OperationType.CREATE,
+        resourceType: ResourceType.OFFLINE_EVENT,
+        resourceId: transactionResult.event.id,
+        userId: operator.id,
+        request: context?.request,
+        description: `提交离线补签到事件: eventId=${transactionResult.event.id}, workerUid=${workerUid}, baseId=${baseId}`,
+        afterData: {
+          offlineRecordId,
+          deviceId,
+          status: transactionResult.event.status,
+          riskLevel: transactionResult.event.riskLevel,
+          validationMessage: transactionResult.event.validationMessage,
+          workDate: transactionResult.event.workDate,
+          occurredAt: transactionResult.event.occurredAt,
+        },
+      });
+    }
+
+    return transactionResult.event;
+  }
+
+  async getOfflineAttendanceEvents(
+    query: any,
+    operator: { id: number; role?: string; roleKey?: UserRole },
+  ) {
+    const scopedBaseIds = await this.getScopedBaseIds(operator);
+    if (scopedBaseIds !== null && scopedBaseIds.length === 0) {
+      return { list: [], total: 0, page: 1, pageSize: Math.min(Math.max(Number(query.pageSize || 10), 1), 100) };
+    }
+
+    const qb = this.offlineEventRepo
+      .createQueryBuilder('event')
+      .leftJoinAndSelect('event.base', 'base')
+      .leftJoinAndSelect('event.job', 'job')
+      .leftJoinAndSelect('event.submitter', 'submitter')
+      .leftJoinAndSelect('event.reviewer', 'reviewer')
+      .leftJoinAndSelect('event.worker', 'worker')
+      .orderBy('event.createdAt', 'DESC');
+
+    if (scopedBaseIds !== null) {
+      qb.andWhere('event.baseId IN (:...scopedBaseIds)', { scopedBaseIds });
+    }
+
+    if (query.baseId) {
+      qb.andWhere('event.baseId = :baseId', { baseId: Number(query.baseId) });
+    }
+    if (query.workDate) {
+      qb.andWhere('event.workDate = :workDate', { workDate: query.workDate });
+    }
+    if (query.status !== undefined && query.status !== '') {
+      qb.andWhere('event.status = :status', { status: Number(query.status) });
+    }
+    if (query.onlyMine === 'true') {
+      qb.andWhere('event.submittedBy = :submittedBy', { submittedBy: operator.id });
+    }
+
+    const page = Math.max(Number(query.page || 1), 1);
+    const pageSize = Math.min(Math.max(Number(query.pageSize || 10), 1), 100);
+    qb.skip((page - 1) * pageSize).take(pageSize);
+
+    const [list, total] = await qb.getManyAndCount();
+
+    return {
+      list: list.map((event) => ({
+        id: event.id,
+        offlineRecordId: event.offlineRecordId,
+        deviceId: event.deviceId,
+        workerUid: event.workerUid,
+        workerName: event.worker?.name || '-',
+        baseId: event.baseId,
+        baseName: event.base?.baseName || '-',
+        jobId: event.jobId,
+        jobTitle: event.job?.jobTitle || '-',
+        workDate: event.workDate,
+        occurredAt: event.occurredAt,
+        submittedBy: event.submittedBy,
+        submittedByName: event.submitter?.name || '-',
+        status: event.status,
+        riskLevel: event.riskLevel,
+        validationMessage: event.validationMessage,
+        evidenceNote: event.evidenceNote,
+        evidenceAttachments: (() => {
+          try {
+            const parsed = event.evidenceJson ? JSON.parse(event.evidenceJson) : null;
+            return Array.isArray(parsed?.attachments) ? parsed.attachments : [];
+          } catch {
+            return [];
+          }
+        })(),
+        reviewedBy: event.reviewedBy,
+        reviewedByName: event.reviewer?.name || '-',
+        reviewedAt: event.reviewedAt,
+        appliedSignupId: event.appliedSignupId,
+        createdAt: event.createdAt,
+      })),
+      total,
+      page,
+      pageSize,
+    };
+  }
+
+  async getOfflineAttendanceEventStats(
+    query: any,
+    operator: { id: number; role?: string; roleKey?: UserRole },
+  ) {
+    const scopedBaseIds = await this.getScopedBaseIds(operator);
+    if (scopedBaseIds !== null && scopedBaseIds.length === 0) {
+      return {
+        total: 0,
+        pendingReview: 0,
+        approved: 0,
+        rejected: 0,
+        autoApproved: 0,
+      };
+    }
+
+    const qb = this.offlineEventRepo.createQueryBuilder('event');
+    if (scopedBaseIds !== null) {
+      qb.andWhere('event.baseId IN (:...scopedBaseIds)', { scopedBaseIds });
+    }
+    if (query.baseId) {
+      qb.andWhere('event.baseId = :baseId', { baseId: Number(query.baseId) });
+    }
+    if (query.workDate) {
+      qb.andWhere('event.workDate = :workDate', { workDate: query.workDate });
+    }
+
+    const raw = await qb
+      .select('COUNT(1)', 'total')
+      .addSelect(`SUM(CASE WHEN event.status = ${OfflineAttendanceEventStatus.PENDING_REVIEW} THEN 1 ELSE 0 END)`, 'pendingReview')
+      .addSelect(`SUM(CASE WHEN event.status = ${OfflineAttendanceEventStatus.APPROVED} THEN 1 ELSE 0 END)`, 'approved')
+      .addSelect(`SUM(CASE WHEN event.status = ${OfflineAttendanceEventStatus.REJECTED} THEN 1 ELSE 0 END)`, 'rejected')
+      .addSelect(`SUM(CASE WHEN event.status = ${OfflineAttendanceEventStatus.AUTO_APPROVED} THEN 1 ELSE 0 END)`, 'autoApproved')
+      .getRawOne();
+
+    return {
+      total: Number(raw?.total || 0),
+      pendingReview: Number(raw?.pendingReview || 0),
+      approved: Number(raw?.approved || 0),
+      rejected: Number(raw?.rejected || 0),
+      autoApproved: Number(raw?.autoApproved || 0),
+    };
+  }
+
+  async reviewOfflineAttendanceEvent(
+    eventId: number,
+    body: ReviewOfflineAttendanceEventDto,
+    operator: { id: number; role?: string; roleKey?: UserRole },
+    context?: OperationLogContext,
+  ) {
+    const existing = await this.offlineEventRepo.findOne({ where: { id: eventId } });
+    if (!existing) {
+      throw new NotFoundException('离线补签到事件不存在');
+    }
+
+    await this.assertCanReviewOfflineForBase(operator, existing.baseId);
+
+    const result = await this.dataSource.transaction(async (manager) => {
+      const event = await manager.findOne(OfflineAttendanceEvent, {
+        where: { id: eventId },
+        lock: { mode: 'pessimistic_write' },
+      });
+      if (!event) {
+        throw new NotFoundException('离线补签到事件不存在');
+      }
+      if (event.status !== OfflineAttendanceEventStatus.PENDING_REVIEW) {
+        throw new BadRequestException('该离线补签到事件已处理，请刷新后重试');
+      }
+
+      if (body.decision === 'reject') {
+        event.status = OfflineAttendanceEventStatus.REJECTED;
+        event.reviewedBy = operator.id;
+        event.reviewedAt = new Date();
+        event.validationMessage = body.reason?.trim() || '已拒绝';
+        return {
+          event: await manager.save(OfflineAttendanceEvent, event),
+          signup: null,
+          signupBefore: null,
+          signupChanged: false,
+        };
+      }
+
+      const applied = await this.applyOfflineEventToSignup(
+        manager,
+        event,
+        null,
+        operator.id,
+        OfflineAttendanceEventStatus.APPROVED,
+        body.reason?.trim() || '人工审核通过',
+      );
+      return {
+        event: applied.event,
+        signup: applied.signup,
+        signupBefore: applied.signupBefore,
+        signupChanged: applied.signupChanged,
+      };
+    });
+
+    await this.operationLogService.logWithContext({
+      operationType: OperationType.AUDIT,
+      resourceType: ResourceType.OFFLINE_EVENT,
+      resourceId: result.event.id,
+      userId: operator.id,
+      request: context?.request,
+      description: `审核离线补签到事件: eventId=${eventId}, decision=${body.decision}`,
+      beforeData: {
+        status: OfflineAttendanceEventStatus.PENDING_REVIEW,
+      },
+      afterData: {
+        status: result.event.status,
+        validationMessage: result.event.validationMessage,
+        appliedSignupId: result.event.appliedSignupId,
+      },
+    });
+
+    if (body.decision === 'approve' && result.signup && result.signupChanged) {
+      await this.logOfflineSignupApplied({
+        operatorId: operator.id,
+        event: result.event,
+        signup: result.signup,
+        signupBefore: result.signupBefore,
+        request: context?.request,
+        decision: 'approved',
+      });
+    }
+
+    return result.event;
   }
 
   /**
