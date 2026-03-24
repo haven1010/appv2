@@ -6,7 +6,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { DataSource } from 'typeorm';
+import { execFile } from 'child_process';
+import { promisify } from 'util';
+import * as path from 'path';
 
 /**
  * 数据备份服务
@@ -15,11 +17,43 @@ import { DataSource } from 'typeorm';
 @Injectable()
 export class BackupService {
   private readonly logger = new Logger(BackupService.name);
+  private readonly execFileAsync = promisify(execFile);
 
   constructor(
     private configService: ConfigService,
-    private dataSource: DataSource,
   ) {}
+
+  private getScriptPath(): string {
+    return path.resolve(process.cwd(), 'scripts', 'db-backup.js');
+  }
+
+  private buildScriptArgs(): string[] {
+    const backupPath = this.configService.get<string>('BACKUP_PATH');
+    const retentionDays = this.configService.get<string>('BACKUP_RETENTION_DAYS');
+    const args = [this.getScriptPath()];
+
+    if (backupPath) {
+      args.push('--output-dir', backupPath);
+    }
+    if (retentionDays) {
+      args.push('--retention-days', retentionDays);
+    }
+
+    return args;
+  }
+
+  private async runBackupScript(): Promise<string> {
+    const { stdout, stderr } = await this.execFileAsync(process.execPath, this.buildScriptArgs(), {
+      cwd: process.cwd(),
+      env: process.env,
+    });
+
+    if (stderr?.trim()) {
+      this.logger.warn(`[数据备份] stderr: ${stderr.trim()}`);
+    }
+
+    return stdout.trim();
+  }
 
   /**
    * 每日自动备份（凌晨2点执行）
@@ -27,32 +61,10 @@ export class BackupService {
   @Cron(CronExpression.EVERY_DAY_AT_2AM)
   async dailyBackup() {
     this.logger.log('[数据备份] 开始执行每日自动备份...');
-    
+
     try {
-      // TODO: 实现数据库备份逻辑
-      // 1. 使用 mysqldump 导出数据库
-      // 2. 压缩备份文件
-      // 3. 上传到云存储（COS/OSS）
-      // 4. 清理旧备份（保留最近30天）
-      
-      const backupPath = this.configService.get<string>('BACKUP_PATH', './backups');
-      const dbName = this.configService.get<string>('DB_DATABASE', 'pickpass_db');
-      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-      const backupFile = `${backupPath}/backup_${dbName}_${timestamp}.sql`;
-      
-      this.logger.log(`[数据备份] 备份文件路径: ${backupFile}`);
-      this.logger.log('[数据备份] 备份完成（模拟）');
-      
-      // 实际实现示例：
-      // const { exec } = require('child_process');
-      // exec(`mysqldump -u${username} -p${password} ${dbName} > ${backupFile}`, (error, stdout, stderr) => {
-      //   if (error) {
-      //     this.logger.error(`[数据备份] 失败: ${error.message}`);
-      //     return;
-      //   }
-      //   this.logger.log(`[数据备份] 成功: ${backupFile}`);
-      // });
-      
+      const result = await this.runBackupScript();
+      this.logger.log(`[数据备份] 备份完成: ${result}`);
     } catch (error) {
       this.logger.error(`[数据备份] 执行失败: ${error.message}`);
     }
@@ -63,7 +75,6 @@ export class BackupService {
    */
   async manualBackup(): Promise<string> {
     this.logger.log('[数据备份] 手动触发备份...');
-    await this.dailyBackup();
-    return '备份任务已启动';
+    return this.runBackupScript();
   }
 }
