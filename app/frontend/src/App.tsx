@@ -146,7 +146,11 @@ export default function App() {
               } />
 
               {/* 业务子路由 */}
-              <Route path="bases" element={<BaseManagement />} />
+              <Route path="bases" element={
+                <ProtectedRoute roles={[UserRole.SUPER_ADMIN, UserRole.BASE_MANAGER]}>
+                  <BaseManagement />
+                </ProtectedRoute>
+              } />
 
               <Route path="attendance" element={
                 <ProtectedRoute roles={[UserRole.SUPER_ADMIN, UserRole.FIELD_MANAGER, UserRole.BASE_MANAGER]}>
@@ -155,13 +159,13 @@ export default function App() {
               } />
 
               <Route path="payroll" element={
-                <ProtectedRoute roles={[UserRole.SUPER_ADMIN, UserRole.BASE_MANAGER]}>
+                <ProtectedRoute roles={[UserRole.SUPER_ADMIN, UserRole.BASE_MANAGER, UserRole.FIELD_MANAGER]}>
                   <PayrollView />
                 </ProtectedRoute>
               } />
 
               <Route path="workers" element={
-                <ProtectedRoute roles={[UserRole.SUPER_ADMIN, UserRole.FIELD_MANAGER]}>
+                <ProtectedRoute roles={[UserRole.SUPER_ADMIN]}>
                   <WorkerManagement />
                 </ProtectedRoute>
               } />

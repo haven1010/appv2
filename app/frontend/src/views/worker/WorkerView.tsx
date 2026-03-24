@@ -194,6 +194,8 @@ export default function WorkerView() {
   const [showWorkHistory, setShowWorkHistory] = useState(false);
   const [showBankCard, setShowBankCard] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [signupLoadingId, setSignupLoadingId] = useState<number | null>(null);
+  const [signedUpApplicationIds, setSignedUpApplicationIds] = useState<number[]>([]);
 
   const { data: recommendedBases = [], isLoading: basesLoading } = useRecommendationControllerGetRecommendedBases();
   const { data: baseJobs = [], isLoading: jobsLoading } = useBaseControllerGetJobsByBase(selectedBaseId ?? 0, {
@@ -301,6 +303,30 @@ export default function WorkerView() {
       alert(Array.isArray(msg) ? msg[0] : msg);
     } finally {
       setApplyLoading(false);
+    }
+  };
+
+  const handleSignupForAttendance = async (application: any) => {
+    if (!application?.baseId || !application?.jobId) {
+      alert('报名记录缺少基地或岗位信息');
+      return;
+    }
+
+    setSignupLoadingId(application.id);
+    try {
+      await AXIOS_INSTANCE.post('/api/attendance/signup', {
+        baseId: application.baseId,
+        jobId: application.jobId,
+      });
+      setSignedUpApplicationIds((current) =>
+        current.includes(application.id) ? current : [...current, application.id],
+      );
+      alert('今日签到记录已创建，请到现场出示签到码');
+    } catch (e: any) {
+      const msg = e?.response?.data?.message ?? '创建签到记录失败';
+      alert(Array.isArray(msg) ? msg[0] : msg);
+    } finally {
+      setSignupLoadingId(null);
     }
   };
 
@@ -529,6 +555,17 @@ export default function WorkerView() {
               查看详情 <ChevronRight size={12} />
             </button>
           </div>
+
+          {app.raw?.status === 1 ? (
+            <button
+              onClick={() => handleSignupForAttendance(app.raw)}
+              disabled={signupLoadingId === app.id || signedUpApplicationIds.includes(app.id)}
+              className="mt-4 w-full py-3 rounded-2xl bg-blue-500/90 text-white text-xs font-bold shadow-lg shadow-blue-500/20 disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              {signupLoadingId === app.id ? <Loader2 className="animate-spin" size={14} /> : null}
+              {signedUpApplicationIds.includes(app.id) ? '今日已创建签到' : '创建今日签到'}
+            </button>
+          ) : null}
         </div>
       ))
       )}

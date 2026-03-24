@@ -103,6 +103,8 @@ export default function WorkerManagement() {
     emergencyContact: '',
     emergencyPhone: '',
     roleKey: 'worker',
+    regionCode: '',
+    assignedBaseId: '',
   });
   const [addLoading, setAddLoading] = useState(false);
   const [addResult, setAddResult] = useState<{ uid: string; name: string } | null>(null);
@@ -234,10 +236,31 @@ export default function WorkerManagement() {
     if (!name.trim()) { alert('请输入姓名'); return; }
     if (!idCard || idCard.length !== 18) { alert('请输入18位身份证号'); return; }
     if (!phone || phone.length !== 11) { alert('请输入11位手机号'); return; }
+    if (addForm.roleKey === 'field_manager' && !addForm.assignedBaseId) {
+      alert('现场管理员必须绑定基地');
+      return;
+    }
 
     setAddLoading(true);
     try {
-      const res = await AXIOS_INSTANCE.post('/api/user/register', addForm);
+      const payload: Record<string, unknown> = {
+        name: addForm.name.trim(),
+        idCard: addForm.idCard.trim(),
+        phone: addForm.phone.trim(),
+        emergencyContact: addForm.emergencyContact.trim() || undefined,
+        emergencyPhone: addForm.emergencyPhone.trim() || undefined,
+        roleKey: addForm.roleKey,
+      };
+      if (addForm.roleKey === 'field_manager' && addForm.assignedBaseId) {
+        payload.assignedBaseId = Number(addForm.assignedBaseId);
+      }
+      if (addForm.roleKey === 'super_admin' && addForm.regionCode) {
+        payload.regionCode = Number(addForm.regionCode);
+      }
+
+      const endpoint =
+        addForm.roleKey === 'super_admin' ? '/api/user/admin/super-admin' : '/api/user/admin';
+      const res = await AXIOS_INSTANCE.post(endpoint, payload);
       setAddResult({ uid: res.data.uid, name: res.data.name });
       setActiveStep(3);
       loadUsers();
@@ -252,7 +275,16 @@ export default function WorkerManagement() {
   function resetAddModal() {
     setShowAddModal(false);
     setActiveStep(1);
-    setAddForm({ name: '', idCard: '', phone: '', emergencyContact: '', emergencyPhone: '', roleKey: 'worker' });
+    setAddForm({
+      name: '',
+      idCard: '',
+      phone: '',
+      emergencyContact: '',
+      emergencyPhone: '',
+      roleKey: 'worker',
+      regionCode: '',
+      assignedBaseId: '',
+    });
     setAddResult(null);
   }
 
@@ -802,7 +834,14 @@ export default function WorkerManagement() {
                         <label className="text-xs text-slate-500 font-semibold uppercase">角色</label>
                         <select
                           value={addForm.roleKey}
-                          onChange={(e) => setAddForm({ ...addForm, roleKey: e.target.value })}
+                          onChange={(e) =>
+                            setAddForm({
+                              ...addForm,
+                              roleKey: e.target.value,
+                              regionCode: e.target.value === 'super_admin' ? addForm.regionCode : '',
+                              assignedBaseId: e.target.value === 'field_manager' ? addForm.assignedBaseId : '',
+                            })
+                          }
                           className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2 text-slate-100 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                         >
                           <option value="worker">采摘工</option>
@@ -811,6 +850,35 @@ export default function WorkerManagement() {
                           <option value="super_admin">超级管理员</option>
                         </select>
                       </div>
+                      {addForm.roleKey === 'field_manager' && (
+                        <div className="space-y-2">
+                          <label className="text-xs text-slate-500 font-semibold uppercase">绑定基地 *</label>
+                          <select
+                            value={addForm.assignedBaseId}
+                            onChange={(e) => setAddForm({ ...addForm, assignedBaseId: e.target.value })}
+                            className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2 text-slate-100 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                          >
+                            <option value="">请选择基地</option>
+                            {basesCache.map((base) => (
+                              <option key={base.id} value={base.id}>
+                                {base.baseName}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
+                      {addForm.roleKey === 'super_admin' && (
+                        <div className="space-y-2">
+                          <label className="text-xs text-slate-500 font-semibold uppercase">区域代码</label>
+                          <input
+                            type="number"
+                            value={addForm.regionCode}
+                            onChange={(e) => setAddForm({ ...addForm, regionCode: e.target.value })}
+                            placeholder="例如 330100"
+                            className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2 text-slate-100 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                          />
+                        </div>
+                      )}
                       <div className="space-y-2">
                         <label className="text-xs text-slate-500 font-semibold uppercase">紧急联系人</label>
                         <input

@@ -175,10 +175,12 @@ function BaseDetailDrawer({
   baseId,
   onClose,
   onOpenCreateJob,
+  canManageJobs,
 }: {
   baseId: number;
   onClose: () => void;
   onOpenCreateJob: () => void;
+  canManageJobs: boolean;
 }) {
   const { data: base, isLoading } = useBaseControllerGetBaseStatistics(baseId);
   const { data: jobs, isLoading: jobsLoading } = useBaseControllerGetJobsByBase(baseId);
@@ -229,13 +231,15 @@ function BaseDetailDrawer({
               <div>
                 <div className="flex justify-between items-center mb-3">
                   <h4 className="font-bold text-white">招聘岗位</h4>
-                  <button
-                    type="button"
-                    onClick={onOpenCreateJob}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500 text-white text-sm font-medium"
-                  >
-                    <Plus size={16} /> 发布招聘
-                  </button>
+                  {canManageJobs ? (
+                    <button
+                      type="button"
+                      onClick={onOpenCreateJob}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500 text-white text-sm font-medium"
+                    >
+                      <Plus size={16} /> 发布招聘
+                    </button>
+                  ) : null}
                 </div>
                 {jobsLoading ? (
                   <div className="py-8 flex justify-center">
@@ -803,6 +807,7 @@ export default function BaseManagement() {
           baseId={detailBaseId}
           onClose={() => setDetailBaseId(null)}
           onOpenCreateJob={() => setShowCreateJobModal(detailBaseId)}
+          canManageJobs={user?.role === UserRole.BASE_MANAGER}
         />
       )}
 

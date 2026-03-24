@@ -21,6 +21,7 @@ import {
   Eye,
   ArrowRight,
   Loader2,
+  RefreshCw,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
@@ -72,9 +73,12 @@ export default function JobManagement() {
   const { user } = useAuth();
   const [showCandidates, setShowCandidates] = useState(false);
   const [selectedJob, setSelectedJob] = useState<any>(null);
+  const [manageJob, setManageJob] = useState<any>(null);
   const [activeBaseId, setActiveBaseId] = useState<number | null>(null);
   const [reviewingId, setReviewingId] = useState<number | null>(null);
   const [showCreateJobModal, setShowCreateJobModal] = useState(false);
+  const [jobKeyword, setJobKeyword] = useState('');
+  const [jobStatusFilter, setJobStatusFilter] = useState<number | ''>('');
 
   const { data: rawBases = [], isLoading: basesLoading } = useBaseControllerFindAll({
     request:
@@ -101,7 +105,7 @@ export default function JobManagement() {
     }
   }, [activeBaseId, bases]);
 
-  const { data: rawJobs, isLoading: jobsLoading } = useBaseControllerGetJobsByBase(
+  const { data: rawJobs, isLoading: jobsLoading, refetch: refetchJobs } = useBaseControllerGetJobsByBase(
     activeBaseId ?? 0,
     { query: { enabled: !!activeBaseId } },
   );
@@ -153,6 +157,29 @@ export default function JobManagement() {
     [applicationsRaw],
   );
 
+  const {
+    data: manageJobDetail,
+    isLoading: manageJobLoading,
+    refetch: refetchManageJob,
+  } = useQuery({
+    queryKey: ['jobDetail', manageJob?.id],
+    enabled: !!manageJob?.id,
+    queryFn: async () => {
+      const res = await AXIOS_INSTANCE.get(`/api/base/jobs/${manageJob.id}`);
+      return res.data;
+    },
+  });
+
+  const visibleJobs = useMemo(() => {
+    const keyword = jobKeyword.trim().toLowerCase();
+    return jobs.filter((job) => {
+      const matchKeyword =
+        !keyword || job.title.toLowerCase().includes(keyword) || job.base.toLowerCase().includes(keyword);
+      const matchStatus = jobStatusFilter === '' || job.statusCode === jobStatusFilter;
+      return matchKeyword && matchStatus;
+    });
+  }, [jobs, jobKeyword, jobStatusFilter]);
+
   const handleOpenCandidates = (job: any) => {
     setSelectedJob(job);
     setShowCandidates(true);
@@ -173,6 +200,26 @@ export default function JobManagement() {
     }
   };
 
+  const handleUpdateJobStatus = async (jobId: number, status: number) => {
+    try {
+      await AXIOS_INSTANCE.patch(`/api/base/jobs/${jobId}/status`, { status });
+      await Promise.all([refetchManageJob(), refetchApplications(), refetchJobs()]);
+    } catch (e: any) {
+      const msg = e?.response?.data?.message ?? '岗位状态更新失败';
+      alert(Array.isArray(msg) ? msg[0] : msg);
+    }
+  };
+
+  const handleRenewJob = async (jobId: number) => {
+    try {
+      await AXIOS_INSTANCE.patch(`/api/base/jobs/${jobId}/renew`);
+      await Promise.all([refetchManageJob(), refetchJobs()]);
+    } catch (e: any) {
+      const msg = e?.response?.data?.message ?? '岗位续期失败';
+      alert(Array.isArray(msg) ? msg[0] : msg);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -182,14 +229,16 @@ export default function JobManagement() {
             基地管理员在这里集中管理本基地的招聘岗位与候选人筛选。
           </p>
         </div>
-        <button
-          className="flex items-center gap-2 px-6 py-3 bg-emerald-500 hover:bg-emerald-400 text-white font-bold rounded-2xl transition-all shadow-xl shadow-emerald-500/20 active:scale-95"
-          disabled={!activeBaseId}
-          onClick={() => setShowCreateJobModal(true)}
-        >
-          <Plus size={18} />
-          <span>发布新需求</span>
-        </button>
+        {user?.role === UserRole.BASE_MANAGER ? (
+          <button
+            className="flex items-center gap-2 px-6 py-3 bg-emerald-500 hover:bg-emerald-400 text-white font-bold rounded-2xl transition-all shadow-xl shadow-emerald-500/20 active:scale-95"
+            disabled={!activeBaseId}
+            onClick={() => setShowCreateJobModal(true)}
+          >
+            <Plus size={18} />
+            <span>发布新需求</span>
+          </button>
+        ) : null}
       </div>
 
       <div className="glass-card rounded-[32px] p-8 border border-slate-800/60">
@@ -201,18 +250,27 @@ export default function JobManagement() {
             />
             <input
               type="text"
-              placeholder="搜索岗位关键字或所属基地名称（暂为本地筛选，可后续扩展）"
+              placeholder="搜索岗位关键字或所属基地名称"
+              value={jobKeyword}
+              onChange={(e) => setJobKeyword(e.target.value)}
               className="w-full bg-slate-900/50 border border-slate-800 rounded-2xl py-3 pl-12 pr-4 text-sm text-slate-100 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
-              disabled
             />
           </div>
           <div className="flex gap-2">
-            <button
-              className="px-5 py-3 bg-slate-800 rounded-2xl text-slate-300 text-sm font-bold flex items-center gap-2 border border-slate-700/50 hover:bg-slate-700 transition-colors"
-              disabled
-            >
-              <Filter size={16} /> 筛选条件
-            </button>
+            <label className="relative">
+              <Filter className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
+              <select
+                value={jobStatusFilter}
+                onChange={(e) => setJobStatusFilter(e.target.value === '' ? '' : Number(e.target.value))}
+                className="rounded-2xl border border-slate-700/50 bg-slate-800 py-3 pl-11 pr-8 text-sm font-bold text-slate-300 transition-colors hover:bg-slate-700"
+              >
+                <option value="">全部状态</option>
+                <option value={1}>招聘中</option>
+                <option value={0}>已下架</option>
+                <option value={2}>已招满</option>
+                <option value={3}>已过期</option>
+              </select>
+            </label>
           </div>
         </div>
 
@@ -248,14 +306,14 @@ export default function JobManagement() {
               <Loader2 className="animate-spin" size={24} />
               正在加载岗位数据...
             </div>
-          ) : jobs.length === 0 ? (
+          ) : visibleJobs.length === 0 ? (
             <div className="col-span-full text-center py-12 text-slate-500 text-sm">
-              名下基地暂无在招岗位，请在「基地管理 → 基地详情 → 发布招聘」中创建新岗位。
+              当前筛选下暂无岗位记录。
             </div>
           ) : null}
 
           {!jobsLoading &&
-            jobs.map((job) => (
+            visibleJobs.map((job) => (
               <div
                 key={job.id}
                 className="glass-card p-6 rounded-[32px] border-slate-800/40 hover:border-emerald-500/40 transition-all flex flex-col md:flex-row md:items-center justify-between gap-6 group relative overflow-hidden"
@@ -346,10 +404,15 @@ export default function JobManagement() {
                       className="opacity-0 group-hover/btn:opacity-100 group-hover/btn:translate-x-1 transition-all"
                     />
                   </button>
-                  <button className="flex-1 md:w-full py-3 px-4 rounded-2xl bg-slate-950 border border-slate-800 text-slate-500 text-xs font-bold hover:text-slate-100 hover:border-slate-700 transition-all flex items-center justify-center gap-2">
-                    <MoreVertical size={16} />
-                    管理岗位
-                  </button>
+                  {user?.role === UserRole.BASE_MANAGER ? (
+                    <button
+                      onClick={() => setManageJob(job)}
+                      className="flex-1 md:w-full py-3 px-4 rounded-2xl bg-slate-950 border border-slate-800 text-slate-500 text-xs font-bold hover:text-slate-100 hover:border-slate-700 transition-all flex items-center justify-center gap-2"
+                    >
+                      <MoreVertical size={16} />
+                      管理岗位
+                    </button>
+                  ) : null}
                 </div>
               </div>
             ))}
@@ -495,6 +558,100 @@ export default function JobManagement() {
               onClose={() => setShowCreateJobModal(false)}
               onSuccess={() => setShowCreateJobModal(false)}
             />
+          </div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {manageJob && (
+          <div className="fixed inset-0 z-[90] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setManageJob(null)}
+              className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 20 }}
+              className="relative z-10 w-full max-w-2xl rounded-[32px] border border-slate-800 bg-slate-900 p-6 shadow-2xl"
+            >
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <h3 className="text-2xl font-bold text-white">岗位管理</h3>
+                  <p className="mt-1 text-sm text-slate-400">{manageJob.title}</p>
+                </div>
+                <button onClick={() => setManageJob(null)} className="text-slate-500 transition hover:text-white">
+                  <XCircle size={28} />
+                </button>
+              </div>
+
+              {manageJobLoading ? (
+                <div className="flex items-center justify-center py-16">
+                  <Loader2 className="animate-spin text-emerald-400" size={28} />
+                </div>
+              ) : manageJobDetail ? (
+                <div className="mt-6 space-y-5">
+                  <div className="grid gap-4 md:grid-cols-3">
+                    <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
+                      <p className="text-xs uppercase tracking-[0.2em] text-slate-500">当前状态</p>
+                      <p className="mt-3 text-lg font-bold text-white">
+                        {JOB_STATUS_LABEL[manageJobDetail.status as number] ?? '未知'}
+                      </p>
+                    </div>
+                    <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
+                      <p className="text-xs uppercase tracking-[0.2em] text-slate-500">有效期</p>
+                      <p className="mt-3 text-lg font-bold text-white">
+                        {manageJobDetail.validUntil ? String(manageJobDetail.validUntil).slice(0, 10) : '未设置'}
+                      </p>
+                    </div>
+                    <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
+                      <p className="text-xs uppercase tracking-[0.2em] text-slate-500">浏览量</p>
+                      <p className="mt-3 text-lg font-bold text-white">{manageJobDetail.viewCount ?? 0}</p>
+                    </div>
+                  </div>
+
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <button
+                      onClick={() => handleUpdateJobStatus(manageJob.id, 1)}
+                      className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm font-semibold text-emerald-200 transition hover:bg-emerald-500/20"
+                    >
+                      上架招聘
+                    </button>
+                    <button
+                      onClick={() => handleUpdateJobStatus(manageJob.id, 0)}
+                      className="rounded-2xl border border-slate-700 bg-slate-800 px-4 py-3 text-sm font-semibold text-slate-200 transition hover:bg-slate-700"
+                    >
+                      下架岗位
+                    </button>
+                    <button
+                      onClick={() => handleUpdateJobStatus(manageJob.id, 2)}
+                      className="rounded-2xl border border-blue-500/20 bg-blue-500/10 px-4 py-3 text-sm font-semibold text-blue-200 transition hover:bg-blue-500/20"
+                    >
+                      标记招满
+                    </button>
+                    <button
+                      onClick={() => handleRenewJob(manageJob.id)}
+                      className="rounded-2xl border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-sm font-semibold text-amber-200 transition hover:bg-amber-500/20"
+                    >
+                      <span className="inline-flex items-center gap-2">
+                        <RefreshCw size={15} />
+                        岗位续期
+                      </span>
+                    </button>
+                  </div>
+
+                  <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
+                    <p className="text-xs uppercase tracking-[0.2em] text-slate-500">岗位说明</p>
+                    <p className="mt-3 text-sm leading-7 text-slate-300">
+                      {manageJobDetail.workContent || manageJobDetail.requirements || '暂无补充说明'}
+                    </p>
+                  </div>
+                </div>
+              ) : null}
+            </motion.div>
           </div>
         )}
       </AnimatePresence>
@@ -696,4 +853,3 @@ function CreateJobInlineModal({
     </motion.div>
   );
 }
-

@@ -8,15 +8,8 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useUserControllerRegister } from '@/api/generated/用户管理/用户管理';
 import type { CreateUserDto } from '@/api/model';
 import { CreateUserDtoRoleKey } from '@/api/model/createUserDtoRoleKey';
-import { Sprout, User as UserIcon, Loader2, CreditCard, Phone, UserPlus } from 'lucide-react';
+import { User as UserIcon, Loader2, CreditCard, Phone, UserPlus } from 'lucide-react';
 import { motion } from 'framer-motion';
-
-const ROLE_OPTIONS: { value: CreateUserDtoRoleKey; label: string }[] = [
-  { value: CreateUserDtoRoleKey.worker, label: '采摘工' },
-  { value: CreateUserDtoRoleKey.base_manager, label: '基地管理员' },
-  { value: CreateUserDtoRoleKey.field_manager, label: '现场管理员' },
-  { value: CreateUserDtoRoleKey.super_admin, label: '超级管理员' },
-];
 
 export default function RegisterView() {
   const navigate = useNavigate();
@@ -114,44 +107,9 @@ export default function RegisterView() {
               className="w-full bg-slate-950/50 border border-slate-700 rounded-xl py-3 pl-10 pr-4 text-white focus:outline-none focus:border-emerald-500 placeholder:text-slate-500"
             />
           </div>
-          <div>
-            <label className="block text-slate-400 text-sm mb-1.5">角色</label>
-            <select
-              value={form.roleKey}
-              onChange={(e) => setForm((f) => ({ ...f, roleKey: e.target.value as CreateUserDtoRoleKey }))}
-              className="w-full bg-slate-950/50 border border-slate-700 rounded-xl py-3 px-4 text-white focus:outline-none focus:border-emerald-500"
-            >
-              {ROLE_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
+          <div className="rounded-2xl border border-emerald-500/15 bg-emerald-500/5 px-4 py-3 text-sm text-emerald-100">
+            公开注册仅支持采摘工账号。管理员、基地管理员、现场管理员请在后台由超级管理员创建。
           </div>
-          {form.roleKey === CreateUserDtoRoleKey.super_admin && (
-            <div>
-              <label className="block text-slate-400 text-sm mb-1.5">区域代码（选填）</label>
-              <input
-                type="number"
-                placeholder="如 3301"
-                value={form.regionCode ?? ''}
-                onChange={(e) => setForm((f) => ({ ...f, regionCode: e.target.value === '' ? undefined : Number(e.target.value) }))}
-                className="w-full bg-slate-950/50 border border-slate-700 rounded-xl py-3 px-4 text-white focus:outline-none focus:border-emerald-500 placeholder:text-slate-500"
-              />
-            </div>
-          )}
-          {form.roleKey === CreateUserDtoRoleKey.field_manager && (
-            <div>
-              <label className="block text-slate-400 text-sm mb-1.5">关联基地ID（现场管理员需填）</label>
-              <input
-                type="number"
-                placeholder="请输入关联基地ID"
-                value={(form as any).assignedBaseId ?? ''}
-                onChange={(e) => setForm((f) => ({ ...f, assignedBaseId: e.target.value === '' ? undefined : Number(e.target.value) }))}
-                className="w-full bg-slate-950/50 border border-slate-700 rounded-xl py-3 px-4 text-white focus:outline-none focus:border-emerald-500 placeholder:text-slate-500"
-              />
-            </div>
-          )}
           <div>
             <label className="block text-slate-400 text-sm mb-1.5">紧急联系人（选填）</label>
             <input

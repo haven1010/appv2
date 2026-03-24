@@ -70,6 +70,7 @@ export default function DashboardLayout() {
         { icon: LayoutDashboard, label: '工作台', path: '/dashboard', roles: [UserRole.FIELD_MANAGER], section: '现场管理' },
         { icon: ClipboardCheck, label: '扫码签到', path: '/dashboard/attendance', roles: [UserRole.FIELD_MANAGER] },
         { icon: Users, label: '基地人员', path: '/dashboard/field-workers', roles: [UserRole.FIELD_MANAGER] },
+        { icon: Wallet, label: '薪资结算', path: '/dashboard/payroll', roles: [UserRole.FIELD_MANAGER] },
     ];
 
     // 过滤菜单
