@@ -20,6 +20,9 @@ import { CreateBaseDto } from './dto/create-base.dto';
 import { CreateJobDto } from './dto/create-job.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { UserRole } from '../user/entities/sys-user.entity';
 
 @ApiTags('基地管理')
 @Controller('base')
@@ -49,6 +52,27 @@ export class BaseController {
   @Get('applications/me')
   async getMyApplications(@Request() req) {
     return this.baseService.getApplicationsByUser(req.user.id);
+  }
+
+  @ApiOperation({ summary: '获取即将过期的招聘岗位（管理用）' })
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN)
+  @Get('jobs/expiring')
+  async getExpiringJobs(
+    @Query('days') days: string
+  ) {
+    const daysNum = days ? parseInt(days) : 3;
+    return this.baseService.getExpiringJobs(daysNum);
+  }
+
+  @ApiOperation({ summary: '批量下架过期招聘岗位（管理用）' })
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN)
+  @Post('jobs/deactivate-expired')
+  async deactivateExpiredJobs() {
+    return this.baseService.deactivateExpiredJobs();
   }
 
   @ApiOperation({ summary: '获取基地详情' })
@@ -131,25 +155,6 @@ export class BaseController {
   @Get('check-name/:name')
   async checkBaseNameAvailability(@Param('name') name: string) {
     return this.baseService.checkBaseNameAvailability(name);
-  }
-
-  @ApiOperation({ summary: '获取即将过期的招聘岗位（管理用）' })
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
-  @Get('jobs/expiring')
-  async getExpiringJobs(
-    @Query('days') days: string
-  ) {
-    const daysNum = days ? parseInt(days) : 3;
-    return this.baseService.getExpiringJobs(daysNum);
-  }
-
-  @ApiOperation({ summary: '批量下架过期招聘岗位（管理用）' })
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
-  @Post('jobs/deactivate-expired')
-  async deactivateExpiredJobs() {
-    return this.baseService.deactivateExpiredJobs();
   }
 
   @ApiOperation({ summary: '用户申请岗位' })

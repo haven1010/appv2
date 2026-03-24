@@ -109,4 +109,12 @@ export class SalaryController {
       { request: req, userId: req.user.id },
     );
   }
+
+  @Get(':salaryId/payments')
+  @ApiOperation({ summary: '查询工资单关联的支付记录' })
+  async getPaymentsBySalary(
+    @Param('salaryId', ParseIntPipe) salaryId: number,
+  ) {
+    return this.paymentService.getPaymentsBySalary(salaryId);
+  }
 }

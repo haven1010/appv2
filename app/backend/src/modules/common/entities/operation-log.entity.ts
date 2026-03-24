@@ -22,6 +22,7 @@ export enum ResourceType {
   JOB = 'job',
   SIGNUP = 'signup',
   SALARY = 'salary',
+  OFFLINE_EVENT = 'offline_event',
 }
 
 @Entity('operation_log')

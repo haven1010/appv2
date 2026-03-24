@@ -242,6 +242,7 @@ export class BaseService {
 
     if (base.ownerId !== userId) {
       this.logger.warn(`[发布招聘] 警告: 用户 ${userId} 不是基地所有者 ${base.ownerId}`);
+      throw new ConflictException('只有基地所有者可以发布招聘');
     }
 
     this.validateSalaryFields(createJobDto);

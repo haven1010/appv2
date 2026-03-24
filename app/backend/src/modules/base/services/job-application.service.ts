@@ -41,14 +41,14 @@ export class JobApplicationService {
     if (!job) {
       throw new NotFoundException('岗位不存在');
     }
-    if (baseId != null && job.baseId !== baseId) {
+    const effectiveBaseId = Number(job.baseId);
+
+    if (baseId != null && effectiveBaseId !== Number(baseId)) {
       throw new BadRequestException('岗位与基地不匹配');
     }
     if (!job.isActive) {
       throw new BadRequestException('岗位已停止招聘');
     }
-
-    const effectiveBaseId = job.baseId;
 
     // 检查是否已申请
     const existing = await this.applicationRepo.findOne({

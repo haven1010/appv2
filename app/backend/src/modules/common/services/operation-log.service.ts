@@ -40,12 +40,24 @@ export class OperationLogService {
     private logRepository: Repository<OperationLog>,
   ) {}
 
-  private resolveUserId(context?: OperationLogContext): number {
-    const requestUserId = context?.request?.user?.id;
-    if (typeof context?.userId === 'number') {
-      return context.userId;
+  private normalizeNumericId(value: unknown): number | null {
+    if (typeof value === 'number' && Number.isFinite(value)) {
+      return value;
     }
-    if (typeof requestUserId === 'number') {
+    if (typeof value === 'string' && value.trim() !== '') {
+      const parsed = Number(value);
+      return Number.isFinite(parsed) ? parsed : null;
+    }
+    return null;
+  }
+
+  private resolveUserId(context?: OperationLogContext): number {
+    const explicitUserId = this.normalizeNumericId(context?.userId);
+    const requestUserId = this.normalizeNumericId(context?.request?.user?.id);
+    if (explicitUserId !== null) {
+      return explicitUserId;
+    }
+    if (requestUserId !== null) {
       return requestUserId;
     }
     return 0;

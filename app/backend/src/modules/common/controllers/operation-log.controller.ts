@@ -7,10 +7,14 @@ import { Controller, Get, UseGuards, Query } from '@nestjs/common';
 import { OperationLogService } from '../services/operation-log.service';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import { RolesGuard } from '../../auth/guards/roles.guard';
+import { Roles } from '../../auth/decorators/roles.decorator';
+import { UserRole } from '../../user/entities/sys-user.entity';
 
 @ApiTags('操作日志')
 @Controller('operation-log')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(UserRole.SUPER_ADMIN)
 @ApiBearerAuth()
 export class OperationLogController {
   constructor(private readonly logService: OperationLogService) {}
