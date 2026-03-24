@@ -61,6 +61,7 @@ Thumbs.db
 app/backend/dist/
 app/backend/node_modules/
 app/backend/.env
+app/backend/backups/
 
 # Frontend specific
 app/frontend/dist/
