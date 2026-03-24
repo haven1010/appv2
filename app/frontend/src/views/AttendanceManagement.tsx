@@ -18,7 +18,10 @@ import {
   MoreVertical,
   History,
   AlertCircle,
-  Loader2
+  Loader2,
+  Paperclip,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AXIOS_INSTANCE } from '@/lib/http';
@@ -57,6 +60,61 @@ interface AttendanceStats {
   date: string;
 }
 
+interface JobDetail {
+  id: number;
+  payType: number;
+  jobTitle: string;
+  hourlyRate?: number | null;
+  unitPrice?: number | null;
+  salaryAmount?: number | null;
+}
+
+interface ManageableBaseOption {
+  id: number;
+  baseName: string;
+}
+
+interface OfflineJobOption {
+  id: number;
+  jobTitle: string;
+}
+
+interface OfflineAttendanceEventRecord {
+  id: number;
+  workerUid: string;
+  workerName: string;
+  baseId: number;
+  baseName: string;
+  jobId: number | null;
+  jobTitle: string;
+  workDate: string;
+  occurredAt: string;
+  status: number;
+  riskLevel: number;
+  validationMessage?: string | null;
+  evidenceNote?: string | null;
+  evidenceAttachments?: { url: string; name: string; size?: number; type?: string }[];
+  submittedByName: string;
+  reviewedByName?: string | null;
+  reviewedAt?: string | null;
+  appliedSignupId?: number | null;
+}
+
+interface OfflineAttendanceStats {
+  total: number;
+  pendingReview: number;
+  approved: number;
+  rejected: number;
+  autoApproved: number;
+}
+
+const resolveAttachmentUrl = (url: string) => {
+  if (!url) return '#';
+  if (/^https?:\/\//i.test(url)) return url;
+  const baseUrl = (AXIOS_INSTANCE.defaults.baseURL as string | undefined) || window.location.origin;
+  return new URL(url, baseUrl).toString();
+};
+
 export default function AttendanceManagement() {
   const { user } = useAuth();
   const [isScanning, setIsScanning] = useState(false);
@@ -71,11 +129,37 @@ export default function AttendanceManagement() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showRecords, setShowRecords] = useState(false);
+  const [salaryDraftTarget, setSalaryDraftTarget] = useState<AttendanceRecord | null>(null);
+  const [salaryJobDetail, setSalaryJobDetail] = useState<JobDetail | null>(null);
+  const [salaryJobLoading, setSalaryJobLoading] = useState(false);
+  const [salaryDuration, setSalaryDuration] = useState('');
+  const [salaryCount, setSalaryCount] = useState('');
+  const [salarySubmitting, setSalarySubmitting] = useState(false);
+  const [manageableBases, setManageableBases] = useState<ManageableBaseOption[]>([]);
+  const [offlineJobs, setOfflineJobs] = useState<OfflineJobOption[]>([]);
+  const [offlineEvents, setOfflineEvents] = useState<OfflineAttendanceEventRecord[]>([]);
+  const [offlineLoading, setOfflineLoading] = useState(false);
+  const [offlineSubmitting, setOfflineSubmitting] = useState(false);
+  const [offlineReviewingId, setOfflineReviewingId] = useState<number | null>(null);
+  const [offlineUploadLoading, setOfflineUploadLoading] = useState(false);
+  const [offlinePage, setOfflinePage] = useState(1);
+  const [offlinePageSize] = useState(10);
+  const [offlineStats, setOfflineStats] = useState<OfflineAttendanceStats | null>(null);
+  const [offlineForm, setOfflineForm] = useState({
+    baseId: '',
+    jobId: '',
+    workerUid: '',
+    workDate: new Date().toISOString().split('T')[0],
+    occurredAt: new Date().toISOString().slice(0, 16),
+    evidenceNote: '',
+    evidenceAttachments: [] as { url: string; name: string; size?: number; type?: string }[],
+  });
 
   // 获取数据
   const fetchData = async () => {
     try {
       setLoading(true);
+      setOfflineLoading(true);
       setError(null);
 
       const date = selectedDate;
@@ -84,26 +168,46 @@ export default function AttendanceManagement() {
         params.baseId = selectedBaseId;
       }
 
-      // 并行获取三个API的数据
+      // 并行获取核心考勤数据
       const [recordsRes, statsRes, basesRes] = await Promise.all([
         AXIOS_INSTANCE.get('/api/attendance/records', { params }),
         AXIOS_INSTANCE.get('/api/attendance/stats', { params: { date } }),
         AXIOS_INSTANCE.get('/api/attendance/bases', { params: { date } }),
       ]);
 
+      const offlineParams: any = { workDate: date };
+      if (selectedBaseId) {
+        offlineParams.baseId = selectedBaseId;
+      } else if (fieldBaseId) {
+        offlineParams.baseId = fieldBaseId;
+      }
+      offlineParams.page = offlinePage;
+      offlineParams.pageSize = offlinePageSize;
+      const [offlineRes, offlineStatsRes] = await Promise.all([
+        AXIOS_INSTANCE.get('/api/attendance/offline-events', { params: offlineParams }),
+        AXIOS_INSTANCE.get('/api/attendance/offline-events/stats', { params: offlineParams }),
+      ]);
+
       setRecords(recordsRes.data.records || []);
       setStats(statsRes.data || null);
       setBaseStats(basesRes.data.bases || []);
+      setOfflineEvents(Array.isArray(offlineRes.data?.list) ? offlineRes.data.list : []);
+      setOfflineStats(offlineStatsRes.data || null);
     } catch (e: any) {
       console.error('获取考勤数据失败:', e);
       setError(e?.response?.data?.message || '获取数据失败，请检查后端是否启动');
     } finally {
       setLoading(false);
+      setOfflineLoading(false);
     }
   };
 
   useEffect(() => {
     fetchData();
+  }, [selectedDate, selectedBaseId, offlinePage]);
+
+  useEffect(() => {
+    setOfflinePage(1);
   }, [selectedDate, selectedBaseId]);
 
   // 手动输入签到模式（用于没有扫码枪时手动输入二维码内容或 UID）
@@ -125,6 +229,68 @@ export default function AttendanceManagement() {
         .catch(() => {});
     }
   }, [user, selectedDate]);
+
+  useEffect(() => {
+    const loadManageableBases = async () => {
+      try {
+        if (!user) return;
+
+        if (user.role === 'field_manager') {
+          if (!fieldBaseId) return;
+          const res = await AXIOS_INSTANCE.get(`/api/base/${fieldBaseId}`);
+          const nextBases = res.data ? [{ id: Number(res.data.id), baseName: res.data.baseName }] : [];
+          setManageableBases(nextBases);
+          setOfflineForm((current) => ({
+            ...current,
+            baseId: current.baseId || String(fieldBaseId),
+          }));
+          return;
+        }
+
+        const params: any = { showAll: true };
+        if (user.role === 'base_manager') {
+          params.ownerId = user.id;
+        }
+
+        const res = await AXIOS_INSTANCE.get('/api/base', { params });
+        const nextBases = (Array.isArray(res.data) ? res.data : []).map((item: any) => ({
+          id: Number(item.id),
+          baseName: item.baseName,
+        }));
+        setManageableBases(nextBases);
+        setOfflineForm((current) => ({
+          ...current,
+          baseId: current.baseId || (nextBases[0] ? String(nextBases[0].id) : ''),
+        }));
+      } catch (e) {
+        console.error('加载可管理基地失败:', e);
+      }
+    };
+
+    loadManageableBases();
+  }, [user, fieldBaseId]);
+
+  useEffect(() => {
+    const loadOfflineJobs = async () => {
+      if (!offlineForm.baseId) {
+        setOfflineJobs([]);
+        return;
+      }
+
+      try {
+        const res = await AXIOS_INSTANCE.get(`/api/base/${offlineForm.baseId}/jobs`);
+        setOfflineJobs((Array.isArray(res.data) ? res.data : []).map((item: any) => ({
+          id: Number(item.id),
+          jobTitle: item.jobTitle,
+        })));
+      } catch (e) {
+        console.error('加载离线补录岗位失败:', e);
+        setOfflineJobs([]);
+      }
+    };
+
+    loadOfflineJobs();
+  }, [offlineForm.baseId]);
 
   const handleStartScan = () => {
     setIsScanning(true);
@@ -169,6 +335,59 @@ export default function AttendanceManagement() {
     }
   };
 
+  const openSalaryDraftModal = async (record: AttendanceRecord) => {
+    setSalaryDraftTarget(record);
+    setSalaryJobDetail(null);
+    setSalaryDuration('');
+    setSalaryCount('');
+    setSalaryJobLoading(true);
+    try {
+      const res = await AXIOS_INSTANCE.get<JobDetail>(`/api/base/jobs/${record.jobId}`);
+      setSalaryJobDetail(res.data);
+    } catch (e: any) {
+      const msg = e?.response?.data?.message || '加载岗位详情失败';
+      alert(Array.isArray(msg) ? msg[0] : msg);
+      setSalaryDraftTarget(null);
+    } finally {
+      setSalaryJobLoading(false);
+    }
+  };
+
+  const closeSalaryDraftModal = () => {
+    setSalaryDraftTarget(null);
+    setSalaryJobDetail(null);
+    setSalaryDuration('');
+    setSalaryCount('');
+    setSalarySubmitting(false);
+  };
+
+  const handleCreateSalaryDraft = async () => {
+    if (!salaryDraftTarget || !salaryJobDetail) return;
+    if (salaryJobDetail.payType === 2 && !salaryDuration) {
+      alert('时薪岗位需要填写工作时长');
+      return;
+    }
+    if (salaryJobDetail.payType === 3 && !salaryCount) {
+      alert('计件岗位需要填写件数');
+      return;
+    }
+
+    setSalarySubmitting(true);
+    try {
+      await AXIOS_INSTANCE.post(`/api/salary/calculate/${salaryDraftTarget.id}`, {
+        duration: salaryJobDetail.payType === 2 ? Number(salaryDuration) : undefined,
+        count: salaryJobDetail.payType === 3 ? Number(salaryCount) : undefined,
+      });
+      alert('工资草稿已生成');
+      closeSalaryDraftModal();
+    } catch (e: any) {
+      const msg = e?.response?.data?.message || '生成工资草稿失败';
+      alert(Array.isArray(msg) ? msg[0] : msg);
+    } finally {
+      setSalarySubmitting(false);
+    }
+  };
+
   const getStatusLabel = (status: number) => {
     switch (status) {
       case 0: return '已报名';
@@ -191,6 +410,129 @@ export default function AttendanceManagement() {
   const formatTime = (timeStr: string | null) => {
     if (!timeStr) return '-';
     return new Date(timeStr).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+  };
+
+  const getOfflineStatusLabel = (status: number) => {
+    switch (status) {
+      case 1: return '自动通过';
+      case 2: return '人工通过';
+      case 3: return '已拒绝';
+      default: return '待审核';
+    }
+  };
+
+  const getOfflineStatusClass = (status: number) => {
+    switch (status) {
+      case 1:
+      case 2:
+        return 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/20';
+      case 3:
+        return 'bg-rose-500/10 text-rose-300 border border-rose-500/20';
+      default:
+        return 'bg-amber-500/10 text-amber-300 border border-amber-500/20';
+    }
+  };
+
+  const canReviewOffline = user?.role === 'super_admin' || user?.role === 'region_admin' || user?.role === 'base_manager';
+
+  const getOfflineDeviceId = () => {
+    const key = 'attendance-offline-device-id';
+    const existing = window.localStorage.getItem(key);
+    if (existing) return existing;
+    const generated = `web-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+    window.localStorage.setItem(key, generated);
+    return generated;
+  };
+
+  const handleCreateOfflineEvent = async () => {
+    if (!offlineForm.baseId || !offlineForm.workerUid.trim()) {
+      alert('请至少选择基地并填写工人UID');
+      return;
+    }
+
+    setOfflineSubmitting(true);
+    try {
+      const offlineRecordId = `manual-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+      const res = await AXIOS_INSTANCE.post('/api/attendance/offline-events', {
+        offlineRecordId,
+        deviceId: getOfflineDeviceId(),
+        workerUid: offlineForm.workerUid.trim(),
+        baseId: Number(offlineForm.baseId),
+        jobId: offlineForm.jobId ? Number(offlineForm.jobId) : undefined,
+        workDate: offlineForm.workDate,
+        occurredAt: new Date(offlineForm.occurredAt).toISOString(),
+        evidenceNote: offlineForm.evidenceNote.trim() || undefined,
+        evidenceAttachments: offlineForm.evidenceAttachments,
+      });
+      const status = Number(res.data?.status);
+      alert(status === 0 ? '已提交待审核' : '离线补签到已自动通过');
+      setOfflineForm((current) => ({
+        ...current,
+        workerUid: '',
+        evidenceNote: '',
+        evidenceAttachments: [],
+      }));
+      fetchData();
+    } catch (e: any) {
+      const msg = e?.response?.data?.message || '提交离线补录失败';
+      alert(Array.isArray(msg) ? msg[0] : msg);
+    } finally {
+      setOfflineSubmitting(false);
+    }
+  };
+
+  const handleOfflineAttachmentUpload = async (fileList: FileList | null) => {
+    if (!fileList || fileList.length === 0) return;
+
+    setOfflineUploadLoading(true);
+    try {
+      const nextAttachments = [...offlineForm.evidenceAttachments];
+      for (const file of Array.from(fileList)) {
+        const formData = new FormData();
+        formData.append('file', file);
+        const res = await AXIOS_INSTANCE.post('/api/attendance/offline-events/evidence', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        nextAttachments.push(res.data);
+      }
+
+      setOfflineForm((current) => ({
+        ...current,
+        evidenceAttachments: nextAttachments,
+      }));
+    } catch (e: any) {
+      const msg = e?.response?.data?.message || '附件上传失败';
+      alert(Array.isArray(msg) ? msg[0] : msg);
+    } finally {
+      setOfflineUploadLoading(false);
+    }
+  };
+
+  const removeOfflineAttachment = (url: string) => {
+    setOfflineForm((current) => ({
+      ...current,
+      evidenceAttachments: current.evidenceAttachments.filter((item) => item.url !== url),
+    }));
+  };
+
+  const handleReviewOfflineEvent = async (eventId: number, decision: 'approve' | 'reject') => {
+    const reason = decision === 'reject'
+      ? window.prompt('请输入拒绝原因') || ''
+      : window.prompt('审核备注（可选）') || '';
+
+    setOfflineReviewingId(eventId);
+    try {
+      await AXIOS_INSTANCE.patch(`/api/attendance/offline-events/${eventId}/review`, {
+        decision,
+        reason: reason || undefined,
+      });
+      fetchData();
+    } catch (e: any) {
+      const msg = e?.response?.data?.message || '审核失败';
+      alert(Array.isArray(msg) ? msg[0] : msg);
+    } finally {
+      setOfflineReviewingId(null);
+    }
   };
 
   return (
@@ -389,6 +731,7 @@ export default function AttendanceManagement() {
                         <th className="pb-3 font-semibold">岗位</th>
                         <th className="pb-3 font-semibold">状态</th>
                         <th className="pb-3 font-semibold">签到时间</th>
+                        <th className="pb-3 font-semibold text-right">薪资</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-800/40">
@@ -404,6 +747,18 @@ export default function AttendanceManagement() {
                             </span>
                           </td>
                           <td className="py-4 text-slate-400 text-sm">{formatTime(record.checkinTime)}</td>
+                          <td className="py-4 text-right">
+                            {record.status === 1 ? (
+                              <button
+                                onClick={() => openSalaryDraftModal(record)}
+                                className="rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-3 py-1.5 text-xs font-medium text-emerald-300 transition hover:bg-emerald-500/20"
+                              >
+                                生成工资草稿
+                              </button>
+                            ) : (
+                              <span className="text-xs text-slate-600">待签到后可计薪</span>
+                            )}
+                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -442,6 +797,284 @@ export default function AttendanceManagement() {
               )}
             </div>
           </div>
+
+          <div className="glass-card rounded-3xl p-6 border border-slate-800/60 overflow-hidden">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-6">
+              <div>
+                <h4 className="text-lg font-bold text-white">离线补签到</h4>
+                <p className="text-sm text-slate-500">断网时先补录原始事件。低风险记录自动入账，高风险记录进入审核队列。</p>
+              </div>
+              <span className="text-xs text-slate-500">按工作日 {selectedDate} 查看</span>
+            </div>
+
+            <div className="grid grid-cols-1 xl:grid-cols-[360px_minmax(0,1fr)] gap-6">
+              <div className="rounded-2xl border border-slate-800/60 bg-slate-950/40 p-5 space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">补录基地</label>
+                  <select
+                    value={offlineForm.baseId}
+                    onChange={(e) => setOfflineForm((current) => ({ ...current, baseId: e.target.value, jobId: '' }))}
+                    disabled={user?.role === 'field_manager'}
+                    className="w-full rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 text-sm text-slate-100 disabled:opacity-70"
+                  >
+                    <option value="">请选择基地</option>
+                    {manageableBases.map((base) => (
+                      <option key={base.id} value={base.id}>{base.baseName}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">岗位</label>
+                  <select
+                    value={offlineForm.jobId}
+                    onChange={(e) => setOfflineForm((current) => ({ ...current, jobId: e.target.value }))}
+                    className="w-full rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 text-sm text-slate-100"
+                  >
+                    <option value="">未知岗位也可先提交</option>
+                    {offlineJobs.map((job) => (
+                      <option key={job.id} value={job.id}>{job.jobTitle}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">工人 UID</label>
+                  <input
+                    value={offlineForm.workerUid}
+                    onChange={(e) => setOfflineForm((current) => ({ ...current, workerUid: e.target.value }))}
+                    placeholder="例如 UMN4K5B76928C"
+                    className="w-full rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 text-sm text-slate-100"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">工作日</label>
+                    <input
+                      type="date"
+                      value={offlineForm.workDate}
+                      onChange={(e) => setOfflineForm((current) => ({ ...current, workDate: e.target.value }))}
+                      className="w-full rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 text-sm text-slate-100"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">发生时间</label>
+                    <input
+                      type="datetime-local"
+                      value={offlineForm.occurredAt}
+                      onChange={(e) => setOfflineForm((current) => ({ ...current, occurredAt: e.target.value }))}
+                      className="w-full rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 text-sm text-slate-100"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">补录说明</label>
+                  <textarea
+                    value={offlineForm.evidenceNote}
+                    onChange={(e) => setOfflineForm((current) => ({ ...current, evidenceNote: e.target.value }))}
+                    placeholder="例如：山区网络中断，已核对纸面签到表"
+                    rows={4}
+                    className="w-full rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 text-sm text-slate-100 resize-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">证据附件</label>
+                  <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-slate-700 bg-slate-800/70 px-4 py-3 text-sm text-slate-300 hover:border-blue-400/40 hover:text-white">
+                    {offlineUploadLoading ? <Loader2 className="animate-spin" size={16} /> : <Paperclip size={16} />}
+                    上传图片或凭证
+                    <input
+                      type="file"
+                      multiple
+                      accept="image/*,.pdf"
+                      className="hidden"
+                      onChange={(e) => {
+                        handleOfflineAttachmentUpload(e.target.files);
+                        e.target.value = '';
+                      }}
+                    />
+                  </label>
+                  {offlineForm.evidenceAttachments.length > 0 ? (
+                    <div className="mt-3 space-y-2">
+                      {offlineForm.evidenceAttachments.map((item) => (
+                        <div key={item.url} className="flex items-center justify-between rounded-xl border border-slate-800 bg-slate-950/50 px-3 py-2 text-xs text-slate-300">
+                          <a href={resolveAttachmentUrl(item.url)} target="_blank" rel="noreferrer" className="truncate hover:text-blue-300">
+                            {item.name}
+                          </a>
+                          <button
+                            type="button"
+                            onClick={() => removeOfflineAttachment(item.url)}
+                            className="ml-3 text-rose-300 hover:text-rose-200"
+                          >
+                            移除
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+
+                <button
+                  onClick={handleCreateOfflineEvent}
+                  disabled={offlineSubmitting}
+                  className="w-full rounded-2xl bg-blue-500 py-3 text-sm font-bold text-white shadow-lg shadow-blue-500/20 transition hover:bg-blue-400 disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {offlineSubmitting ? <Loader2 className="animate-spin" size={16} /> : null}
+                  提交离线补录
+                </button>
+              </div>
+
+              <div className="rounded-2xl border border-slate-800/60 bg-slate-950/30 p-5">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h5 className="text-base font-bold text-white">补录队列</h5>
+                    <p className="text-xs text-slate-500">自动通过会直接完成签到，待审核项需要基地管理员或超级管理员处理。</p>
+                  </div>
+                  <button
+                    onClick={fetchData}
+                    className="rounded-xl border border-slate-700 bg-slate-800 px-3 py-2 text-xs text-slate-300 hover:bg-slate-700"
+                  >
+                    刷新队列
+                  </button>
+                </div>
+
+                {offlineStats ? (
+                  <div className="grid grid-cols-2 xl:grid-cols-5 gap-3 mb-4">
+                    <div className="rounded-xl border border-slate-800 bg-slate-900/60 px-3 py-3">
+                      <div className="text-xs text-slate-500">总数</div>
+                      <div className="mt-1 text-lg font-bold text-white">{offlineStats.total}</div>
+                    </div>
+                    <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 px-3 py-3">
+                      <div className="text-xs text-amber-300">待审核</div>
+                      <div className="mt-1 text-lg font-bold text-amber-200">{offlineStats.pendingReview}</div>
+                    </div>
+                    <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 px-3 py-3">
+                      <div className="text-xs text-emerald-300">自动通过</div>
+                      <div className="mt-1 text-lg font-bold text-emerald-200">{offlineStats.autoApproved}</div>
+                    </div>
+                    <div className="rounded-xl border border-blue-500/20 bg-blue-500/5 px-3 py-3">
+                      <div className="text-xs text-blue-300">人工通过</div>
+                      <div className="mt-1 text-lg font-bold text-blue-200">{offlineStats.approved}</div>
+                    </div>
+                    <div className="rounded-xl border border-rose-500/20 bg-rose-500/5 px-3 py-3">
+                      <div className="text-xs text-rose-300">已拒绝</div>
+                      <div className="mt-1 text-lg font-bold text-rose-200">{offlineStats.rejected}</div>
+                    </div>
+                  </div>
+                ) : null}
+
+                {offlineLoading ? (
+                  <div className="flex items-center justify-center py-12 text-slate-400 gap-2">
+                    <Loader2 className="animate-spin" size={20} />
+                    正在加载补录队列...
+                  </div>
+                ) : offlineEvents.length === 0 ? (
+                  <div className="py-12 text-center text-sm text-slate-500">当前没有离线补录记录</div>
+                ) : (
+                  <div className="space-y-3">
+                    {offlineEvents.map((event) => (
+                      <div key={event.id} className="rounded-2xl border border-slate-800/60 bg-slate-900/50 p-4">
+                        <div className="flex flex-col md:flex-row md:items-start justify-between gap-3 mb-3">
+                          <div>
+                            <div className="flex items-center flex-wrap gap-2 mb-1">
+                              <span className="font-bold text-slate-100">{event.workerName || '-'}</span>
+                              <span className="font-mono text-xs text-emerald-400">{event.workerUid}</span>
+                              <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${getOfflineStatusClass(event.status)}`}>
+                                {getOfflineStatusLabel(event.status)}
+                              </span>
+                              <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${event.riskLevel === 0 ? 'bg-emerald-500/10 text-emerald-300' : 'bg-amber-500/10 text-amber-300'}`}>
+                                {event.riskLevel === 0 ? '低风险' : '高风险'}
+                              </span>
+                            </div>
+                            <p className="text-sm text-slate-400">{event.baseName} · {event.jobTitle || '未指定岗位'}</p>
+                            <p className="text-xs text-slate-500 mt-1">
+                              工作日 {event.workDate} · 发生于 {new Date(event.occurredAt).toLocaleString('zh-CN')}
+                            </p>
+                          </div>
+                          <div className="text-right text-xs text-slate-500">
+                            <div>提交人：{event.submittedByName}</div>
+                            {event.reviewedAt ? <div>审核人：{event.reviewedByName || '-'}</div> : null}
+                          </div>
+                        </div>
+
+                        <div className="rounded-xl border border-slate-800 bg-slate-950/40 px-3 py-2 text-sm text-slate-300">
+                          {event.validationMessage || '无系统提示'}
+                        </div>
+
+                        {event.evidenceNote ? (
+                          <p className="mt-2 text-xs text-slate-500">补录说明：{event.evidenceNote}</p>
+                        ) : null}
+
+                        {event.evidenceAttachments && event.evidenceAttachments.length > 0 ? (
+                          <div className="mt-2 flex flex-wrap gap-2">
+                            {event.evidenceAttachments.map((item) => (
+                              <a
+                                key={item.url}
+                                href={resolveAttachmentUrl(item.url)}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="rounded-full border border-slate-700 bg-slate-800 px-3 py-1 text-[11px] text-slate-300 hover:text-white"
+                              >
+                                附件: {item.name}
+                              </a>
+                            ))}
+                          </div>
+                        ) : null}
+
+                        {canReviewOffline && event.status === 0 ? (
+                          <div className="mt-4 flex gap-3">
+                            <button
+                              onClick={() => handleReviewOfflineEvent(event.id, 'approve')}
+                              disabled={offlineReviewingId === event.id}
+                              className="flex-1 rounded-xl bg-emerald-500 px-4 py-2 text-sm font-bold text-white disabled:opacity-50 flex items-center justify-center gap-2"
+                            >
+                              {offlineReviewingId === event.id ? <Loader2 className="animate-spin" size={14} /> : null}
+                              通过补录
+                            </button>
+                            <button
+                              onClick={() => handleReviewOfflineEvent(event.id, 'reject')}
+                              disabled={offlineReviewingId === event.id}
+                              className="flex-1 rounded-xl bg-rose-500/90 px-4 py-2 text-sm font-bold text-white disabled:opacity-50"
+                            >
+                              拒绝
+                            </button>
+                          </div>
+                        ) : null}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {!offlineLoading && offlineStats && offlineStats.total > offlinePageSize ? (
+                  <div className="mt-4 flex items-center justify-between border-t border-slate-800 pt-4">
+                    <span className="text-xs text-slate-500">
+                      第 {offlinePage} 页，共 {Math.max(Math.ceil(offlineStats.total / offlinePageSize), 1)} 页
+                    </span>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setOfflinePage((current) => Math.max(current - 1, 1))}
+                        disabled={offlinePage <= 1}
+                        className="rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-xs text-slate-300 disabled:opacity-40 flex items-center gap-1"
+                      >
+                        <ChevronLeft size={14} />
+                        上一页
+                      </button>
+                      <button
+                        onClick={() => setOfflinePage((current) => current + 1)}
+                        disabled={offlinePage >= Math.max(Math.ceil(offlineStats.total / offlinePageSize), 1)}
+                        className="rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-xs text-slate-300 disabled:opacity-40 flex items-center gap-1"
+                      >
+                        下一页
+                        <ChevronRight size={14} />
+                      </button>
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+            </div>
+          </div>
         </div>
 
         <div className="space-y-6">
@@ -459,8 +1092,7 @@ export default function AttendanceManagement() {
             ) : (
               <div className="space-y-6">
                 {baseStats.map((base, i) => {
-                  const colors = ['emerald', 'blue', 'orange', 'purple', 'pink'];
-                  const color = colors[i % colors.length];
+                  const colorClass = ['bg-emerald-500', 'bg-blue-500', 'bg-orange-500', 'bg-cyan-500', 'bg-pink-500'][i % 5];
                   return (
                     <div key={base.baseId} className="space-y-2">
                       <div className="flex justify-between text-sm">
@@ -469,7 +1101,7 @@ export default function AttendanceManagement() {
                       </div>
                       <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
                         <div 
-                          className={`h-full bg-${color}-500 transition-all duration-1000`} 
+                          className={`h-full ${colorClass} transition-all duration-1000`} 
                           style={{ width: `${base.attendanceRate}%` }}
                         />
                       </div>
@@ -514,6 +1146,103 @@ export default function AttendanceManagement() {
           </div>
         </div>
       </div>
+      <AnimatePresence>
+        {salaryDraftTarget && (
+          <div className="fixed inset-0 z-[90] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={closeSalaryDraftModal}
+              className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 20 }}
+              className="relative z-10 w-full max-w-lg rounded-3xl border border-slate-800 bg-slate-900 p-6 shadow-2xl"
+            >
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <h3 className="text-xl font-bold text-white">生成工资草稿</h3>
+                  <p className="mt-1 text-sm text-slate-400">
+                    {salaryDraftTarget.workerName} · {salaryDraftTarget.jobTitle}
+                  </p>
+                </div>
+                <button onClick={closeSalaryDraftModal} className="text-slate-500 transition hover:text-white">
+                  <XCircle size={22} />
+                </button>
+              </div>
+
+              {salaryJobLoading ? (
+                <div className="flex items-center justify-center py-16">
+                  <Loader2 className="animate-spin text-emerald-400" size={28} />
+                </div>
+              ) : salaryJobDetail ? (
+                <div className="mt-6 space-y-4">
+                  <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4 text-sm text-slate-300">
+                    <p>计薪方式：{salaryJobDetail.payType === 1 ? '固定' : salaryJobDetail.payType === 2 ? '时薪' : '计件'}</p>
+                    <p className="mt-2">
+                      单价：
+                      {salaryJobDetail.payType === 1
+                        ? `¥${Number(salaryJobDetail.salaryAmount || 0).toFixed(2)}/天`
+                        : salaryJobDetail.payType === 2
+                          ? `¥${Number(salaryJobDetail.hourlyRate || 0).toFixed(2)}/小时`
+                          : `¥${Number(salaryJobDetail.unitPrice || 0).toFixed(2)}/件`}
+                    </p>
+                  </div>
+
+                  {salaryJobDetail.payType === 2 && (
+                    <div>
+                      <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-500">工作时长（小时）</label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.5"
+                        value={salaryDuration}
+                        onChange={(e) => setSalaryDuration(e.target.value)}
+                        className="w-full rounded-2xl border border-slate-800 bg-slate-950/80 px-4 py-3 text-sm text-white focus:border-emerald-500/40 focus:outline-none"
+                        placeholder="例如 8"
+                      />
+                    </div>
+                  )}
+
+                  {salaryJobDetail.payType === 3 && (
+                    <div>
+                      <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-500">完成件数</label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="1"
+                        value={salaryCount}
+                        onChange={(e) => setSalaryCount(e.target.value)}
+                        className="w-full rounded-2xl border border-slate-800 bg-slate-950/80 px-4 py-3 text-sm text-white focus:border-emerald-500/40 focus:outline-none"
+                        placeholder="例如 120"
+                      />
+                    </div>
+                  )}
+
+                  <div className="flex gap-3 pt-2">
+                    <button
+                      onClick={closeSalaryDraftModal}
+                      className="flex-1 rounded-2xl bg-slate-800 px-4 py-3 text-sm font-medium text-slate-300 transition hover:bg-slate-700"
+                    >
+                      取消
+                    </button>
+                    <button
+                      onClick={handleCreateSalaryDraft}
+                      disabled={salarySubmitting}
+                      className="flex-1 rounded-2xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-400 disabled:opacity-50"
+                    >
+                      {salarySubmitting ? '提交中...' : '生成工资草稿'}
+                    </button>
+                  </div>
+                </div>
+              ) : null}
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
       <style>{`
         @keyframes scan-line {
           0% { top: 0; }
