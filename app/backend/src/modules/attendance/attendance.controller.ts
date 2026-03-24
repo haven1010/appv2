@@ -21,7 +21,7 @@ export class AttendanceController {
   @Post('signup')
   @ApiOperation({ summary: '工人报名岗位 (创建待签到记录)' })
   async signup(@Body() dto: CreateSignupDto, @Req() req) {
-    return this.attendanceService.signup(req.user.id, dto);
+    return this.attendanceService.signup(req.user.id, dto, { request: req, userId: req.user.id });
   }
 
   @Get('qrcode')
@@ -35,14 +35,14 @@ export class AttendanceController {
   @Post('checkin')
   @ApiOperation({ summary: '现场扫码签到 (管理员/领队扫工人)' })
   @ApiResponse({ status: 201, description: '签到成功' })
-  async checkIn(@Body() checkInDto: CheckInDto) {
-    return this.attendanceService.checkIn(checkInDto.qrContent, checkInDto.baseId);
+  async checkIn(@Body() checkInDto: CheckInDto, @Req() req) {
+    return this.attendanceService.checkIn(checkInDto.qrContent, checkInDto.baseId, { request: req, userId: req.user.id });
   }
 
   @Post('sync')
   @ApiOperation({ summary: '离线数据批量同步' })
   async syncOffline(@Body() body: SyncOfflineDto, @Req() req) {
-    return this.attendanceService.syncOfflineRecords(body.records, req.user.id);
+    return this.attendanceService.syncOfflineRecords(body.records, req.user.id, { request: req, userId: req.user.id });
   }
 
   @Get('worker/records')

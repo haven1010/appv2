@@ -57,7 +57,7 @@ export class SalaryController {
     @Param('salaryId', ParseIntPipe) salaryId: number,
     @Req() req: any,
   ) {
-    return this.salaryService.workerConfirmSalary(salaryId, req.user.id);
+    return this.salaryService.workerConfirmSalary(salaryId, req.user.id, { request: req, userId: req.user.id });
   }
 
   @Post('calculate/:signupId')
@@ -67,7 +67,7 @@ export class SalaryController {
     @Body() body: { duration?: number; count?: number },
     @Req() req: any,
   ) {
-    return this.salaryService.calculateAndDraft(signupId, body, req.user.id);
+    return this.salaryService.calculateAndDraft(signupId, body, req.user.id, { request: req, userId: req.user.id });
   }
 
   @Post(':salaryId/payment')
@@ -81,6 +81,7 @@ export class SalaryController {
       salaryId,
       body.paymentMethod,
       req.user.id,
+      { request: req, userId: req.user.id },
     );
   }
 
@@ -91,7 +92,7 @@ export class SalaryController {
     @Body() body: { confirmSignatureUrl: string },
     @Req() req: any,
   ) {
-    return this.paymentService.confirmPayment(id, body.confirmSignatureUrl);
+    return this.paymentService.confirmPayment(id, body.confirmSignatureUrl, req.user.id, { request: req, userId: req.user.id });
   }
 
   @Patch('payment/:id/complete')
@@ -105,6 +106,7 @@ export class SalaryController {
       id,
       body.paymentVoucherUrl,
       req.user.id,
+      { request: req, userId: req.user.id },
     );
   }
 }

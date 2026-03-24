@@ -5,7 +5,7 @@
  */
 import { Injectable, BadRequestException, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { DailySignup, SignupStatus } from './entities/daily-signup.entity';
 import { SecurityService } from '../common/services/security.service';
 import { SysUser, UserRole, isSuperAdmin } from '../user/entities/sys-user.entity';
@@ -13,7 +13,7 @@ import { RecruitmentJob } from '../base/entities/recruitment-job.entity';
 import { BaseInfo } from '../base/entities/base-info.entity';
 import { SmsService } from '../common/services/sms.service';
 import { QrCodeService } from '../qrcode/qrcode.service';
-import { OperationLogService } from '../common/services/operation-log.service';
+import { OperationLogService, OperationLogContext } from '../common/services/operation-log.service';
 import { OperationType, ResourceType } from '../common/entities/operation-log.entity';
 
 @Injectable()
@@ -37,7 +37,15 @@ export class AttendanceService {
     private smsService: SmsService,
     private qrcodeService: QrCodeService,
     private operationLogService: OperationLogService,
+    private dataSource: DataSource,
   ) { }
+
+  private rethrowDuplicateSignup(error: any, message: string): never {
+    if (error?.code === 'ER_DUP_ENTRY') {
+      throw new BadRequestException(message);
+    }
+    throw error;
+  }
 
   /**
    * 获取当前本地日期的 `YYYY-MM-DD` 字符串。
@@ -79,7 +87,7 @@ export class AttendanceService {
    * 2. 用户在目标基地当日存在报名记录。
    * 副作用: 更新签到状态与签到时间，并写入操作日志。
    */
-  async checkIn(qrContent: string, baseId: number): Promise<DailySignup> {
+  async checkIn(qrContent: string, baseId: number, context?: OperationLogContext): Promise<DailySignup> {
     // 1. 解密
     let decrypted: string;
     try {
@@ -126,25 +134,60 @@ export class AttendanceService {
     }
 
     // 5. 更新状态
-    if (signup.status === SignupStatus.CHECKED_IN) {
-      // 如果已经签到，直接返回记录
-      return signup;
+    const { saved, beforeStatus, beforeCheckinTime, changed } = await this.dataSource.transaction(async (manager) => {
+      const lockedSignup = await manager.findOne(DailySignup, {
+        where: { id: signup.id },
+        lock: { mode: 'pessimistic_write' },
+      });
+      if (!lockedSignup) {
+        throw new NotFoundException('报名记录不存在');
+      }
+      if (lockedSignup.status === SignupStatus.CHECKED_IN) {
+        return {
+          saved: lockedSignup,
+          beforeStatus: lockedSignup.status,
+          beforeCheckinTime: lockedSignup.checkinTime,
+          changed: false,
+        };
+      }
+
+      const previousStatus = lockedSignup.status;
+      const previousCheckinTime = lockedSignup.checkinTime;
+      lockedSignup.status = SignupStatus.CHECKED_IN;
+      lockedSignup.checkinTime = new Date();
+      const next = await manager.save(DailySignup, lockedSignup);
+      return {
+        saved: next,
+        beforeStatus: previousStatus,
+        beforeCheckinTime: previousCheckinTime,
+        changed: true,
+      };
+    });
+
+    if (!changed) {
+      return saved;
     }
 
-    signup.status = SignupStatus.CHECKED_IN;
-    signup.checkinTime = new Date();
-
-    const saved = await this.signupRepo.save(signup);
     this.logger.log(`[签到成功] 用户: ${user.name} (UID: ${user.uid}), 基地ID: ${baseId}`);
 
     // 记录签到操作日志
-    this.operationLogService.log(
-      OperationType.CHECKIN,
-      ResourceType.SIGNUP,
-      saved.id,
-      user.id,
-      `扫码签到: ${user.name} (${user.uid}), 基地ID: ${baseId}`,
-    ).catch(() => {});
+    await this.operationLogService.logWithContext({
+      operationType: OperationType.CHECKIN,
+      resourceType: ResourceType.SIGNUP,
+      resourceId: saved.id,
+      userId: context?.userId ?? user.id,
+      request: context?.request,
+      description: `扫码签到: ${user.name} (${user.uid}), 基地ID: ${baseId}`,
+      beforeData: {
+        status: beforeStatus,
+        checkinTime: beforeCheckinTime,
+      },
+      afterData: {
+        status: saved.status,
+        checkinTime: saved.checkinTime,
+        isOfflineSync: saved.isOfflineSync,
+      },
+    });
 
     return saved;
   }
@@ -153,7 +196,7 @@ export class AttendanceService {
    * 批量同步离线签到记录。
    * 该流程采用逐条容错策略，单条失败不会中断整批同步。
    */
-  async syncOfflineRecords(records: any[], adminId: number) {
+  async syncOfflineRecords(records: any[], adminId: number, context?: OperationLogContext) {
     const results = [];
     const today = this.getTodayDateString();
 
@@ -169,19 +212,49 @@ export class AttendanceService {
         // 使用记录中的日期，如果没有则默认为今天
         const dateToSync = record.date || today;
 
-        const signup = await this.signupRepo.findOne({
-          where: { userId: user.id, baseId: record.baseId, workDate: dateToSync }
+        const syncResult = await this.dataSource.transaction(async (manager) => {
+          const lockedSignup = await manager.findOne(DailySignup, {
+            where: { userId: user.id, baseId: record.baseId, workDate: dateToSync },
+            lock: { mode: 'pessimistic_write' },
+          });
+
+          if (!lockedSignup) {
+            return null;
+          }
+
+          if (lockedSignup.status === SignupStatus.CHECKED_IN) {
+            return { signup: lockedSignup, changed: false };
+          }
+
+          lockedSignup.status = SignupStatus.CHECKED_IN;
+          lockedSignup.checkinTime = record.checkinTime ? new Date(record.checkinTime) : new Date();
+          lockedSignup.isOfflineSync = true;
+          const saved = await manager.save(DailySignup, lockedSignup);
+          return { signup: saved, changed: true };
         });
 
-        if (signup) {
-          if (signup.status === SignupStatus.CHECKED_IN) {
+        if (syncResult?.signup) {
+          if (!syncResult.changed) {
             results.push({ uid: record.uid, status: 'skipped', msg: 'Already checked in' });
           } else {
-            signup.status = SignupStatus.CHECKED_IN;
-            signup.checkinTime = record.checkinTime ? new Date(record.checkinTime) : new Date();
-            signup.isOfflineSync = true;
-            await this.signupRepo.save(signup);
             results.push({ uid: record.uid, status: 'success' });
+            await this.operationLogService.logWithContext({
+              operationType: OperationType.CHECKIN,
+              resourceType: ResourceType.SIGNUP,
+              resourceId: syncResult.signup.id,
+              userId: adminId,
+              request: context?.request,
+              description: `离线同步签到: ${record.uid}, 基地ID: ${record.baseId}`,
+              beforeData: {
+                status: SignupStatus.SIGNED_UP,
+                isOfflineSync: false,
+              },
+              afterData: {
+                status: syncResult.signup.status,
+                isOfflineSync: syncResult.signup.isOfflineSync,
+                checkinTime: syncResult.signup.checkinTime,
+              },
+            });
           }
         } else {
           // 严格模式：没有报名记录则报错
@@ -201,44 +274,119 @@ export class AttendanceService {
    * 创建当日报名记录，并在成功后尝试发送签到二维码短信。
    * 代报名会复用同一套工作日与基地唯一性约束。
    */
-  async signup(userId: number, dto: any): Promise<DailySignup> {
-    const { baseId, jobId, proxyUserIds } = dto;
+  async signup(userId: number, dto: any, context?: OperationLogContext): Promise<DailySignup> {
+    const { baseId, jobId } = dto;
+    const proxyUserIds: number[] = Array.isArray(dto.proxyUserIds)
+      ? Array.from(
+          new Set<number>(
+            dto.proxyUserIds
+              .map((id: any) => Number(id))
+              .filter((id: number) => Number.isInteger(id) && id > 0),
+          ),
+        )
+      : [];
     // 如果没传日期，默认报今天的名
     const workDate = dto.workDate || this.getTodayDateString();
 
-    // 1. 检查岗位是否存在且在招聘中
-    const job = await this.jobRepo.findOne({ where: { id: jobId, baseId } });
-    if (!job) {
-      throw new NotFoundException('该基地不存在此招聘岗位');
+    if (proxyUserIds.length > 2) {
+      throw new BadRequestException('最多只能代两人报名');
     }
-    if (!job.isActive) {
-      throw new BadRequestException('该岗位已停止招聘');
+    if (proxyUserIds.includes(userId)) {
+      throw new BadRequestException('不能为自己代报名');
     }
 
-    // 2. 检查是否重复报名
-    const existing = await this.signupRepo.findOne({
-      where: {
+    const { savedSignup, savedProxySignups } = await this.dataSource.transaction(async (manager) => {
+      const jobRepo = manager.getRepository(RecruitmentJob);
+      const signupRepo = manager.getRepository(DailySignup);
+
+      const job = await jobRepo.findOne({ where: { id: jobId, baseId } });
+      if (!job) {
+        throw new NotFoundException('该基地不存在此招聘岗位');
+      }
+      if (!job.isActive) {
+        throw new BadRequestException('该岗位已停止招聘');
+      }
+
+      const existing = await signupRepo.findOne({
+        where: {
+          userId,
+          baseId,
+          workDate,
+        }
+      });
+
+      if (existing) {
+        throw new BadRequestException('您今日已报名该基地，请勿重复操作');
+      }
+
+      const signup = signupRepo.create({
         userId,
         baseId,
-        workDate, // 限制同一天同一个基地只能报一次
+        jobId,
+        workDate,
+        status: 0,
+        isProxy: false,
+      });
+
+      let savedSignupRecord: DailySignup;
+      try {
+        savedSignupRecord = await signupRepo.save(signup);
+      } catch (error) {
+        this.rethrowDuplicateSignup(error, '您今日已报名该基地，请勿重复操作');
       }
+
+      const proxyRecords: DailySignup[] = [];
+      for (const proxyUserId of proxyUserIds) {
+        const proxyExisting = await signupRepo.findOne({
+          where: {
+            userId: proxyUserId,
+            baseId,
+            workDate,
+          }
+        });
+
+        if (proxyExisting) {
+          continue;
+        }
+
+        const proxySignup = signupRepo.create({
+          userId: proxyUserId,
+          baseId,
+          jobId,
+          workDate,
+          status: 0,
+          isProxy: true,
+          proxyUserId: userId,
+        }) as DailySignup;
+
+        try {
+          proxyRecords.push(await signupRepo.save(proxySignup));
+        } catch (error) {
+          this.rethrowDuplicateSignup(error, `用户 ${proxyUserId} 今日已报名该基地`);
+        }
+      }
+
+      return {
+        savedSignup: savedSignupRecord,
+        savedProxySignups: proxyRecords,
+      };
     });
 
-    if (existing) {
-      throw new BadRequestException('您今日已报名该基地，请勿重复操作');
-    }
-
-    // 3. 创建报名记录
-    const signup = this.signupRepo.create({
+    await this.operationLogService.logWithContext({
+      operationType: OperationType.CREATE,
+      resourceType: ResourceType.SIGNUP,
+      resourceId: savedSignup.id,
       userId,
-      baseId,
-      jobId,
-      workDate,
-      status: 0, // 0 = 已报名
-      isProxy: false,
+      request: context?.request,
+      description: `创建报名记录: signupId=${savedSignup.id}, baseId=${baseId}, jobId=${jobId}`,
+      afterData: {
+        baseId,
+        jobId,
+        workDate,
+        isProxy: false,
+        status: savedSignup.status,
+      },
     });
-
-    const savedSignup = await this.signupRepo.save(signup);
 
     // 4. 生成二维码并发送短信
     try {
@@ -258,35 +406,24 @@ export class AttendanceService {
       this.logger.warn(`发送短信失败: ${error.message}`);
     }
 
-    // 5. 处理代报名（一人替最多两人报名）
-    if (proxyUserIds && Array.isArray(proxyUserIds) && proxyUserIds.length > 0) {
-      if (proxyUserIds.length > 2) {
-        throw new BadRequestException('最多只能代两人报名');
-      }
-
-      for (const proxyUserId of proxyUserIds) {
-        // 检查被代报人是否已报名
-        const proxyExisting = await this.signupRepo.findOne({
-          where: {
-            userId: proxyUserId,
-            baseId,
-            workDate,
-          }
-        });
-
-        if (!proxyExisting) {
-          const proxySignup = this.signupRepo.create({
-            userId: proxyUserId,
-            baseId,
-            jobId,
-            workDate,
-            status: 0,
-            isProxy: true,
-            proxyUserId: userId,
-          });
-          await this.signupRepo.save(proxySignup);
-        }
-      }
+    for (const savedProxySignup of savedProxySignups) {
+      await this.operationLogService.logWithContext({
+        operationType: OperationType.CREATE,
+        resourceType: ResourceType.SIGNUP,
+        resourceId: savedProxySignup.id,
+        userId,
+        request: context?.request,
+        description: `代报名记录: signupId=${savedProxySignup.id}, proxyUserId=${savedProxySignup.userId}, baseId=${baseId}, jobId=${jobId}`,
+        afterData: {
+          baseId,
+          jobId,
+          workDate,
+          isProxy: true,
+          proxyUserId: userId,
+          userId: savedProxySignup.userId,
+          status: savedProxySignup.status,
+        },
+      });
     }
 
     return savedSignup;

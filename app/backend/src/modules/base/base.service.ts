@@ -5,7 +5,7 @@
  */
 import { Injectable, NotFoundException, Logger, ConflictException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { BaseInfo, AuditStatus } from './entities/base-info.entity';
 import { RecruitmentJob, PayType, JobStatus } from './entities/recruitment-job.entity';
 import { CreateBaseDto } from './dto/create-base.dto';
@@ -14,7 +14,7 @@ import { JobApplicationService } from './services/job-application.service';
 import { BaseCooperationService } from './services/base-cooperation.service';
 import { ApplicationStatus } from './entities/job-application.entity';
 import { CooperationStatus } from './entities/base-cooperation.entity';
-import { OperationLogService } from '../common/services/operation-log.service';
+import { OperationLogService, OperationLogContext } from '../common/services/operation-log.service';
 import { OperationType, ResourceType } from '../common/entities/operation-log.entity';
 import { SysUser, UserRole } from '../user/entities/sys-user.entity';
 
@@ -36,6 +36,7 @@ export class BaseService {
     private jobApplicationService: JobApplicationService,
     private baseCooperationService: BaseCooperationService,
     private operationLogService: OperationLogService,
+    private dataSource: DataSource,
   ) { }
 
   // ========== 基地相关方法 ==========
@@ -44,7 +45,7 @@ export class BaseService {
    * 创建基地并保证名称、负责人角色与软删除复用规则同时成立。
    * 若数据库唯一键被并发写入触发，这里会转换成可读的业务冲突错误。
    */
-  async create(createBaseDto: CreateBaseDto, ownerId: number): Promise<BaseInfo> {
+  async create(createBaseDto: CreateBaseDto, ownerId: number, context?: OperationLogContext): Promise<BaseInfo> {
     this.logger.log(`[创建基地] 开始: ${createBaseDto.baseName}, 所有者: ${ownerId}`);
 
     // 1. 清理和验证名称
@@ -89,6 +90,21 @@ export class BaseService {
 
     try {
       const savedBase = await this.baseRepo.save(base);
+      await this.operationLogService.logWithContext({
+        operationType: OperationType.CREATE,
+        resourceType: ResourceType.BASE,
+        resourceId: savedBase.id,
+        userId: ownerId,
+        request: context?.request,
+        description: `创建基地: ${savedBase.baseName}`,
+        afterData: {
+          baseName: savedBase.baseName,
+          ownerId: savedBase.ownerId,
+          auditStatus: savedBase.auditStatus,
+          regionCode: savedBase.regionCode,
+          category: savedBase.category,
+        },
+      });
       this.logger.log(`[创建基地] 成功: ID=${savedBase.id}, 名称=${savedBase.baseName}`);
       return savedBase;
     } catch (error) {
@@ -105,14 +121,8 @@ export class BaseService {
    * 审核基地状态，并记录状态变更日志。
    * 这里只负责状态流转，不负责更细的跨组织审批编排。
    */
-  async audit(id: number, status: any): Promise<BaseInfo> {
+  async audit(id: number, status: any, context?: OperationLogContext): Promise<BaseInfo> {
     this.logger.log(`[审核基地] 开始: id=${id}, status=${status}`);
-
-    const base = await this.baseRepo.findOne({ where: { id } });
-    if (!base) {
-      this.logger.error(`[审核基地] 失败: 基地不存在 id=${id}`);
-      throw new NotFoundException('基地不存在');
-    }
 
     const statusNum = Number(status);
     if (isNaN(statusNum) || ![0, 1, 2].includes(statusNum)) {
@@ -120,22 +130,42 @@ export class BaseService {
       throw new BadRequestException('审核状态必须是 0（待审核）, 1（通过）或 2（拒绝）');
     }
 
-    const beforeStatus = base.auditStatus;
-    base.auditStatus = statusNum;
-    const result = await this.baseRepo.save(base);
+    const { result, beforeStatus, baseName } = await this.dataSource.transaction(async (manager) => {
+      const base = await manager.findOne(BaseInfo, {
+        where: { id },
+        lock: { mode: 'pessimistic_write' },
+      });
+      if (!base) {
+        this.logger.error(`[审核基地] 失败: 基地不存在 id=${id}`);
+        throw new NotFoundException('基地不存在');
+      }
+      if (base.auditStatus !== AuditStatus.PENDING) {
+        throw new ConflictException('该基地已被审核，请刷新后重试');
+      }
+
+      const previousStatus = base.auditStatus;
+      base.auditStatus = statusNum;
+      const saved = await manager.save(BaseInfo, base);
+      return {
+        result: saved,
+        beforeStatus: previousStatus,
+        baseName: base.baseName,
+      };
+    });
 
     this.logger.log(`[审核基地] 完成: id=${id}, 新状态=${result.auditStatus}`);
 
     // 记录审核操作日志
-    this.operationLogService.log(
-      OperationType.AUDIT,
-      ResourceType.BASE,
-      id,
-      0, // 没有传入操作者，暂用0
-      `基地审核: ${base.baseName}, ${beforeStatus} -> ${statusNum}`,
-      { auditStatus: beforeStatus },
-      { auditStatus: statusNum },
-    ).catch(() => {});
+    await this.operationLogService.logWithContext({
+      operationType: OperationType.AUDIT,
+      resourceType: ResourceType.BASE,
+      resourceId: id,
+      userId: context?.userId,
+      request: context?.request,
+      description: `基地审核: ${baseName}, ${beforeStatus} -> ${statusNum}`,
+      beforeData: { auditStatus: beforeStatus },
+      afterData: { auditStatus: statusNum },
+    });
 
     return result;
   }
@@ -196,7 +226,7 @@ export class BaseService {
    * 1. 基地存在且已审核通过。
    * 2. 薪资字段、年龄区间和日期区间满足业务约束。
    */
-  async createJob(baseId: number, createJobDto: CreateJobDto, userId: number): Promise<RecruitmentJob> {
+  async createJob(baseId: number, createJobDto: CreateJobDto, userId: number, context?: OperationLogContext): Promise<RecruitmentJob> {
     this.logger.log(`[发布招聘] 开始: baseId=${baseId}, userId=${userId}`);
 
     const base = await this.baseRepo.findOne({ where: { id: baseId } });
@@ -243,6 +273,21 @@ export class BaseService {
 
     try {
       const savedJob = await this.jobRepo.save(job);
+      await this.operationLogService.logWithContext({
+        operationType: OperationType.CREATE,
+        resourceType: ResourceType.JOB,
+        resourceId: savedJob.id,
+        userId,
+        request: context?.request,
+        description: `创建岗位: ${savedJob.jobTitle}`,
+        afterData: {
+          baseId: savedJob.baseId,
+          jobTitle: savedJob.jobTitle,
+          status: savedJob.status,
+          payType: savedJob.payType,
+          validUntil: savedJob.validUntil,
+        },
+      });
       this.logger.log(`[发布招聘] 成功: jobId=${savedJob.id}, 岗位=${savedJob.jobTitle}`);
       return savedJob;
     } catch (error) {
@@ -366,8 +411,8 @@ export class BaseService {
     }
 
     if (job.isActive) {
+      await this.jobRepo.increment({ id: job.id }, 'viewCount', 1);
       job.viewCount += 1;
-      await this.jobRepo.save(job);
     }
 
     this.logger.log(`[查询岗位详情] 成功: jobId=${job.id}, 岗位=${job.jobTitle}`);
@@ -378,60 +423,112 @@ export class BaseService {
    * 更新岗位状态。
    * 该方法负责基地所有权校验，避免非岗位归属方修改招聘开关。
    */
-  async updateJobStatus(jobId: number, status: JobStatus, userId: number): Promise<RecruitmentJob> {
+  async updateJobStatus(jobId: number, status: JobStatus, userId: number, context?: OperationLogContext): Promise<RecruitmentJob> {
     this.logger.log(`[更新岗位状态] jobId=${jobId}, status=${status}`);
 
-    const job = await this.jobRepo.findOne({
-      where: { id: jobId },
-      relations: ['base']
+    const { updatedJob, beforeStatus, beforeActive } = await this.dataSource.transaction(async (manager) => {
+      const job = await manager.findOne(RecruitmentJob, {
+        where: { id: jobId },
+        lock: { mode: 'pessimistic_write' },
+      });
+      if (!job) {
+        throw new NotFoundException('招聘岗位不存在');
+      }
+
+      const base = await manager.findOne(BaseInfo, { where: { id: job.baseId } });
+      if (!base) {
+        throw new NotFoundException('基地不存在');
+      }
+      if (base.ownerId !== userId) {
+        throw new ConflictException('只有基地所有者可以修改招聘状态');
+      }
+
+      const previousStatus = job.status;
+      const previousActive = job.isActive;
+
+      job.status = status;
+      job.isActive = ![JobStatus.OFFLINE, JobStatus.FULL].includes(status);
+
+      const next = await manager.save(RecruitmentJob, job);
+      return {
+        updatedJob: next,
+        beforeStatus: previousStatus,
+        beforeActive: previousActive,
+      };
     });
-
-    if (!job) {
-      throw new NotFoundException('招聘岗位不存在');
-    }
-
-    const base = job.base;
-    if (base.ownerId !== userId) {
-      throw new ConflictException('只有基地所有者可以修改招聘状态');
-    }
-
-    job.status = status;
-
-    if (status === JobStatus.OFFLINE || status === JobStatus.FULL) {
-      job.isActive = false;
-    }
-
-    const updatedJob = await this.jobRepo.save(job);
+    await this.operationLogService.logWithContext({
+      operationType: OperationType.UPDATE,
+      resourceType: ResourceType.JOB,
+      resourceId: updatedJob.id,
+      userId,
+      request: context?.request,
+      description: `更新岗位状态: ${updatedJob.jobTitle}`,
+      beforeData: {
+        status: beforeStatus,
+        isActive: beforeActive,
+      },
+      afterData: {
+        status: updatedJob.status,
+        isActive: updatedJob.isActive,
+      },
+    });
     this.logger.log(`[更新岗位状态] 成功: jobId=${jobId}, 新状态=${status}`);
     return updatedJob;
   }
 
-  async renewJob(jobId: number, userId: number): Promise<RecruitmentJob> {
+  async renewJob(jobId: number, userId: number, context?: OperationLogContext): Promise<RecruitmentJob> {
     this.logger.log(`[续期岗位] jobId=${jobId}`);
 
-    const job = await this.jobRepo.findOne({
-      where: { id: jobId },
-      relations: ['base']
+    const { renewedJob, beforeValidUntil, beforeStatus } = await this.dataSource.transaction(async (manager) => {
+      const job = await manager.findOne(RecruitmentJob, {
+        where: { id: jobId },
+        lock: { mode: 'pessimistic_write' },
+      });
+      if (!job) {
+        throw new NotFoundException('招聘岗位不存在');
+      }
+
+      const base = await manager.findOne(BaseInfo, { where: { id: job.baseId } });
+      if (!base) {
+        throw new NotFoundException('基地不存在');
+      }
+      if (base.ownerId !== userId) {
+        throw new ConflictException('只有基地所有者可以续期招聘');
+      }
+
+      const newValidUntil = new Date(job.validUntil);
+      newValidUntil.setDate(newValidUntil.getDate() + job.renewalDays);
+      const previousValidUntil = job.validUntil;
+      const previousStatus = job.status;
+
+      job.validUntil = newValidUntil;
+      job.isActive = true;
+      job.status = JobStatus.RECRUITING;
+
+      const next = await manager.save(RecruitmentJob, job);
+      return {
+        renewedJob: next,
+        beforeValidUntil: previousValidUntil,
+        beforeStatus: previousStatus,
+      };
     });
-
-    if (!job) {
-      throw new NotFoundException('招聘岗位不存在');
-    }
-
-    const base = job.base;
-    if (base.ownerId !== userId) {
-      throw new ConflictException('只有基地所有者可以续期招聘');
-    }
-
-    const newValidUntil = new Date(job.validUntil);
-    newValidUntil.setDate(newValidUntil.getDate() + job.renewalDays);
-
-    job.validUntil = newValidUntil;
-    job.isActive = true;
-    job.status = JobStatus.RECRUITING;
-
-    const renewedJob = await this.jobRepo.save(job);
-    this.logger.log(`[续期岗位] 成功: jobId=${jobId}, 新有效期=${newValidUntil.toISOString()}`);
+    await this.operationLogService.logWithContext({
+      operationType: OperationType.UPDATE,
+      resourceType: ResourceType.JOB,
+      resourceId: renewedJob.id,
+      userId,
+      request: context?.request,
+      description: `续期岗位: ${renewedJob.jobTitle}`,
+      beforeData: {
+        validUntil: beforeValidUntil,
+        status: beforeStatus,
+      },
+      afterData: {
+        validUntil: renewedJob.validUntil,
+        status: renewedJob.status,
+      },
+    });
+    this.logger.log(`[续期岗位] 成功: jobId=${jobId}, 新有效期=${renewedJob.validUntil.toISOString()}`);
     return renewedJob;
   }
 
@@ -545,30 +642,25 @@ export class BaseService {
    */
   async deactivateExpiredJobs(): Promise<{ deactivated: number }> {
     const now = new Date();
-    const expiredDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    const result = await this.jobRepo
+      .createQueryBuilder()
+      .update(RecruitmentJob)
+      .set({
+        isActive: false,
+        status: JobStatus.EXPIRED,
+      })
+      .where('is_active = :isActive', { isActive: true })
+      .andWhere('auto_renew = :autoRenew', { autoRenew: false })
+      .andWhere('valid_until IS NOT NULL')
+      .andWhere('valid_until <= :now', { now })
+      .andWhere('status <> :expiredStatus', { expiredStatus: JobStatus.EXPIRED })
+      .execute();
 
-    const expiredJobs = await this.jobRepo.find({
-      where: {
-        isActive: true,
-        validUntil: expiredDate,
-        autoRenew: false,
-      },
-    });
-
-    let deactivated = 0;
-    for (const job of expiredJobs) {
-      job.isActive = false;
-      job.status = JobStatus.EXPIRED;
-      await this.jobRepo.save(job);
-      deactivated++;
-      this.logger.log(`下架过期招聘: ${job.jobTitle} (ID: ${job.id})`);
-    }
-
-    return { deactivated };
+    return { deactivated: result.affected || 0 };
   }
 
-  async applyJob(userId: number, jobId: number, baseId: number, note?: string) {
-    return this.jobApplicationService.create(userId, jobId, baseId, note);
+  async applyJob(userId: number, jobId: number, baseId: number, note?: string, context?: OperationLogContext) {
+    return this.jobApplicationService.create(userId, jobId, baseId, note, context);
   }
 
   async getJobApplications(jobId: number) {
@@ -584,16 +676,16 @@ export class BaseService {
     return this.jobApplicationService.getApplicationsByBase(baseId, status as ApplicationStatus);
   }
 
-  async reviewApplication(applicationId: number, status: number, reviewedBy: number, rejectReason?: string) {
-    return this.jobApplicationService.review(applicationId, status as ApplicationStatus, reviewedBy, rejectReason);
+  async reviewApplication(applicationId: number, status: number, reviewedBy: number, rejectReason?: string, context?: OperationLogContext) {
+    return this.jobApplicationService.review(applicationId, status as ApplicationStatus, reviewedBy, rejectReason, context);
   }
 
-  async createCooperation(applicantId: number, baseId: number, requirement: string) {
-    return this.baseCooperationService.create(applicantId, baseId, requirement);
+  async createCooperation(applicantId: number, baseId: number, requirement: string, context?: OperationLogContext) {
+    return this.baseCooperationService.create(applicantId, baseId, requirement, context);
   }
 
-  async reviewCooperation(cooperationId: number, status: number, reviewedBy: number, rejectReason?: string) {
-    return this.baseCooperationService.review(cooperationId, status as CooperationStatus, reviewedBy, rejectReason);
+  async reviewCooperation(cooperationId: number, status: number, reviewedBy: number, rejectReason?: string, context?: OperationLogContext) {
+    return this.baseCooperationService.review(cooperationId, status as CooperationStatus, reviewedBy, rejectReason, context);
   }
 
   async getBaseCooperations(baseId: number) {

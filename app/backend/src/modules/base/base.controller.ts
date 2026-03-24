@@ -34,7 +34,7 @@ export class BaseController {
     @Body() createBaseDto: CreateBaseDto,
     @Request() req
   ) {
-    return this.baseService.create(createBaseDto, req.user.id);
+    return this.baseService.create(createBaseDto, req.user.id, { request: req, userId: req.user.id });
   }
 
   @ApiOperation({ summary: '获取基地列表' })
@@ -63,9 +63,10 @@ export class BaseController {
   @Patch(':id/audit')
   async audit(
     @Param('id', ParseIntPipe) id: number,
-    @Body('status') status: any
+    @Body('status') status: any,
+    @Request() req
   ) {
-    return this.baseService.audit(id, status);
+    return this.baseService.audit(id, status, { request: req, userId: req.user.id });
   }
 
   @ApiOperation({ summary: '发布招聘岗位' })
@@ -77,7 +78,7 @@ export class BaseController {
     @Body() createJobDto: CreateJobDto,
     @Request() req
   ) {
-    return this.baseService.createJob(baseId, createJobDto, req.user.id);
+    return this.baseService.createJob(baseId, createJobDto, req.user.id, { request: req, userId: req.user.id });
   }
 
   @ApiOperation({ summary: '获取基地的招聘岗位列表' })
@@ -106,7 +107,7 @@ export class BaseController {
     @Body('status') status: any,
     @Request() req
   ) {
-    return this.baseService.updateJobStatus(jobId, status, req.user.id);
+    return this.baseService.updateJobStatus(jobId, status, req.user.id, { request: req, userId: req.user.id });
   }
 
   @ApiOperation({ summary: '续期招聘岗位' })
@@ -117,7 +118,7 @@ export class BaseController {
     @Param('jobId', ParseIntPipe) jobId: number,
     @Request() req
   ) {
-    return this.baseService.renewJob(jobId, req.user.id);
+    return this.baseService.renewJob(jobId, req.user.id, { request: req, userId: req.user.id });
   }
 
   @ApiOperation({ summary: '获取基地统计信息' })
@@ -161,7 +162,7 @@ export class BaseController {
     @Body('note') note: string,
     @Request() req
   ) {
-    return this.baseService.applyJob(req.user.id, jobId, baseId, note);
+    return this.baseService.applyJob(req.user.id, jobId, baseId, note, { request: req, userId: req.user.id });
   }
 
   @ApiOperation({ summary: '获取岗位申请列表（基地管理员查看）' })
@@ -193,7 +194,7 @@ export class BaseController {
     @Body('rejectReason') rejectReason: string,
     @Request() req
   ) {
-    return this.baseService.reviewApplication(applicationId, status, req.user.id, rejectReason);
+    return this.baseService.reviewApplication(applicationId, status, req.user.id, rejectReason, { request: req, userId: req.user.id });
   }
 
   @ApiOperation({ summary: '提交基地合作申请（区域管理员/超级管理员）' })
@@ -205,7 +206,7 @@ export class BaseController {
     @Body('requirement') requirement: string,
     @Request() req
   ) {
-    return this.baseService.createCooperation(req.user.id, baseId, requirement);
+    return this.baseService.createCooperation(req.user.id, baseId, requirement, { request: req, userId: req.user.id });
   }
 
   @ApiOperation({ summary: '审核基地合作申请' })
@@ -218,7 +219,7 @@ export class BaseController {
     @Body('rejectReason') rejectReason: string,
     @Request() req
   ) {
-    return this.baseService.reviewCooperation(cooperationId, status, req.user.id, rejectReason);
+    return this.baseService.reviewCooperation(cooperationId, status, req.user.id, rejectReason, { request: req, userId: req.user.id });
   }
 
   @ApiOperation({ summary: '获取基地合作申请列表' })

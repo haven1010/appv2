@@ -3,10 +3,11 @@
  * Responsibility: Implements the Auth application service for the Auth module, including business rules, side effects, and persistence coordination.
  * Notes: Keep comments focused on intent, invariants, side effects, and cross-module contracts.
  */
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UserService } from '../user/user.service';
-import { SecurityService } from '../common/services/security.service';
+import { OperationLogService } from '../common/services/operation-log.service';
+import { OperationType, ResourceType } from '../common/entities/operation-log.entity';
 
 @Injectable()
 /**
@@ -17,7 +18,7 @@ export class AuthService {
   constructor(
     private userService: UserService,
     private jwtService: JwtService,
-    private securityService: SecurityService,
+    private operationLogService: OperationLogService,
   ) { }
 
   /**
@@ -67,8 +68,22 @@ export class AuthService {
    * 为已通过校验的用户签发访问令牌，并返回前端登录态所需的最小用户信息。
    * 这里约定 JWT 载荷包含 `sub`、`role` 和 `uid`，供后续鉴权与路由隔离使用。
    */
-  async login(user: any) {
+  async login(user: any, request?: any) {
     const payload = { username: user.name, sub: user.id, role: user.roleKey, uid: user.uid };
+
+    await this.operationLogService.logWithContext({
+      operationType: OperationType.LOGIN,
+      resourceType: ResourceType.USER,
+      resourceId: user.id,
+      userId: user.id,
+      request,
+      description: `用户登录: ${user.name} (${user.uid})`,
+      afterData: {
+        uid: user.uid,
+        roleKey: user.roleKey,
+      },
+    });
+
     return {
       access_token: this.jwtService.sign(payload),
       user: {

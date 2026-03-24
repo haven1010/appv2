@@ -5,10 +5,10 @@
  */
 import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { SalaryPayment, PaymentMethod, PaymentStatus } from '../entities/salary-payment.entity';
 import { LaborSalary, SalaryStatus } from '../entities/labor-salary.entity';
-import { OperationLogService } from '../../common/services/operation-log.service';
+import { OperationLogService, OperationLogContext } from '../../common/services/operation-log.service';
 import { OperationType, ResourceType } from '../../common/entities/operation-log.entity';
 
 @Injectable()
@@ -24,6 +24,7 @@ export class SalaryPaymentService {
     private paymentRepo: Repository<SalaryPayment>,
     @InjectRepository(LaborSalary)
     private salaryRepo: Repository<LaborSalary>,
+    private dataSource: DataSource,
     private operationLogService: OperationLogService,
   ) {}
 
@@ -35,37 +36,59 @@ export class SalaryPaymentService {
     salaryId: number,
     paymentMethod: PaymentMethod,
     paidBy: number,
+    context?: OperationLogContext,
   ): Promise<SalaryPayment> {
-    const salary = await this.salaryRepo.findOne({ where: { id: salaryId } });
-    if (!salary) {
-      throw new NotFoundException('工资记录不存在');
-    }
+    const saved = await this.dataSource.transaction(async (manager) => {
+      const salary = await manager.findOne(LaborSalary, {
+        where: { id: salaryId },
+        lock: { mode: 'pessimistic_write' },
+      });
+      if (!salary) {
+        throw new NotFoundException('工资记录不存在');
+      }
 
-    if (salary.status !== SalaryStatus.CONFIRMED) {
-      throw new BadRequestException('工资记录未确认，无法创建支付记录');
-    }
+      if (salary.status !== SalaryStatus.CONFIRMED) {
+        throw new BadRequestException('工资记录未确认，无法创建支付记录');
+      }
 
-    const existingPayment = await this.paymentRepo.findOne({ where: { salaryId } });
-    if (existingPayment) {
-      throw new BadRequestException('该工资记录已存在支付单');
-    }
+      const existingPayment = await manager.findOne(SalaryPayment, {
+        where: { salaryId },
+        lock: { mode: 'pessimistic_write' },
+      });
+      if (existingPayment) {
+        throw new BadRequestException('该工资记录已存在支付单');
+      }
 
-    const payment = this.paymentRepo.create({
-      salaryId,
-      paymentMethod,
-      status: PaymentStatus.PENDING,
-      paidBy,
+      const payment = manager.create(SalaryPayment, {
+        salaryId,
+        paymentMethod,
+        status: PaymentStatus.PENDING,
+        paidBy,
+      });
+
+      try {
+        return await manager.save(SalaryPayment, payment);
+      } catch (error) {
+        if (error?.code === 'ER_DUP_ENTRY') {
+          throw new BadRequestException('该工资记录已存在支付单');
+        }
+        throw error;
+      }
     });
 
-    const saved = await this.paymentRepo.save(payment);
-
-    this.operationLogService.log(
-      OperationType.PAYMENT,
-      ResourceType.SALARY,
-      salaryId,
-      paidBy,
-      `创建薪资支付: salaryId=${salaryId}, method=${paymentMethod}`,
-    ).catch(() => {});
+    await this.operationLogService.logWithContext({
+      operationType: OperationType.PAYMENT,
+      resourceType: ResourceType.SALARY,
+      resourceId: salaryId,
+      userId: paidBy,
+      request: context?.request,
+      description: `创建薪资支付: salaryId=${salaryId}, method=${paymentMethod}`,
+      afterData: {
+        paymentId: saved.id,
+        status: saved.status,
+        paymentMethod: saved.paymentMethod,
+      },
+    });
 
     return saved;
   }
@@ -76,16 +99,46 @@ export class SalaryPaymentService {
   async confirmPayment(
     paymentId: number,
     signatureUrl: string,
+    paidBy?: number,
+    context?: OperationLogContext,
   ): Promise<SalaryPayment> {
-    const payment = await this.paymentRepo.findOne({ where: { id: paymentId } });
-    if (!payment) {
-      throw new NotFoundException('支付记录不存在');
-    }
+    const { saved, beforeStatus } = await this.dataSource.transaction(async (manager) => {
+      const payment = await manager.findOne(SalaryPayment, {
+        where: { id: paymentId },
+        lock: { mode: 'pessimistic_write' },
+      });
+      if (!payment) {
+        throw new NotFoundException('支付记录不存在');
+      }
+      if (payment.status !== PaymentStatus.PENDING) {
+        throw new BadRequestException('该支付记录当前状态不允许确认');
+      }
 
-    payment.status = PaymentStatus.CONFIRMED;
-    payment.confirmSignatureUrl = signatureUrl;
+      const previousStatus = payment.status;
+      payment.status = PaymentStatus.CONFIRMED;
+      payment.confirmSignatureUrl = signatureUrl;
 
-    return this.paymentRepo.save(payment);
+      const next = await manager.save(SalaryPayment, payment);
+      return { saved: next, beforeStatus: previousStatus };
+    });
+    await this.operationLogService.logWithContext({
+      operationType: OperationType.UPDATE,
+      resourceType: ResourceType.SALARY,
+      resourceId: saved.salaryId,
+      userId: paidBy,
+      request: context?.request,
+      description: `确认薪资支付: paymentId=${saved.id}`,
+      beforeData: {
+        paymentId: saved.id,
+        status: beforeStatus,
+      },
+      afterData: {
+        paymentId: saved.id,
+        status: saved.status,
+        confirmSignatureUrl: saved.confirmSignatureUrl,
+      },
+    });
+    return saved;
   }
 
   /**
@@ -99,33 +152,65 @@ export class SalaryPaymentService {
     paymentId: number,
     voucherUrl: string,
     paidBy: number,
+    context?: OperationLogContext,
   ): Promise<SalaryPayment> {
-    const payment = await this.paymentRepo.findOne({ where: { id: paymentId } });
-    if (!payment) {
-      throw new NotFoundException('支付记录不存在');
-    }
+    const { saved, beforeStatus } = await this.dataSource.transaction(async (manager) => {
+      const paymentRepo = manager.getRepository(SalaryPayment);
+      const salaryRepo = manager.getRepository(LaborSalary);
 
-    payment.status = PaymentStatus.PAID;
-    payment.paymentVoucherUrl = voucherUrl;
-    payment.paidAt = new Date();
-    payment.paidBy = paidBy;
+      const payment = await paymentRepo.findOne({
+        where: { id: paymentId },
+        lock: { mode: 'pessimistic_write' },
+      });
+      if (!payment) {
+        throw new NotFoundException('支付记录不存在');
+      }
+      if (payment.status !== PaymentStatus.CONFIRMED) {
+        throw new BadRequestException('该支付记录当前状态不允许完成发放');
+      }
 
-    // 更新工资记录状态
-    const salary = await this.salaryRepo.findOne({ where: { id: payment.salaryId } });
-    if (salary) {
+      const previousStatus = payment.status;
+      payment.status = PaymentStatus.PAID;
+      payment.paymentVoucherUrl = voucherUrl;
+      payment.paidAt = new Date();
+      payment.paidBy = paidBy;
+
+      const salary = await salaryRepo.findOne({
+        where: { id: payment.salaryId },
+        lock: { mode: 'pessimistic_write' },
+      });
+      if (!salary) {
+        throw new NotFoundException('工资记录不存在');
+      }
+      if (salary.status !== SalaryStatus.CONFIRMED) {
+        throw new BadRequestException('工资记录当前状态不允许发放');
+      }
+
       salary.status = SalaryStatus.PAID;
-      await this.salaryRepo.save(salary);
-    }
+      await salaryRepo.save(salary);
 
-    const saved = await this.paymentRepo.save(payment);
+      const next = await paymentRepo.save(payment);
+      return { saved: next, beforeStatus: previousStatus };
+    });
 
-    this.operationLogService.log(
-      OperationType.PAYMENT,
-      ResourceType.SALARY,
-      payment.salaryId,
-      paidBy,
-      `完成薪资支付: paymentId=${paymentId}`,
-    ).catch(() => {});
+    await this.operationLogService.logWithContext({
+      operationType: OperationType.PAYMENT,
+      resourceType: ResourceType.SALARY,
+      resourceId: saved.salaryId,
+      userId: paidBy,
+      request: context?.request,
+      description: `完成薪资支付: paymentId=${paymentId}`,
+      beforeData: {
+        paymentId,
+        status: beforeStatus,
+      },
+      afterData: {
+        paymentId: saved.id,
+        status: saved.status,
+        paidAt: saved.paidAt,
+        paymentVoucherUrl: saved.paymentVoucherUrl,
+      },
+    });
 
     return saved;
   }

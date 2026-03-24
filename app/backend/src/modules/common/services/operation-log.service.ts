@@ -3,10 +3,29 @@
  * Responsibility: Implements the Operation Log application service for the Common module, including business rules, side effects, and persistence coordination.
  * Notes: Keep comments focused on intent, invariants, side effects, and cross-module contracts.
  */
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { OperationLog, OperationType, ResourceType } from '../entities/operation-log.entity';
+
+export interface OperationLogContext {
+  request?: {
+    user?: { id?: number };
+    headers?: Record<string, string | string[] | undefined>;
+    ip?: string;
+    socket?: { remoteAddress?: string };
+  };
+  userId?: number;
+}
+
+export interface OperationLogPayload extends OperationLogContext {
+  operationType: OperationType;
+  resourceType: ResourceType;
+  resourceId: number;
+  description?: string;
+  beforeData?: unknown;
+  afterData?: unknown;
+}
 
 @Injectable()
 /**
@@ -14,10 +33,39 @@ import { OperationLog, OperationType, ResourceType } from '../entities/operation
  * 所有写入都应该经过该服务，以保证日志结构和序列化策略保持一致。
  */
 export class OperationLogService {
+  private readonly logger = new Logger(OperationLogService.name);
+
   constructor(
     @InjectRepository(OperationLog)
     private logRepository: Repository<OperationLog>,
   ) {}
+
+  private resolveUserId(context?: OperationLogContext): number {
+    const requestUserId = context?.request?.user?.id;
+    if (typeof context?.userId === 'number') {
+      return context.userId;
+    }
+    if (typeof requestUserId === 'number') {
+      return requestUserId;
+    }
+    return 0;
+  }
+
+  private resolveRequestMeta(context?: OperationLogContext) {
+    const forwarded = context?.request?.headers?.['x-forwarded-for'];
+    const ipAddress = Array.isArray(forwarded)
+      ? forwarded[0]
+      : typeof forwarded === 'string' && forwarded.trim()
+        ? forwarded.split(',')[0].trim()
+        : context?.request?.ip || context?.request?.socket?.remoteAddress || null;
+
+    const userAgentHeader = context?.request?.headers?.['user-agent'];
+    const userAgent = Array.isArray(userAgentHeader)
+      ? userAgentHeader[0]
+      : userAgentHeader || null;
+
+    return { ipAddress, userAgent };
+  }
 
   /**
    * 写入一条操作日志。
@@ -47,6 +95,34 @@ export class OperationLogService {
     });
 
     return this.logRepository.save(log);
+  }
+
+  /**
+   * 从请求上下文中补齐操作者、IP 和 User-Agent 后写入日志。
+   * 日志写入失败会记录错误，避免业务侧无感丢失审计信息。
+   */
+  async logWithContext(payload: OperationLogPayload): Promise<OperationLog | null> {
+    const { ipAddress, userAgent } = this.resolveRequestMeta(payload);
+    const userId = this.resolveUserId(payload);
+
+    try {
+      return await this.log(
+        payload.operationType,
+        payload.resourceType,
+        payload.resourceId,
+        userId,
+        payload.description,
+        payload.beforeData,
+        payload.afterData,
+        ipAddress,
+        userAgent,
+      );
+    } catch (error) {
+      this.logger.error(
+        `操作日志写入失败: operation=${payload.operationType}, resource=${payload.resourceType}, resourceId=${payload.resourceId}, userId=${userId}, reason=${error?.message || error}`,
+      );
+      return null;
+    }
   }
 
   /**

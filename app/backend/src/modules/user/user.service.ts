@@ -5,11 +5,11 @@
  */
 import { Injectable, BadRequestException, ConflictException, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, In } from 'typeorm';
+import { Repository, In, DataSource, EntityManager } from 'typeorm';
 import { SysUser, UserRole } from './entities/sys-user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { SecurityService } from '../common/services/security.service';
-import { OperationLogService } from '../common/services/operation-log.service';
+import { OperationLogService, OperationLogContext } from '../common/services/operation-log.service';
 import { OperationType, ResourceType } from '../common/entities/operation-log.entity';
 import { BaseInfo } from '../base/entities/base-info.entity';
 import * as crypto from 'crypto';
@@ -27,6 +27,7 @@ export class UserService {
     private baseRepository: Repository<BaseInfo>,
     private securityService: SecurityService,
     private operationLogService: OperationLogService,
+    private dataSource: DataSource,
   ) { }
 
   /**
@@ -54,13 +55,15 @@ export class UserService {
    * 1. `field_manager` 必须绑定存在的基地。
    * 2. 非 `field_manager` 不允许携带 `assignedBaseId`。
    */
-  private async validateAssignedBase(roleKey: UserRole, assignedBaseId?: number): Promise<void> {
+  private async validateAssignedBase(roleKey: UserRole, assignedBaseId?: number, manager?: EntityManager): Promise<void> {
+    const baseRepository = manager ? manager.getRepository(BaseInfo) : this.baseRepository;
+
     if (roleKey === UserRole.FIELD_MANAGER) {
       if (!assignedBaseId) {
         throw new BadRequestException('field_manager 必须绑定 assignedBaseId');
       }
 
-      const base = await this.baseRepository.findOne({ where: { id: assignedBaseId } });
+      const base = await baseRepository.findOne({ where: { id: assignedBaseId } });
       if (!base) {
         throw new BadRequestException('assignedBaseId 对应的基地不存在');
       }
@@ -78,7 +81,7 @@ export class UserService {
    * 1. 写入 `sys_user`。
    * 2. 依赖实体 transformer 在持久化阶段执行字段加密。
    */
-  async create(createUserDto: CreateUserDto): Promise<SysUser> {
+  async create(createUserDto: CreateUserDto, context?: OperationLogContext): Promise<SysUser> {
     const roleKey = createUserDto.roleKey || UserRole.WORKER;
     await this.validateAssignedBase(roleKey, createUserDto.assignedBaseId);
 
@@ -120,7 +123,24 @@ export class UserService {
     });
 
     try {
-      return await this.userRepository.save(user);
+      const savedUser = await this.userRepository.save(user);
+
+      await this.operationLogService.logWithContext({
+        operationType: OperationType.CREATE,
+        resourceType: ResourceType.USER,
+        resourceId: savedUser.id,
+        userId: context?.userId ?? savedUser.id,
+        request: context?.request,
+        description: `创建用户: ${savedUser.name} (${savedUser.uid})`,
+        afterData: {
+          uid: savedUser.uid,
+          roleKey: savedUser.roleKey,
+          assignedBaseId: savedUser.assignedBaseId,
+          infoAuditStatus: savedUser.infoAuditStatus,
+        },
+      });
+
+      return savedUser;
     } catch (error) {
       this.rethrowDuplicateKey(error);
     }
@@ -130,7 +150,7 @@ export class UserService {
    * 仅允许首个超级管理员继续扩展超级管理员账号。
    * 该约束用于避免任意高权限用户横向复制超级权限。
    */
-  async createSuperAdmin(createUserDto: CreateUserDto, operatorId: number): Promise<SysUser> {
+  async createSuperAdmin(createUserDto: CreateUserDto, operatorId: number, request?: any): Promise<SysUser> {
     const bootstrapSuperAdmin = await this.userRepository.findOne({
       where: {
         roleKey: UserRole.SUPER_ADMIN,
@@ -147,10 +167,16 @@ export class UserService {
       throw new ForbiddenException('仅首个超级管理员可以创建次级超级管理员');
     }
 
-    return this.create({
-      ...createUserDto,
-      roleKey: UserRole.SUPER_ADMIN,
-    });
+    return this.create(
+      {
+        ...createUserDto,
+        roleKey: UserRole.SUPER_ADMIN,
+      },
+      {
+        userId: operatorId,
+        request,
+      },
+    );
   }
 
   /**
@@ -193,39 +219,73 @@ export class UserService {
    * 更新用户资料，并在必要时重算 hash 与回退审核状态。
    * 当更新涉及手机号或紧急联系人时，服务会强制重新进入待审核。
    */
-  async update(userId: number, updateDto: any): Promise<SysUser> {
-    const user = await this.userRepository.findOne({ where: { id: userId } });
-    if (!user) {
-      throw new NotFoundException('用户不存在');
-    }
-
-    if (updateDto.assignedBaseId !== undefined) {
-      await this.validateAssignedBase(user.roleKey, updateDto.assignedBaseId);
-    }
-
-    // 如果更新手机号，需要重新计算hash
-    if (updateDto.phone && updateDto.phone !== user.phone) {
-      const phoneHash = this.securityService.hash(updateDto.phone);
-      const existingUser = await this.userRepository.findOne({ where: { phoneHash } });
-      if (existingUser && existingUser.id !== userId) {
-        throw new ConflictException('手机号已被使用');
-      }
-      updateDto.phoneHash = phoneHash;
-    }
-
-    // 如果更新紧急联系人电话，需要重新计算hash
-    if (updateDto.emergencyPhone) {
-      updateDto.emergencyPhoneHash = this.securityService.hash(updateDto.emergencyPhone);
-    }
-
-    // 信息更新后需要重新审核
-    if (updateDto.phone || updateDto.emergencyContact || updateDto.emergencyPhone) {
-      updateDto.infoAuditStatus = 0; // 待审核
-    }
-
-    Object.assign(user, updateDto);
+  async update(userId: number, updateDto: any, context?: OperationLogContext): Promise<SysUser> {
     try {
-      return await this.userRepository.save(user);
+      const { saved, beforeSnapshot } = await this.dataSource.transaction(async (manager) => {
+        const userRepository = manager.getRepository(SysUser);
+        const user = await userRepository.findOne({
+          where: { id: userId },
+          lock: { mode: 'pessimistic_write' },
+        });
+        if (!user || user.isDeleted) {
+          throw new NotFoundException('用户不存在');
+        }
+
+        const nextUpdate = { ...updateDto };
+        const before = {
+          roleKey: user.roleKey,
+          assignedBaseId: user.assignedBaseId,
+          infoAuditStatus: user.infoAuditStatus,
+          regionCode: user.regionCode,
+          phoneUpdated: false,
+          emergencyPhoneUpdated: false,
+        };
+
+        if (nextUpdate.assignedBaseId !== undefined) {
+          await this.validateAssignedBase(user.roleKey, nextUpdate.assignedBaseId, manager);
+        }
+
+        if (nextUpdate.phone && nextUpdate.phone !== user.phone) {
+          const phoneHash = this.securityService.hash(nextUpdate.phone);
+          const existingUser = await userRepository.findOne({ where: { phoneHash } });
+          if (existingUser && existingUser.id !== userId) {
+            throw new ConflictException('手机号已被使用');
+          }
+          nextUpdate.phoneHash = phoneHash;
+        }
+
+        if (nextUpdate.emergencyPhone) {
+          nextUpdate.emergencyPhoneHash = this.securityService.hash(nextUpdate.emergencyPhone);
+        }
+
+        if (nextUpdate.phone || nextUpdate.emergencyContact || nextUpdate.emergencyPhone) {
+          nextUpdate.infoAuditStatus = 0;
+        }
+
+        Object.assign(user, nextUpdate);
+        const next = await userRepository.save(user);
+        return { saved: next, beforeSnapshot: before };
+      });
+
+      await this.operationLogService.logWithContext({
+        operationType: OperationType.UPDATE,
+        resourceType: ResourceType.USER,
+        resourceId: saved.id,
+        userId: context?.userId ?? saved.id,
+        request: context?.request,
+        description: `更新用户资料: ${saved.name} (${saved.uid})`,
+        beforeData: beforeSnapshot,
+        afterData: {
+          roleKey: saved.roleKey,
+          assignedBaseId: saved.assignedBaseId,
+          infoAuditStatus: saved.infoAuditStatus,
+          regionCode: saved.regionCode,
+          phoneUpdated: Boolean(updateDto.phone),
+          emergencyPhoneUpdated: Boolean(updateDto.emergencyPhone),
+        },
+      });
+
+      return saved;
     } catch (error) {
       this.rethrowDuplicateKey(error);
     }
@@ -234,26 +294,41 @@ export class UserService {
   /**
    * 更新实名资料审核状态，并写入操作日志形成审计轨迹。
    */
-  async auditInfo(userId: number, status: number, reason?: string, operatorId?: number): Promise<SysUser> {
-    const user = await this.userRepository.findOne({ where: { id: userId } });
-    if (!user) {
-      throw new NotFoundException('用户不存在');
+  async auditInfo(userId: number, status: number, reason?: string, operatorId?: number, request?: any): Promise<SysUser> {
+    if (![0, 1, 2].includes(Number(status))) {
+      throw new BadRequestException('审核状态必须是 0、1 或 2');
     }
 
-    const beforeStatus = user.infoAuditStatus;
-    user.infoAuditStatus = status;
-    const saved = await this.userRepository.save(user);
+    const { saved, beforeStatus } = await this.dataSource.transaction(async (manager) => {
+      const userRepository = manager.getRepository(SysUser);
+      const user = await userRepository.findOne({
+        where: { id: userId },
+        lock: { mode: 'pessimistic_write' },
+      });
+      if (!user || user.isDeleted) {
+        throw new NotFoundException('用户不存在');
+      }
+      if (user.infoAuditStatus !== 0) {
+        throw new ConflictException('该用户信息已被审核，请刷新后重试');
+      }
+
+      const previousStatus = user.infoAuditStatus;
+      user.infoAuditStatus = status;
+      const next = await userRepository.save(user);
+      return { saved: next, beforeStatus: previousStatus };
+    });
 
     // 记录审核操作日志
-    this.operationLogService.log(
-      OperationType.AUDIT,
-      ResourceType.USER,
-      userId,
-      operatorId || 0,
-      `用户审核: ${beforeStatus} -> ${status}${reason ? `, 原因: ${reason}` : ''}`,
-      { infoAuditStatus: beforeStatus },
-      { infoAuditStatus: status },
-    ).catch(() => {}); // fire-and-forget
+    await this.operationLogService.logWithContext({
+      operationType: OperationType.AUDIT,
+      resourceType: ResourceType.USER,
+      resourceId: userId,
+      userId: operatorId || 0,
+      request,
+      description: `用户审核: ${beforeStatus} -> ${status}${reason ? `, 原因: ${reason}` : ''}`,
+      beforeData: { infoAuditStatus: beforeStatus },
+      afterData: { infoAuditStatus: status },
+    });
 
     return saved;
   }
@@ -341,19 +416,35 @@ export class UserService {
    * 对用户执行软删除，并补写操作日志。
    * 该方法不会物理删除记录，以保留审计与历史关联数据。
    */
-  async softDelete(userId: number, operatorId?: number): Promise<void> {
-    const user = await this.userRepository.findOne({ where: { id: userId } });
-    if (!user) throw new NotFoundException('用户不存在');
-    user.isDeleted = true;
-    await this.userRepository.save(user);
+  async softDelete(userId: number, operatorId?: number, request?: any): Promise<void> {
+    const deletedUser = await this.dataSource.transaction(async (manager) => {
+      const userRepository = manager.getRepository(SysUser);
+      const user = await userRepository.findOne({
+        where: { id: userId },
+        lock: { mode: 'pessimistic_write' },
+      });
+      if (!user || user.isDeleted) {
+        throw new NotFoundException('用户不存在');
+      }
+      user.isDeleted = true;
+      return userRepository.save(user);
+    });
 
-    // 记录删除操作日志
-    this.operationLogService.log(
-      OperationType.DELETE,
-      ResourceType.USER,
-      userId,
-      operatorId || 0,
-      `软删除用户: ${user.name} (${user.uid})`,
-    ).catch(() => {});
+    await this.operationLogService.logWithContext({
+      operationType: OperationType.DELETE,
+      resourceType: ResourceType.USER,
+      resourceId: userId,
+      userId: operatorId || 0,
+      request,
+      description: `软删除用户: ${deletedUser.name} (${deletedUser.uid})`,
+      beforeData: {
+        isDeleted: false,
+        roleKey: deletedUser.roleKey,
+      },
+      afterData: {
+        isDeleted: true,
+        roleKey: deletedUser.roleKey,
+      },
+    });
   }
 }

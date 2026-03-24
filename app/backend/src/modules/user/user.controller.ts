@@ -25,12 +25,12 @@ export class UserController {
 
   @Post('register')
   @ApiOperation({ summary: '用户注册/实名录入（手动填写）' })
-  async register(@Body() createUserDto: CreateUserDto) {
+  async register(@Req() req, @Body() createUserDto: CreateUserDto) {
     if (createUserDto.roleKey && createUserDto.roleKey !== UserRole.WORKER) {
       throw new BadRequestException('公开注册只允许创建 worker 角色');
     }
     createUserDto.roleKey = UserRole.WORKER;
-    const user = await this.userService.create(createUserDto);
+    const user = await this.userService.create(createUserDto, { request: req });
     return {
       id: user.id,
       uid: user.uid,
@@ -72,12 +72,12 @@ export class UserController {
 
   @Post('register/complete')
   @ApiOperation({ summary: '完成OCR注册（补充完整信息）' })
-  async completeOcrRegister(@Body() createUserDto: CreateUserDto) {
+  async completeOcrRegister(@Req() req, @Body() createUserDto: CreateUserDto) {
     if (createUserDto.roleKey && createUserDto.roleKey !== UserRole.WORKER) {
       throw new BadRequestException('公开注册只允许创建 worker 角色');
     }
     createUserDto.roleKey = UserRole.WORKER;
-    const user = await this.userService.create(createUserDto);
+    const user = await this.userService.create(createUserDto, { request: req });
     return {
       id: user.id,
       uid: user.uid,
@@ -91,14 +91,14 @@ export class UserController {
   @Roles(UserRole.SUPER_ADMIN)
   @ApiBearerAuth()
   @ApiOperation({ summary: '管理员创建用户' })
-  async createByAdmin(@Body() createUserDto: CreateUserDto) {
+  async createByAdmin(@Req() req, @Body() createUserDto: CreateUserDto) {
     if (
       !createUserDto.roleKey ||
       ![UserRole.BASE_MANAGER, UserRole.FIELD_MANAGER, UserRole.WORKER].includes(createUserDto.roleKey)
     ) {
       throw new BadRequestException('管理员创建仅允许 base_manager、field_manager 或 worker');
     }
-    const user = await this.userService.create(createUserDto);
+    const user = await this.userService.create(createUserDto, { request: req, userId: req.user.id });
     return {
       id: user.id,
       uid: user.uid,
@@ -113,7 +113,7 @@ export class UserController {
   @ApiBearerAuth()
   @ApiOperation({ summary: '首个超级管理员创建次级超级管理员' })
   async createSecondarySuperAdmin(@Req() req, @Body() createUserDto: CreateUserDto) {
-    const user = await this.userService.createSuperAdmin(createUserDto, req.user.id);
+    const user = await this.userService.createSuperAdmin(createUserDto, req.user.id, req);
     return {
       id: user.id,
       uid: user.uid,
@@ -159,7 +159,7 @@ export class UserController {
   @ApiBearerAuth()
   @ApiOperation({ summary: '更新个人信息（需要重新审核）' })
   async updateProfile(@Req() req, @Body() updateDto: UpdateUserDto) {
-    return this.userService.update(req.user.id, updateDto);
+    return this.userService.update(req.user.id, updateDto, { request: req, userId: req.user.id });
   }
 
   @Patch(':id/audit')
@@ -173,7 +173,7 @@ export class UserController {
     @Body('status') status: number,
     @Body('reason') reason?: string,
   ) {
-    return this.userService.auditInfo(userId, status, reason, req.user.id);
+    return this.userService.auditInfo(userId, status, reason, req.user.id, req);
   }
 
   @Delete(':id')
@@ -182,7 +182,7 @@ export class UserController {
   @ApiBearerAuth()
   @ApiOperation({ summary: '删除用户（软删除）' })
   async deleteUser(@Req() req, @Param('id', ParseIntPipe) userId: number) {
-    await this.userService.softDelete(userId, req.user.id);
+    await this.userService.softDelete(userId, req.user.id, req);
     return { msg: '已删除' };
   }
 }

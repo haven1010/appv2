@@ -5,13 +5,16 @@
  */
 import { Injectable, BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { LaborSalary, SalaryStatus } from './entities/labor-salary.entity';
 import { DailySignup, SignupStatus } from '../attendance/entities/daily-signup.entity';
 import { BaseInfo } from '../base/entities/base-info.entity';
 import { SalaryCalculatorFactory } from './services/salary-calculator.strategy';
+import { PayType } from '../base/entities/recruitment-job.entity';
 import { UserRole, isSuperAdmin } from '../user/entities/sys-user.entity';
 import { SysUser } from '../user/entities/sys-user.entity';
+import { OperationLogService, OperationLogContext } from '../common/services/operation-log.service';
+import { OperationType, ResourceType } from '../common/entities/operation-log.entity';
 
 @Injectable()
 /**
@@ -28,40 +31,93 @@ export class SalaryService {
     private baseRepo: Repository<BaseInfo>,
     @InjectRepository(SysUser)
     private userRepo: Repository<SysUser>,
+    private operationLogService: OperationLogService,
+    private dataSource: DataSource,
   ) {}
+
+  private resolveUnitPriceSnapshot(job: { payType: PayType; unitPrice?: number; hourlyRate?: number; salaryAmount?: number }): number {
+    switch (job.payType) {
+      case PayType.FIXED:
+        return Number(job.salaryAmount || 0);
+      case PayType.HOURLY:
+        return Number(job.hourlyRate || 0);
+      case PayType.PIECEWORK:
+        return Number(job.unitPrice || 0);
+      default:
+        throw new BadRequestException(`未知计薪类型: ${job.payType}`);
+    }
+  }
 
   /**
    * 基于签到记录和岗位计薪策略生成或更新工资草稿。
    * 该方法会覆盖同一报名记录已有的草稿，以保证重复计算结果可收敛。
    */
-  async calculateAndDraft(signupId: number, input: { duration?: number; count?: number }, adminId: number) {
-    const signup = await this.signupRepo.findOne({ where: { id: signupId }, relations: ['job'] });
-    if (!signup) throw new BadRequestException('Signup record not found');
-    if (signup.status !== SignupStatus.CHECKED_IN) throw new BadRequestException('Worker has not checked in');
+  async calculateAndDraft(signupId: number, input: { duration?: number; count?: number }, adminId: number, context?: OperationLogContext) {
+    const { saved, isCreate, beforeSnapshot } = await this.dataSource.transaction(async (manager) => {
+      const signup = await manager.findOne(DailySignup, {
+        where: { id: signupId },
+        relations: ['job'],
+        lock: { mode: 'pessimistic_write' },
+      });
+      if (!signup) throw new BadRequestException('Signup record not found');
+      if (signup.status !== SignupStatus.CHECKED_IN) throw new BadRequestException('Worker has not checked in');
 
-    const job = signup.job;
-    const strategy = SalaryCalculatorFactory.getStrategy(job.payType);
-    
-    const amount = strategy.calculate({
-      unitPrice: job.unitPrice,
-      workDuration: input.duration,
-      pieceCount: input.count,
+      const job = signup.job;
+      const unitPriceSnapshot = this.resolveUnitPriceSnapshot(job);
+      const strategy = SalaryCalculatorFactory.getStrategy(job.payType);
+      const amount = strategy.calculate({
+        unitPrice: unitPriceSnapshot,
+        workDuration: input.duration,
+        pieceCount: input.count,
+      });
+
+      let salaryRecord = await manager.findOne(LaborSalary, {
+        where: { signupId },
+        lock: { mode: 'pessimistic_write' },
+      });
+      const creating = !salaryRecord;
+      const previous = salaryRecord
+        ? {
+            workDuration: Number(salaryRecord.workDuration),
+            pieceCount: salaryRecord.pieceCount,
+            totalAmount: Number(salaryRecord.totalAmount),
+            status: salaryRecord.status,
+          }
+        : null;
+
+      if (!salaryRecord) {
+        salaryRecord = manager.create(LaborSalary, { signupId });
+      } else if (salaryRecord.status !== SalaryStatus.PENDING) {
+        throw new BadRequestException('该工资单已确认或已发放，不能重新计算');
+      }
+
+      salaryRecord.unitPriceSnapshot = unitPriceSnapshot;
+      salaryRecord.workDuration = input.duration || 0;
+      salaryRecord.pieceCount = input.count || 0;
+      salaryRecord.totalAmount = amount;
+      salaryRecord.status = SalaryStatus.PENDING;
+      salaryRecord.adminId = adminId;
+
+      const next = await manager.save(LaborSalary, salaryRecord);
+      return { saved: next, isCreate: creating, beforeSnapshot: previous };
     });
-
-    let salaryRecord = await this.salaryRepo.findOne({ where: { signupId } });
-    if (!salaryRecord) {
-      salaryRecord = new LaborSalary();
-      salaryRecord.signupId = signupId;
-    }
-
-    salaryRecord.unitPriceSnapshot = job.unitPrice;
-    salaryRecord.workDuration = input.duration || 0;
-    salaryRecord.pieceCount = input.count || 0;
-    salaryRecord.totalAmount = amount;
-    salaryRecord.status = SalaryStatus.PENDING;
-    salaryRecord.adminId = adminId;
-
-    return this.salaryRepo.save(salaryRecord);
+    await this.operationLogService.logWithContext({
+      operationType: isCreate ? OperationType.CREATE : OperationType.UPDATE,
+      resourceType: ResourceType.SALARY,
+      resourceId: saved.id,
+      userId: adminId,
+      request: context?.request,
+      description: `${isCreate ? '创建' : '更新'}工资草稿: salaryId=${saved.id}, signupId=${signupId}`,
+      beforeData: beforeSnapshot,
+      afterData: {
+        signupId: saved.signupId,
+        workDuration: Number(saved.workDuration),
+        pieceCount: saved.pieceCount,
+        totalAmount: Number(saved.totalAmount),
+        status: saved.status,
+      },
+    });
+    return saved;
   }
 
   /**
@@ -247,19 +303,36 @@ export class SalaryService {
   /**
    * 允许工人确认工资无误，并将状态从 `PENDING` 推进到 `CONFIRMED`。
    */
-  async workerConfirmSalary(salaryId: number, userId: number) {
-    const salary = await this.salaryRepo.findOne({
-      where: { id: salaryId },
-      relations: ['signup'],
+  async workerConfirmSalary(salaryId: number, userId: number, context?: OperationLogContext) {
+    const { saved, beforeStatus } = await this.dataSource.transaction(async (manager) => {
+      const salary = await manager.findOne(LaborSalary, {
+        where: { id: salaryId },
+        relations: ['signup'],
+        lock: { mode: 'pessimistic_write' },
+      });
+      if (!salary) throw new NotFoundException('工资记录不存在');
+      if ((salary.signup as any)?.userId !== userId) {
+        throw new ForbiddenException('无权操作此记录');
+      }
+      if (salary.status !== SalaryStatus.PENDING) {
+        throw new BadRequestException('该记录已确认或已发放');
+      }
+
+      const previousStatus = salary.status;
+      salary.status = SalaryStatus.CONFIRMED;
+      const next = await manager.save(LaborSalary, salary);
+      return { saved: next, beforeStatus: previousStatus };
     });
-    if (!salary) throw new NotFoundException('工资记录不存在');
-    if ((salary.signup as any)?.userId !== userId) {
-      throw new ForbiddenException('无权操作此记录');
-    }
-    if (salary.status !== SalaryStatus.PENDING) {
-      throw new BadRequestException('该记录已确认或已发放');
-    }
-    salary.status = SalaryStatus.CONFIRMED;
-    return this.salaryRepo.save(salary);
+    await this.operationLogService.logWithContext({
+      operationType: OperationType.UPDATE,
+      resourceType: ResourceType.SALARY,
+      resourceId: saved.id,
+      userId,
+      request: context?.request,
+      description: `工人确认工资: salaryId=${saved.id}`,
+      beforeData: { status: beforeStatus },
+      afterData: { status: saved.status },
+    });
+    return saved;
   }
 }

@@ -5,10 +5,12 @@
  */
 import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { BaseCooperation, CooperationStatus } from '../entities/base-cooperation.entity';
 import { BaseInfo } from '../entities/base-info.entity';
 import { SysUser, UserRole } from '../../user/entities/sys-user.entity';
+import { OperationLogService, OperationLogContext } from '../../common/services/operation-log.service';
+import { OperationType, ResourceType } from '../../common/entities/operation-log.entity';
 
 @Injectable()
 export class BaseCooperationService {
@@ -21,9 +23,18 @@ export class BaseCooperationService {
     private baseRepo: Repository<BaseInfo>,
     @InjectRepository(SysUser)
     private userRepo: Repository<SysUser>,
+    private operationLogService: OperationLogService,
+    private dataSource: DataSource,
   ) {}
 
-  async create(applicantId: number, baseId: number, requirement: string): Promise<BaseCooperation> {
+  private rethrowDuplicatePendingCooperation(error: any): never {
+    if (error?.code === 'ER_DUP_ENTRY') {
+      throw new BadRequestException('您已提交过合作申请，请等待审核');
+    }
+    throw error;
+  }
+
+  async create(applicantId: number, baseId: number, requirement: string, context?: OperationLogContext): Promise<BaseCooperation> {
     // 检查申请人权限（必须是区域管理员或超级管理员）
     const applicant = await this.userRepo.findOne({ where: { id: applicantId } });
     if (!applicant) {
@@ -56,7 +67,26 @@ export class BaseCooperationService {
       status: CooperationStatus.PENDING,
     });
 
-    return this.cooperationRepo.save(cooperation);
+    let saved: BaseCooperation;
+    try {
+      saved = await this.cooperationRepo.save(cooperation);
+    } catch (error) {
+      this.rethrowDuplicatePendingCooperation(error);
+    }
+    await this.operationLogService.logWithContext({
+      operationType: OperationType.CREATE,
+      resourceType: ResourceType.BASE,
+      resourceId: saved.baseId,
+      userId: applicantId,
+      request: context?.request,
+      description: `提交基地合作申请: cooperationId=${saved.id}, baseId=${saved.baseId}`,
+      afterData: {
+        cooperationId: saved.id,
+        applicantId: saved.applicantId,
+        status: saved.status,
+      },
+    });
+    return saved;
   }
 
   async review(
@@ -64,20 +94,49 @@ export class BaseCooperationService {
     status: CooperationStatus,
     reviewedBy: number,
     rejectReason?: string,
+    context?: OperationLogContext,
   ): Promise<BaseCooperation> {
-    const cooperation = await this.cooperationRepo.findOne({ where: { id: cooperationId } });
-    if (!cooperation) {
-      throw new NotFoundException('合作申请不存在');
-    }
+    const { saved, beforeStatus } = await this.dataSource.transaction(async (manager) => {
+      const cooperation = await manager.findOne(BaseCooperation, {
+        where: { id: cooperationId },
+        lock: { mode: 'pessimistic_write' },
+      });
+      if (!cooperation) {
+        throw new NotFoundException('合作申请不存在');
+      }
+      if (cooperation.status !== CooperationStatus.PENDING) {
+        throw new BadRequestException('该合作申请已被处理，请刷新后重试');
+      }
 
-    cooperation.status = status;
-    cooperation.reviewedBy = reviewedBy;
-    cooperation.reviewedAt = new Date();
-    if (status === CooperationStatus.REJECTED && rejectReason) {
-      cooperation.rejectReason = rejectReason;
-    }
+      const previousStatus = cooperation.status;
+      cooperation.status = status;
+      cooperation.reviewedBy = reviewedBy;
+      cooperation.reviewedAt = new Date();
+      if (status === CooperationStatus.REJECTED && rejectReason) {
+        cooperation.rejectReason = rejectReason;
+      }
 
-    return this.cooperationRepo.save(cooperation);
+      const next = await manager.save(BaseCooperation, cooperation);
+      return { saved: next, beforeStatus: previousStatus };
+    });
+    await this.operationLogService.logWithContext({
+      operationType: OperationType.AUDIT,
+      resourceType: ResourceType.BASE,
+      resourceId: saved.baseId,
+      userId: reviewedBy,
+      request: context?.request,
+      description: `审核基地合作申请: cooperationId=${saved.id}, ${beforeStatus} -> ${saved.status}`,
+      beforeData: {
+        cooperationId: saved.id,
+        status: beforeStatus,
+      },
+      afterData: {
+        cooperationId: saved.id,
+        status: saved.status,
+        rejectReason: saved.rejectReason,
+      },
+    });
+    return saved;
   }
 
   async getCooperationsByBase(baseId: number): Promise<BaseCooperation[]> {

@@ -3,7 +3,7 @@
  * Responsibility: Implements the Auth transport boundary for the Auth module and delegates business work to application services.
  * Notes: Keep comments focused on intent, invariants, side effects, and cross-module contracts.
  */
-import { Controller, Post, Body, UnauthorizedException } from '@nestjs/common';
+import { Controller, Post, Body, UnauthorizedException, Req } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { ApiTags, ApiOperation, ApiOkResponse, ApiProperty } from '@nestjs/swagger'; // 🔥 引入 ApiOkResponse, ApiProperty
 import { LoginDto } from './dto/login.dto';
@@ -35,7 +35,7 @@ export class AuthController {
     description: '登录成功',
     type: LoginResponse
   })
-  async login(@Body() loginDto: LoginDto): Promise<LoginResponse> {
+  async login(@Body() loginDto: LoginDto, @Req() req): Promise<LoginResponse> {
     const phone = loginDto.phone;
     const idCardLast6 = loginDto.idCardLast6;
 
@@ -50,7 +50,7 @@ export class AuthController {
     }
 
     // authService.login 生成 JWT token
-    const tokenResult = await this.authService.login(user);
+    const tokenResult = await this.authService.login(user, req);
 
     // 返回 token + 完整用户信息，并添加 role 字段（由 roleKey 映射）
     // 前端使用 user.role 来判断角色
