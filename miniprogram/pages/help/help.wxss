@@ -1,0 +1,6 @@
+.help-container { padding: 32rpx; }
+.title { font-size: 36rpx; font-weight: bold; margin-bottom: 24rpx; }
+.faq-item { margin-bottom: 24rpx; }
+.q { color: #333; font-weight: bold; }
+.a { color: #666; margin-left: 16rpx; }
+.kefu-btn { margin-top: 48rpx; background: #34d399; color: #fff; }

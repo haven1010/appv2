@@ -37,6 +37,13 @@
       <text class="menu-arrow">›</text>
     </view>
 
+    <view class="menu-item" bindtap="goHelp">
+      <view class="menu-left">
+        <text class="menu-icon">🤖</text>
+        <text class="menu-label">帮助与AI客服</text>
+      </view>
+      <text class="menu-arrow">›</text>
+    </view>
     <view class="menu-item">
       <view class="menu-left">
         <text class="menu-icon">⚙</text>

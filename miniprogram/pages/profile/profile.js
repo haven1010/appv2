@@ -1,3 +1,6 @@
+  goHelp() {
+    wx.navigateTo({ url: '/pages/help/help' });
+  },
 /**
  * Layer: Mini Program Page
  * Responsibility: Implements the Profile page lifecycle, local interaction state, and backend integration for the WeChat client.

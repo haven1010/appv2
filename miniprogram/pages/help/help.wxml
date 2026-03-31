@@ -1,0 +1,10 @@
+<view class="help-container">
+  <view class="section">
+    <text class="title">常见问题</text>
+    <view wx:for="{{faqList}}" wx:key="index" class="faq-item">
+      <text class="q">Q: {{item.q}}</text>
+      <text class="a">A: {{item.a}}</text>
+    </view>
+  </view>
+  <button open-type="contact" class="kefu-btn">联系客服（微信云客服）</button>
+</view>
