@@ -1,4 +1,9 @@
 <view class="help-container">
+  <view class="service-card">
+    <text class="service-title">智能客服助手</text>
+    <text class="service-desc">支持 7x24 咨询，优先由 AI 自动答复，复杂问题可转人工。</text>
+  </view>
+
   <view class="section">
     <text class="title">常见问题</text>
     <view wx:for="{{faqList}}" wx:key="index" class="faq-item">
@@ -6,5 +11,24 @@
       <text class="a">A: {{item.a}}</text>
     </view>
   </view>
-  <button open-type="contact" class="kefu-btn">联系客服（微信云客服）</button>
+
+  <button
+    wx:if="{{canUseContact}}"
+    open-type="contact"
+    bindcontact="onContact"
+    binderror="onContactError"
+    session-from="{{sessionFrom}}"
+    show-message-card="{{true}}"
+    send-message-title="{{messageTitle}}"
+    send-message-path="{{messagePath}}"
+    class="kefu-btn"
+  >
+    联系 AI 客服（微信云客服）
+  </button>
+
+  <view wx:else class="fallback">
+    <text class="fallback-tip">当前微信版本不支持云客服按钮，请使用电话客服。</text>
+  </view>
+
+  <button class="phone-btn" bindtap="callServicePhone">电话客服：{{servicePhone}}</button>
 </view>
