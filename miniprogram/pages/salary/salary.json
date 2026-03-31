@@ -1,5 +1,5 @@
 {
-  "navigationBarTitleText": "薪资明细",
+  "navigationBarTitleText": "薪资结算",
   "enablePullDownRefresh": true,
   "usingComponents": {}
 }

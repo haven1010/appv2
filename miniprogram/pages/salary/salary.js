@@ -60,8 +60,8 @@ Page({
         wx.showLoading({ title: '确认中...' });
         try {
           await app.request({
-            url: '/salary/' + salaryId + '/worker-confirm',
-            method: 'PATCH',
+            url: '/salary/worker/' + salaryId + '/confirm',
+            method: 'POST',
           });
           wx.hideLoading();
           wx.showToast({ title: '确认成功', icon: 'success' });

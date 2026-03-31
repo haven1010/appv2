@@ -25,13 +25,13 @@ function hasFlag(name) {
 function readDbConfig() {
   return {
     host: process.env.DB_HOST || process.env.DB_HOSTNAME || '127.0.0.1',
-    port: String(process.env.DB_PORT || '3307'),
+    port: String(process.env.DB_PORT || '3306'),
     username:
       process.env.DB_RESTORE_USERNAME ||
       process.env.DB_USERNAME ||
       process.env.DB_USER ||
-      'pickpass_user',
-    password: process.env.DB_RESTORE_PASSWORD || process.env.DB_PASSWORD || 'pickpass_password',
+      'root',
+    password: process.env.DB_RESTORE_PASSWORD || process.env.DB_PASSWORD || '123456',
     database: process.env.DB_DATABASE || 'pickpass_db',
   };
 }

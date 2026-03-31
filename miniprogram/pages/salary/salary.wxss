@@ -1,212 +1,271 @@
-.container {
-  padding: 30rpx;
+.page {
   min-height: 100vh;
-  background: #020617;
+  padding: 0 24rpx 48rpx;
+  box-sizing: border-box;
+  background:
+    radial-gradient(circle at right top, rgba(201, 227, 255, 0.78) 0%, rgba(201, 227, 255, 0) 42%),
+    linear-gradient(180deg, #fffef8 0%, #fff2dc 100%);
 }
 
-.header {
-  margin-bottom: 30rpx;
+.sticky-shell {
+  position: sticky;
+  top: 0;
+  z-index: 8;
+  padding: 24rpx 2rpx 16rpx;
+  background: linear-gradient(180deg, rgba(255, 247, 230, 0.98) 0%, rgba(255, 247, 230, 0.72) 74%, rgba(255, 247, 230, 0) 100%);
 }
 
 .title {
   display: block;
   font-size: 36rpx;
-  font-weight: bold;
-  color: #f1f5f9;
-  margin-bottom: 8rpx;
+  font-weight: 800;
+  color: #2f2316;
 }
 
 .subtitle {
+  display: block;
+  margin-top: 8rpx;
   font-size: 24rpx;
-  color: #64748b;
+  color: #8b7a64;
 }
 
-.loading {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 120rpx 0;
+.state-card {
+  margin-top: 22rpx;
+  border-radius: 24rpx;
+  text-align: center;
+  padding: 52rpx 28rpx;
+  border: 1rpx solid rgba(201, 153, 85, 0.2);
+  background: rgba(255, 252, 246, 0.92);
+  box-shadow: 0 12rpx 22rpx rgba(190, 139, 49, 0.08);
 }
 
-.loading-spinner {
-  width: 48rpx;
-  height: 48rpx;
-  border: 4rpx solid #1e293b;
-  border-top: 4rpx solid #10b981;
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
+.state-title {
+  display: block;
+  font-size: 30rpx;
+  color: #5d4a31;
+  font-weight: 700;
 }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-.loading-text {
-  margin-top: 20rpx;
-  font-size: 26rpx;
-  color: #64748b;
+.state-desc {
+  display: block;
+  margin-top: 8rpx;
+  font-size: 24rpx;
+  color: #8b7a64;
 }
 
 .stats-row {
   display: flex;
-  gap: 16rpx;
-  margin-bottom: 40rpx;
+  gap: 12rpx;
+  margin-top: 8rpx;
 }
 
 .stat-card {
   flex: 1;
-  background: rgba(15, 23, 42, 0.8);
-  border: 1rpx solid rgba(51, 65, 85, 0.5);
   border-radius: 20rpx;
-  padding: 24rpx 16rpx;
+  border: 1rpx solid rgba(201, 153, 85, 0.2);
+  background: rgba(255, 251, 244, 0.95);
+  box-shadow: 0 10rpx 20rpx rgba(186, 134, 41, 0.1);
+  padding: 20rpx 12rpx;
   text-align: center;
 }
 
 .stat-card.accent {
-  border-color: rgba(16, 185, 129, 0.3);
-  background: rgba(16, 185, 129, 0.05);
+  background: rgba(237, 254, 248, 0.96);
+  border-color: rgba(111, 223, 191, 0.32);
 }
 
 .stat-card.warn {
-  border-color: rgba(245, 158, 11, 0.3);
-  background: rgba(245, 158, 11, 0.05);
+  background: rgba(255, 247, 224, 0.96);
+  border-color: rgba(248, 197, 99, 0.36);
 }
 
 .stat-value {
   display: block;
-  font-size: 32rpx;
-  font-weight: bold;
-  color: #f1f5f9;
-  margin-bottom: 8rpx;
+  font-size: 30rpx;
+  font-weight: 800;
+  color: #2f2416;
 }
 
 .stat-card.accent .stat-value {
-  color: #34d399;
+  color: #3a9c7d;
 }
 
 .stat-card.warn .stat-value {
-  color: #fbbf24;
+  color: #b27e25;
 }
 
 .stat-label {
-  font-size: 22rpx;
-  color: #64748b;
+  display: block;
+  margin-top: 8rpx;
+  font-size: 21rpx;
+  color: #7f6f5a;
 }
 
-.section {
-  margin-bottom: 30rpx;
+.section-head {
+  margin-top: 26rpx;
+  margin-bottom: 16rpx;
 }
 
 .section-title {
   display: block;
   font-size: 30rpx;
-  font-weight: 600;
-  color: #e2e8f0;
-  margin-bottom: 20rpx;
-}
-
-.empty-section {
-  text-align: center;
-  padding: 60rpx 0;
-}
-
-.empty-text {
-  font-size: 26rpx;
-  color: #475569;
+  font-weight: 800;
+  color: #2f2316;
 }
 
 .salary-list {
   display: flex;
   flex-direction: column;
-  gap: 20rpx;
+  gap: 18rpx;
 }
 
 .salary-card {
-  background: rgba(15, 23, 42, 0.8);
-  border: 1rpx solid rgba(51, 65, 85, 0.5);
   border-radius: 24rpx;
-  padding: 28rpx;
+  border: 1rpx solid rgba(201, 153, 85, 0.2);
+  background: rgba(255, 251, 244, 0.95);
+  box-shadow: 0 12rpx 22rpx rgba(186, 134, 41, 0.1);
+  padding: 24rpx;
 }
 
 .salary-top {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 16rpx;
-}
-
-.salary-info {
-  display: flex;
-  flex-direction: column;
+  gap: 16rpx;
 }
 
 .salary-base {
-  font-size: 28rpx;
-  font-weight: 600;
-  color: #f1f5f9;
-  margin-bottom: 6rpx;
+  display: block;
+  font-size: 30rpx;
+  font-weight: 800;
+  color: #2f2316;
 }
 
 .salary-date {
+  display: block;
+  margin-top: 6rpx;
   font-size: 22rpx;
-  color: #64748b;
+  color: #7f6f5a;
 }
 
 .salary-amount {
-  font-size: 36rpx;
-  font-weight: bold;
-  color: #34d399;
+  font-size: 34rpx;
+  font-weight: 800;
+  color: #3aa07f;
 }
 
 .salary-detail {
   display: flex;
   flex-wrap: wrap;
-  gap: 16rpx;
-  margin-bottom: 16rpx;
+  gap: 10rpx;
+  margin-top: 14rpx;
 }
 
 .detail-item {
   font-size: 22rpx;
-  color: #94a3b8;
-  background: rgba(30, 41, 59, 0.8);
-  padding: 4rpx 14rpx;
-  border-radius: 8rpx;
+  color: #6e5f4c;
+  background: rgba(255, 255, 255, 0.78);
+  border: 1rpx solid rgba(201, 153, 85, 0.14);
+  padding: 4rpx 12rpx;
+  border-radius: 999rpx;
 }
 
 .salary-bottom {
+  margin-top: 14rpx;
+  padding-top: 14rpx;
+  border-top: 1rpx solid rgba(201, 153, 85, 0.16);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-top: 16rpx;
-  border-top: 1rpx solid rgba(51, 65, 85, 0.3);
 }
 
 .salary-status {
   font-size: 22rpx;
-  padding: 4rpx 16rpx;
-  border-radius: 8rpx;
+  font-weight: 700;
+  padding: 6rpx 14rpx;
+  border-radius: 999rpx;
 }
 
 .salary-status.pending {
-  background: rgba(245, 158, 11, 0.15);
-  color: #fbbf24;
+  color: #b98728;
+  background: rgba(255, 211, 119, 0.24);
 }
 
 .salary-status.confirmed {
-  background: rgba(59, 130, 246, 0.15);
-  color: #60a5fa;
+  color: #3d8cb5;
+  background: rgba(115, 182, 221, 0.16);
 }
 
 .salary-status.paid {
-  background: rgba(16, 185, 129, 0.15);
-  color: #34d399;
+  color: #2c9f76;
+  background: rgba(74, 195, 154, 0.18);
 }
 
 .confirm-btn {
-  background: #10b981;
-  color: white;
+  border-radius: 999rpx;
+  padding: 10rpx 24rpx;
   font-size: 24rpx;
-  font-weight: 600;
-  padding: 10rpx 30rpx;
-  border-radius: 16rpx;
+  font-weight: 800;
+  color: #2f2316;
+  background: linear-gradient(135deg, #8ce3c8 0%, #86d9f5 52%, #ffd786 100%);
+}
+
+@media (prefers-color-scheme: dark) {
+  .page {
+    background:
+      radial-gradient(circle at right top, rgba(68, 92, 110, 0.52) 0%, rgba(68, 92, 110, 0) 42%),
+      linear-gradient(180deg, #1a2028 0%, #121820 100%);
+  }
+
+  .sticky-shell {
+    background: linear-gradient(180deg, rgba(25, 31, 41, 0.98) 0%, rgba(25, 31, 41, 0.74) 74%, rgba(25, 31, 41, 0) 100%);
+  }
+
+  .title,
+  .section-title,
+  .salary-base,
+  .state-title,
+  .stat-value {
+    color: #ecf3ff;
+  }
+
+  .subtitle,
+  .state-desc,
+  .salary-date,
+  .detail-item,
+  .stat-label {
+    color: #a8bace;
+  }
+
+  .state-card,
+  .stat-card,
+  .salary-card {
+    background: rgba(30, 39, 50, 0.94);
+    border-color: rgba(129, 152, 176, 0.24);
+    box-shadow: 0 14rpx 28rpx rgba(0, 0, 0, 0.28);
+  }
+
+  .stat-card.accent {
+    background: rgba(32, 60, 57, 0.82);
+    border-color: rgba(98, 188, 159, 0.36);
+  }
+
+  .stat-card.warn {
+    background: rgba(66, 55, 35, 0.82);
+    border-color: rgba(190, 145, 69, 0.38);
+  }
+
+  .salary-amount {
+    color: #8de0c5;
+  }
+
+  .detail-item {
+    background: rgba(22, 29, 39, 0.85);
+    border-color: rgba(129, 152, 176, 0.22);
+  }
+
+  .confirm-btn {
+    color: #eff8ff;
+    background: linear-gradient(135deg, #3f8c72 0%, #3b6e88 52%, #a17f3e 100%);
+  }
 }

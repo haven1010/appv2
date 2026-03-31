@@ -1,18 +1,19 @@
 <!--pages/register/register.wxml-->
-<view class="register-container">
-  <!-- 头部 -->
-  <view class="header-section">
-    <view class="logo-circle">🌱</view>
-    <view class="app-name">采摘智工</view>
-    <view class="app-desc">农业劳动力全生命周期管理平台</view>
+<view class="container register-container page-enter">
+  <view class="brand-hero">
+    <view class="brand-row">
+      <image class="brand-logo" src="/images/zhihui-logo.jpg" mode="aspectFit" />
+      <view>
+        <view class="brand-title">智汇就业</view>
+        <view class="brand-subtitle">实名入职 · 便捷注册</view>
+      </view>
+    </view>
   </view>
 
-  <!-- 注册表单卡片 -->
-  <view class="register-card">
+  <view class="card register-card">
     <view class="card-title">创建账号</view>
     <view class="card-subtitle">请填写真实信息，用于身份核验</view>
 
-    <!-- 步骤指示 -->
     <view class="steps">
       <view class="step active">
         <view class="step-dot">1</view>
@@ -25,19 +26,17 @@
       </view>
     </view>
 
-    <!-- 基本信息分组 -->
     <view class="form-section">
       <view class="section-label">
-        <text class="section-icon">👤</text>
         <text>基本信息</text>
       </view>
 
       <view class="form-item">
         <view class="input-wrapper {{nameFocus ? 'focus' : ''}}">
-          <text class="input-icon">📝</text>
-          <input 
-            class="input-field" 
-            type="text" 
+          <text class="input-icon">姓名</text>
+          <input
+            class="input-field"
+            type="text"
             placeholder="真实姓名"
             placeholder-class="placeholder"
             value="{{name}}"
@@ -51,10 +50,10 @@
 
       <view class="form-item">
         <view class="input-wrapper {{idCardFocus ? 'focus' : ''}}">
-          <text class="input-icon">🆔</text>
-          <input 
-            class="input-field" 
-            type="idcard" 
+          <text class="input-icon">证件</text>
+          <input
+            class="input-field"
+            type="idcard"
             placeholder="18位身份证号码"
             placeholder-class="placeholder"
             value="{{idCard}}"
@@ -69,17 +68,17 @@
           <text class="hint-text">还需输入 {{18 - idCard.length}} 位</text>
         </view>
         <view class="input-hint success" wx:if="{{idCard.length === 18}}">
-          <text class="hint-text">✓ 格式正确</text>
+          <text class="hint-text">格式正确</text>
         </view>
       </view>
 
       <view class="form-item">
         <view class="input-wrapper {{phoneFocus ? 'focus' : ''}}">
-          <text class="input-icon">📱</text>
-          <input 
-            class="input-field" 
-            type="number" 
-            placeholder="11位手机号码"
+          <text class="input-icon">手机</text>
+          <input
+            class="input-field"
+            type="number"
+            placeholder="11位手机号"
             placeholder-class="placeholder"
             value="{{phone}}"
             bindinput="onInputPhone"
@@ -90,25 +89,23 @@
           <text class="required-star">*</text>
         </view>
         <view class="input-hint success" wx:if="{{phone.length === 11}}">
-          <text class="hint-text">✓ 格式正确</text>
+          <text class="hint-text">格式正确</text>
         </view>
       </view>
     </view>
 
-    <!-- 紧急联系人分组 -->
     <view class="form-section">
       <view class="section-label">
-        <text class="section-icon">🆘</text>
         <text>紧急联系人</text>
         <text class="section-optional">选填</text>
       </view>
 
       <view class="form-item">
         <view class="input-wrapper">
-          <text class="input-icon">👥</text>
-          <input 
-            class="input-field" 
-            type="text" 
+          <text class="input-icon">联系</text>
+          <input
+            class="input-field"
+            type="text"
             placeholder="姓名及关系，如：李四-配偶"
             placeholder-class="placeholder"
             value="{{emergencyContact}}"
@@ -119,10 +116,10 @@
 
       <view class="form-item">
         <view class="input-wrapper">
-          <text class="input-icon">📞</text>
-          <input 
-            class="input-field" 
-            type="number" 
+          <text class="input-icon">电话</text>
+          <input
+            class="input-field"
+            type="number"
             placeholder="紧急联系人电话"
             placeholder-class="placeholder"
             value="{{emergencyPhone}}"
@@ -133,14 +130,36 @@
       </view>
     </view>
 
-    <!-- 错误提示 -->
     <view class="error-msg" wx:if="{{error}}">
       <text>{{error}}</text>
     </view>
 
-    <!-- 注册按钮 -->
-    <button 
-      class="register-btn" 
+    <view class="api-toggle" bindtap="toggleApiConfig">
+      <text class="api-toggle-label">网络设置</text>
+      <text class="api-toggle-value">{{currentBaseUrlDisplay}}</text>
+    </view>
+
+    <view class="api-panel" wx:if="{{showApiConfig}}">
+      <view class="api-title">后端接口地址</view>
+      <input
+        class="api-input"
+        type="text"
+        placeholder="http://192.168.1.100:3001/api"
+        placeholder-class="placeholder"
+        value="{{apiBaseUrlInput}}"
+        bindinput="onInputApiBaseUrl"
+      />
+
+      <view class="api-presets">
+        <view class="api-preset" data-url="{{devtoolsBaseUrl}}" bindtap="useApiPreset">开发者工具地址</view>
+        <view class="api-preset" data-url="{{lanBaseUrl}}" bindtap="useApiPreset">局域网默认地址</view>
+      </view>
+
+      <button class="api-save-btn" bindtap="saveApiBaseUrl">保存接口地址</button>
+    </view>
+
+    <button
+      class="register-btn"
       hover-class="register-btn-hover"
       bindtap="handleRegister"
       loading="{{loading}}"
@@ -149,7 +168,6 @@
       {{loading ? '注册中...' : '立即注册'}}
     </button>
 
-    <!-- 底部 -->
     <view class="footer-links">
       <text class="login-text">已有账号？</text>
       <text class="login-link" bindtap="goToLogin">返回登录</text>

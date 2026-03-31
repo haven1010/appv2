@@ -1,10 +1,28 @@
 <!--pages/applications/applications.wxml-->
-<view class="container">
-  <view class="section-title">我的报名进度</view>
+<view class="page page-enter">
+  <view class="brand-head card">
+    <view class="brand-row">
+      <image class="brand-logo" src="/images/zhihui-logo.jpg" mode="aspectFit" />
+      <view class="brand-copy">
+        <text class="brand-title">智汇就业</text>
+        <text class="brand-sub">劳务协同与就业服务平台</text>
+      </view>
+    </view>
+    <view class="hero-line"></view>
+    <view class="hero-title">我的报名进度</view>
+    <view class="hero-desc">查看岗位申请状态与待确认工资，关键进展一目了然</view>
+  </view>
 
-  <view wx:if="{{loading}}" class="loading-box">加载中...</view>
+  <view class="section-header">
+    <text class="section-title">报名记录</text>
+    <text class="section-note">实时更新</text>
+  </view>
 
-  <view wx:elif="{{applications.length === 0}}" class="empty-box">暂无报名记录，去广场看看推荐岗位吧</view>
+  <view wx:if="{{loading}}" class="state-card">加载中...</view>
+
+  <view wx:elif="{{applications.length === 0}}" class="state-card">
+    暂无报名记录，去广场看看推荐岗位吧
+  </view>
 
   <view wx:else class="app-list">
     <view
@@ -15,26 +33,33 @@
       data-job-id="{{item.raw.jobId}}"
       data-base-id="{{item.raw.baseId}}"
     >
-      <view class="app-header">
-        <view class="app-title">{{item.title}}</view>
-        <view class="app-base">{{item.base}}</view>
+      <view class="app-top">
+        <view>
+          <view class="app-title">{{item.title}}</view>
+          <view class="app-base">{{item.base}}</view>
+        </view>
+        <view class="status-chip {{item.status === '已录用' ? 'ok' : item.status === '已拒绝' || item.status === '已取消' ? 'fail' : 'pending'}}">
+          {{item.status}}
+        </view>
       </view>
-      <view class="app-status {{item.status === '已录取' ? 'status-ok' : item.status === '已拒绝' || item.status === '已取消' ? 'status-fail' : 'status-pending'}}">
-        {{item.status}}
-      </view>
-      <view class="app-date">报名日期: {{item.date}}</view>
+      <view class="app-date">报名日期：{{item.date}}</view>
     </view>
   </view>
 
-  <view class="section-title" style="margin-top: 40rpx;">待发放核对</view>
+  <view class="section-header section-gap">
+    <text class="section-title">待发放核对</text>
+    <text class="section-note">确认后可发放</text>
+  </view>
 
-  <view wx:if="{{pendingLoading}}" class="loading-box">加载中...</view>
+  <view wx:if="{{pendingLoading}}" class="state-card">加载中...</view>
 
-  <view wx:elif="{{workerPending.length === 0}}" class="empty-box">暂无待确认工资</view>
+  <view wx:elif="{{workerPending.length === 0}}" class="state-card">
+    暂无待确认工资
+  </view>
 
   <view wx:else class="pending-list">
     <view class="pending-card" wx:for="{{workerPending}}" wx:key="id">
-      <view class="pending-header">
+      <view class="pending-top">
         <view class="pending-title">{{item.baseName}} · {{item.jobTitle}}</view>
         <view class="pending-date">{{item.workDate ? item.workDate : '-'}}</view>
       </view>

@@ -47,11 +47,11 @@ import { CommonModule } from './modules/common/common.module';
         const isProduction = process.env.NODE_ENV === 'production';
         // 调试：打印当前实际使用的数据库配置，避免 .env 未生效导致的困惑
         const dbConfig = {
-          host: configService.get<string>('DB_HOST', 'localhost'),
+          host: configService.get<string>('DB_HOST', '127.0.0.1'),
           port: configService.get<number>('DB_PORT', 3306),
           username: configService.get<string>('DB_USERNAME', 'root'),
-          password: configService.get<string>('DB_PASSWORD', 'root123'),
-          database: configService.get<string>('DB_DATABASE', 'caizhitong'),
+          password: configService.get<string>('DB_PASSWORD', '123456'),
+          database: configService.get<string>('DB_DATABASE', 'pickpass_db'),
         };
         const synchronize = configService.get<string>('DB_SYNCHRONIZE', 'false') === 'true' && !isProduction;
 

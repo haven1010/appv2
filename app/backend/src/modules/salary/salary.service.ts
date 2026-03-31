@@ -130,9 +130,11 @@ export class SalaryService {
   async getList(query: any, user: { id: number; role?: string; roleKey?: UserRole }) {
     const role = user.role ?? user.roleKey;
     const baseId = query.baseId ? Number(query.baseId) : null;
+    const jobId = query.jobId ? Number(query.jobId) : null;
     const dateFrom = query.dateFrom || null;
     const dateTo = query.dateTo || null;
     const status = query.status !== undefined ? Number(query.status) : null;
+    const keyword = query.keyword ? String(query.keyword).trim() : '';
 
     const qb = this.salaryRepo
       .createQueryBuilder('salary')
@@ -161,18 +163,40 @@ export class SalaryService {
     if (dateFrom) qb.andWhere('signup.workDate >= :dateFrom', { dateFrom });
     if (dateTo) qb.andWhere('signup.workDate <= :dateTo', { dateTo });
     if (status !== null) qb.andWhere('salary.status = :status', { status });
+    if (jobId) qb.andWhere('signup.jobId = :jobId', { jobId });
+    if (keyword) {
+      qb.andWhere('(user.name LIKE :kw OR user.uid LIKE :kw OR job.jobTitle LIKE :kw)', {
+        kw: `%${keyword}%`,
+      });
+    }
 
     const [list, total] = await qb.getManyAndCount();
 
     const records = list.map((s) => {
-      const signup = s.signup as DailySignup & { user?: { name: string; uid: string }; base?: { baseName: string }; job?: { jobTitle: string; payType: number } };
+      const signup = s.signup as DailySignup & {
+        user?: {
+          name: string;
+          uid: string;
+          phone?: string;
+          idCard?: string;
+          emergencyContact?: string;
+          emergencyPhone?: string;
+        };
+        base?: { baseName: string };
+        job?: { jobTitle: string; payType: number };
+      };
       return {
         id: s.id,
         signupId: s.signupId,
         workerName: signup?.user?.name ?? '-',
         workerUid: signup?.user?.uid ?? '-',
+        workerPhone: signup?.user?.phone ?? '',
+        workerIdCard: signup?.user?.idCard ?? '',
+        workerEmergencyContact: signup?.user?.emergencyContact ?? '',
+        workerEmergencyPhone: signup?.user?.emergencyPhone ?? '',
         baseId: signup?.baseId,
         baseName: signup?.base?.baseName ?? '-',
+        jobId: signup?.jobId,
         jobTitle: signup?.job?.jobTitle ?? '-',
         payType: signup?.job?.payType,
         workDate: signup?.workDate,

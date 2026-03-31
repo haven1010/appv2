@@ -4,6 +4,7 @@
     "pages/login/login",
     "pages/register/register",
     "pages/profile/profile",
+    "pages/profile/settings/settings",
     "pages/applications/applications",
     "pages/base/list/list",
     "pages/base/detail/detail",
@@ -19,34 +20,67 @@
     "pages/field/home/home",
     "pages/field/scan/scan",
     "pages/field/records/records",
-    "pages/field/profile/profile"
+    "pages/field/profile/profile",
+    "pages/admin/home/home",
+    "pages/admin/base/base",
+    "pages/admin/attendance/attendance",
+    "pages/admin/users/users",
+    "pages/admin/system/system",
+    "pages/admin/profile/profile"
   ],
   "window": {
-    "backgroundTextStyle": "light",
-    "navigationBarBackgroundColor": "#020617",
-    "navigationBarTitleText": "采摘智工",
-    "navigationBarTextStyle": "white",
-    "backgroundColor": "#020617",
+    "backgroundTextStyle": "dark",
+    "navigationBarBackgroundColor": "#f4f9ff",
+    "navigationBarTitleText": "\u667a\u6c47\u5c31\u4e1a",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#f4f9ff",
     "enablePullDownRefresh": true
   },
   "tabBar": {
     "custom": true,
-    "color": "#64748b",
-    "selectedColor": "#34d399",
-    "backgroundColor": "#0f172a",
-    "borderStyle": "black",
+    "color": "#6f8aa1",
+    "selectedColor": "#2d73c7",
+    "backgroundColor": "#f8fcff",
+    "borderStyle": "white",
     "list": [
-      { "pagePath": "pages/index/index", "text": "广场" },
-      { "pagePath": "pages/applications/applications", "text": "我的报名" },
-      { "pagePath": "pages/qrcode/qrcode", "text": "签到码" },
-      { "pagePath": "pages/profile/profile", "text": "我的" },
-      { "pagePath": "pages/field/home/home", "text": "工作台" },
-      { "pagePath": "pages/field/scan/scan", "text": "扫码签到" },
-      { "pagePath": "pages/field/records/records", "text": "考勤记录" },
-      { "pagePath": "pages/field/profile/profile", "text": "我的(管理)" }
+      {
+        "pagePath": "pages/index/index",
+        "text": "\u5e7f\u573a"
+      },
+      {
+        "pagePath": "pages/applications/applications",
+        "text": "\u6211\u7684\u62a5\u540d"
+      },
+      {
+        "pagePath": "pages/qrcode/qrcode",
+        "text": "\u7b7e\u5230\u7801"
+      },
+      {
+        "pagePath": "pages/profile/profile",
+        "text": "\u6211\u7684"
+      },
+      {
+        "pagePath": "pages/field/home/home",
+        "text": "\u5de5\u4f5c\u53f0"
+      },
+      {
+        "pagePath": "pages/field/scan/scan",
+        "text": "\u626b\u7801\u7b7e\u5230"
+      },
+      {
+        "pagePath": "pages/field/records/records",
+        "text": "\u8003\u52e4\u8bb0\u5f55"
+      },
+      {
+        "pagePath": "pages/field/profile/profile",
+        "text": "\u6211\u7684(\u7ba1\u7406)"
+      }
     ]
   },
-  "requiredPrivateInfos": ["getLocation"],
+  "requiredPrivateInfos": [
+    "getLocation"
+  ],
+  "darkmode": true,
   "style": "v2",
   "sitemapLocation": "sitemap.json",
   "lazyCodeLoading": "requiredComponents"

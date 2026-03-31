@@ -6,11 +6,16 @@
 // frontend/src/lib/http.ts
 import axios, { AxiosRequestConfig } from 'axios';
 
-// 🔥 修改这里！
-// 1. 去掉 '/api'，因为生成的代码里自带了
-// 2. 直接写后端地址 http://localhost:3001 (因为后端开了 CORS，允许 3000 访问)
+const rawBaseUrl = (import.meta.env.VITE_API_BASE_URL ?? '').trim();
+const normalizedBaseUrl = rawBaseUrl.endsWith('/') ? rawBaseUrl.slice(0, -1) : rawBaseUrl;
+
+// Configure API base URL:
+// - Leave VITE_API_BASE_URL empty to use same-origin requests (recommended for LAN/mobile via Vite proxy).
+// - Set VITE_API_BASE_URL (for example http://192.168.1.10:3001) when direct API access is needed.
 export const AXIOS_INSTANCE = axios.create({
-    baseURL: 'http://localhost:3001',
+    // Default to same-origin requests for better LAN/mobile testing support.
+    // Generated endpoints already include `/api/...`.
+    baseURL: normalizedBaseUrl || undefined,
 });
 
 // 拦截器：每次请求前，自动加 Token

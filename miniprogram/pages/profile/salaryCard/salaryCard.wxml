@@ -1,8 +1,70 @@
-<!--pages/profile/salaryCard/salaryCard.wxml-->
-<view class="container">
-  <view class="placeholder-card">
-    <text class="icon">💳</text>
-    <text class="title">薪资卡号</text>
-    <text class="desc">暂未绑定银行卡，该功能即将上线</text>
-  </view>
+<!-- pages/profile/salaryCard/salaryCard.wxml -->
+<view class="page {{pageReady ? 'page-enter' : ''}}" bindtap="handleBlankTap">
+  <scroll-view class="scroll-wrap" scroll-y enhanced bounces bindscroll="onScroll">
+    <view class="sticky-shell">
+      <view class="sticky-glow" style="opacity: {{topShadeOpacity}};"></view>
+      <view class="brand-row">
+        <image class="brand-logo" src="/images/zhihui-logo.jpg" mode="aspectFit" />
+        <view>
+          <text class="sticky-title">工资卡号</text>
+          <text class="sticky-sub">支持脱敏展示、复制与自动保护</text>
+        </view>
+      </view>
+    </view>
+
+    <view wx:if="{{loading}}" class="state-card">
+      <text class="state-title">正在加载工资卡信息...</text>
+      <text class="state-desc">请稍候</text>
+    </view>
+
+    <view wx:else catchtap="noop">
+      <view
+        class="bank-card pressable {{cardLifted ? 'lifted' : ''}}"
+        hover-class="pressing"
+        hover-stay-time="110"
+        bindtap="onTapCard"
+      >
+        <view class="bank-top">
+          <view class="bank-meta">
+            <text class="meta-label">开户行</text>
+            <text class="meta-value">{{cardInfo.bankName || '未设置开户行'}}</text>
+          </view>
+          <text class="privacy-tag">隐私保护</text>
+        </view>
+
+        <view class="number-panel {{visible ? 'showing' : 'hiding'}}">
+          <text class="number-label">银行卡号</text>
+          <text class="number-value">{{displayCardNo}}</text>
+        </view>
+
+        <view class="bank-bottom">
+          <view class="bottom-col">
+            <text class="bottom-label">持卡人</text>
+            <text class="bottom-value">{{cardInfo.holderName || '未命名'}}</text>
+          </view>
+          <view class="bottom-col">
+            <text class="bottom-label">更新时间</text>
+            <text class="bottom-value">{{cardInfo.updateTimeText || '-'}}</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="action-row">
+        <view class="action-btn view-btn pressable" hover-class="pressing" hover-stay-time="110" bindtap="toggleVisible">
+          {{visible ? '隐藏卡号' : '查看卡号'}}
+        </view>
+        <view
+          class="action-btn copy-btn pressable {{copySuccess ? 'copy-success' : ''}} {{!hasCard ? 'disabled' : ''}}"
+          hover-class="pressing"
+          hover-stay-time="110"
+          bindtap="copyCardNo"
+        >复制卡号</view>
+      </view>
+
+      <view wx:if="{{!hasCard}}" class="state-card empty-card">
+        <text class="state-title">暂未绑定银行卡</text>
+        <text class="state-desc">请联系管理员维护信息，绑定后可在此查看与复制</text>
+      </view>
+    </view>
+  </scroll-view>
 </view>

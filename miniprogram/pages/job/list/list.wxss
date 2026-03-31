@@ -1,137 +1,123 @@
-.container {
-  padding: 30rpx;
+.page {
   min-height: 100vh;
-  background: #020617;
+  padding: 0 24rpx 48rpx;
+  box-sizing: border-box;
+  background:
+    radial-gradient(circle at right top, rgba(255, 226, 180, 0.9) 0%, rgba(255, 226, 180, 0) 46%),
+    linear-gradient(180deg, #fffef8 0%, #fff2dc 100%);
 }
 
-.header {
-  margin-bottom: 30rpx;
+.sticky-shell {
+  position: sticky;
+  top: 0;
+  z-index: 8;
+  padding: 24rpx 2rpx 16rpx;
+  background: linear-gradient(180deg, rgba(255, 247, 230, 0.98) 0%, rgba(255, 247, 230, 0.72) 74%, rgba(255, 247, 230, 0) 100%);
 }
 
 .title {
   display: block;
   font-size: 36rpx;
-  font-weight: bold;
-  color: #f1f5f9;
-  margin-bottom: 8rpx;
+  font-weight: 800;
+  color: #2f2316;
 }
 
 .subtitle {
+  display: block;
+  margin-top: 8rpx;
   font-size: 24rpx;
-  color: #64748b;
+  color: #8b7a64;
 }
 
-.loading {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 120rpx 0;
+.state-card {
+  margin-top: 24rpx;
+  border-radius: 24rpx;
+  text-align: center;
+  padding: 52rpx 28rpx;
+  border: 1rpx solid rgba(201, 153, 85, 0.2);
+  background: rgba(255, 252, 246, 0.92);
+  box-shadow: 0 12rpx 22rpx rgba(190, 139, 49, 0.08);
 }
 
-.loading-spinner {
-  width: 48rpx;
-  height: 48rpx;
-  border: 4rpx solid #1e293b;
-  border-top: 4rpx solid #10b981;
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-.loading-text {
-  margin-top: 20rpx;
-  font-size: 26rpx;
-  color: #64748b;
-}
-
-.empty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 120rpx 0;
-}
-
-.empty-icon {
-  font-size: 80rpx;
-  margin-bottom: 20rpx;
-}
-
-.empty-text {
+.state-title {
+  display: block;
   font-size: 30rpx;
-  color: #94a3b8;
-  margin-bottom: 10rpx;
+  color: #5d4a31;
+  font-weight: 700;
 }
 
-.empty-hint {
+.state-desc {
+  display: block;
+  margin-top: 8rpx;
   font-size: 24rpx;
-  color: #475569;
+  color: #8b7a64;
 }
 
 .job-list {
   display: flex;
   flex-direction: column;
-  gap: 24rpx;
+  gap: 18rpx;
 }
 
 .job-card {
-  background: rgba(15, 23, 42, 0.8);
-  border: 1rpx solid rgba(51, 65, 85, 0.5);
   border-radius: 24rpx;
-  padding: 30rpx;
+  border: 1rpx solid rgba(201, 153, 85, 0.2);
+  background: rgba(255, 251, 244, 0.95);
+  box-shadow: 0 12rpx 22rpx rgba(186, 134, 41, 0.1);
+  padding: 24rpx;
 }
 
 .job-top {
   display: flex;
+  align-items: flex-start;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16rpx;
+  gap: 16rpx;
 }
 
 .job-title {
-  font-size: 32rpx;
-  font-weight: 600;
-  color: #f1f5f9;
   flex: 1;
+  font-size: 31rpx;
+  font-weight: 800;
+  color: #2f2316;
 }
 
 .job-salary {
-  font-size: 30rpx;
-  font-weight: bold;
-  color: #f59e0b;
-  margin-left: 16rpx;
+  font-size: 27rpx;
+  font-weight: 800;
+  color: #3da785;
 }
 
-.job-base {
-  margin-bottom: 16rpx;
-}
-
-.base-tag {
-  display: inline-block;
-  background: rgba(16, 185, 129, 0.15);
-  color: #34d399;
-  font-size: 22rpx;
-  padding: 4rpx 16rpx;
-  border-radius: 8rpx;
-}
-
-.job-info {
+.job-meta {
   display: flex;
-  gap: 24rpx;
-  margin-bottom: 12rpx;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10rpx;
+  margin-top: 14rpx;
 }
 
-.info-item {
-  font-size: 24rpx;
-  color: #94a3b8;
+.meta-tag {
+  font-size: 21rpx;
+  color: #3f9b7c;
+  background: rgba(111, 223, 191, 0.2);
+  border: 1rpx solid rgba(111, 223, 191, 0.38);
+  padding: 5rpx 14rpx;
+  border-radius: 999rpx;
+}
+
+.meta-item {
+  font-size: 23rpx;
+  color: #6f604d;
 }
 
 .job-desc {
+  margin-top: 14rpx;
   font-size: 24rpx;
-  color: #64748b;
-  margin-bottom: 16rpx;
+  color: #6f604d;
+  line-height: 1.6;
+  padding: 14rpx 16rpx;
+  border-radius: 16rpx;
+  border: 1rpx solid rgba(201, 153, 85, 0.14);
+  background: rgba(255, 255, 255, 0.76);
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -139,34 +125,98 @@
 }
 
 .job-bottom {
+  margin-top: 14rpx;
+  padding-top: 14rpx;
+  border-top: 1rpx solid rgba(201, 153, 85, 0.16);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-top: 16rpx;
-  border-top: 1rpx solid rgba(51, 65, 85, 0.3);
 }
 
 .status {
   font-size: 22rpx;
-  padding: 4rpx 16rpx;
-  border-radius: 8rpx;
+  font-weight: 700;
+  border-radius: 999rpx;
+  padding: 6rpx 14rpx;
 }
 
 .status-open {
-  background: rgba(16, 185, 129, 0.15);
-  color: #34d399;
+  color: #2f9d73;
+  background: rgba(130, 219, 189, 0.24);
 }
 
 .status-closed {
-  background: rgba(239, 68, 68, 0.15);
-  color: #f87171;
+  color: #c25b4b;
+  background: rgba(233, 148, 134, 0.18);
 }
 
 .apply-btn {
-  background: #10b981;
-  color: white;
+  border-radius: 999rpx;
+  padding: 10rpx 24rpx;
   font-size: 24rpx;
-  font-weight: 600;
-  padding: 10rpx 30rpx;
-  border-radius: 16rpx;
+  font-weight: 800;
+  color: #2f2316;
+  background: linear-gradient(135deg, #8ce3c8 0%, #86d9f5 52%, #ffd786 100%);
+}
+
+@media (prefers-color-scheme: dark) {
+  .page {
+    background:
+      radial-gradient(circle at right top, rgba(74, 96, 109, 0.54) 0%, rgba(74, 96, 109, 0) 46%),
+      linear-gradient(180deg, #1a2028 0%, #121820 100%);
+  }
+
+  .sticky-shell {
+    background: linear-gradient(180deg, rgba(25, 31, 41, 0.98) 0%, rgba(25, 31, 41, 0.74) 74%, rgba(25, 31, 41, 0) 100%);
+  }
+
+  .title,
+  .job-title,
+  .state-title {
+    color: #ecf3ff;
+  }
+
+  .subtitle,
+  .meta-item,
+  .job-desc,
+  .state-desc {
+    color: #a8bace;
+  }
+
+  .job-card,
+  .state-card {
+    background: rgba(30, 39, 50, 0.94);
+    border-color: rgba(129, 152, 176, 0.24);
+    box-shadow: 0 14rpx 28rpx rgba(0, 0, 0, 0.28);
+  }
+
+  .job-desc {
+    background: rgba(22, 29, 39, 0.85);
+    border-color: rgba(129, 152, 176, 0.22);
+  }
+
+  .job-salary {
+    color: #89e0c5;
+  }
+
+  .meta-tag {
+    color: #9ce9ce;
+    background: rgba(61, 141, 114, 0.34);
+    border-color: rgba(98, 188, 159, 0.36);
+  }
+
+  .status-open {
+    color: #8de0c5;
+    background: rgba(61, 141, 114, 0.35);
+  }
+
+  .status-closed {
+    color: #f0a79c;
+    background: rgba(160, 77, 64, 0.34);
+  }
+
+  .apply-btn {
+    color: #eff8ff;
+    background: linear-gradient(135deg, #3f8c72 0%, #3b6e88 52%, #a17f3e 100%);
+  }
 }

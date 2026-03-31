@@ -1,6 +1,9 @@
 <!--custom-tab-bar/index.wxml-->
 <view class="tab-bar">
-  <!-- 采摘工导航 -->
+  <view class="brand-anchor">
+    <image class="brand-anchor-logo" src="/images/zhihui-logo.jpg" mode="aspectFit" />
+  </view>
+
   <block wx:if="{{role !== 'field_manager'}}">
     <view
       wx:for="{{workerList}}"
@@ -10,12 +13,13 @@
       data-index="{{index}}"
       bindtap="switchTab"
     >
-      <text class="tab-icon-text">{{item.icon}}</text>
+      <view class="tab-icon-wrap">
+        <text class="tab-icon-text">{{item.icon}}</text>
+      </view>
       <text class="tab-text">{{item.text}}</text>
     </view>
   </block>
 
-  <!-- 现场管理员导航 -->
   <block wx:else>
     <view
       wx:for="{{fieldList}}"
@@ -25,7 +29,9 @@
       data-index="{{index}}"
       bindtap="switchTab"
     >
-      <text class="tab-icon-text">{{item.icon}}</text>
+      <view class="tab-icon-wrap">
+        <text class="tab-icon-text">{{item.icon}}</text>
+      </view>
       <text class="tab-text">{{item.text}}</text>
     </view>
   </block>

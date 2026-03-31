@@ -1,34 +1,44 @@
-<!--pages/index/index.wxml-->
-<view class="page">
+<!-- pages/index/index.wxml -->
+<view class="page {{pageReady ? 'page-enter' : ''}}" bindtap="handleBlankTap">
   <view class="header">
+    <view class="header-glow" style="opacity: {{topShadeOpacity}};"></view>
     <view class="logo-row">
-      <view class="logo">🌱</view>
-      <text class="title">采摘智工</text>
+      <image class="logo-image" src="/images/zhihui-logo.jpg" mode="aspectFit" />
+      <view class="brand-copy">
+        <text class="title">智汇就业</text>
+        <text class="title-sub">劳务协同与就业服务平台</text>
+      </view>
     </view>
   </view>
 
-  <view wx:if="{{!userInfo}}" class="card welcome-card">
-    <view class="welcome-title">欢迎使用采摘通</view>
-    <view class="welcome-desc">农业劳动力全生命周期管理平台</view>
-    <button class="btn-primary" bindtap="goToLogin">登录</button>
-    <button class="btn-register" bindtap="goToRegister">注册</button>
+  <view wx:if="{{!userInfo}}" class="card welcome-card" catchtap="noop">
+    <image class="welcome-watermark" src="/images/zhihui-logo.jpg" mode="aspectFit" />
+    <view class="welcome-title">欢迎使用智汇就业</view>
+    <view class="welcome-desc">让岗位匹配、签到考勤与薪资结算更清晰、更高效</view>
+    <view class="welcome-tags">
+      <text class="tag green">岗位智能推荐</text>
+      <text class="tag blue">签到考勤联动</text>
+      <text class="tag gold">薪资进度可视</text>
+    </view>
+    <button class="btn-primary pressable" hover-class="pressing" hover-stay-time="110" bindtap="goToLogin">登录</button>
+    <button class="btn-register pressable" hover-class="pressing" hover-stay-time="110" bindtap="goToRegister">注册</button>
   </view>
 
-  <view wx:if="{{userInfo}}" class="content">
-    <view class="stats-card">
+  <view wx:if="{{userInfo}}" class="content" catchtap="noop">
+    <view class="stats-card {{statsLifted ? 'lifted' : ''}}" bindtap="triggerStatsLift">
       <view class="stats-header">
         <view class="user-block">
           <view class="avatar">{{userInfo.name ? userInfo.name[0] : '?'}}</view>
           <view class="user-info">
-            <text class="user-name">{{userInfo.name}}</text>
-            <text class="user-uid">编号: {{userInfo.uid}}</text>
+            <text class="user-name" bindlongpress="copyName">{{userInfo.name}}</text>
+            <text class="user-uid" bindlongpress="copyUid">编号: {{userInfo.uid}}</text>
           </view>
         </view>
-        <view class="qr-btn" bindtap="goToQrcode">📱</view>
+        <view class="qr-btn pressable" hover-class="pressing" hover-stay-time="100" bindtap="goToQrcode">码</view>
       </view>
       <view class="stats-grid">
         <view class="stat-item">
-          <text class="stat-value">{{workerStats ? workerStats.workDays : '-'}}</text>
+          <text class="stat-value">{{workerStats ? workerStats.workDays : 0}}</text>
           <text class="stat-label">已做天数</text>
         </view>
         <view class="stat-item border-mid">
@@ -47,17 +57,19 @@
       <view class="section-sub">根据匹配度推荐</view>
     </view>
 
-    <view wx:if="{{loading}}" class="loading-box">加载中...</view>
-
+    <view wx:if="{{loading}}" class="loading-box">正在加载推荐基地...</view>
     <view wx:elif="{{recommendedBases.length === 0}}" class="empty-box">暂无推荐基地，请稍后再看</view>
 
     <view wx:else class="base-list">
       <view
-        class="base-card"
+        class="base-card pressable"
         wx:for="{{recommendedBases}}"
         wx:key="id"
+        hover-class="pressing"
+        hover-stay-time="100"
         bindtap="showBaseJobs"
         data-id="{{item.id}}"
+        style="animation-delay: {{item.entryDelay}};"
       >
         <view class="base-header">
           <view>
@@ -71,22 +83,21 @@
         </view>
         <view class="base-footer">
           <text class="base-name-small">{{item.baseName}}</text>
-          <view class="btn-view">查看岗位</view>
+          <view class="btn-view pressable" hover-class="pressing" hover-stay-time="90">查看岗位</view>
         </view>
       </view>
     </view>
   </view>
 
-  <!-- 岗位抽屉 -->
   <view wx:if="{{selectedBaseId}}" class="drawer-mask" bindtap="closeJobDrawer"></view>
-  <view wx:if="{{selectedBaseId}}" class="drawer">
+  <view wx:if="{{selectedBaseId}}" class="drawer {{drawerPulse ? 'pulse' : ''}}" catchtap="noop">
     <view class="drawer-header">
       <text class="drawer-title">在招岗位</text>
-      <text class="drawer-close" bindtap="closeJobDrawer">✕</text>
+      <text class="drawer-close pressable" hover-class="pressing" hover-stay-time="90" bindtap="closeJobDrawer">×</text>
     </view>
     <scroll-view class="drawer-body" scroll-y>
-      <view wx:if="{{jobsLoading}}" class="loading-box">加载岗位…</view>
-      <view wx:elif="{{baseJobs.length === 0}}" class="empty-box">该基地暂无在招岗位</view>
+      <view wx:if="{{jobsLoading}}" class="loading-box">正在加载岗位...</view>
+      <view wx:elif="{{baseJobs.length === 0}}" class="empty-box">该基地暂时没有在招岗位</view>
       <view wx:else class="job-list">
         <view class="job-card" wx:for="{{baseJobs}}" wx:key="id">
           <view class="job-header">
@@ -95,11 +106,13 @@
           </view>
           <text wx:if="{{item.workContent || item.description}}" class="job-desc">{{item.workContent || item.description}}</text>
           <view class="job-tags" wx:if="{{item.headcount || item.workHours}}">
-            <text class="job-tag" wx:if="{{item.headcount}}">招{{item.headcount}}人</text>
+            <text class="job-tag" wx:if="{{item.headcount}}">招 {{item.headcount}} 人</text>
             <text class="job-tag" wx:if="{{item.workHours}}">{{item.workHours}}</text>
           </view>
           <button
-            class="btn-apply {{item.applied ? 'btn-applied' : ''}}"
+            class="btn-apply pressable {{item.applied ? 'btn-applied' : ''}}"
+            hover-class="pressing"
+            hover-stay-time="100"
             disabled="{{applyLoading || item.applied}}"
             bindtap="handleApply"
             data-job-id="{{item.id}}"

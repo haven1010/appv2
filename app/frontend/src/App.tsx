@@ -9,6 +9,11 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 // --- 类型定义 ---
 import { User, UserRole } from './types';
+import WarmDashboardLayout from './layouts/WarmDashboardLayout';
+import WarmLoginView from './views/WarmLoginView';
+import WarmRegisterView from './views/WarmRegisterView';
+import WarmDashboardView from './views/WarmDashboardView';
+import WarmFieldDashboard from './views/WarmFieldDashboard';
 
 // --- 布局组件 ---
 import DashboardLayout from './layouts/DashboardLayout'; // 之前创建的通用布局
@@ -74,8 +79,8 @@ const ProtectedRoute = ({ children, roles }: { children?: React.ReactNode, roles
 // --- 4. Dashboard Index (根据角色选择不同首页) ---
 function DashboardIndex() {
   const { user } = useAuth();
-  if (user?.role === UserRole.FIELD_MANAGER) return <FieldDashboard />;
-  return <DashboardView />;
+  if (user?.role === UserRole.FIELD_MANAGER) return <WarmFieldDashboard />;
+  return <WarmDashboardView />;
 }
 
 // --- 5. 主应用组件 ---
@@ -104,8 +109,8 @@ export default function App() {
         <BrowserRouter>
           <Routes>
             {/* === 公开路由 === */}
-            <Route path="/login" element={<LoginView />} />
-            <Route path="/register" element={<RegisterView />} />
+            <Route path="/login" element={<WarmLoginView />} />
+            <Route path="/register" element={<WarmRegisterView />} />
 
             {/* === 根路径重定向逻辑 === */}
             <Route path="/" element={
@@ -121,7 +126,7 @@ export default function App() {
               path="/dashboard"
               element={
                 <ProtectedRoute>
-                  <DashboardLayout />
+                  <WarmDashboardLayout />
                 </ProtectedRoute>
               }
             >

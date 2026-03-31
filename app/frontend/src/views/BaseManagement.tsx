@@ -555,7 +555,30 @@ export default function BaseManagement() {
   const handleBaseDetail = (baseId: number) => setDetailBaseId(baseId);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 warm-business warm-business-base">
+      <section className="soft-card-strong p-6 md:p-8">
+        <p className="section-label">Base Operation</p>
+        <h2 className="page-title">基地管理与入驻审核统一到一套清爽工作流</h2>
+        <p className="page-subtitle">
+          这里保留原有业务动作不变，只重排视觉层次。你可以继续做入驻审核、运营档案查看和岗位发布，界面会和新首页保持同一语言。
+        </p>
+        <div className="warm-business-summary mt-6">
+          <article className="paper-panel p-4">
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#a2814a]">基地总量</p>
+            <p className="mt-3 text-3xl font-extrabold tracking-tight text-[var(--ink)]">{bases.length}</p>
+          </article>
+          <article className="paper-panel p-4">
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#a2814a]">待审核</p>
+            <p className="mt-3 text-3xl font-extrabold tracking-tight text-[var(--ink)]">{pendingBases.length}</p>
+          </article>
+          <article className="paper-panel p-4">
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#a2814a]">当前模式</p>
+            <p className="mt-3 text-xl font-bold text-[var(--ink)]">
+              {activeTab === 'audit' ? '审核处理' : '基地总览'}
+            </p>
+          </article>
+        </div>
+      </section>
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold text-white">基地生态网络</h2>

@@ -5,6 +5,7 @@
  */
 // pages/profile/profile.js
 const app = getApp();
+const { resolveRole, isAdminRole, roleLabel } = require('../../utils/role');
 
 function maskPhone(phone) {
   if (!phone || phone.length < 7) return phone || '';
@@ -17,15 +18,20 @@ Page({
     profileData: null,
     workerStats: null,
     workRecords: [],
+    role: 'worker',
+    roleText: '采摘工',
+    canOpenAdmin: false,
     loading: true,
     workRecordsLoading: false,
   },
 
   onLoad() {
+    if (this.redirectAdminIfNeeded()) return;
     this.checkLogin();
   },
 
   onShow() {
+    if (this.redirectAdminIfNeeded()) return;
     const tabBar = this.getTabBar && this.getTabBar();
     if (tabBar) {
       tabBar.setData({ selected: 3 });
@@ -49,7 +55,23 @@ Page({
       });
       return;
     }
-    this.setData({ userInfo });
+    const role = resolveRole(userInfo);
+    this.setData({
+      userInfo,
+      role,
+      roleText: roleLabel(role),
+      canOpenAdmin: isAdminRole(role),
+    });
+  },
+
+  redirectAdminIfNeeded() {
+    const userInfo = wx.getStorageSync('userInfo');
+    const role = resolveRole(userInfo);
+    if (isAdminRole(role)) {
+      wx.reLaunch({ url: '/pages/admin/home/home' });
+      return true;
+    }
+    return false;
   },
 
   async loadProfile() {
@@ -58,21 +80,24 @@ Page({
       this.setData({ loading: false });
       return;
     }
+
     this.setData({ loading: true });
+
     try {
-      var results = await Promise.all([
+      const results = await Promise.all([
         app.request({ url: '/user/profile', method: 'GET' }),
         app.request({ url: '/salary/worker/stats', method: 'GET' }),
       ]);
-      var profile = results[0];
-      var stats = results[1];
-      const p = profile || {};
+
+      const profile = results[0] || {};
+      const stats = results[1] || { workDays: 0, pendingAmount: 0 };
+
       this.setData({
-        profileData: Object.assign({}, p, {
-          phoneMasked: maskPhone(p.phone),
-          emergencyPhoneMasked: maskPhone(p.emergencyPhone),
+        profileData: Object.assign({}, profile, {
+          phoneMasked: maskPhone(profile.phone),
+          emergencyPhoneMasked: maskPhone(profile.emergencyPhone),
         }),
-        workerStats: stats || { workDays: 0, pendingAmount: 0 },
+        workerStats: stats,
         loading: false,
       });
     } catch (err) {
@@ -102,9 +127,20 @@ Page({
 
   showWorkHistory() {
     this.loadWorkRecords();
-    wx.navigateTo({
-      url: '/pages/profile/workHistory/workHistory',
-    });
+    wx.navigateTo({ url: '/pages/profile/workHistory/workHistory' });
+  },
+
+  goSettings() {
+    wx.navigateTo({ url: '/pages/profile/settings/settings' });
+  },
+
+  goAdminCenter() {
+    const role = this.data.role || resolveRole(this.data.userInfo);
+    if (!isAdminRole(role)) {
+      wx.showToast({ title: '当前账号无管理权限', icon: 'none' });
+      return;
+    }
+    wx.navigateTo({ url: '/pages/admin/home/home' });
   },
 
   logout() {
@@ -112,13 +148,12 @@ Page({
       title: '提示',
       content: '确定要退出登录吗？',
       success: (res) => {
-        if (res.confirm) {
-          wx.removeStorageSync('token');
-          wx.removeStorageSync('userInfo');
-          app.globalData.token = null;
-          app.globalData.userInfo = null;
-          wx.switchTab({ url: '/pages/index/index' });
-        }
+        if (!res.confirm) return;
+        wx.removeStorageSync('token');
+        wx.removeStorageSync('userInfo');
+        app.globalData.token = null;
+        app.globalData.userInfo = null;
+        wx.switchTab({ url: '/pages/index/index' });
       },
     });
   },

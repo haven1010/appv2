@@ -7,6 +7,7 @@ import {
   Controller,
   Get,
   Post,
+  Delete,
   Body,
   Patch,
   Param,
@@ -79,6 +80,18 @@ export class BaseController {
   @Get(':id')
   async findOne(@Param('id', ParseIntPipe) id: number) {
     return this.baseService.findOne(id);
+  }
+
+  @ApiOperation({ summary: '删除基地（超级管理员）' })
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN)
+  @Delete(':id')
+  async remove(
+    @Param('id', ParseIntPipe) id: number,
+    @Request() req,
+  ) {
+    return this.baseService.remove(id, req.user.id, { request: req, userId: req.user.id });
   }
 
   @ApiOperation({ summary: '审核基地' })

@@ -218,6 +218,68 @@ export class BaseService {
     return base;
   }
 
+  /**
+   * 超级管理员删除基地（软删除）。
+   * 同时将该基地仍处于启用状态的岗位批量下线，避免后续继续招工。
+   */
+  async remove(id: number, operatorId: number, context?: OperationLogContext): Promise<{ msg: string }> {
+    const { beforeSnapshot, affectedJobs } = await this.dataSource.transaction(async (manager) => {
+      const base = await manager.findOne(BaseInfo, {
+        where: { id },
+        lock: { mode: 'pessimistic_write' },
+      });
+
+      if (!base) {
+        throw new NotFoundException('基地不存在');
+      }
+      if (base.isDeleted) {
+        throw new ConflictException('该基地已删除');
+      }
+
+      const previous = {
+        baseName: base.baseName,
+        ownerId: base.ownerId,
+        auditStatus: base.auditStatus,
+        isDeleted: base.isDeleted,
+      };
+
+      base.isDeleted = true;
+      await manager.save(BaseInfo, base);
+
+      const jobsResult = await manager
+        .createQueryBuilder()
+        .update(RecruitmentJob)
+        .set({
+          isActive: false,
+          status: JobStatus.OFFLINE,
+        })
+        .where('base_id = :baseId', { baseId: id })
+        .andWhere('is_active = :isActive', { isActive: true })
+        .execute();
+
+      return {
+        beforeSnapshot: previous,
+        affectedJobs: jobsResult.affected || 0,
+      };
+    });
+
+    await this.operationLogService.logWithContext({
+      operationType: OperationType.DELETE,
+      resourceType: ResourceType.BASE,
+      resourceId: id,
+      userId: operatorId,
+      request: context?.request,
+      description: `删除基地: baseId=${id}, 同步下线岗位=${affectedJobs}`,
+      beforeData: beforeSnapshot,
+      afterData: {
+        isDeleted: true,
+        deactivatedJobs: affectedJobs,
+      },
+    });
+
+    return { msg: '基地删除成功' };
+  }
+
   // ========== 招聘岗位相关方法 ==========
 
   /**

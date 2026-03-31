@@ -5,6 +5,7 @@
  */
 // pages/qrcode/qrcode.js
 const app = getApp();
+const { resolveRole, isAdminRole } = require('../../utils/role');
 
 Page({
   data: {
@@ -16,10 +17,12 @@ Page({
   },
 
   onLoad() {
+    if (this.redirectAdminIfNeeded()) return;
     this.checkLogin();
   },
 
   onShow() {
+    if (this.redirectAdminIfNeeded()) return;
     const tabBar = this.getTabBar && this.getTabBar();
     if (tabBar) {
       tabBar.setData({ selected: 2 });
@@ -39,6 +42,16 @@ Page({
       return;
     }
     this.setData({ userInfo });
+  },
+
+  redirectAdminIfNeeded() {
+    const userInfo = wx.getStorageSync('userInfo');
+    const role = resolveRole(userInfo);
+    if (isAdminRole(role)) {
+      wx.reLaunch({ url: '/pages/admin/home/home' });
+      return true;
+    }
+    return false;
   },
 
   async loadQrCode() {

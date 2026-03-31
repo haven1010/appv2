@@ -4,15 +4,19 @@
  * Notes: Keep comments focused on intent, invariants, side effects, and cross-module contracts.
  */
 import React, { useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import {
   Banknote,
+  CalendarDays,
   CheckCircle2,
+  ChevronDown,
   CircleDollarSign,
   Clock3,
   Download,
   FileText,
   Filter,
   Loader2,
+  MapPin,
   ReceiptText,
   RefreshCw,
   Search,
@@ -93,6 +97,21 @@ interface SalaryRecord {
   createdAt: string;
 }
 
+interface AttendanceRecord {
+  id: number;
+  workerName: string;
+  workerUid: string;
+  baseId: number;
+  baseName: string;
+  jobId: number;
+  jobTitle: string;
+  workDate: string;
+  status: number;
+  checkinTime: string | null;
+  isProxy: boolean;
+  createdAt: string;
+}
+
 interface SalaryStats {
   totalPaid: number;
   totalPending: number;
@@ -109,6 +128,15 @@ interface PaymentRecord {
   paymentVoucherUrl?: string | null;
   paidAt?: string | null;
   createdAt: string;
+}
+
+interface JobDetail {
+  id: number;
+  payType: number;
+  jobTitle: string;
+  hourlyRate?: number | null;
+  unitPrice?: number | null;
+  salaryAmount?: number | null;
 }
 
 type PaymentModalState =
@@ -174,6 +202,7 @@ function exportSalaryToCsv(records: SalaryRecord[], filename?: string) {
 }
 
 export default function PayrollView() {
+  const today = new Date().toISOString().slice(0, 10);
   const navigate = useNavigate();
   const { user } = useAuth();
   const [list, setList] = useState<SalaryRecord[]>([]);
@@ -191,6 +220,20 @@ export default function PayrollView() {
   const [paymentMethod, setPaymentMethod] = useState<'cash' | 'transfer'>('transfer');
   const [attachmentUrl, setAttachmentUrl] = useState('');
   const [paymentSubmitting, setPaymentSubmitting] = useState(false);
+  const [draftModalOpen, setDraftModalOpen] = useState(false);
+  const [draftBaseId, setDraftBaseId] = useState<number | null>(null);
+  const [draftWorkDate, setDraftWorkDate] = useState(today);
+  const [draftSearchKeyword, setDraftSearchKeyword] = useState('');
+  const [draftRecords, setDraftRecords] = useState<AttendanceRecord[]>([]);
+  const [draftLoading, setDraftLoading] = useState(false);
+  const [draftError, setDraftError] = useState<string | null>(null);
+  const [draftSelectedId, setDraftSelectedId] = useState<number | null>(null);
+  const [draftJobDetail, setDraftJobDetail] = useState<JobDetail | null>(null);
+  const [draftJobLoading, setDraftJobLoading] = useState(false);
+  const [draftDuration, setDraftDuration] = useState('');
+  const [draftCount, setDraftCount] = useState('');
+  const [draftSubmitting, setDraftSubmitting] = useState(false);
+  const modalRoot = typeof document !== 'undefined' ? document.body : null;
 
   const { data: rawBases = [] } = useBaseControllerFindAll({
     request:
@@ -207,6 +250,7 @@ export default function PayrollView() {
     }
     return list;
   }, [rawBases, user?.assignedBaseId, user?.role]);
+  const fieldBaseId = user?.role === UserRole.FIELD_MANAGER ? Number(user.assignedBaseId || 0) || null : null;
 
   async function fetchData() {
     try {
@@ -261,6 +305,44 @@ export default function PayrollView() {
     return filteredList.find((item) => item.id === selectedId) || filteredList[0] || null;
   }, [filteredList, selectedId]);
 
+  const draftFilteredRecords = useMemo(() => {
+    const keyword = draftSearchKeyword.trim().toLowerCase();
+    if (!keyword) return draftRecords;
+    return draftRecords.filter(
+      (item) =>
+        item.workerName.toLowerCase().includes(keyword) ||
+        item.workerUid.toLowerCase().includes(keyword) ||
+        item.jobTitle.toLowerCase().includes(keyword) ||
+        item.baseName.toLowerCase().includes(keyword) ||
+        String(item.id).includes(keyword),
+    );
+  }, [draftRecords, draftSearchKeyword]);
+
+  const draftSelectedRecord = useMemo(() => {
+    return draftFilteredRecords.find((item) => item.id === draftSelectedId) || draftFilteredRecords[0] || null;
+  }, [draftFilteredRecords, draftSelectedId]);
+
+  async function fetchDraftRecords() {
+    if (!draftModalOpen) return;
+    try {
+      setDraftLoading(true);
+      setDraftError(null);
+      const params: Record<string, string | number> = { date: draftWorkDate };
+      const effectiveBaseId = fieldBaseId ?? draftBaseId;
+      if (effectiveBaseId) params.baseId = effectiveBaseId;
+      const res = await AXIOS_INSTANCE.get<{ records?: AttendanceRecord[] }>('/api/attendance/records', { params });
+      const next = (Array.isArray(res.data?.records) ? res.data.records : [])
+        .filter((item) => Number(item.status) === 1)
+        .sort((a, b) => String(b.checkinTime || b.createdAt).localeCompare(String(a.checkinTime || a.createdAt)));
+      setDraftRecords(next);
+    } catch (e: any) {
+      setDraftError(e?.response?.data?.message || '加载签到记录失败');
+      setDraftRecords([]);
+    } finally {
+      setDraftLoading(false);
+    }
+  }
+
   const {
     data: payments = [],
     isLoading: paymentsLoading,
@@ -313,6 +395,95 @@ export default function PayrollView() {
     setAttachmentUrl('');
     setPaymentSubmitting(false);
   };
+
+  const openDraftModal = () => {
+    setDraftSearchKeyword('');
+    setDraftRecords([]);
+    setDraftError(null);
+    setDraftSelectedId(null);
+    setDraftJobDetail(null);
+    setDraftDuration('');
+    setDraftCount('');
+    setDraftSubmitting(false);
+    setDraftBaseId(fieldBaseId ?? filterBaseId ?? (bases[0] ? Number((bases[0] as any).id) : null));
+    setDraftWorkDate(dateFrom || dateTo || today);
+    setDraftModalOpen(true);
+  };
+
+  const closeDraftModal = () => {
+    setDraftModalOpen(false);
+    setDraftRecords([]);
+    setDraftError(null);
+    setDraftSelectedId(null);
+    setDraftJobDetail(null);
+    setDraftDuration('');
+    setDraftCount('');
+    setDraftSubmitting(false);
+  };
+
+  async function handleCreateDraft() {
+    if (!draftSelectedRecord || !draftJobDetail) return;
+    if (draftJobDetail.payType === 2 && !draftDuration) {
+      window.alert('时薪岗位需要填写工作时长');
+      return;
+    }
+    if (draftJobDetail.payType === 3 && !draftCount) {
+      window.alert('计件岗位需要填写件数');
+      return;
+    }
+
+    setDraftSubmitting(true);
+    try {
+      const res = await AXIOS_INSTANCE.post<{ id?: number }>(`/api/salary/calculate/${draftSelectedRecord.id}`, {
+        duration: draftJobDetail.payType === 2 ? Number(draftDuration) : undefined,
+        count: draftJobDetail.payType === 3 ? Number(draftCount) : undefined,
+      });
+      await fetchData();
+      if (res.data?.id) {
+        setSelectedId(Number(res.data.id));
+      }
+      closeDraftModal();
+    } catch (e: any) {
+      const msg = e?.response?.data?.message || '生成工资草稿失败';
+      window.alert(Array.isArray(msg) ? msg[0] : msg);
+    } finally {
+      setDraftSubmitting(false);
+    }
+  }
+
+  useEffect(() => {
+    fetchDraftRecords();
+  }, [draftModalOpen, draftBaseId, draftWorkDate, fieldBaseId]);
+
+  useEffect(() => {
+    if (!draftModalOpen) return;
+    setDraftSelectedId((current) =>
+      draftFilteredRecords.find((item) => item.id === current)?.id ?? draftFilteredRecords[0]?.id ?? null,
+    );
+  }, [draftFilteredRecords, draftModalOpen]);
+
+  useEffect(() => {
+    if (!draftModalOpen || !draftSelectedRecord) {
+      setDraftJobDetail(null);
+      return;
+    }
+
+    setDraftDuration('');
+    setDraftCount('');
+    setDraftJobLoading(true);
+    AXIOS_INSTANCE.get<JobDetail>(`/api/base/jobs/${draftSelectedRecord.jobId}`)
+      .then((res) => {
+        setDraftJobDetail(res.data);
+      })
+      .catch((e: any) => {
+        const msg = e?.response?.data?.message || '加载岗位详情失败';
+        setDraftJobDetail(null);
+        window.alert(Array.isArray(msg) ? msg[0] : msg);
+      })
+      .finally(() => {
+        setDraftJobLoading(false);
+      });
+  }, [draftModalOpen, draftSelectedRecord?.id]);
 
   const handleSubmitPaymentAction = async () => {
     if (!paymentModal) return;
@@ -393,7 +564,7 @@ export default function PayrollView() {
   })();
 
   return (
-    <div className="space-y-7 pb-8">
+    <div className="space-y-7 pb-8 warm-business warm-business-payroll">
       <section className="overflow-hidden rounded-[30px] border border-emerald-500/15 bg-[radial-gradient(circle_at_top_left,_rgba(16,185,129,0.18),_transparent_30%),linear-gradient(180deg,rgba(15,23,42,0.96),rgba(2,6,23,0.98))] p-6 shadow-[0_24px_80px_rgba(2,6,23,0.52)]">
         <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
           <div className="max-w-2xl">
@@ -403,7 +574,7 @@ export default function PayrollView() {
             </div>
             <h2 className="text-3xl font-bold tracking-tight text-white">工资结算与支付闭环</h2>
             <p className="mt-3 text-sm leading-7 text-slate-300">
-              这页直接接入支付单创建、确认、完成发放。发起新结算会跳转到考勤页，从签到记录生成工资草稿。
+              这页直接接入工资草稿生成、支付单创建、确认和完成发放，不需要再切到考勤页。
             </p>
           </div>
 
@@ -425,7 +596,7 @@ export default function PayrollView() {
               {exporting ? '导出中...' : '导出报表'}
             </button>
             <button
-              onClick={() => navigate('/dashboard/attendance')}
+              onClick={openDraftModal}
               className="inline-flex items-center gap-2 rounded-2xl bg-emerald-500 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-900/20 transition hover:bg-emerald-400"
             >
               <CircleDollarSign size={16} />
@@ -514,7 +685,7 @@ export default function PayrollView() {
             </div>
           </div>
 
-          <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_180px_160px_160px_160px]">
+          <div className="space-y-3">
             <label className="relative block">
               <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
               <input
@@ -526,46 +697,59 @@ export default function PayrollView() {
               />
             </label>
 
-            <select
-              value={filterBaseId ?? ''}
-              onChange={(e) => setFilterBaseId(e.target.value ? Number(e.target.value) : null)}
-              className="rounded-2xl border border-slate-800 bg-slate-900/80 px-4 py-3 text-sm text-white focus:border-emerald-500/40 focus:outline-none"
-            >
-              <option value="">全部基地</option>
-              {bases.map((b: any) => (
-                <option key={b.id} value={b.id}>
-                  {b.baseName ?? b.name ?? b.id}
-                </option>
-              ))}
-            </select>
+            <div className="grid gap-3 md:grid-cols-2 2xl:grid-cols-[minmax(220px,1fr)_180px_180px_180px]">
+              <label className="relative block min-w-0">
+                <MapPin className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
+                <select
+                  value={filterBaseId ?? ''}
+                  onChange={(e) => setFilterBaseId(e.target.value ? Number(e.target.value) : null)}
+                  className="w-full appearance-none rounded-2xl border border-slate-800 bg-slate-900/80 py-3 pl-10 pr-11 text-sm text-white focus:border-emerald-500/40 focus:outline-none"
+                >
+                  <option value="">全部基地</option>
+                  {bases.map((b: any) => (
+                    <option key={b.id} value={b.id}>
+                      {b.baseName ?? b.name ?? b.id}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
+              </label>
 
-            <input
-              type="date"
-              value={dateFrom}
-              onChange={(e) => setDateFrom(e.target.value)}
-              className="rounded-2xl border border-slate-800 bg-slate-900/80 px-4 py-3 text-sm text-white focus:border-emerald-500/40 focus:outline-none"
-            />
+              <label className="relative block min-w-0">
+                <CalendarDays className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
+                <input
+                  type="date"
+                  value={dateFrom}
+                  onChange={(e) => setDateFrom(e.target.value)}
+                  className="w-full rounded-2xl border border-slate-800 bg-slate-900/80 py-3 pl-10 pr-4 text-sm text-white focus:border-emerald-500/40 focus:outline-none"
+                />
+              </label>
 
-            <input
-              type="date"
-              value={dateTo}
-              onChange={(e) => setDateTo(e.target.value)}
-              className="rounded-2xl border border-slate-800 bg-slate-900/80 px-4 py-3 text-sm text-white focus:border-emerald-500/40 focus:outline-none"
-            />
+              <label className="relative block min-w-0">
+                <CalendarDays className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
+                <input
+                  type="date"
+                  value={dateTo}
+                  onChange={(e) => setDateTo(e.target.value)}
+                  className="w-full rounded-2xl border border-slate-800 bg-slate-900/80 py-3 pl-10 pr-4 text-sm text-white focus:border-emerald-500/40 focus:outline-none"
+                />
+              </label>
 
-            <label className="relative block">
-              <Filter className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
-              <select
-                value={filterStatus ?? ''}
-                onChange={(e) => setFilterStatus(e.target.value === '' ? null : Number(e.target.value))}
-                className="w-full appearance-none rounded-2xl border border-slate-800 bg-slate-900/80 py-3 pl-10 pr-4 text-sm text-white focus:border-emerald-500/40 focus:outline-none"
-              >
-                <option value="">全部状态</option>
-                <option value={0}>待确认</option>
-                <option value={1}>已确认</option>
-                <option value={2}>已发放</option>
-              </select>
-            </label>
+              <label className="relative block min-w-0">
+                <Filter className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
+                <select
+                  value={filterStatus ?? ''}
+                  onChange={(e) => setFilterStatus(e.target.value === '' ? null : Number(e.target.value))}
+                  className="w-full appearance-none rounded-2xl border border-slate-800 bg-slate-900/80 py-3 pl-10 pr-11 text-sm text-white focus:border-emerald-500/40 focus:outline-none"
+                >
+                  <option value="">全部状态</option>
+                  <option value={0}>待确认</option>
+                  <option value={1}>已确认</option>
+                  <option value={2}>已发放</option>
+                </select>
+                <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
+              </label>
+            </div>
           </div>
 
           <div className="overflow-hidden rounded-[24px] border border-slate-800/70">
@@ -751,7 +935,7 @@ export default function PayrollView() {
         </aside>
       </section>
 
-      {paymentModal && (
+      {paymentModal && modalRoot && createPortal(
         <div className="fixed inset-0 z-[90] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm" onClick={closePaymentModal} />
           <div className="relative z-10 w-full max-w-lg rounded-[28px] border border-slate-800 bg-slate-900 p-6 shadow-2xl">
@@ -820,7 +1004,218 @@ export default function PayrollView() {
             </div>
           </div>
         </div>
-      )}
+      , modalRoot)}
+
+      {draftModalOpen && modalRoot && createPortal(
+        <div className="fixed inset-0 z-[90] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm" onClick={closeDraftModal} />
+          <div className="relative z-10 flex max-h-[90vh] w-full max-w-6xl flex-col overflow-hidden rounded-[28px] border border-slate-800 bg-slate-900 shadow-2xl">
+            <div className="flex items-start justify-between gap-4 border-b border-slate-800/80 px-6 py-5">
+              <div>
+                <h3 className="text-xl font-bold text-white">发起新结算</h3>
+                <p className="mt-1 text-sm text-slate-400">在薪资页内选择已签到记录，直接生成工资草稿。</p>
+              </div>
+              <button onClick={closeDraftModal} className="text-slate-500 hover:text-white">
+                <X size={22} />
+              </button>
+            </div>
+
+            <div className="grid gap-6 overflow-hidden p-6 xl:grid-cols-[1.2fr_420px]">
+              <div className="space-y-4 overflow-hidden">
+                <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_180px_180px]">
+                  <label className="relative block">
+                    <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
+                    <input
+                      type="text"
+                      value={draftSearchKeyword}
+                      onChange={(e) => setDraftSearchKeyword(e.target.value)}
+                      placeholder="搜索工人姓名、UID、岗位或签到单号"
+                      className="w-full rounded-2xl border border-slate-800 bg-slate-950/80 py-3 pl-10 pr-4 text-sm text-white placeholder:text-slate-500 focus:border-emerald-500/40 focus:outline-none"
+                    />
+                  </label>
+                  <select
+                    value={draftBaseId ?? ''}
+                    onChange={(e) => setDraftBaseId(e.target.value ? Number(e.target.value) : null)}
+                    disabled={Boolean(fieldBaseId)}
+                    className="rounded-2xl border border-slate-800 bg-slate-950/80 px-4 py-3 text-sm text-white focus:border-emerald-500/40 focus:outline-none disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {!fieldBaseId && <option value="">全部基地</option>}
+                    {bases.map((b: any) => (
+                      <option key={b.id} value={b.id}>
+                        {b.baseName ?? b.name ?? b.id}
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    type="date"
+                    value={draftWorkDate}
+                    onChange={(e) => setDraftWorkDate(e.target.value)}
+                    className="rounded-2xl border border-slate-800 bg-slate-950/80 px-4 py-3 text-sm text-white focus:border-emerald-500/40 focus:outline-none"
+                  />
+                </div>
+
+                <div className="rounded-[24px] border border-slate-800/70">
+                  {draftLoading ? (
+                    <div className="flex min-h-[420px] items-center justify-center">
+                      <Loader2 className="animate-spin text-emerald-300" size={24} />
+                      <span className="ml-3 text-slate-400">加载已签到记录...</span>
+                    </div>
+                  ) : draftError ? (
+                    <div className="flex min-h-[420px] items-center justify-center px-6 text-center text-sm text-rose-300">
+                      {draftError}
+                    </div>
+                  ) : draftFilteredRecords.length === 0 ? (
+                    <div className="flex min-h-[420px] items-center justify-center px-6 text-center text-sm text-slate-500">
+                      当前筛选条件下没有可结算的已签到记录
+                    </div>
+                  ) : (
+                    <div className="max-h-[420px] overflow-auto">
+                      <table className="min-w-full text-left">
+                        <thead className="sticky top-0 border-b border-slate-800/70 bg-slate-950/95 text-xs uppercase tracking-[0.22em] text-slate-500">
+                          <tr>
+                            <th className="px-5 py-4 font-semibold">签到单 / 日期</th>
+                            <th className="px-5 py-4 font-semibold">采摘工</th>
+                            <th className="px-5 py-4 font-semibold">岗位 / 基地</th>
+                            <th className="px-5 py-4 font-semibold">签到时间</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-800/60">
+                          {draftFilteredRecords.map((row) => {
+                            const active = draftSelectedRecord?.id === row.id;
+                            return (
+                              <tr
+                                key={row.id}
+                                className={`cursor-pointer transition ${active ? 'bg-emerald-500/6' : 'hover:bg-slate-900/70'}`}
+                                onClick={() => setDraftSelectedId(row.id)}
+                              >
+                                <td className="px-5 py-4 align-top">
+                                  <div className="font-mono text-sm text-slate-200">#{row.id}</div>
+                                  <div className="mt-1 text-xs text-slate-500">{row.workDate}</div>
+                                </td>
+                                <td className="px-5 py-4 align-top">
+                                  <div className="font-medium text-slate-100">{row.workerName}</div>
+                                  <div className="mt-1 text-xs font-mono text-slate-500">{row.workerUid}</div>
+                                </td>
+                                <td className="px-5 py-4 align-top">
+                                  <div className="text-sm text-slate-200">{row.jobTitle}</div>
+                                  <div className="mt-1 text-xs text-slate-500">{row.baseName}</div>
+                                </td>
+                                <td className="px-5 py-4 align-top text-sm text-slate-300">
+                                  {row.checkinTime ? String(row.checkinTime).slice(11, 16) : '-'}
+                                  {row.isProxy && <span className="ml-2 text-xs text-amber-300">代报名</span>}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <aside className="overflow-hidden rounded-[24px] border border-slate-800/70 bg-slate-950/70">
+                {draftSelectedRecord ? (
+                  <div className="flex h-full flex-col">
+                    <div className="border-b border-slate-800/70 px-5 py-5">
+                      <p className="text-xs uppercase tracking-[0.22em] text-slate-500">待生成草稿</p>
+                      <h4 className="mt-2 text-xl font-semibold text-white">
+                        {draftSelectedRecord.workerName}
+                        <span className="ml-2 font-mono text-base text-slate-500">#{draftSelectedRecord.id}</span>
+                      </h4>
+                      <p className="mt-2 text-sm text-slate-400">
+                        {draftSelectedRecord.baseName} · {draftSelectedRecord.jobTitle}
+                      </p>
+                    </div>
+
+                    <div className="space-y-4 overflow-auto px-5 py-5">
+                      <div className="rounded-2xl border border-slate-800/70 bg-slate-950/80 p-4">
+                        <p className="text-xs uppercase tracking-[0.2em] text-slate-500">签到信息</p>
+                        <div className="mt-3 space-y-2 text-sm text-slate-300">
+                          <p>签到日期：{draftSelectedRecord.workDate}</p>
+                          <p>签到时间：{draftSelectedRecord.checkinTime ? String(draftSelectedRecord.checkinTime).slice(11, 19) : '-'}</p>
+                          <p>工人 UID：<span className="font-mono">{draftSelectedRecord.workerUid}</span></p>
+                        </div>
+                      </div>
+
+                      <div className="rounded-2xl border border-slate-800/70 bg-slate-950/80 p-4">
+                        <p className="text-xs uppercase tracking-[0.2em] text-slate-500">计薪规则</p>
+                        {draftJobLoading ? (
+                          <div className="flex items-center justify-center py-8">
+                            <Loader2 className="animate-spin text-emerald-300" size={20} />
+                          </div>
+                        ) : draftJobDetail ? (
+                          <div className="mt-3 space-y-3 text-sm text-slate-300">
+                            <p>计薪方式：{draftJobDetail.payType === 1 ? '固定' : draftJobDetail.payType === 2 ? '时薪' : '计件'}</p>
+                            <p>
+                              单价规则：
+                              {draftJobDetail.payType === 1
+                                ? ` ¥${Number(draftJobDetail.salaryAmount || 0).toFixed(2)}/天`
+                                : draftJobDetail.payType === 2
+                                  ? ` ¥${Number(draftJobDetail.hourlyRate || 0).toFixed(2)}/小时`
+                                  : ` ¥${Number(draftJobDetail.unitPrice || 0).toFixed(2)}/件`}
+                            </p>
+
+                            {draftJobDetail.payType === 2 && (
+                              <label className="block">
+                                <span className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-500">工作时长（小时）</span>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  step="0.5"
+                                  value={draftDuration}
+                                  onChange={(e) => setDraftDuration(e.target.value)}
+                                  className="w-full rounded-2xl border border-slate-800 bg-slate-900/80 px-4 py-3 text-sm text-white focus:border-emerald-500/40 focus:outline-none"
+                                />
+                              </label>
+                            )}
+
+                            {draftJobDetail.payType === 3 && (
+                              <label className="block">
+                                <span className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-500">完成件数</span>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  step="1"
+                                  value={draftCount}
+                                  onChange={(e) => setDraftCount(e.target.value)}
+                                  className="w-full rounded-2xl border border-slate-800 bg-slate-900/80 px-4 py-3 text-sm text-white focus:border-emerald-500/40 focus:outline-none"
+                                />
+                              </label>
+                            )}
+                          </div>
+                        ) : (
+                          <p className="mt-3 text-sm text-slate-500">请选择一条签到记录后查看计薪规则。</p>
+                        )}
+                      </div>
+
+                      <div className="flex gap-3">
+                        <button
+                          onClick={closeDraftModal}
+                          className="flex-1 rounded-2xl bg-slate-800 px-4 py-3 text-sm font-medium text-slate-300 transition hover:bg-slate-700"
+                        >
+                          取消
+                        </button>
+                        <button
+                          onClick={handleCreateDraft}
+                          disabled={!draftSelectedRecord || !draftJobDetail || draftSubmitting}
+                          className="flex-1 rounded-2xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-400 disabled:opacity-50"
+                        >
+                          {draftSubmitting ? '生成中...' : '生成工资草稿'}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex h-full min-h-[420px] items-center justify-center px-6 text-center text-sm text-slate-500">
+                    从左侧选择一条已签到记录开始结算
+                  </div>
+                )}
+              </aside>
+            </div>
+          </div>
+        </div>
+      , modalRoot)}
     </div>
   );
 }

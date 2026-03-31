@@ -1,6 +1,5 @@
 <!--pages/field/home/home.wxml-->
 <view class="page">
-  <!-- 头部 -->
   <view class="header">
     <view class="logo-row">
       <view class="logo">F</view>
@@ -11,12 +10,10 @@
     </view>
   </view>
 
-  <!-- 加载中 -->
   <view class="loading-box" wx:if="{{loading}}">
     <text>加载中...</text>
   </view>
 
-  <!-- 错误提示 -->
   <view class="error-card" wx:elif="{{error}}">
     <text class="error-icon">⚠</text>
     <text class="error-msg">{{error}}</text>
@@ -24,10 +21,9 @@
   </view>
 
   <block wx:else>
-    <!-- 基地信息卡片 -->
     <view class="base-card" wx:if="{{baseInfo}}">
       <view class="base-card-header">
-        <view class="base-badge">管辖基地</view>
+        <view class="base-badge">管理基地</view>
       </view>
       <view class="base-name">{{baseInfo.name || '基地 #' + baseId}}</view>
       <view class="base-detail-row">
@@ -44,7 +40,6 @@
       </view>
     </view>
 
-    <!-- 今日考勤统计 -->
     <view class="stats-card">
       <view class="section-title-row">
         <text class="section-title">今日考勤</text>
@@ -69,10 +64,9 @@
       </view>
     </view>
 
-    <!-- 快捷操作 -->
     <view class="actions">
       <view class="action-btn scan-btn" bindtap="goScan">
-        <text class="action-icon">📷</text>
+        <text class="action-icon">📲</text>
         <text class="action-text">扫码签到</text>
         <text class="action-desc">扫描工人二维码完成签到</text>
       </view>
@@ -83,7 +77,6 @@
       </view>
     </view>
 
-    <!-- 最近签到记录 -->
     <view class="recent-section" wx:if="{{recentRecords.length > 0}}">
       <view class="section-title-row">
         <text class="section-title">最近签到</text>
@@ -101,7 +94,6 @@
       </view>
     </view>
 
-    <!-- 无数据时 -->
     <view class="empty-box" wx:if="{{!loading && !baseInfo && !error}}">
       <text>暂无基地信息</text>
     </view>

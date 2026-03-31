@@ -68,17 +68,19 @@ npm install
 
 1. 创建MySQL数据库：
 ```sql
-CREATE DATABASE picker_management CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE DATABASE pickpass_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 ```
 
 2. 配置后端环境变量（`app/backend/.env`）：
 ```env
-DB_HOST=localhost
+DB_HOST=127.0.0.1
 DB_PORT=3306
 DB_USERNAME=root
-DB_PASSWORD=your_password
-DB_DATABASE=picker_management
-JWT_SECRET=your_jwt_secret
+DB_PASSWORD=123456
+DB_DATABASE=pickpass_db
+JWT_SECRET=super_secret_key_for_course_design_2025
+AES_KEY=CaiZhiTong2025AES32ByteKey123456
+AES_IV=0123456789012345
 ```
 
 ### 运行项目

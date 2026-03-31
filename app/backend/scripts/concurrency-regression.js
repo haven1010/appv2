@@ -5,9 +5,9 @@ const BASE_URL = process.env.TEST_BASE_URL || 'http://127.0.0.1:3001/api';
 const CONCURRENCY = Number(process.env.TEST_CONCURRENCY || 8);
 const DB_CONFIG = {
   host: process.env.DB_HOST || '127.0.0.1',
-  port: Number(process.env.DB_PORT || 3307),
-  user: process.env.DB_USERNAME || 'pickpass_user',
-  password: process.env.DB_PASSWORD || 'pickpass_password',
+  port: Number(process.env.DB_PORT || 3306),
+  user: process.env.DB_USERNAME || 'root',
+  password: process.env.DB_PASSWORD || '123456',
   database: process.env.DB_DATABASE || 'pickpass_db',
 };
 

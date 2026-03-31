@@ -1,2 +1,38 @@
-<!--pages/attendance/attendance.wxml-->
-<text>pages/attendance/attendance.wxml</text>
+<!-- pages/attendance/attendance.wxml -->
+<view class="page {{pageReady ? 'page-enter' : ''}}">
+  <view class="sticky-shell">
+    <text class="title">考勤管理</text>
+    <text class="subtitle">签到、记录、薪资入口统一在这里</text>
+  </view>
+
+  <view class="entry-card">
+    <text class="card-title">今日考勤助手</text>
+    <text class="card-desc">点击对应功能即可快速完成签到和记录查询</text>
+
+    <view class="entry-list">
+      <view class="entry-item pressable" hover-class="pressing" hover-stay-time="100" bindtap="goToQrcode">
+        <view>
+          <text class="entry-title">签到码</text>
+          <text class="entry-sub">展示个人签到二维码</text>
+        </view>
+        <text class="entry-arrow">进入</text>
+      </view>
+
+      <view class="entry-item pressable" hover-class="pressing" hover-stay-time="100" bindtap="goToWorkHistory">
+        <view>
+          <text class="entry-title">考勤记录</text>
+          <text class="entry-sub">查看签到时间与工作历程</text>
+        </view>
+        <text class="entry-arrow">进入</text>
+      </view>
+
+      <view class="entry-item pressable" hover-class="pressing" hover-stay-time="100" bindtap="goToSalary">
+        <view>
+          <text class="entry-title">薪资结算</text>
+          <text class="entry-sub">确认待发放工资记录</text>
+        </view>
+        <text class="entry-arrow">进入</text>
+      </view>
+    </view>
+  </view>
+</view>

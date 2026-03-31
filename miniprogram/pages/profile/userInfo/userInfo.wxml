@@ -1,35 +1,87 @@
-<!--pages/profile/userInfo/userInfo.wxml-->
-<view class="container">
-  <view class="card" wx:if="{{profile}}">
-    <view class="form-group">
-      <view class="label">姓名</view>
-      <input class="input" placeholder="请输入姓名" value="{{form.name}}" bindinput="onInputName" />
+<!-- pages/profile/userInfo/userInfo.wxml -->
+<view class="page {{pageReady ? 'page-enter' : ''}}" bindtap="handleBlankTap">
+  <scroll-view class="scroll-wrap" scroll-y enhanced bounces bindscroll="onScroll">
+    <view class="sticky-shell">
+      <view class="sticky-glow" style="opacity: {{topShadeOpacity}};"></view>
+      <view class="brand-row">
+        <image class="brand-logo" src="/images/zhihui-logo.jpg" mode="aspectFit" />
+        <view>
+          <text class="sticky-title">基本信息</text>
+          <text class="sticky-sub">点击卡片可展开编辑，长按可快速复制</text>
+        </view>
+      </view>
     </view>
-    <view class="form-group">
-      <view class="label">工号</view>
-      <view class="value">{{profile.uid || '-'}}</view>
-    </view>
-    <view class="form-group">
-      <view class="label">手机号</view>
-      <input class="input" type="number" placeholder="请输入手机号" value="{{form.phone}}" bindinput="onInputPhone" maxlength="11" />
-    </view>
-    <view class="form-group">
-      <view class="label">身份证号</view>
-      <view class="value">{{profile.idCardMasked || '-'}}</view>
-    </view>
-    <view class="form-group">
-      <view class="label">紧急联系人</view>
-      <input class="input" placeholder="请输入姓名及关系" value="{{form.emergencyContact}}" bindinput="onInputEmergencyContact" />
-    </view>
-    <view class="form-group">
-      <view class="label">联系人电话</view>
-      <input class="input" type="number" placeholder="请输入电话" value="{{form.emergencyPhone}}" bindinput="onInputEmergencyPhone" maxlength="11" />
-    </view>
-    <view class="form-group">
-      <view class="label">认证状态</view>
-      <view class="value">{{auditStatusText}}</view>
-    </view>
-  </view>
 
-  <button class="btn-save" bindtap="handleSave" loading="{{saving}}" wx:if="{{profile}}">保存修改</button>
+    <view class="module-card {{infoExpanded ? 'open' : 'closed'}}" wx:if="{{profile}}" catchtap="noop">
+      <view class="module-head pressable" hover-class="pressing" hover-stay-time="110" bindtap="toggleInfoCard">
+        <view class="avatar-wrap pressable" hover-class="pressing" hover-stay-time="90" catchtap="previewAvatar">
+          <image class="avatar-image" wx:if="{{profile.avatarUrl}}" src="{{profile.avatarUrl}}" mode="aspectFill"></image>
+          <text class="avatar-text" wx:else>{{profile.name ? profile.name[0] : '工'}}</text>
+        </view>
+        <view class="head-main">
+          <text class="head-name" bindlongpress="copyByLongPress" data-copy="{{profile.name}}" data-label="姓名">{{profile.name || '未填写姓名'}}</text>
+          <text class="head-sub">{{profile.roleText || '务工人员'}} · {{auditStatusText}}</text>
+        </view>
+        <text class="head-toggle">{{infoExpanded ? '收起' : '展开'}}</text>
+      </view>
+
+      <view class="module-body">
+        <view class="info-grid">
+          <view class="info-row">
+            <text class="info-label">岗位</text>
+            <text class="info-value" bindlongpress="copyByLongPress" data-copy="{{profile.roleText}}" data-label="岗位">{{profile.roleText || '-'}}</text>
+          </view>
+          <view class="info-row">
+            <text class="info-label">部门</text>
+            <text class="info-value" bindlongpress="copyByLongPress" data-copy="{{profile.departmentText}}" data-label="部门">{{profile.departmentText || '-'}}</text>
+          </view>
+          <view class="info-row">
+            <text class="info-label">入职时间</text>
+            <text class="info-value">{{profile.joinDateText || '-'}}</text>
+          </view>
+          <view class="info-row">
+            <text class="info-label">工号</text>
+            <text class="info-value" bindlongpress="copyByLongPress" data-copy="{{profile.uid}}" data-label="工号">{{profile.uid || '-'}}</text>
+          </view>
+        </view>
+
+        <view class="divider"></view>
+
+        <view class="field-group">
+          <text class="field-label">姓名</text>
+          <input class="field-input" value="{{form.name}}" placeholder="请输入姓名" bindinput="onInputName" />
+        </view>
+        <view class="field-group">
+          <text class="field-label">手机号</text>
+          <input class="field-input" type="number" maxlength="11" value="{{form.phone}}" placeholder="请输入手机号" bindinput="onInputPhone" />
+        </view>
+        <view class="field-group">
+          <text class="field-label">身份证号</text>
+          <text class="field-value">{{profile.idCardMasked || '-'}}</text>
+        </view>
+        <view class="field-group">
+          <text class="field-label">紧急联系人</text>
+          <input class="field-input" value="{{form.emergencyContact}}" placeholder="请输入联系人姓名及关系" bindinput="onInputEmergencyContact" />
+        </view>
+        <view class="field-group">
+          <text class="field-label">联系人电话</text>
+          <input class="field-input" type="number" maxlength="11" value="{{form.emergencyPhone}}" placeholder="请输入紧急联系人电话" bindinput="onInputEmergencyPhone" />
+        </view>
+      </view>
+    </view>
+
+    <view class="empty-card" wx:if="{{!profile}}">
+      <text class="empty-title">暂无基本信息</text>
+      <text class="empty-desc">请稍后刷新或重新登录后再试</text>
+    </view>
+
+    <button
+      class="save-btn pressable"
+      hover-class="pressing"
+      hover-stay-time="110"
+      wx:if="{{profile}}"
+      loading="{{saving}}"
+      bindtap="handleSave"
+    >保存修改</button>
+  </scroll-view>
 </view>

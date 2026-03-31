@@ -5,6 +5,7 @@
  */
 // pages/applications/applications.js
 const app = getApp();
+const { resolveRole, isAdminRole } = require('../../utils/role');
 
 const STATUS_MAP = { 0: '审核中', 1: '已录取', 2: '已拒绝', 3: '已取消' };
 
@@ -18,10 +19,12 @@ Page({
   },
 
   onLoad() {
+    if (this.redirectAdminIfNeeded()) return;
     this.checkLogin();
   },
 
   onShow() {
+    if (this.redirectAdminIfNeeded()) return;
     const tabBar = this.getTabBar && this.getTabBar();
     if (tabBar) {
       tabBar.setData({ selected: 1 });
@@ -37,6 +40,16 @@ Page({
   checkLogin() {
     const userInfo = wx.getStorageSync('userInfo');
     if (userInfo) this.setData({ userInfo });
+  },
+
+  redirectAdminIfNeeded() {
+    const userInfo = wx.getStorageSync('userInfo');
+    const role = resolveRole(userInfo);
+    if (isAdminRole(role)) {
+      wx.reLaunch({ url: '/pages/admin/home/home' });
+      return true;
+    }
+    return false;
   },
 
   async loadData() {

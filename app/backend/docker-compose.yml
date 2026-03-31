@@ -4,12 +4,12 @@ services:
     image: mysql:8.0
     container_name: pickpass_mysql
     environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_ROOT_PASSWORD: 123456
       MYSQL_DATABASE: pickpass_db
-      MYSQL_USER: pickpass_user
-      MYSQL_PASSWORD: pickpass_password
+      MYSQL_USER: root
+      MYSQL_PASSWORD: 123456
     ports:
-      - "3307:3306"
+      - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
     networks:

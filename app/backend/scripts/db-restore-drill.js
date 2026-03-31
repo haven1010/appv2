@@ -52,12 +52,12 @@ function formatTimestamp(date = new Date()) {
 function readDbConfig() {
   return {
     host: process.env.DB_HOST || process.env.DB_HOSTNAME || '127.0.0.1',
-    port: Number(process.env.DB_PORT || '3307'),
-    username: process.env.DB_USERNAME || process.env.DB_USER || 'pickpass_user',
-    password: process.env.DB_PASSWORD || 'pickpass_password',
+    port: Number(process.env.DB_PORT || '3306'),
+    username: process.env.DB_USERNAME || process.env.DB_USER || 'root',
+    password: process.env.DB_PASSWORD || '123456',
     database: process.env.DB_DATABASE || 'pickpass_db',
-    adminUsername: process.env.DB_ADMIN_USERNAME || process.env.DB_USERNAME || process.env.DB_USER || 'pickpass_user',
-    adminPassword: process.env.DB_ADMIN_PASSWORD || process.env.DB_PASSWORD || 'pickpass_password',
+    adminUsername: process.env.DB_ADMIN_USERNAME || process.env.DB_USERNAME || process.env.DB_USER || 'root',
+    adminPassword: process.env.DB_ADMIN_PASSWORD || process.env.DB_PASSWORD || '123456',
     grantHost: process.env.DB_GRANT_HOST || '%',
     mode: process.env.DB_BACKUP_MODE || 'auto',
     dockerContainer: process.env.DB_DOCKER_CONTAINER || '',

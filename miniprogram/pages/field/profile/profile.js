@@ -5,6 +5,7 @@
  */
 // pages/field/profile/profile.js
 const app = getApp();
+const { resolveRole, isAdminRole, roleLabel } = require('../../../utils/role');
 
 function maskPhone(phone) {
   if (!phone || phone.length < 7) return phone || '';
@@ -16,6 +17,8 @@ Page({
     userInfo: null,
     profileData: null,
     baseName: '',
+    roleText: '现场管理员',
+    canOpenAdmin: true,
     loading: true,
   },
 
@@ -49,7 +52,12 @@ Page({
       });
       return;
     }
-    this.setData({ userInfo });
+    const role = resolveRole(userInfo);
+    this.setData({
+      userInfo,
+      roleText: roleLabel(role),
+      canOpenAdmin: isAdminRole(role),
+    });
   },
 
   async loadProfile() {
@@ -109,5 +117,25 @@ Page({
         }
       },
     });
+  },
+
+  goScan() {
+    wx.switchTab({ url: '/pages/field/scan/scan' });
+  },
+
+  goRecords() {
+    wx.switchTab({ url: '/pages/field/records/records' });
+  },
+
+  goSettings() {
+    wx.navigateTo({ url: '/pages/profile/settings/settings' });
+  },
+
+  goAdminCenter() {
+    if (!this.data.canOpenAdmin) {
+      wx.showToast({ title: '当前账号无管理权限', icon: 'none' });
+      return;
+    }
+    wx.navigateTo({ url: '/pages/admin/home/home' });
   },
 });

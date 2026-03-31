@@ -5,67 +5,25 @@
  */
 // pages/attendance/attendance.js
 Page({
-
-  /**
-   * 页面的初始数据
-   */
   data: {
-
+    pageReady: false,
   },
 
-  /**
-   * 生命周期函数--监听页面加载
-   */
-  onLoad(options) {
-
+  onLoad() {
+    setTimeout(() => {
+      this.setData({ pageReady: true });
+    }, 30);
   },
 
-  /**
-   * 生命周期函数--监听页面初次渲染完成
-   */
-  onReady() {
-
+  goToQrcode() {
+    wx.navigateTo({ url: '/pages/qrcode/qrcode' });
   },
 
-  /**
-   * 生命周期函数--监听页面显示
-   */
-  onShow() {
-
+  goToWorkHistory() {
+    wx.navigateTo({ url: '/pages/profile/workHistory/workHistory' });
   },
 
-  /**
-   * 生命周期函数--监听页面隐藏
-   */
-  onHide() {
-
+  goToSalary() {
+    wx.navigateTo({ url: '/pages/salary/salary' });
   },
-
-  /**
-   * 生命周期函数--监听页面卸载
-   */
-  onUnload() {
-
-  },
-
-  /**
-   * 页面相关事件处理函数--监听用户下拉动作
-   */
-  onPullDownRefresh() {
-
-  },
-
-  /**
-   * 页面上拉触底事件的处理函数
-   */
-  onReachBottom() {
-
-  },
-
-  /**
-   * 用户点击右上角分享
-   */
-  onShareAppMessage() {
-
-  }
-})
+});

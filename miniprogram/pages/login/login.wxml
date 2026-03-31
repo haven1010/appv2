@@ -1,22 +1,25 @@
 <!--pages/login/login.wxml-->
-<view class="container login-container">
-  <!-- 头部Logo区 -->
-  <view class="header-section">
-    <view class="logo-circle">🌱</view>
-    <view class="app-name">采摘智工</view>
+<view class="container login-container page-enter">
+  <view class="brand-hero">
+    <view class="brand-row">
+      <image class="brand-logo" src="/images/zhihui-logo.jpg" mode="aspectFit" />
+      <view>
+        <view class="brand-title">智汇就业</view>
+        <view class="brand-subtitle">农业劳务智能协同平台</view>
+      </view>
+    </view>
   </view>
 
-  <view class="login-card">
+  <view class="card login-card">
     <view class="title">欢迎回来</view>
-    <view class="subtitle">请登录您的账户</view>
+    <view class="subtitle">请输入手机号和身份证后 6 位</view>
 
-    <!-- 手机号输入 -->
     <view class="form-item">
       <view class="input-wrapper">
-        <text class="input-icon">📱</text>
-        <input 
-          class="input-field" 
-          type="number" 
+        <view class="input-badge badge-blue">手机</view>
+        <input
+          class="input-field"
+          type="number"
           placeholder="请输入手机号"
           placeholder-class="placeholder"
           value="{{phone}}"
@@ -26,14 +29,12 @@
       </view>
     </view>
 
-    <!-- 身份证输入 -->
     <view class="form-item">
       <view class="input-wrapper">
-        <text class="input-icon">🆔</text>
-        <input 
-          class="input-field" 
-          type="idcard" 
-          password="{{false}}"
+        <view class="input-badge badge-gold">验证</view>
+        <input
+          class="input-field"
+          type="text"
           placeholder="身份证后6位"
           placeholder-class="placeholder"
           value="{{idCardLast6}}"
@@ -43,23 +44,20 @@
       </view>
     </view>
 
-    <!-- 错误提示 -->
     <view class="error-msg" wx:if="{{error}}">
       <text>{{error}}</text>
     </view>
 
-    <!-- 登录按钮 -->
-    <button 
-      class="login-btn" 
+    <button
+      class="login-btn"
       hover-class="login-btn-hover"
       bindtap="handleLogin"
       loading="{{loading}}"
       disabled="{{loading}}"
     >
-      {{loading ? '登录中...' : '立即登录'}}
+      {{loading ? '登录中...' : '进入智汇就业'}}
     </button>
 
-    <!-- 底部链接 -->
     <view class="footer-links">
       <text class="register-text">还没有账号？</text>
       <text class="register-link" bindtap="goToRegister">立即注册</text>

@@ -1,48 +1,72 @@
-<!--pages/profile/profile.wxml-->
-<view class="page">
-  <view class="profile-header">
-    <view class="avatar">{{userInfo.name ? userInfo.name[0] : '?'}}</view>
-    <view class="user-name">{{userInfo.name}}</view>
+﻿<!--pages/profile/profile.wxml-->
+<view class="page page-enter">
+  <view class="header-card card">
+    <view class="brand-row">
+      <image class="brand-logo" src="/images/zhihui-logo.jpg" mode="aspectFit" />
+      <view>
+        <view class="brand-title">智汇就业</view>
+        <view class="brand-sub">我的个人中心</view>
+      </view>
+    </view>
+
+    <view class="profile-main">
+      <view class="avatar">{{userInfo.name ? userInfo.name[0] : '?'}}</view>
+      <view class="profile-copy">
+        <view class="user-name">{{userInfo.name}}</view>
+        <view class="profile-sub">{{roleText}}</view>
+      </view>
+    </view>
+
     <view class="user-tags">
-      <text class="tag">实名采摘工</text>
+      <text class="tag">已实名认证</text>
       <text class="tag uid">{{userInfo.uid}}</text>
     </view>
   </view>
 
-  <view class="menu-list">
+  <view class="menu-list card">
     <view class="menu-item" bindtap="goBasicInfo">
       <view class="menu-left">
-        <text class="menu-icon">👤</text>
+        <text class="menu-icon">基本</text>
         <text class="menu-label">基本信息</text>
       </view>
-      <text class="menu-value">{{profileData ? (profileData.infoAuditStatus === 1 ? '已认证' : profileData.infoAuditStatus === 0 ? '待审核' : '未认证') : '-'}}</text>
-      <text class="menu-arrow">›</text>
+      <text class="menu-value">{{profileData ? (profileData.infoAuditStatus === 1 ? '已认证' : profileData.infoAuditStatus === 0 ? '待审核' : '未通过') : '-'}}</text>
+      <text class="menu-arrow">></text>
     </view>
 
     <view class="menu-item" bindtap="goSalaryCard">
       <view class="menu-left">
-        <text class="menu-icon">💳</text>
-        <text class="menu-label">薪资卡号</text>
+        <text class="menu-icon">工资</text>
+        <text class="menu-label">工资卡号</text>
       </view>
-      <text class="menu-value">未绑定</text>
-      <text class="menu-arrow">›</text>
+      <text class="menu-value">查看与复制</text>
+      <text class="menu-arrow">></text>
     </view>
 
     <view class="menu-item" bindtap="showWorkHistory">
       <view class="menu-left">
-        <text class="menu-icon">📋</text>
+        <text class="menu-icon">历程</text>
         <text class="menu-label">工作历程</text>
       </view>
       <text class="menu-value">{{workerStats ? workerStats.workDays + ' 天签到' : '0 天签到'}}</text>
-      <text class="menu-arrow">›</text>
+      <text class="menu-arrow">></text>
     </view>
 
-    <view class="menu-item">
+    <view class="menu-item" wx:if="{{canOpenAdmin}}" bindtap="goAdminCenter">
       <view class="menu-left">
-        <text class="menu-icon">⚙</text>
+        <text class="menu-icon">管理</text>
+        <text class="menu-label">管理中心</text>
+      </view>
+      <text class="menu-value">基地 / 签到 / 超级管理</text>
+      <text class="menu-arrow">></text>
+    </view>
+
+    <view class="menu-item" bindtap="goSettings">
+      <view class="menu-left">
+        <text class="menu-icon">设置</text>
         <text class="menu-label">设置</text>
       </view>
-      <text class="menu-arrow">›</text>
+      <text class="menu-value">通知与隐私</text>
+      <text class="menu-arrow">></text>
     </view>
   </view>
 

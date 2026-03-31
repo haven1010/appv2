@@ -22,9 +22,9 @@ async function updatePhoneHash() {
   const connection = await createConnection({
     type: 'mysql',
     host: configService.get<string>('DB_HOST', 'localhost'),
-    port: configService.get<number>('DB_PORT', 3307),
-    username: configService.get<string>('DB_USERNAME', 'pickpass_user'),
-    password: configService.get<string>('DB_PASSWORD', 'pickpass_password'),
+    port: configService.get<number>('DB_PORT', 3306),
+    username: configService.get<string>('DB_USERNAME', 'root'),
+    password: configService.get<string>('DB_PASSWORD', '123456'),
     database: configService.get<string>('DB_DATABASE', 'pickpass_db'),
     entities: [SysUser],
   });

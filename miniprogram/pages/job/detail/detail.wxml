@@ -1,58 +1,61 @@
-<!--pages/job/detail/detail.wxml-->
-<view class="container">
-  <view class="card" wx:if="{{jobInfo}}">
-    <view class="job-title">{{jobInfo.jobTitle}}</view>
-    <view class="job-info">
+<!-- pages/job/detail/detail.wxml -->
+<view class="page page-enter">
+  <view class="sticky-shell">
+    <text class="title">岗位详情</text>
+    <text class="subtitle">查看薪资、要求并完成申请</text>
+  </view>
+
+  <view class="detail-card" wx:if="{{jobInfo}}">
+    <text class="job-title">{{jobInfo.jobTitle || '未命名岗位'}}</text>
+
+    <view class="info-list">
       <view class="info-item">
-        <text class="label">薪资类型：</text>
-        <text class="value">
-          {{jobInfo.payType === 'fixed' ? '固定工资' : jobInfo.payType === 'hourly' ? '时薪' : '计件'}}
-        </text>
+        <text class="label">薪资类型</text>
+        <text class="value">{{jobInfo.payType === 'fixed' ? '固定工资' : jobInfo.payType === 'hourly' ? '时薪' : '计件'}}</text>
       </view>
       <view class="info-item">
-        <text class="label">薪资标准：</text>
+        <text class="label">薪资标准</text>
         <text class="value highlight">
-          {{jobInfo.payType === 'fixed' ? jobInfo.salaryAmount : jobInfo.payType === 'hourly' ? jobInfo.hourlyRate : jobInfo.unitPrice}}元
-          {{jobInfo.payType === 'hourly' ? '/小时' : jobInfo.payType === 'piecework' ? '/件' : ''}}
+          {{jobInfo.payType === 'fixed' ? jobInfo.salaryAmount : jobInfo.payType === 'hourly' ? jobInfo.hourlyRate : jobInfo.unitPrice}} 元{{jobInfo.payType === 'hourly' ? '/小时' : jobInfo.payType === 'piecework' ? '/件' : ''}}
         </text>
       </view>
       <view class="info-item">
-        <text class="label">招聘人数：</text>
-        <text class="value">{{jobInfo.recruitCount}}人</text>
+        <text class="label">招聘人数</text>
+        <text class="value">{{jobInfo.recruitCount || 0}} 人</text>
       </view>
       <view class="info-item">
-        <text class="label">工作周期：</text>
+        <text class="label">结算周期</text>
         <text class="value">{{jobInfo.workCycle === 'daily' ? '日结' : jobInfo.workCycle === 'weekly' ? '周结' : '月结'}}</text>
       </view>
     </view>
 
-    <view class="job-description" wx:if="{{jobInfo.jobDescription}}">
-      <view class="section-title">工作内容</view>
-      <text>{{jobInfo.jobDescription}}</text>
+    <view class="section" wx:if="{{jobInfo.jobDescription}}">
+      <text class="section-title">工作内容</text>
+      <text class="section-text">{{jobInfo.jobDescription}}</text>
     </view>
 
-    <view class="job-requirements" wx:if="{{jobInfo.requirements}}">
-      <view class="section-title">招聘要求</view>
-      <text>{{jobInfo.requirements}}</text>
+    <view class="section" wx:if="{{jobInfo.requirements}}">
+      <text class="section-title">招聘要求</text>
+      <text class="section-text">{{jobInfo.requirements}}</text>
     </view>
 
-    <view class="job-status">
-      <text class="status-badge" wx:if="{{jobInfo.status === 1}}">招聘中</text>
-      <text class="status-badge" wx:else>已停止</text>
+    <view class="status-wrap">
+      <text class="status-tag {{jobInfo.status === 1 ? 'open' : 'closed'}}">{{jobInfo.status === 1 ? '招聘中' : '已停止'}}</text>
     </view>
   </view>
 
-  <view class="button-group">
-    <button 
-      class="btn-primary" 
+  <view class="state-card" wx:if="{{loading}}">
+    <text class="state-title">正在加载岗位详情...</text>
+    <text class="state-desc">请稍候</text>
+  </view>
+
+  <view class="action-shell">
+    <button
+      class="apply-btn pressable"
+      hover-class="pressing"
+      hover-stay-time="100"
       bindtap="handleApply"
       disabled="{{!jobInfo || jobInfo.status !== 1}}"
-    >
-      申请岗位
-    </button>
-  </view>
-
-  <view class="loading" wx:if="{{loading}}">
-    <text>加载中...</text>
+    >申请岗位</button>
   </view>
 </view>

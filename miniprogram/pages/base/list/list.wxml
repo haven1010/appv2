@@ -1,61 +1,73 @@
-<!--pages/base/list/list.wxml-->
-<view class="container">
-  <view class="filter-bar">
-    <view 
-      class="filter-item {{category === 0 ? 'active' : ''}}"
-      bindtap="filterByCategory"
-      data-category="0"
-    >
-      全部
-    </view>
-    <view 
-      class="filter-item {{category === 1 ? 'active' : ''}}"
-      bindtap="filterByCategory"
-      data-category="1"
-    >
-      水果
-    </view>
-    <view 
-      class="filter-item {{category === 2 ? 'active' : ''}}"
-      bindtap="filterByCategory"
-      data-category="2"
-    >
-      蔬菜
-    </view>
-    <view 
-      class="filter-item {{category === 3 ? 'active' : ''}}"
-      bindtap="filterByCategory"
-      data-category="3"
-    >
-      其他
-    </view>
+<!-- pages/base/list/list.wxml -->
+<view class="page page-enter">
+  <view class="sticky-shell">
+    <text class="title">基地管理</text>
+    <text class="subtitle">按品类筛选基地，风格与个人页统一</text>
   </view>
 
-  <view class="base-list" wx:if="{{!loading && bases.length > 0}}">
-    <view 
-      class="base-item card" 
-      wx:for="{{bases}}" 
+  <view class="filter-bar">
+    <view
+      class="filter-item pressable {{category === 0 ? 'active' : ''}}"
+      bindtap="filterByCategory"
+      hover-class="pressing"
+      hover-stay-time="90"
+      data-category="0"
+    >全部</view>
+    <view
+      class="filter-item pressable {{category === 1 ? 'active' : ''}}"
+      bindtap="filterByCategory"
+      hover-class="pressing"
+      hover-stay-time="90"
+      data-category="1"
+    >水果</view>
+    <view
+      class="filter-item pressable {{category === 2 ? 'active' : ''}}"
+      bindtap="filterByCategory"
+      hover-class="pressing"
+      hover-stay-time="90"
+      data-category="2"
+    >蔬菜</view>
+    <view
+      class="filter-item pressable {{category === 3 ? 'active' : ''}}"
+      bindtap="filterByCategory"
+      hover-class="pressing"
+      hover-stay-time="90"
+      data-category="3"
+    >其他</view>
+  </view>
+
+  <view wx:if="{{loading}}" class="state-card">
+    <text class="state-title">正在加载基地列表...</text>
+    <text class="state-desc">请稍候</text>
+  </view>
+
+  <view wx:elif="{{bases.length === 0}}" class="state-card">
+    <text class="state-title">暂无基地信息</text>
+    <text class="state-desc">稍后刷新或调整筛选条件</text>
+  </view>
+
+  <view wx:else class="base-list">
+    <view
+      class="base-item pressable"
+      wx:for="{{bases}}"
       wx:key="id"
       bindtap="goToDetail"
+      hover-class="pressing"
+      hover-stay-time="100"
       data-id="{{item.id}}"
     >
-      <view class="base-name">{{item.baseName}}</view>
-      <view class="base-info">
-        <text class="base-category">{{item.category === 1 ? '水果' : item.category === 2 ? '蔬菜' : '其他'}}</text>
-        <text class="base-address" wx:if="{{item.address}}">{{item.address}}</text>
+      <view class="item-head">
+        <text class="base-name">{{item.baseName || '未命名基地'}}</text>
+        <text class="audit-tag {{item.auditStatus === 1 ? 'approved' : 'pending'}}">{{item.auditStatus === 1 ? '已审核' : '待审核'}}</text>
       </view>
-      <view class="base-status">
-        <text class="status-text" wx:if="{{item.auditStatus === 1}}">已审核</text>
-        <text class="status-text pending" wx:else>待审核</text>
+      <view class="item-meta">
+        <text class="category-tag">{{item.category === 1 ? '水果' : item.category === 2 ? '蔬菜' : '其他'}}</text>
+        <text class="base-address" wx:if="{{item.address}}">{{item.address}}</text>
+        <text class="base-address" wx:else>地址待补充</text>
+      </view>
+      <view class="item-foot">
+        <text class="foot-hint">点击查看基地详情与岗位信息</text>
       </view>
     </view>
-  </view>
-
-  <view class="empty" wx:if="{{!loading && bases.length === 0}}">
-    <text>暂无基地信息</text>
-  </view>
-
-  <view class="loading" wx:if="{{loading}}">
-    <text>加载中...</text>
   </view>
 </view>

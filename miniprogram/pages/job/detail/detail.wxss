@@ -1,31 +1,64 @@
 /* pages/job/detail/detail.wxss */
-.container {
-  padding: 20rpx;
-  padding-bottom: 120rpx; /* Space for fixed bottom button */
+.page {
+  min-height: 100vh;
+  padding: 0 24rpx 132rpx;
+  box-sizing: border-box;
+  background:
+    radial-gradient(circle at right top, rgba(255, 226, 180, 0.9) 0%, rgba(255, 226, 180, 0) 46%),
+    linear-gradient(180deg, #fffef8 0%, #fff2dc 100%);
 }
 
-.card {
-  background: #1e293b;
-  border-radius: 20rpx;
-  padding: 30rpx;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+.sticky-shell {
+  position: sticky;
+  top: 0;
+  z-index: 8;
+  padding: 24rpx 2rpx 16rpx;
+  background: linear-gradient(180deg, rgba(255, 247, 230, 0.98) 0%, rgba(255, 247, 230, 0.72) 74%, rgba(255, 247, 230, 0) 100%);
+}
+
+.title {
+  display: block;
+  font-size: 36rpx;
+  font-weight: 800;
+  color: #2f2316;
+}
+
+.subtitle {
+  display: block;
+  margin-top: 8rpx;
+  font-size: 24rpx;
+  color: #8b7a64;
+}
+
+.detail-card {
+  border-radius: 24rpx;
+  border: 1rpx solid rgba(201, 153, 85, 0.2);
+  background: rgba(255, 251, 244, 0.95);
+  box-shadow: 0 12rpx 22rpx rgba(186, 134, 41, 0.1);
+  padding: 24rpx;
 }
 
 .job-title {
-  font-size: 40rpx;
-  font-weight: bold;
-  color: #f1f5f9;
-  margin-bottom: 40rpx;
+  font-size: 32rpx;
+  font-weight: 800;
+  color: #2f2316;
+  margin-bottom: 18rpx;
 }
 
-.job-info {
-  margin-bottom: 40rpx;
+.info-list {
+  border-radius: 18rpx;
+  overflow: hidden;
+  border: 1rpx solid rgba(201, 153, 85, 0.16);
 }
 
 .info-item {
   display: flex;
-  padding: 24rpx 0;
-  border-bottom: 1rpx solid rgba(255, 255, 255, 0.05);
+  justify-content: space-between;
+  align-items: center;
+  gap: 10rpx;
+  padding: 18rpx 16rpx;
+  background: rgba(255, 255, 255, 0.78);
+  border-bottom: 1rpx solid rgba(201, 153, 85, 0.12);
 }
 
 .info-item:last-child {
@@ -33,89 +66,172 @@
 }
 
 .label {
-  font-size: 28rpx;
-  color: #94a3b8;
-  width: 200rpx;
+  font-size: 24rpx;
+  color: #7f6f5a;
 }
 
 .value {
-  font-size: 28rpx;
-  color: #f1f5f9;
-  flex: 1;
   text-align: right;
+  font-size: 24rpx;
+  color: #2f2416;
+  font-weight: 700;
 }
 
 .value.highlight {
-  color: #34d399;
-  font-weight: bold;
-  font-size: 32rpx;
+  color: #3aa07f;
 }
 
-.job-description,
-.job-requirements {
-  margin-top: 40rpx;
-  padding-top: 40rpx;
-  border-top: 1rpx solid rgba(255, 255, 255, 0.05);
+.section {
+  margin-top: 18rpx;
 }
 
 .section-title {
-  font-size: 32rpx;
-  font-weight: bold;
-  color: #f1f5f9;
-  margin-bottom: 24rpx;
-  border-left: 8rpx solid #34d399;
-  padding-left: 16rpx;
+  display: block;
+  font-size: 27rpx;
+  font-weight: 800;
+  color: #2f2316;
 }
 
-.job-description text,
-.job-requirements text {
-  font-size: 28rpx;
-  color: #cbd5e1;
-  line-height: 1.6;
-}
-
-.job-status {
-  margin-top: 40rpx;
-}
-
-.status-badge {
-  display: inline-block;
-  padding: 8rpx 16rpx;
-  background-color: rgba(52, 211, 153, 0.2);
-  color: #34d399;
-  border-radius: 8rpx;
+.section-text {
+  display: block;
+  margin-top: 10rpx;
   font-size: 24rpx;
+  line-height: 1.7;
+  color: #6f604d;
+  border-radius: 16rpx;
+  border: 1rpx solid rgba(201, 153, 85, 0.14);
+  background: rgba(255, 255, 255, 0.78);
+  padding: 14rpx 16rpx;
 }
 
-.button-group {
+.status-wrap {
+  margin-top: 16rpx;
+}
+
+.status-tag {
+  font-size: 22rpx;
+  font-weight: 700;
+  border-radius: 999rpx;
+  padding: 6rpx 14rpx;
+}
+
+.status-tag.open {
+  color: #2f9d73;
+  background: rgba(130, 219, 189, 0.24);
+}
+
+.status-tag.closed {
+  color: #c25b4b;
+  background: rgba(233, 148, 134, 0.18);
+}
+
+.state-card {
+  margin-top: 18rpx;
+  border-radius: 24rpx;
+  text-align: center;
+  padding: 52rpx 28rpx;
+  border: 1rpx solid rgba(201, 153, 85, 0.2);
+  background: rgba(255, 252, 246, 0.92);
+  box-shadow: 0 12rpx 22rpx rgba(190, 139, 49, 0.08);
+}
+
+.state-title {
+  display: block;
+  font-size: 30rpx;
+  color: #5d4a31;
+  font-weight: 700;
+}
+
+.state-desc {
+  display: block;
+  margin-top: 8rpx;
+  font-size: 24rpx;
+  color: #8b7a64;
+}
+
+.action-shell {
   position: fixed;
-  bottom: 0;
   left: 0;
-  width: 100%;
-  padding: 20rpx 40rpx;
-  background: #020617; /* Matches page background */
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  right: 0;
+  bottom: 0;
+  padding: 18rpx 28rpx 28rpx;
+  background: linear-gradient(180deg, rgba(255, 247, 230, 0) 0%, rgba(255, 247, 230, 0.96) 42%);
   box-sizing: border-box;
 }
 
-.btn-primary {
-  width: 100%;
-  background: #34d399;
-  color: #fff;
-  border-radius: 12rpx;
-  font-weight: bold;
-  font-size: 32rpx;
+.apply-btn {
+  border: none;
+  border-radius: 999rpx;
+  font-size: 30rpx;
+  font-weight: 800;
+  color: #2f2316;
+  background: linear-gradient(135deg, #8ce3c8 0%, #86d9f5 52%, #ffd786 100%);
 }
 
-.btn-primary[disabled] {
-  background: #334155 !important;
-  color: #64748b !important;
+.apply-btn::after {
+  border: none;
 }
 
-.loading {
-  text-align: center;
-  padding: 60rpx 0;
-  color: #64748b;
-  font-size: 28rpx;
+.apply-btn[disabled] {
+  color: #99866f !important;
+  background: rgba(221, 205, 181, 0.9) !important;
 }
 
+@media (prefers-color-scheme: dark) {
+  .page {
+    background:
+      radial-gradient(circle at right top, rgba(74, 96, 109, 0.54) 0%, rgba(74, 96, 109, 0) 46%),
+      linear-gradient(180deg, #1a2028 0%, #121820 100%);
+  }
+
+  .sticky-shell {
+    background: linear-gradient(180deg, rgba(25, 31, 41, 0.98) 0%, rgba(25, 31, 41, 0.74) 74%, rgba(25, 31, 41, 0) 100%);
+  }
+
+  .title,
+  .job-title,
+  .section-title,
+  .value,
+  .state-title {
+    color: #ecf3ff;
+  }
+
+  .subtitle,
+  .label,
+  .section-text,
+  .state-desc {
+    color: #a8bace;
+  }
+
+  .detail-card,
+  .state-card {
+    background: rgba(30, 39, 50, 0.94);
+    border-color: rgba(129, 152, 176, 0.24);
+    box-shadow: 0 14rpx 28rpx rgba(0, 0, 0, 0.28);
+  }
+
+  .info-list,
+  .info-item,
+  .section-text {
+    background: rgba(22, 29, 39, 0.85);
+    border-color: rgba(129, 152, 176, 0.22);
+  }
+
+  .value.highlight {
+    color: #8de0c5;
+  }
+
+  .apply-btn {
+    color: #eff8ff;
+    background: linear-gradient(135deg, #3f8c72 0%, #3b6e88 52%, #a17f3e 100%);
+  }
+
+  .apply-btn[disabled] {
+    color: #95a6ba !important;
+    background: rgba(63, 79, 97, 0.9) !important;
+  }
+
+  .action-shell {
+    background: linear-gradient(180deg, rgba(25, 31, 41, 0) 0%, rgba(25, 31, 41, 0.96) 42%);
+  }
+}
