@@ -39,6 +39,22 @@ export class UserController {
     };
   }
 
+  @Post('register/boss')
+  @ApiOperation({ summary: '企业老板注册（仅创建 boss 角色）' })
+  async registerBoss(@Req() req, @Body() createUserDto: CreateUserDto) {
+    if (createUserDto.roleKey && createUserDto.roleKey !== UserRole.BOSS) {
+      throw new BadRequestException('老板注册接口仅允许 boss 角色');
+    }
+    createUserDto.roleKey = UserRole.BOSS;
+    const user = await this.userService.create(createUserDto, { request: req });
+    return {
+      id: user.id,
+      uid: user.uid,
+      name: user.name,
+      msg: '老板注册成功',
+    };
+  }
+
   @Post('register/ocr')
   @ApiOperation({ summary: 'OCR拍照录入（拍摄身份证照片后OCR识别）' })
   async registerByOcr(@Body() dto: RegisterByOcrDto) {

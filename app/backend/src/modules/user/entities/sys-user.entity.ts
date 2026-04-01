@@ -1,73 +1,74 @@
 /**
  * Layer: Persistence Entity
- * Responsibility: Defines the Sys User persistence mapping and documents how the User model is stored in the relational schema.
- * Notes: Keep comments focused on intent, invariants, side effects, and cross-module contracts.
+ * Responsibility: Defines the user table mapping.
  */
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, Index, JoinColumn, ManyToOne } from 'typeorm';
-import { ApiProperty } from '@nestjs/swagger'; // 🔥 关键引入
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+  Index,
+  JoinColumn,
+  ManyToOne,
+} from 'typeorm';
+import { ApiProperty } from '@nestjs/swagger';
 import { EncryptionTransformer } from '../../common/transformers/encryption.transformer';
 import { BaseInfo } from '../../base/entities/base-info.entity';
 
 export enum UserRole {
   SUPER_ADMIN = 'super_admin',
-  /** @deprecated 已废弃，历史数据兼容，登录时按 SUPER_ADMIN 权限处理 */
+  /** @deprecated kept only for historical data compatibility */
   REGION_ADMIN = 'region_admin',
+  BOSS = 'boss',
   BASE_MANAGER = 'base_manager',
   FIELD_MANAGER = 'field_manager',
   WORKER = 'worker',
 }
 
-/** 注册/前端可选的有效角色（排除废弃的 REGION_ADMIN） */
 export const VALID_REGISTER_ROLES: UserRole[] = [
   UserRole.SUPER_ADMIN,
+  UserRole.BOSS,
   UserRole.BASE_MANAGER,
   UserRole.FIELD_MANAGER,
   UserRole.WORKER,
 ];
 
-/** 判断角色是否具有超级管理员权限（含已废弃的 REGION_ADMIN） */
 export function isSuperAdmin(role: string): boolean {
   return role === UserRole.SUPER_ADMIN || role === UserRole.REGION_ADMIN;
 }
 
 @Entity('sys_user')
 export class SysUser {
-  @ApiProperty({ description: '数据库唯一ID' }) // 🔥 添加 ApiProperty
+  @ApiProperty({ description: 'Primary key ID' })
   @PrimaryGeneratedColumn({ type: 'bigint' })
   id: number;
 
-  @ApiProperty({ description: '公开的用户UID' })
+  @ApiProperty({ description: 'Public unique ID' })
   @Column({ length: 32, unique: true, comment: 'Public Unique ID' })
   uid: string;
 
-  @ApiProperty({ description: '真实姓名' })
+  @ApiProperty({ description: 'Real name' })
   @Column({ length: 50, comment: 'Real Name' })
   name: string;
 
-  // --- Encrypted Fields (AES256) ---
-
-  // 注意：虽然数据库存的是密文，但 TypeORM transformer 读出来是明文
-  // 所以这里告诉 Swagger 它是 string，前端收到的是解密后的身份证号
-  @ApiProperty({ description: '身份证号 (解密后)' })
+  @ApiProperty({ description: 'ID card number (encrypted)' })
   @Column({
     name: 'id_card_enc',
     length: 256,
     transformer: new EncryptionTransformer(),
-    comment: 'Encrypted ID Card Number'
+    comment: 'Encrypted ID Card Number',
   })
   idCard: string;
 
-  @ApiProperty({ description: '手机号 (解密后)' })
+  @ApiProperty({ description: 'Phone number (encrypted)' })
   @Column({
     name: 'phone_enc',
     length: 256,
     transformer: new EncryptionTransformer(),
-    comment: 'Encrypted Phone Number'
+    comment: 'Encrypted Phone Number',
   })
   phone: string;
-
-  // --- Search Indexes (Hash) ---
-  // 🔥 哈希字段通常不需要暴露给前端，所以不加 @ApiProperty
 
   @Index('UQ_sys_user_id_card_hash', { unique: true })
   @Column({ name: 'id_card_hash', length: 64, comment: 'SHA256 Hash of ID Card for Search' })
@@ -78,27 +79,27 @@ export class SysUser {
   phoneHash: string | null;
 
   @ApiProperty({
-    description: '用户角色',
-    enum: UserRole, // 🔥 这样前端会自动生成 UserRole 枚举类型
-    example: UserRole.WORKER
+    description: 'Role key',
+    enum: UserRole,
+    example: UserRole.WORKER,
   })
   @Column({
     type: 'enum',
     enum: UserRole,
     default: UserRole.WORKER,
-    name: 'role_key'
+    name: 'role_key',
   })
   roleKey: UserRole;
 
-  @ApiProperty({ description: '头像地址', required: false, nullable: true })
+  @ApiProperty({ description: 'Face image URL', required: false, nullable: true })
   @Column({ name: 'face_img_url', length: 255, nullable: true, comment: 'COS URL for Face/ID Photo' })
   faceImgUrl: string;
 
-  @ApiProperty({ description: '区域代码 (管理员专用)', required: false, nullable: true })
+  @ApiProperty({ description: 'Region code (for regional admins)', required: false, nullable: true })
   @Column({ name: 'region_code', type: 'int', nullable: true, comment: 'For Region Admins' })
   regionCode: number;
 
-  @ApiProperty({ description: '关联基地ID (现场管理员专用)', required: false, nullable: true })
+  @ApiProperty({ description: 'Assigned base ID (for field manager)', required: false, nullable: true })
   @Column({ name: 'assigned_base_id', type: 'bigint', nullable: true, comment: 'For Field Managers - assigned base' })
   assignedBaseId: number;
 
@@ -106,23 +107,23 @@ export class SysUser {
   @JoinColumn({ name: 'assigned_base_id' })
   assignedBase?: BaseInfo;
 
-  @ApiProperty({ description: '紧急联系人信息', required: false, nullable: true })
-  @Column({ 
-    name: 'emergency_contact_enc', 
-    length: 256, 
+  @ApiProperty({ description: 'Emergency contact (encrypted)', required: false, nullable: true })
+  @Column({
+    name: 'emergency_contact_enc',
+    length: 256,
     nullable: true,
     transformer: new EncryptionTransformer(),
-    comment: 'Encrypted Emergency Contact (Name and Relationship)' 
+    comment: 'Encrypted Emergency Contact (Name and Relationship)',
   })
   emergencyContact: string;
 
-  @ApiProperty({ description: '紧急联系人电话', required: false, nullable: true })
-  @Column({ 
-    name: 'emergency_phone_enc', 
-    length: 256, 
+  @ApiProperty({ description: 'Emergency contact phone (encrypted)', required: false, nullable: true })
+  @Column({
+    name: 'emergency_phone_enc',
+    length: 256,
     nullable: true,
     transformer: new EncryptionTransformer(),
-    comment: 'Encrypted Emergency Contact Phone' 
+    comment: 'Encrypted Emergency Contact Phone',
   })
   emergencyPhone: string;
 
@@ -130,24 +131,61 @@ export class SysUser {
   @Column({ name: 'emergency_phone_hash', length: 64, nullable: true, comment: 'Hash of Emergency Phone for Search' })
   emergencyPhoneHash: string | null;
 
-  @ApiProperty({ description: '信息审核状态', enum: [0, 1, 2], example: 1 })
-  @Column({ 
-    name: 'info_audit_status', 
-    type: 'tinyint', 
+  @ApiProperty({ description: 'Home address (encrypted)', required: false, nullable: true })
+  @Column({
+    name: 'home_address_enc',
+    length: 512,
+    nullable: true,
+    transformer: new EncryptionTransformer(),
+    comment: 'Encrypted Home Address',
+  })
+  homeAddress: string | null;
+
+  @ApiProperty({ description: 'Bank name', required: false, nullable: true })
+  @Column({
+    name: 'bank_name',
+    length: 100,
+    nullable: true,
+    comment: 'Bank Name',
+  })
+  bankName: string | null;
+
+  @ApiProperty({ description: 'Bank card number (encrypted)', required: false, nullable: true })
+  @Column({
+    name: 'bank_card_no_enc',
+    length: 256,
+    nullable: true,
+    transformer: new EncryptionTransformer(),
+    comment: 'Encrypted Bank Card Number',
+  })
+  bankCardNo: string | null;
+
+  @Index('IDX_sys_user_bank_card_no_hash')
+  @Column({
+    name: 'bank_card_no_hash',
+    length: 64,
+    nullable: true,
+    comment: 'Hash of Bank Card Number for Search',
+  })
+  bankCardNoHash: string | null;
+
+  @ApiProperty({ description: 'Info audit status', enum: [0, 1, 2], example: 1 })
+  @Column({
+    name: 'info_audit_status',
+    type: 'tinyint',
     default: 1,
-    comment: '0:Pending, 1:Approved, 2:Rejected' 
+    comment: '0:Pending, 1:Approved, 2:Rejected',
   })
   infoAuditStatus: number;
 
-  // 通常 isDeleted 不需要返回给前端，除非你要做回收站功能
   @Column({ default: false, name: 'is_deleted' })
   isDeleted: boolean;
 
-  @ApiProperty({ description: '创建时间' })
+  @ApiProperty({ description: 'Created time' })
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
-  @ApiProperty({ description: '更新时间' })
+  @ApiProperty({ description: 'Updated time' })
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
 }

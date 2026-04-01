@@ -90,13 +90,13 @@ export class UserService {
     const phoneHash = this.securityService.hash(createUserDto.phone);
 
     // Check if ID card already exists
-    const existingUserByIdCard = await this.userRepository.findOne({ where: { idCardHash } });
+    const existingUserByIdCard = await this.userRepository.findOne({ where: { idCardHash, isDeleted: false } });
     if (existingUserByIdCard) {
       throw new ConflictException('身份证号已被注册');
     }
 
     // Check if phone already exists
-    const existingUserByPhone = await this.userRepository.findOne({ where: { phoneHash } });
+    const existingUserByPhone = await this.userRepository.findOne({ where: { phoneHash, isDeleted: false } });
     if (existingUserByPhone) {
       throw new ConflictException('手机号已被注册');
     }
@@ -247,7 +247,7 @@ export class UserService {
 
         if (nextUpdate.phone && nextUpdate.phone !== user.phone) {
           const phoneHash = this.securityService.hash(nextUpdate.phone);
-          const existingUser = await userRepository.findOne({ where: { phoneHash } });
+          const existingUser = await userRepository.findOne({ where: { phoneHash, isDeleted: false } });
           if (existingUser && existingUser.id !== userId) {
             throw new ConflictException('手机号已被使用');
           }
@@ -380,6 +380,7 @@ export class UserService {
         roleKey: u.roleKey,
         emergencyContact: u.emergencyContact,
         emergencyPhone: u.emergencyPhone,
+        homeAddress: u.homeAddress,
         infoAuditStatus: u.infoAuditStatus,
         regionCode: u.regionCode,
         assignedBaseId: u.assignedBaseId,
@@ -426,8 +427,32 @@ export class UserService {
       if (!user || user.isDeleted) {
         throw new NotFoundException('用户不存在');
       }
+      const originalRoleKey = user.roleKey;
+      const deletedMarker = `deleted_user_${user.id}_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
+      user.name = `DELETED_USER_${user.id}`;
+      user.phone = deletedMarker;
+      user.idCard = deletedMarker;
+      user.phoneHash = null;
+      user.idCardHash = this.securityService.hash(`${deletedMarker}_id_card`);
+      user.faceImgUrl = null;
+      user.regionCode = null;
+      // DB trigger requires field_manager to keep assigned_base_id.
+      // Convert role before clearing assignment so soft delete won't be blocked.
+      if (user.roleKey === UserRole.FIELD_MANAGER) {
+        user.roleKey = UserRole.WORKER;
+      }
+      user.assignedBaseId = null;
+      user.emergencyContact = null;
+      user.emergencyPhone = null;
+      user.emergencyPhoneHash = null;
+      user.homeAddress = null;
+      user.bankName = null;
+      user.bankCardNo = null;
+      user.bankCardNoHash = null;
+      user.infoAuditStatus = 2;
       user.isDeleted = true;
-      return userRepository.save(user);
+      const saved = await userRepository.save(user);
+      return { saved, originalRoleKey };
     });
 
     await this.operationLogService.logWithContext({
@@ -436,14 +461,14 @@ export class UserService {
       resourceId: userId,
       userId: operatorId || 0,
       request,
-      description: `软删除用户: ${deletedUser.name} (${deletedUser.uid})`,
+      description: `软删除用户: ${deletedUser.saved.name} (${deletedUser.saved.uid})`,
       beforeData: {
         isDeleted: false,
-        roleKey: deletedUser.roleKey,
+        roleKey: deletedUser.originalRoleKey,
       },
       afterData: {
         isDeleted: true,
-        roleKey: deletedUser.roleKey,
+        roleKey: deletedUser.saved.roleKey,
       },
     });
   }
