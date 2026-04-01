@@ -2,6 +2,7 @@
   "pages": [
     "pages/index/index",
     "pages/login/login",
+    "pages/boss/dashboard/dashboard",
     "pages/register/register",
     "pages/profile/profile",
     "pages/profile/settings/settings",
@@ -11,10 +12,12 @@
     "pages/job/list/list",
     "pages/job/detail/detail",
     "pages/signup/signup",
+    "pages/signup/success/success",
     "pages/qrcode/qrcode",
     "pages/attendance/attendance",
     "pages/salary/salary",
     "pages/profile/workHistory/workHistory",
+    "pages/profile/signups/signups",
     "pages/profile/userInfo/userInfo",
     "pages/profile/salaryCard/salaryCard",
     "pages/field/home/home",
@@ -30,17 +33,17 @@
   ],
   "window": {
     "backgroundTextStyle": "dark",
-    "navigationBarBackgroundColor": "#f4f9ff",
+    "navigationBarBackgroundColor": "#F5EFE3",
     "navigationBarTitleText": "\u667a\u6c47\u5c31\u4e1a",
     "navigationBarTextStyle": "black",
-    "backgroundColor": "#f4f9ff",
+    "backgroundColor": "#F5EFE3",
     "enablePullDownRefresh": true
   },
   "tabBar": {
     "custom": true,
-    "color": "#6f8aa1",
-    "selectedColor": "#2d73c7",
-    "backgroundColor": "#f8fcff",
+    "color": "#8a94a6",
+    "selectedColor": "#2F6BFF",
+    "backgroundColor": "#F5EFE3",
     "borderStyle": "white",
     "list": [
       {
@@ -48,12 +51,16 @@
         "text": "\u5e7f\u573a"
       },
       {
-        "pagePath": "pages/applications/applications",
-        "text": "\u6211\u7684\u62a5\u540d"
+        "pagePath": "pages/salary/salary",
+        "text": "\u6536\u5165"
       },
       {
         "pagePath": "pages/qrcode/qrcode",
-        "text": "\u7b7e\u5230\u7801"
+        "text": "\u4e8c\u7ef4\u7801"
+      },
+      {
+        "pagePath": "pages/applications/applications",
+        "text": "AI"
       },
       {
         "pagePath": "pages/profile/profile",
@@ -80,7 +87,7 @@
   "requiredPrivateInfos": [
     "getLocation"
   ],
-  "darkmode": true,
+  "darkmode": false,
   "style": "v2",
   "sitemapLocation": "sitemap.json",
   "lazyCodeLoading": "requiredComponents"

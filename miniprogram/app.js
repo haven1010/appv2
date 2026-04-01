@@ -10,6 +10,72 @@ const PRODUCTION_BASE_URL = 'https://your-domain.com/api';
 const API_BASE_URL_KEY = 'apiBaseUrl';
 const LOOPBACK_WARNING_KEY = 'loopbackBaseUrlWarned';
 
+function isTemporaryImageUrl(value) {
+  const text = String(value || '').trim();
+  if (!text) return false;
+  return (
+    /^https?:\/\/127\.0\.0\.1:\d+\/__tmp__\//i.test(text)
+    || /^wxfile:\/\//i.test(text)
+    || /^[a-zA-Z]:\\/.test(text)
+    || /^file:\/\//i.test(text)
+  );
+}
+
+function sanitizeTemporaryImageUrls(target, visited = new Set()) {
+  if (typeof target === 'string') {
+    return isTemporaryImageUrl(target) ? '' : target;
+  }
+
+  if (!target || typeof target !== 'object') return target;
+  if (visited.has(target)) return target;
+  visited.add(target);
+
+  if (Array.isArray(target)) {
+    for (let i = 0; i < target.length; i += 1) {
+      target[i] = sanitizeTemporaryImageUrls(target[i], visited);
+    }
+    return target;
+  }
+
+  const keys = Object.keys(target);
+  for (let i = 0; i < keys.length; i += 1) {
+    const key = keys[i];
+    target[key] = sanitizeTemporaryImageUrls(target[key], visited);
+  }
+  return target;
+}
+
+function safeSerialize(value) {
+  try {
+    return JSON.stringify(value);
+  } catch (_) {
+    return '';
+  }
+}
+
+function sanitizeStorageEntry(key) {
+  const raw = wx.getStorageSync(key);
+  if (raw === undefined) return;
+  const before = safeSerialize(raw);
+  const cleaned = sanitizeTemporaryImageUrls(raw);
+  const after = safeSerialize(cleaned);
+  if (before !== after) {
+    wx.setStorageSync(key, cleaned);
+  }
+}
+
+function sanitizeLocalStorageImages() {
+  try {
+    const info = wx.getStorageInfoSync();
+    const keys = Array.isArray(info?.keys) ? info.keys : [];
+    for (let i = 0; i < keys.length; i += 1) {
+      sanitizeStorageEntry(keys[i]);
+    }
+  } catch (_) {
+    // Ignore storage clean failures and continue bootstrap.
+  }
+}
+
 function normalizeBaseUrl(url) {
   return String(url || '').trim().replace(/\/+$/, '');
 }
@@ -32,8 +98,11 @@ function resolveBaseUrl() {
 
 App({
   onLaunch() {
+    sanitizeLocalStorageImages();
+
     const token = wx.getStorageSync('token');
-    const userInfo = wx.getStorageSync('userInfo');
+    const userInfo = sanitizeTemporaryImageUrls(wx.getStorageSync('userInfo'));
+    if (userInfo) wx.setStorageSync('userInfo', userInfo);
 
     if (token && userInfo) {
       this.globalData.userInfo = userInfo;
@@ -44,6 +113,11 @@ App({
     this.globalData.baseUrl = resolvedBaseUrl;
     console.log('[API] baseUrl =', resolvedBaseUrl);
     this.warnIfLoopbackOnRealDevice(resolvedBaseUrl);
+  },
+
+  onShow() {
+    sanitizeLocalStorageImages();
+    this.globalData.userInfo = sanitizeTemporaryImageUrls(this.globalData.userInfo || null);
   },
 
   globalData: {
@@ -129,7 +203,7 @@ App({
         ),
         success: (res) => {
           if (res.statusCode >= 200 && res.statusCode < 300) {
-            resolve(res.data);
+            resolve(sanitizeTemporaryImageUrls(res.data));
             return;
           }
 
@@ -191,6 +265,7 @@ App({
             }
           }
 
+          payload = sanitizeTemporaryImageUrls(payload);
           if (res.statusCode >= 200 && res.statusCode < 300) {
             resolve(payload);
             return;
@@ -216,5 +291,57 @@ App({
         },
       });
     });
+  },
+
+  saveBase64File(options = {}) {
+    return new Promise((resolve, reject) => {
+      const base64Data = String(options.base64 || '').trim();
+      const fallbackName = `export-${Date.now()}.xlsx`;
+      let fileName = String(options.fileName || fallbackName).trim() || fallbackName;
+      if (!/\.xlsx$/i.test(fileName)) {
+        fileName = `${fileName}.xlsx`;
+      }
+      fileName = fileName.replace(/[\\/:*?"<>|]/g, '_');
+
+      if (!base64Data) {
+        reject(new Error('Export file content is empty.'));
+        return;
+      }
+
+      const filePath = `${wx.env.USER_DATA_PATH}/${fileName}`;
+      const fs = wx.getFileSystemManager();
+      fs.writeFile({
+        filePath,
+        data: base64Data,
+        encoding: 'base64',
+        success: () => {
+          wx.openDocument({
+            filePath,
+            fileType: 'xlsx',
+            showMenu: true,
+            success: () => resolve({ filePath, fileName }),
+            fail: () => resolve({ filePath, fileName }),
+          });
+        },
+        fail: (err) => {
+          reject(new Error(err?.errMsg || 'Write file failed'));
+        },
+      });
+    });
+  },
+
+  async exportXlsx(options = {}) {
+    const payload = await this.request({
+      url: options.url,
+      method: options.method || 'GET',
+      data: options.data || {},
+    });
+
+    const fileBase64 = String(payload?.fileBase64 || '').trim();
+    const fileName = payload?.fileName || options.fileName || `export-${Date.now()}.xlsx`;
+    if (!fileBase64) {
+      throw new Error('Server did not return xlsx content.');
+    }
+    return this.saveBase64File({ base64: fileBase64, fileName });
   },
 });

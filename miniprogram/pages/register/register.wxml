@@ -1,18 +1,17 @@
-<!--pages/register/register.wxml-->
-<view class="container register-container page-enter">
+﻿<view class="container register-container page-enter">
   <view class="brand-hero">
     <view class="brand-row">
       <image class="brand-logo" src="/images/zhihui-logo.jpg" mode="aspectFit" />
       <view>
         <view class="brand-title">智汇就业</view>
-        <view class="brand-subtitle">实名入职 · 便捷注册</view>
+        <view class="brand-subtitle">实名注册 · 信息完善</view>
       </view>
     </view>
   </view>
 
   <view class="card register-card">
-    <view class="card-title">创建账号</view>
-    <view class="card-subtitle">请填写真实信息，用于身份核验</view>
+    <view class="card-title">{{registerRole === 'boss' ? '创建老板账号' : '创建采摘工账号'}}</view>
+    <view class="card-subtitle">{{registerRole === 'boss' ? '请填写真实信息，用于企业入驻与资料审核' : '请填写真实信息，用于报名、工资结算与发放'}}</view>
 
     <view class="steps">
       <view class="step active">
@@ -64,12 +63,6 @@
           />
           <text class="required-star">*</text>
         </view>
-        <view class="input-hint" wx:if="{{idCard && idCard.length > 0 && idCard.length !== 18}}">
-          <text class="hint-text">还需输入 {{18 - idCard.length}} 位</text>
-        </view>
-        <view class="input-hint success" wx:if="{{idCard.length === 18}}">
-          <text class="hint-text">格式正确</text>
-        </view>
       </view>
 
       <view class="form-item">
@@ -88,10 +81,56 @@
           />
           <text class="required-star">*</text>
         </view>
-        <view class="input-hint success" wx:if="{{phone.length === 11}}">
-          <text class="hint-text">格式正确</text>
-        </view>
       </view>
+
+      <block wx:if="{{registerRole === 'worker'}}">
+        <view class="form-item">
+          <view class="input-wrapper input-wrapper-multiline">
+            <text class="input-icon">住址</text>
+            <textarea
+              class="input-field input-area"
+              placeholder="家庭详细地址（用于工资表）"
+              placeholder-class="placeholder"
+              value="{{homeAddress}}"
+              bindinput="onInputHomeAddress"
+              maxlength="120"
+              auto-height
+            />
+            <text class="required-star">*</text>
+          </view>
+        </view>
+
+        <view class="form-item">
+          <view class="input-wrapper">
+            <text class="input-icon">银行</text>
+            <input
+              class="input-field"
+              type="text"
+              placeholder="如：中国农业银行"
+              placeholder-class="placeholder"
+              value="{{bankName}}"
+              bindinput="onInputBankName"
+            />
+            <text class="required-star">*</text>
+          </view>
+        </view>
+
+        <view class="form-item">
+          <view class="input-wrapper">
+            <text class="input-icon">卡号</text>
+            <input
+              class="input-field"
+              type="number"
+              placeholder="银行卡号"
+              placeholder-class="placeholder"
+              value="{{bankCardNo}}"
+              bindinput="onInputBankCardNo"
+              maxlength="30"
+            />
+            <text class="required-star">*</text>
+          </view>
+        </view>
+      </block>
     </view>
 
     <view class="form-section">
@@ -102,7 +141,7 @@
 
       <view class="form-item">
         <view class="input-wrapper">
-          <text class="input-icon">联系</text>
+          <text class="input-icon">联系人</text>
           <input
             class="input-field"
             type="text"
@@ -164,9 +203,7 @@
       bindtap="handleRegister"
       loading="{{loading}}"
       disabled="{{loading}}"
-    >
-      {{loading ? '注册中...' : '立即注册'}}
-    </button>
+    >{{loading ? '注册中...' : '立即注册'}}</button>
 
     <view class="footer-links">
       <text class="login-text">已有账号？</text>

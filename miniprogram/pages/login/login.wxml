@@ -1,66 +1,91 @@
-<!--pages/login/login.wxml-->
-<view class="container login-container page-enter">
-  <view class="brand-hero">
-    <view class="brand-row">
-      <image class="brand-logo" src="/images/zhihui-logo.jpg" mode="aspectFit" />
-      <view>
-        <view class="brand-title">智汇就业</view>
-        <view class="brand-subtitle">农业劳务智能协同平台</view>
-      </view>
+﻿<view class="login-page {{pageLeaving ? 'page-leave' : 'page-enter'}}">
+  <view class="paper-bg"></view>
+
+  <view class="top-header" style="padding-top: {{statusBarHeight}}px;">
+    <view class="top-header-inner" style="height: {{navBarHeight}}px;">
+      <text class="top-title">登录</text>
     </view>
   </view>
 
-  <view class="card login-card">
-    <view class="title">欢迎回来</view>
-    <view class="subtitle">请输入手机号和身份证后 6 位</view>
+  <view class="content-wrap">
+    <view class="logo-area">
+      <image class="brand-logo logo-float" src="/images/zhihui-logo.jpg" mode="aspectFit" />
+      <text class="brand-name">智汇就业</text>
+      <text class="brand-desc">农业劳务智能协同平台</text>
+    </view>
 
-    <view class="form-item">
-      <view class="input-wrapper">
-        <view class="input-badge badge-blue">手机</view>
-        <input
-          class="input-field"
-          type="number"
-          placeholder="请输入手机号"
-          placeholder-class="placeholder"
-          value="{{phone}}"
-          bindinput="onInputPhone"
-          maxlength="11"
-        />
+    <view class="role-switch">
+      <view class="role-pill {{loginRole === 'worker' ? 'active' : ''}}" data-role="worker" bindtap="onSwitchRole">
+        👷 我是员工
+      </view>
+      <view class="role-pill {{loginRole === 'boss' ? 'active' : ''}}" data-role="boss" bindtap="onSwitchRole">
+        🏢 我是老板
       </view>
     </view>
 
-    <view class="form-item">
-      <view class="input-wrapper">
-        <view class="input-badge badge-gold">验证</view>
-        <input
-          class="input-field"
-          type="text"
-          placeholder="身份证后6位"
-          placeholder-class="placeholder"
-          value="{{idCardLast6}}"
-          bindinput="onInputIdCard"
-          maxlength="6"
-        />
+    <view class="login-card">
+      <view class="welcome-row">
+        <text class="card-title">欢迎回来</text>
+        <text class="leaf-anim">🍃</text>
       </view>
-    </view>
+      <text class="card-subtitle">请输入手机号和身份证后6位</text>
 
-    <view class="error-msg" wx:if="{{error}}">
-      <text>{{error}}</text>
-    </view>
+      <view class="form-item">
+        <view class="input-shell {{focusField === 'phone' ? 'is-focus' : ''}}">
+          <text class="input-icon">📱</text>
+          <input
+            class="input-field"
+            type="number"
+            maxlength="11"
+            value="{{phone}}"
+            placeholder="请输入手机号"
+            placeholder-class="placeholder"
+            bindfocus="onInputFocus"
+            bindblur="onInputBlur"
+            bindinput="onInputPhone"
+            data-field="phone"
+          />
+        </view>
+      </view>
 
-    <button
-      class="login-btn"
-      hover-class="login-btn-hover"
-      bindtap="handleLogin"
-      loading="{{loading}}"
-      disabled="{{loading}}"
-    >
-      {{loading ? '登录中...' : '进入智汇就业'}}
-    </button>
+      <view class="form-item">
+        <view class="input-shell {{focusField === 'idCard' ? 'is-focus' : ''}}">
+          <text class="input-icon">🔒</text>
+          <input
+            class="input-field"
+            type="text"
+            maxlength="6"
+            value="{{idCardLast6}}"
+            placeholder="身份证后6位"
+            placeholder-class="placeholder"
+            bindfocus="onInputFocus"
+            bindblur="onInputBlur"
+            bindinput="onInputIdCard"
+            data-field="idCard"
+          />
+        </view>
+      </view>
 
-    <view class="footer-links">
-      <text class="register-text">还没有账号？</text>
-      <text class="register-link" bindtap="goToRegister">立即注册</text>
+      <view class="error-msg" wx:if="{{error}}">
+        <text>{{error}}</text>
+      </view>
+
+      <button
+        class="login-btn {{btnPressed ? 'btn-pressed' : ''}}"
+        bindtap="handleLogin"
+        bindtouchstart="onLoginPressStart"
+        bindtouchend="onLoginPressEnd"
+        bindtouchcancel="onLoginPressEnd"
+        loading="{{loading}}"
+        disabled="{{loading || !canSubmit}}"
+      >
+        {{loading ? '登录中...' : '进入智汇就业'}}
+      </button>
+
+      <view class="footer-links">
+        <text class="register-text">还没有账号？</text>
+        <text class="register-link" bindtap="goToRegister">立即注册</text>
+      </view>
     </view>
   </view>
 </view>

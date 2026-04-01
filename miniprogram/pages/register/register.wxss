@@ -115,6 +115,10 @@
   transition: all 0.25s ease;
 }
 
+.input-wrapper-multiline {
+  align-items: flex-start;
+}
+
 .input-wrapper.focus {
   background: #fff;
   border-color: #2d73c7;
@@ -141,6 +145,13 @@
   font-size: 28rpx;
   color: #163456;
   height: 44rpx;
+}
+
+.input-area {
+  min-height: 92rpx;
+  height: auto;
+  line-height: 1.5;
+  padding-top: 4rpx;
 }
 
 .placeholder {

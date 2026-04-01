@@ -18,6 +18,8 @@ function isAdminRole(role) {
 
 function roleLabel(role) {
   switch (role) {
+    case 'boss':
+      return '企业老板';
     case 'super_admin':
     case 'region_admin':
       return '超级管理员';

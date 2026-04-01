@@ -1,9 +1,7 @@
 /**
  * Layer: Mini Program Component
- * Responsibility: Coordinates custom tab bar rendering, selection state, and shared navigation behavior across mini program pages.
- * Notes: Keep comments focused on intent, invariants, side effects, and cross-module contracts.
+ * Responsibility: Renders the custom tab bar and handles role-aware tab navigation.
  */
-// custom-tab-bar/index.js
 const app = getApp();
 
 Component({
@@ -11,16 +9,17 @@ Component({
     selected: 0,
     role: 'worker',
     workerList: [
-      { pagePath: '/pages/index/index', text: '广场', icon: '🏠' },
-      { pagePath: '/pages/applications/applications', text: '我的报名', icon: '📋' },
-      { pagePath: '/pages/qrcode/qrcode', text: '签到码', icon: '🔳' },
-      { pagePath: '/pages/profile/profile', text: '我的', icon: '👤' },
+      { pagePath: '/pages/index/index', text: '广场', icon: '广' },
+      { pagePath: '/pages/salary/salary', text: '收入', icon: '收' },
+      { pagePath: '/pages/qrcode/qrcode', text: '二维码', icon: '码', center: true },
+      { pagePath: '/pages/applications/applications', text: 'AI', icon: 'AI' },
+      { pagePath: '/pages/profile/profile', text: '我的', icon: '我' },
     ],
     fieldList: [
-      { pagePath: '/pages/field/home/home', text: '工作台', icon: '📊' },
-      { pagePath: '/pages/field/scan/scan', text: '扫码签到', icon: '📲' },
-      { pagePath: '/pages/field/records/records', text: '考勤记录', icon: '🗂' },
-      { pagePath: '/pages/field/profile/profile', text: '我的', icon: '👤' },
+      { pagePath: '/pages/field/home/home', text: '工作台', icon: '工' },
+      { pagePath: '/pages/field/scan/scan', text: '扫码', icon: '扫' },
+      { pagePath: '/pages/field/records/records', text: '记录', icon: '记' },
+      { pagePath: '/pages/field/profile/profile', text: '我的', icon: '我' },
     ],
   },
 
@@ -38,15 +37,15 @@ Component({
     updateRole() {
       const userInfo = app.globalData.userInfo || wx.getStorageSync('userInfo');
       const role = userInfo && userInfo.role ? userInfo.role : 'worker';
-      if (this.data.role !== role) {
+      if (role !== this.data.role) {
         this.setData({ role });
       }
     },
 
     switchTab(e) {
-      const data = e.currentTarget.dataset;
-      const url = data.path;
-      wx.switchTab({ url });
+      const { path } = e.currentTarget.dataset;
+      if (!path) return;
+      wx.switchTab({ url: path });
     },
   },
 });

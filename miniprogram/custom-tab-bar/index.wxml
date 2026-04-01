@@ -1,38 +1,35 @@
-<!--custom-tab-bar/index.wxml-->
-<view class="tab-bar">
-  <view class="brand-anchor">
-    <image class="brand-anchor-logo" src="/images/zhihui-logo.jpg" mode="aspectFit" />
+<!-- custom-tab-bar/index.wxml -->
+<view class="tab-shell">
+  <view class="tab-bar">
+    <block wx:if="{{role !== 'field_manager'}}">
+      <view
+        wx:for="{{workerList}}"
+        wx:key="pagePath"
+        class="tab-item {{item.center ? 'is-center' : ''}} {{selected === index ? 'active' : ''}}"
+        data-path="{{item.pagePath}}"
+        bindtap="switchTab"
+      >
+        <view class="icon-wrap {{item.center ? 'center-wrap' : ''}}">
+          <view wx:if="{{item.center}}" class="center-glow"></view>
+          <text class="icon-text">{{item.icon}}</text>
+        </view>
+        <text class="tab-text">{{item.text}}</text>
+      </view>
+    </block>
+
+    <block wx:else>
+      <view
+        wx:for="{{fieldList}}"
+        wx:key="pagePath"
+        class="tab-item {{selected === index ? 'active' : ''}}"
+        data-path="{{item.pagePath}}"
+        bindtap="switchTab"
+      >
+        <view class="icon-wrap">
+          <text class="icon-text">{{item.icon}}</text>
+        </view>
+        <text class="tab-text">{{item.text}}</text>
+      </view>
+    </block>
   </view>
-
-  <block wx:if="{{role !== 'field_manager'}}">
-    <view
-      wx:for="{{workerList}}"
-      wx:key="pagePath"
-      class="tab-bar-item {{selected === index ? 'active' : ''}}"
-      data-path="{{item.pagePath}}"
-      data-index="{{index}}"
-      bindtap="switchTab"
-    >
-      <view class="tab-icon-wrap">
-        <text class="tab-icon-text">{{item.icon}}</text>
-      </view>
-      <text class="tab-text">{{item.text}}</text>
-    </view>
-  </block>
-
-  <block wx:else>
-    <view
-      wx:for="{{fieldList}}"
-      wx:key="pagePath"
-      class="tab-bar-item {{selected === index ? 'active' : ''}}"
-      data-path="{{item.pagePath}}"
-      data-index="{{index}}"
-      bindtap="switchTab"
-    >
-      <view class="tab-icon-wrap">
-        <text class="tab-icon-text">{{item.icon}}</text>
-      </view>
-      <text class="tab-text">{{item.text}}</text>
-    </view>
-  </block>
 </view>

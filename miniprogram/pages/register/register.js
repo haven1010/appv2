@@ -1,10 +1,11 @@
-/**
- * Layer: Mini Program Page
- * Responsibility: Implements the Register page lifecycle, local interaction state, and backend integration for the WeChat client.
- * Notes: Keep comments focused on intent, invariants, side effects, and cross-module contracts.
+﻿/**
+ * Register page for worker and boss accounts.
  */
-// pages/register/register.js
 const app = getApp();
+
+function normalizeRegisterRole(role) {
+  return role === 'boss' ? 'boss' : 'worker';
+}
 
 function normalizeText(value) {
   return String(value || '').trim();
@@ -12,6 +13,10 @@ function normalizeText(value) {
 
 function cleanPhone(value) {
   return String(value || '').replace(/\D/g, '').slice(0, 11);
+}
+
+function cleanBankCardNo(value) {
+  return String(value || '').replace(/\D/g, '').slice(0, 30);
 }
 
 function cleanIdCard(value) {
@@ -45,18 +50,14 @@ function toErrorMessage(err) {
   if (!err) return '注册失败，请稍后重试';
   const raw = extractRawError(err);
 
-  if (
-    err.statusCode === 409 ||
-    /Conflict/i.test(raw) ||
-    /已被注册|手机号已|身份证号已|already\s+exists/i.test(raw)
-  ) {
-    return '手机号或身份证号已注册，请直接登录。';
+  if (err.statusCode === 409 || /Conflict|already\s+exists|已被注册|已被使用/i.test(raw)) {
+    return '手机号、身份证号或银行卡已被使用，请检查后重试';
   }
 
   if (/ERR_ADDRESS_UNREACHABLE|request:fail|Network request failed/i.test(raw)) {
     const urlMatch = raw.match(/\((https?:\/\/[^)]+)\)/i);
     const target = urlMatch ? urlMatch[1] : '当前后端地址';
-    return `无法连接后端：${target}。请在下方“网络设置”里更新接口地址。`;
+    return `无法连接后端：${target}。请在“网络设置”中更新接口地址。`;
   }
 
   return raw || '注册失败，请稍后重试';
@@ -71,16 +72,23 @@ function formatBaseUrlForDisplay(value) {
 
 Page({
   data: {
+    registerRole: 'worker',
     name: '',
     idCard: '',
     phone: '',
+    homeAddress: '',
+    bankName: '',
+    bankCardNo: '',
     emergencyContact: '',
     emergencyPhone: '',
+
     loading: false,
     error: '',
+
     nameFocus: false,
     idCardFocus: false,
     phoneFocus: false,
+
     showApiConfig: false,
     apiBaseUrlInput: '',
     currentBaseUrlDisplay: '未设置',
@@ -88,7 +96,10 @@ Page({
     lanBaseUrl: '',
   },
 
-  onLoad() {
+  onLoad(options) {
+    this.setData({
+      registerRole: normalizeRegisterRole(options?.role),
+    });
     this.refreshApiConfig();
   },
 
@@ -119,12 +130,24 @@ Page({
     this.setData({ phone: cleanPhone(e.detail.value), error: '' });
   },
 
+  onInputHomeAddress(e) {
+    this.setData({ homeAddress: e.detail.value, error: '' });
+  },
+
+  onInputBankName(e) {
+    this.setData({ bankName: e.detail.value, error: '' });
+  },
+
+  onInputBankCardNo(e) {
+    this.setData({ bankCardNo: cleanBankCardNo(e.detail.value), error: '' });
+  },
+
   onInputEmergencyContact(e) {
-    this.setData({ emergencyContact: e.detail.value });
+    this.setData({ emergencyContact: e.detail.value, error: '' });
   },
 
   onInputEmergencyPhone(e) {
-    this.setData({ emergencyPhone: cleanPhone(e.detail.value) });
+    this.setData({ emergencyPhone: cleanPhone(e.detail.value), error: '' });
   },
 
   onNameFocus() {
@@ -168,10 +191,7 @@ Page({
   saveApiBaseUrl() {
     const normalized = normalizeBaseUrl(this.data.apiBaseUrlInput);
     if (!normalized || !/^https?:\/\//i.test(normalized)) {
-      wx.showToast({
-        title: '请输入正确的接口地址',
-        icon: 'none',
-      });
+      wx.showToast({ title: '请输入正确的接口地址', icon: 'none' });
       return;
     }
 
@@ -182,16 +202,17 @@ Page({
       showApiConfig: false,
     });
 
-    wx.showToast({
-      title: '接口地址已更新',
-      icon: 'none',
-    });
+    wx.showToast({ title: '接口地址已更新', icon: 'none' });
   },
 
   async handleRegister() {
+    const registerRole = normalizeRegisterRole(this.data.registerRole);
     const name = normalizeText(this.data.name);
     const idCard = cleanIdCard(this.data.idCard);
     const phone = cleanPhone(this.data.phone);
+    const homeAddress = normalizeText(this.data.homeAddress);
+    const bankName = normalizeText(this.data.bankName);
+    const bankCardNo = cleanBankCardNo(this.data.bankCardNo);
     const emergencyContact = normalizeText(this.data.emergencyContact);
     const emergencyPhone = cleanPhone(this.data.emergencyPhone);
 
@@ -210,6 +231,23 @@ Page({
       return;
     }
 
+    if (registerRole === 'worker') {
+      if (!homeAddress || homeAddress.length < 5) {
+        this.setData({ error: '请填写详细家庭地址（至少5个字）' });
+        return;
+      }
+
+      if (!bankName) {
+        this.setData({ error: '请输入开户银行' });
+        return;
+      }
+
+      if (bankCardNo.length < 12) {
+        this.setData({ error: '请输入正确的银行卡号' });
+        return;
+      }
+    }
+
     if (emergencyPhone && emergencyPhone.length !== 11) {
       this.setData({ error: '紧急联系人电话需为11位手机号' });
       return;
@@ -219,6 +257,9 @@ Page({
       name,
       idCard,
       phone,
+      homeAddress,
+      bankName,
+      bankCardNo,
       emergencyContact,
       emergencyPhone,
       loading: true,
@@ -226,34 +267,43 @@ Page({
     });
 
     try {
+      const url = registerRole === 'boss' ? '/user/register/boss' : '/user/register';
+      const payload = {
+        name,
+        idCard,
+        phone,
+        roleKey: registerRole,
+        emergencyContact: emergencyContact || undefined,
+        emergencyPhone: emergencyPhone || undefined,
+      };
+
+      if (registerRole === 'worker') {
+        payload.homeAddress = homeAddress;
+        payload.bankName = bankName;
+        payload.bankCardNo = bankCardNo;
+      }
+
       await app.request({
-        url: '/user/register',
+        url,
         method: 'POST',
-        data: {
-          name,
-          idCard,
-          phone,
-          roleKey: 'worker',
-          emergencyContact: emergencyContact || undefined,
-          emergencyPhone: emergencyPhone || undefined,
-        },
+        data: payload,
       });
 
       this.setData({ loading: false });
       wx.showToast({
-        title: '注册成功',
+        title: registerRole === 'boss' ? '老板注册成功' : '注册成功',
         icon: 'success',
-        duration: 1500,
+        duration: 1200,
       });
 
       setTimeout(() => {
         wx.navigateBack();
-      }, 1500);
+      }, 1200);
     } catch (err) {
       const message = toErrorMessage(err);
       this.setData({ error: message, loading: false });
 
-      if (/已注册/.test(message)) {
+      if (/冲突|已被|already/i.test(message)) {
         wx.showModal({
           title: '注册冲突',
           content: message,
