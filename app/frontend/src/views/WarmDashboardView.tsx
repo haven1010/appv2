@@ -75,11 +75,11 @@ interface RecentBase {
 }
 
 const tooltipStyle = {
-  backgroundColor: 'rgba(255, 250, 242, 0.96)',
-  border: '1px solid rgba(191, 145, 68, 0.16)',
+  backgroundColor: 'rgba(247, 253, 255, 0.96)',
+  border: '1px solid rgba(95, 170, 193, 0.2)',
   borderRadius: '18px',
-  color: '#231a12',
-  boxShadow: '0 16px 40px rgba(181, 121, 23, 0.14)',
+  color: '#143247',
+  boxShadow: '0 16px 40px rgba(82, 160, 190, 0.14)',
 };
 
 function formatMoney(value: number) {
@@ -96,23 +96,23 @@ function getAuditTone(status: number) {
   if (status === 1) {
     return {
       dot: 'status-dot-success',
-      text: 'text-[#2f9e69]',
-      badge: 'bg-[#edf9f2] text-[#2f9e69]',
+      text: 'text-[#2ea97f]',
+      badge: 'bg-[#e8f8f2] text-[#2ea97f]',
     };
   }
 
   if (status === 2) {
     return {
       dot: 'status-dot-danger',
-      text: 'text-[#d8644f]',
-      badge: 'bg-[#fff1ee] text-[#d8644f]',
+      text: 'text-[#de6d87]',
+      badge: 'bg-[#fff1f5] text-[#de6d87]',
     };
   }
 
   return {
     dot: 'status-dot-warn',
-    text: 'text-[#c57e11]',
-    badge: 'bg-[#fff4dd] text-[#c57e11]',
+    text: 'text-[#4f98d8]',
+    badge: 'bg-[#eaf4ff] text-[#4f98d8]',
   };
 }
 
@@ -157,7 +157,7 @@ export default function WarmDashboardView() {
   if (loading) {
     return (
       <div className="soft-card flex h-64 items-center justify-center gap-3 p-6">
-        <Loader2 size={24} className="animate-spin text-[#c57e11]" />
+        <Loader2 size={24} className="animate-spin text-[#4f98d8]" />
         <span className="text-sm text-[var(--muted)]">正在加载首页数据...</span>
       </div>
     );
@@ -210,7 +210,7 @@ export default function WarmDashboardView() {
               把关键数据做成像产品海报一样清楚的首页，而不是一堆堆挤在一起的模块。
             </h2>
             <p className="page-subtitle">
-              欢迎回来{user?.name ? `，${user.name}` : ''}。这块区域借用了参考图的轻柔暖橙质感，但用更适合后台的方式重组了信息层级。
+              欢迎回来{user?.name ? `，${user.name}` : ''}。这块区域采用浅绿、浅蓝和白色作为基调，用更适合后台的方式重组信息层级。
             </p>
 
             <div className="mt-6 flex flex-wrap gap-3">
@@ -235,7 +235,7 @@ export default function WarmDashboardView() {
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="paper-panel p-5">
-              <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#a2814a]">
+              <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#6b93ab]">
                 今日节奏
               </p>
               <p className="mt-3 text-3xl font-extrabold tracking-tight text-[var(--ink)]">
@@ -245,7 +245,7 @@ export default function WarmDashboardView() {
             </div>
 
             <div className="paper-panel p-5">
-              <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#a2814a]">
+              <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#6b93ab]">
                 月度薪资
               </p>
               <p className="mt-3 text-3xl font-extrabold tracking-tight text-[var(--ink)]">
@@ -255,7 +255,7 @@ export default function WarmDashboardView() {
             </div>
 
             <div className="paper-panel p-5 sm:col-span-2">
-              <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#a2814a]">
+              <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#6b93ab]">
                 灵感转译
               </p>
               <div className="mt-4 phone-stack">
@@ -289,7 +289,7 @@ export default function WarmDashboardView() {
                 <p className="text-sm font-semibold text-[var(--muted)]">{item.label}</p>
                 <p className="metric-value mt-4 text-[var(--ink)]">{item.value}</p>
               </div>
-              <div className="flex h-12 w-12 items-center justify-center rounded-[18px] bg-[#2b221b] text-[#ffd16d]">
+              <div className="flex h-12 w-12 items-center justify-center rounded-[18px] bg-[#28586f] text-[#d7f7eb]">
                 <item.icon size={22} />
               </div>
             </div>
@@ -306,7 +306,7 @@ export default function WarmDashboardView() {
               onClick={() => navigate(isGlobal ? '/dashboard/audit' : '/dashboard/workers')}
               className="soft-card flex items-center gap-4 p-5 text-left transition hover:-translate-y-[1px]"
             >
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#fff4dd] text-[#c57e11]">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#eaf4ff] text-[#4f98d8]">
                 <AlertTriangle size={22} />
               </div>
               <div className="flex-1">
@@ -315,7 +315,7 @@ export default function WarmDashboardView() {
                   当前有 {stats.pendingAuditUsers} 位用户资料等待处理。
                 </p>
               </div>
-              <ArrowUpRight size={18} className="text-[#c57e11]" />
+              <ArrowUpRight size={18} className="text-[#4f98d8]" />
             </button>
           ) : null}
 
@@ -325,7 +325,7 @@ export default function WarmDashboardView() {
               onClick={() => navigate(isGlobal ? '/dashboard/audit' : '/dashboard/bases')}
               className="soft-card flex items-center gap-4 p-5 text-left transition hover:-translate-y-[1px]"
             >
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#eef2ff] text-[#6177d6]">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#e8f8f2] text-[#2ea97f]">
                 <ShieldCheck size={22} />
               </div>
               <div className="flex-1">
@@ -334,7 +334,7 @@ export default function WarmDashboardView() {
                   当前有 {stats.pendingAuditBases} 个基地等待审核入驻。
                 </p>
               </div>
-              <ArrowUpRight size={18} className="text-[#6177d6]" />
+              <ArrowUpRight size={18} className="text-[#4f98d8]" />
             </button>
           ) : null}
         </section>
@@ -355,17 +355,17 @@ export default function WarmDashboardView() {
                 <AreaChart data={trend}>
                   <defs>
                     <linearGradient id="warmCheckedIn" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#f4b233" stopOpacity={0.36} />
-                      <stop offset="95%" stopColor="#f4b233" stopOpacity={0} />
+                      <stop offset="5%" stopColor="#58c2a6" stopOpacity={0.34} />
+                      <stop offset="95%" stopColor="#58c2a6" stopOpacity={0} />
                     </linearGradient>
                     <linearGradient id="warmSignedUp" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#6177d6" stopOpacity={0.22} />
-                      <stop offset="95%" stopColor="#6177d6" stopOpacity={0} />
+                      <stop offset="5%" stopColor="#4f98d8" stopOpacity={0.24} />
+                      <stop offset="95%" stopColor="#4f98d8" stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid vertical={false} strokeDasharray="3 3" />
-                  <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fill: '#8f7b63', fontSize: 12 }} />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#8f7b63', fontSize: 12 }} />
+                  <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fill: '#7f98aa', fontSize: 12 }} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#7f98aa', fontSize: 12 }} />
                   <Tooltip
                     contentStyle={tooltipStyle}
                     formatter={(value: number, name: string) => [
@@ -376,7 +376,7 @@ export default function WarmDashboardView() {
                   <Area
                     type="monotone"
                     dataKey="signedUp"
-                    stroke="#6177d6"
+                    stroke="#4f98d8"
                     strokeWidth={2}
                     fillOpacity={1}
                     fill="url(#warmSignedUp)"
@@ -384,7 +384,7 @@ export default function WarmDashboardView() {
                   <Area
                     type="monotone"
                     dataKey="checkedIn"
-                    stroke="#f4b233"
+                    stroke="#58c2a6"
                     strokeWidth={3}
                     fillOpacity={1}
                     fill="url(#warmCheckedIn)"
@@ -418,11 +418,11 @@ export default function WarmDashboardView() {
                       dataKey="name"
                       axisLine={false}
                       tickLine={false}
-                      tick={{ fill: '#8f7b63', fontSize: 12 }}
+                      tick={{ fill: '#7f98aa', fontSize: 12 }}
                       width={68}
                     />
                     <Tooltip
-                      cursor={{ fill: 'rgba(244, 178, 51, 0.08)' }}
+                      cursor={{ fill: 'rgba(79, 152, 216, 0.1)' }}
                       contentStyle={tooltipStyle}
                       formatter={(value: number) => [`${value}%`, '占比']}
                     />
@@ -482,7 +482,7 @@ export default function WarmDashboardView() {
                 return (
                   <div key={base.id} className="list-row">
                     <div className="flex min-w-0 flex-1 items-center gap-4">
-                      <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-[#2b221b] text-[#ffd16d]">
+                      <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-[#28586f] text-[#d7f7eb]">
                         <Building2 size={20} />
                       </div>
                       <div className="min-w-0">

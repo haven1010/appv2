@@ -150,7 +150,7 @@ export default function WarmDashboardLayout() {
         <aside className="dashboard-sidebar">
           <div className="soft-card-strong p-5">
             <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-[18px] bg-[#28221c] text-[#ffcd6d] shadow-[0_16px_28px_rgba(52,32,0,0.22)]">
+              <div className="flex h-12 w-12 items-center justify-center rounded-[18px] bg-[#23495d] text-[#c8f2e4] shadow-[0_16px_28px_rgba(56,111,138,0.24)]">
                 <Sprout size={24} />
               </div>
               <div>
@@ -179,7 +179,7 @@ export default function WarmDashboardLayout() {
                   <Link to={item.path} className={`nav-link ${isActive ? 'nav-link-active' : ''}`}>
                     <span
                       className={`flex h-10 w-10 items-center justify-center rounded-2xl ${
-                        isActive ? 'bg-[#2a211b] text-[#ffd16d]' : 'bg-[#fff8ea] text-[#9b7a3d]'
+                        isActive ? 'bg-[#28586f] text-[#d7f7eb]' : 'bg-[#eff7ff] text-[#4f8eb2]'
                       }`}
                     >
                       <item.icon size={18} />
@@ -193,7 +193,7 @@ export default function WarmDashboardLayout() {
 
           <div className="soft-card mt-5 p-4">
             <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#2b221b] text-sm font-bold text-[#ffd16d]">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#28586f] text-sm font-bold text-[#d7f7eb]">
                 {user?.name?.slice(0, 1) ?? '管'}
               </div>
               <div className="min-w-0 flex-1">
@@ -207,7 +207,7 @@ export default function WarmDashboardLayout() {
               <button
                 type="button"
                 onClick={handleLogout}
-                className="flex h-11 w-11 items-center justify-center rounded-full border border-[var(--line)] bg-white/70 text-[#8b6d3f] transition hover:border-[var(--line-strong)] hover:text-[var(--ink)]"
+                className="flex h-11 w-11 items-center justify-center rounded-full border border-[var(--line)] bg-white/70 text-[#5f88a2] transition hover:border-[var(--line-strong)] hover:text-[var(--ink)]"
                 title="退出登录"
               >
                 <LogOut size={18} />
@@ -224,14 +224,14 @@ export default function WarmDashboardLayout() {
                 把繁杂流程变成干净、可执行的工作面板
               </h2>
               <p className="mt-3 max-w-2xl text-sm leading-7 text-[var(--muted)]">
-                这一版界面延续了参考图里柔和暖调和轻量留白的气质，但改成更适合运营后台的结构，让数据、操作和状态都更安静地呈现出来。
+                这一版界面改为浅绿、浅蓝与白色的低饱和组合，在保持留白节奏的同时，让后台数据阅读更稳定。
               </p>
             </div>
 
             <div className="soft-card hidden min-w-[18rem] p-5 lg:block">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#a2814a]">
+                  <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#6b93ab]">
                     当前身份
                   </p>
                   <p className="mt-2 text-lg font-bold text-[var(--ink)]">

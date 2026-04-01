@@ -539,21 +539,21 @@ export default function AttendanceManagement() {
     <div className="space-y-6 warm-business warm-business-attendance">
       <section className="soft-card-strong p-6 md:p-8">
         <p className="section-label">Attendance Flow</p>
-        <h2 className="page-title">考勤管理页统一为同一套暖色运营界面</h2>
+        <h2 className="page-title">考勤管理页统一为浅绿蓝白运营界面</h2>
         <p className="page-subtitle">
           保留扫码签到、记录查询、离线补录和审核闭环的业务能力，重点优化视觉层级和表单阅读体验。
         </p>
         <div className="warm-business-summary mt-6">
           <article className="paper-panel p-4">
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#a2814a]">今日签到</p>
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#6b93ab]">今日签到</p>
             <p className="mt-3 text-3xl font-extrabold tracking-tight text-[var(--ink)]">{stats?.checkedIn ?? 0}</p>
           </article>
           <article className="paper-panel p-4">
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#a2814a]">待签到</p>
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#6b93ab]">待签到</p>
             <p className="mt-3 text-3xl font-extrabold tracking-tight text-[var(--ink)]">{stats?.signedUp ?? 0}</p>
           </article>
           <article className="paper-panel p-4">
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#a2814a]">离线补录</p>
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#6b93ab]">离线补录</p>
             <p className="mt-3 text-3xl font-extrabold tracking-tight text-[var(--ink)]">{offlineStats?.pendingReview ?? 0}</p>
           </article>
         </div>

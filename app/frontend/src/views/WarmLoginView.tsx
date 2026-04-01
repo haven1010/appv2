@@ -68,11 +68,11 @@ export default function WarmLoginView() {
       <AuthShowcase
         eyebrow="Warm Product Style"
         title="让管理后台也有轻盈、干净、耐看的第一眼。"
-        description="参考图里的暖橙气质、留白节奏和设备卡片感被重新转译成了一套更适合业务后台的原创设计语言。"
+        description="参考图里的留白节奏和设备卡片感被转译为浅绿、浅蓝与白色的清透界面，更适合长时间运营使用。"
         highlights={[
           { label: '首页状态', value: '12 项关键指标' },
           { label: '操作效率', value: '一步直达常用流程' },
-          { label: '视觉感受', value: '暖白 + 蜜橙 + 炭黑' },
+          { label: '视觉感受', value: '浅绿 + 浅蓝 + 白' },
         ]}
       />
 
@@ -84,7 +84,7 @@ export default function WarmLoginView() {
       >
         <div className="flex h-full flex-col">
           <div className="mb-8 flex items-center gap-3">
-            <div className="flex h-14 w-14 items-center justify-center rounded-[20px] bg-[#2a211b] text-[#ffd16d] shadow-[0_20px_30px_rgba(56,35,13,0.18)]">
+            <div className="flex h-14 w-14 items-center justify-center rounded-[20px] bg-[#28586f] text-[#d7f7eb] shadow-[0_20px_30px_rgba(68,130,161,0.2)]">
               <Sprout size={28} />
             </div>
             <div>
@@ -105,7 +105,7 @@ export default function WarmLoginView() {
               <div className="relative">
                 <Phone
                   size={18}
-                  className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[#a2814a]"
+                  className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[#6b93ab]"
                 />
                 <input
                   type="text"
@@ -122,7 +122,7 @@ export default function WarmLoginView() {
               <div className="relative">
                 <KeyRound
                   size={18}
-                  className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[#a2814a]"
+                  className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[#6b93ab]"
                 />
                 <input
                   type="password"
@@ -151,7 +151,7 @@ export default function WarmLoginView() {
 
           <p className="mt-8 text-sm text-[var(--muted)]">
             还没有账号？
-            <Link to="/register" className="ml-2 font-semibold text-[#c27600] hover:text-[#9b5f00]">
+            <Link to="/register" className="ml-2 font-semibold text-[#3f8fbc] hover:text-[#2e7ca8]">
               去注册
             </Link>
           </p>

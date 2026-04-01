@@ -75,7 +75,7 @@ export default function WarmRegisterView() {
       <AuthShowcase
         eyebrow="Worker Onboarding"
         title="把注册流程做得更简洁，也更像一个完整产品。"
-        description="页面延续同一套暖色卡片语言，让实名认证信息填写不再像传统表单，而像一个更温和、更可信的引导流程。"
+        description="页面统一为浅绿、浅蓝与白色卡片语言，让实名认证信息填写更轻、更稳定、更可信。"
         highlights={[
           { label: '公开入口', value: '仅开放采摘工注册' },
           { label: '登录方式', value: '手机号 + 身份证后 6 位' },
@@ -90,7 +90,7 @@ export default function WarmRegisterView() {
         className="auth-panel"
       >
         <div className="mb-8 flex items-center gap-3">
-          <div className="flex h-14 w-14 items-center justify-center rounded-[20px] bg-[#2a211b] text-[#ffd16d] shadow-[0_20px_30px_rgba(56,35,13,0.18)]">
+          <div className="flex h-14 w-14 items-center justify-center rounded-[20px] bg-[#28586f] text-[#d7f7eb] shadow-[0_20px_30px_rgba(68,130,161,0.2)]">
             <UserPlus size={28} />
           </div>
           <div>
@@ -111,7 +111,7 @@ export default function WarmRegisterView() {
             <div className="relative">
               <User
                 size={18}
-                className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[#a2814a]"
+                className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[#6b93ab]"
               />
               <input
                 value={form.name}
@@ -127,7 +127,7 @@ export default function WarmRegisterView() {
             <div className="relative">
               <CreditCard
                 size={18}
-                className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[#a2814a]"
+                className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[#6b93ab]"
               />
               <input
                 value={form.idCard}
@@ -144,7 +144,7 @@ export default function WarmRegisterView() {
             <div className="relative">
               <Phone
                 size={18}
-                className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[#a2814a]"
+                className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[#6b93ab]"
               />
               <input
                 type="tel"
@@ -202,7 +202,7 @@ export default function WarmRegisterView() {
 
         <p className="mt-8 text-sm text-[var(--muted)]">
           已有账号？
-          <Link to="/login" className="ml-2 font-semibold text-[#c27600] hover:text-[#9b5f00]">
+          <Link to="/login" className="ml-2 font-semibold text-[#3f8fbc] hover:text-[#2e7ca8]">
             去登录
           </Link>
         </p>

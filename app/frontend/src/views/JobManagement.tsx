@@ -224,21 +224,21 @@ export default function JobManagement() {
     <div className="space-y-6 warm-business warm-business-jobs">
       <section className="soft-card-strong p-6 md:p-8">
         <p className="section-label">Hiring Pipeline</p>
-        <h2 className="page-title">招聘管理页已切换到统一暖色简约视觉</h2>
+        <h2 className="page-title">招聘管理页已切换到浅绿蓝白统一视觉</h2>
         <p className="page-subtitle">
           原有招聘筛选、候选人审核、岗位状态流转和续期操作全部保留，这里主要升级为更轻盈的阅读节奏和信息层级。
         </p>
         <div className="warm-business-summary mt-6">
           <article className="paper-panel p-4">
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#a2814a]">岗位数量</p>
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#6b93ab]">岗位数量</p>
             <p className="mt-3 text-3xl font-extrabold tracking-tight text-[var(--ink)]">{jobs.length}</p>
           </article>
           <article className="paper-panel p-4">
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#a2814a]">筛选结果</p>
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#6b93ab]">筛选结果</p>
             <p className="mt-3 text-3xl font-extrabold tracking-tight text-[var(--ink)]">{visibleJobs.length}</p>
           </article>
           <article className="paper-panel p-4">
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#a2814a]">当前基地</p>
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#6b93ab]">当前基地</p>
             <p className="mt-3 truncate text-xl font-bold text-[var(--ink)]">
               {bases.find((item) => item.id === activeBaseId)?.name ?? '未选择'}
             </p>

@@ -60,12 +60,12 @@ export default function AuthShowcase({
           {highlights.map((item, index) => (
             <div key={item.label} className="list-row">
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#2a211b] text-[#ffd16d]">
+                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#28586f] text-[#d7f7eb]">
                   {index === 0 ? <Sprout size={18} /> : <TrendingUp size={18} />}
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-[var(--ink)]">{item.label}</p>
-                  <p className="text-xs text-[var(--muted)]">轻量排版与暖色层次统一呈现</p>
+                  <p className="text-xs text-[var(--muted)]">轻量排版与浅绿浅蓝层次统一呈现</p>
                 </div>
               </div>
               <p className="text-lg font-extrabold tracking-tight text-[var(--ink)]">

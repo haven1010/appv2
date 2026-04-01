@@ -564,15 +564,15 @@ export default function BaseManagement() {
         </p>
         <div className="warm-business-summary mt-6">
           <article className="paper-panel p-4">
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#a2814a]">基地总量</p>
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#6b93ab]">基地总量</p>
             <p className="mt-3 text-3xl font-extrabold tracking-tight text-[var(--ink)]">{bases.length}</p>
           </article>
           <article className="paper-panel p-4">
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#a2814a]">待审核</p>
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#6b93ab]">待审核</p>
             <p className="mt-3 text-3xl font-extrabold tracking-tight text-[var(--ink)]">{pendingBases.length}</p>
           </article>
           <article className="paper-panel p-4">
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#a2814a]">当前模式</p>
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#6b93ab]">当前模式</p>
             <p className="mt-3 text-xl font-bold text-[var(--ink)]">
               {activeTab === 'audit' ? '审核处理' : '基地总览'}
             </p>

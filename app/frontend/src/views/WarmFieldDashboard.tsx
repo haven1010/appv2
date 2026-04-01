@@ -107,7 +107,7 @@ function getStatusStyle(status: number) {
     case 3:
       return 'bg-[#f5f0e6] text-[#7f6d55]';
     default:
-      return 'bg-[#fff4dd] text-[#c57e11]';
+      return 'bg-[#eaf4ff] text-[#4f98d8]';
   }
 }
 
@@ -230,7 +230,7 @@ export default function WarmFieldDashboard() {
   if (loading) {
     return (
       <div className="soft-card flex h-64 items-center justify-center gap-3 p-6">
-        <Loader2 size={24} className="animate-spin text-[#c57e11]" />
+        <Loader2 size={24} className="animate-spin text-[#4f98d8]" />
         <span className="text-sm text-[var(--muted)]">正在加载现场工作台...</span>
       </div>
     );
@@ -318,7 +318,7 @@ export default function WarmFieldDashboard() {
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="paper-panel p-5">
-              <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#a2814a]">
+              <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#6b93ab]">
                 今日签到
               </p>
               <p className="mt-3 text-3xl font-extrabold tracking-tight text-[var(--ink)]">
@@ -328,7 +328,7 @@ export default function WarmFieldDashboard() {
             </div>
 
             <div className="paper-panel p-5">
-              <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#a2814a]">
+              <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#6b93ab]">
                 到岗率
               </p>
               <p className="mt-3 text-3xl font-extrabold tracking-tight text-[var(--ink)]">
@@ -340,7 +340,7 @@ export default function WarmFieldDashboard() {
             <div className="paper-panel p-5 sm:col-span-2">
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#a2814a]">
+                  <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#6b93ab]">
                     当前基地
                   </p>
                   <p className="mt-3 text-xl font-bold text-[var(--ink)]">{baseInfo.baseName}</p>
@@ -372,7 +372,7 @@ export default function WarmFieldDashboard() {
               <p className="text-sm font-semibold text-[var(--muted)]">待签到</p>
               <p className="metric-value mt-4 text-[var(--ink)]">{stats?.signedUp ?? 0}</p>
             </div>
-            <div className="flex h-12 w-12 items-center justify-center rounded-[18px] bg-[#fff4dd] text-[#c57e11]">
+            <div className="flex h-12 w-12 items-center justify-center rounded-[18px] bg-[#eaf4ff] text-[#4f98d8]">
               <CalendarCheck size={22} />
             </div>
           </div>
@@ -409,7 +409,7 @@ export default function WarmFieldDashboard() {
           onClick={() => navigate('/dashboard/attendance')}
           className="soft-card flex items-center gap-4 p-5 text-left transition hover:-translate-y-[1px]"
         >
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#fff4dd] text-[#c57e11]">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#eaf4ff] text-[#4f98d8]">
             <AlertTriangle size={22} />
           </div>
           <div className="flex-1">
@@ -418,7 +418,7 @@ export default function WarmFieldDashboard() {
               今天还有 {pendingRecords.length} 位工人已报名但未完成签到，建议尽快扫码核验。
             </p>
           </div>
-          <ArrowRight size={18} className="text-[#c57e11]" />
+          <ArrowRight size={18} className="text-[#4f98d8]" />
         </button>
       ) : null}
 
@@ -484,14 +484,14 @@ export default function WarmFieldDashboard() {
             <div className="list-rows mt-6">
               <div className="list-row">
                 <div className="flex items-center gap-3">
-                  <Building2 size={18} className="text-[#c57e11]" />
+                  <Building2 size={18} className="text-[#4f98d8]" />
                   <span className="text-sm font-semibold text-[var(--ink)]">基地名称</span>
                 </div>
                 <span className="text-sm text-[var(--muted)]">{baseInfo.baseName}</span>
               </div>
               <div className="list-row">
                 <div className="flex items-center gap-3">
-                  <MapPin size={18} className="text-[#c57e11]" />
+                  <MapPin size={18} className="text-[#4f98d8]" />
                   <span className="text-sm font-semibold text-[var(--ink)]">基地地址</span>
                 </div>
                 <span className="max-w-[12rem] truncate text-sm text-[var(--muted)]">
@@ -500,7 +500,7 @@ export default function WarmFieldDashboard() {
               </div>
               <div className="list-row">
                 <div className="flex items-center gap-3">
-                  <Phone size={18} className="text-[#c57e11]" />
+                  <Phone size={18} className="text-[#4f98d8]" />
                   <span className="text-sm font-semibold text-[var(--ink)]">联系电话</span>
                 </div>
                 <span className="text-sm text-[var(--muted)]">
@@ -509,7 +509,7 @@ export default function WarmFieldDashboard() {
               </div>
               <div className="list-row">
                 <div className="flex items-center gap-3">
-                  <Wallet size={18} className="text-[#c57e11]" />
+                  <Wallet size={18} className="text-[#4f98d8]" />
                   <span className="text-sm font-semibold text-[var(--ink)]">招聘进度</span>
                 </div>
                 <span className="text-sm text-[var(--muted)]">
@@ -529,10 +529,10 @@ export default function WarmFieldDashboard() {
                 className="list-row text-left transition hover:-translate-y-[1px]"
               >
                 <div className="flex items-center gap-3">
-                  <Camera size={18} className="text-[#c57e11]" />
+                  <Camera size={18} className="text-[#4f98d8]" />
                   <span className="text-sm font-semibold text-[var(--ink)]">扫码签到</span>
                 </div>
-                <ArrowRight size={16} className="text-[#c57e11]" />
+                <ArrowRight size={16} className="text-[#4f98d8]" />
               </button>
 
               <button
@@ -541,10 +541,10 @@ export default function WarmFieldDashboard() {
                 className="list-row text-left transition hover:-translate-y-[1px]"
               >
                 <div className="flex items-center gap-3">
-                  <Users size={18} className="text-[#c57e11]" />
+                  <Users size={18} className="text-[#4f98d8]" />
                   <span className="text-sm font-semibold text-[var(--ink)]">查看基地人员</span>
                 </div>
-                <ArrowRight size={16} className="text-[#c57e11]" />
+                <ArrowRight size={16} className="text-[#4f98d8]" />
               </button>
             </div>
           </div>
@@ -572,7 +572,7 @@ export default function WarmFieldDashboard() {
             records.slice(0, 10).map((record) => (
               <div key={record.id} className="list-row">
                 <div className="flex min-w-0 flex-1 items-center gap-4">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#2b221b] text-sm font-bold text-[#ffd16d]">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#28586f] text-sm font-bold text-[#d7f7eb]">
                     {record.workerName?.slice(0, 1) ?? '?'}
                   </div>
                   <div className="min-w-0">
