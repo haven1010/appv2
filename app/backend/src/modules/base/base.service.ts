@@ -37,6 +37,166 @@ export class BaseService {
     private dataSource: DataSource,
   ) { }
 
+  private trimText(value: any): string {
+    return String(value || '').trim();
+  }
+
+  private getPublicApiOrigin(): string {
+    const text = this.trimText(process.env.PUBLIC_API_BASE_URL).replace(/\/+$/, '');
+    const match = text.match(/^(https?:\/\/[^/]+)/i);
+    return match ? match[1] : '';
+  }
+
+  private isLoopbackOrigin(value: string): boolean {
+    return /^https?:\/\/(127\.0\.0\.1|localhost)(:\d+)?$/i.test(this.trimText(value));
+  }
+
+  private isLoopbackHttpUrl(value: string): boolean {
+    return /^https?:\/\/(127\.0\.0\.1|localhost)(:\d+)?(\/|$)/i.test(this.trimText(value));
+  }
+
+  private extractImageText(value: any): string {
+    if (typeof value === 'string') return this.trimText(value);
+    if (!value || typeof value !== 'object') return '';
+
+    const candidates = [
+      value.url,
+      value.src,
+      value.path,
+      value.image,
+      value.imageUrl,
+    ];
+
+    for (let i = 0; i < candidates.length; i += 1) {
+      const text = this.trimText(candidates[i]);
+      if (text) return text;
+    }
+    return '';
+  }
+
+  private parseImageCollection(value: any): string[] {
+    if (Array.isArray(value)) {
+      return value.map((item) => this.extractImageText(item)).filter(Boolean);
+    }
+
+    const text = this.extractImageText(value);
+    if (!text) return [];
+    if (/^data:image\//i.test(text)) return [text];
+
+    if (text.startsWith('[') || text.startsWith('{')) {
+      try {
+        return this.parseImageCollection(JSON.parse(text));
+      } catch (_) {
+        // Keep plain-text fallback below.
+      }
+    }
+
+    if (!/[,\n\r;，；]/.test(text)) return [text];
+    return text
+      .split(/[,\n\r;，；]+/)
+      .map((item) => this.trimText(item))
+      .filter(Boolean);
+  }
+
+  private normalizeLegacyImageUrl(value: any): string {
+    const text = this.trimText(value);
+    if (!text) return '';
+
+    if (
+      /^https?:\/\/127\.0\.0\.1:\d+\/__tmp__\//i.test(text)
+      || /^wxfile:\/\//i.test(text)
+      || /^[a-zA-Z]:\\/.test(text)
+      || /^file:\/\//i.test(text)
+    ) {
+      return '';
+    }
+
+    if (/^data:image\//i.test(text)) return text;
+    if (text.startsWith('//')) return `https:${text}`;
+
+    const publicOrigin = this.getPublicApiOrigin();
+    if (/^https?:\/\//i.test(text)) {
+      if (publicOrigin && !this.isLoopbackOrigin(publicOrigin) && this.isLoopbackHttpUrl(text)) {
+        return text.replace(/^(https?:\/\/[^/]+)/i, publicOrigin);
+      }
+      return text;
+    }
+
+    const uploadsPath = /^\/?uploads\//i.test(text)
+      ? (text.startsWith('/') ? text : `/${text}`)
+      : '';
+    if (!uploadsPath) return '';
+    return publicOrigin ? `${publicOrigin}${uploadsPath}` : uploadsPath;
+  }
+
+  private sanitizeBaseImagesForRead(base: BaseInfo): boolean {
+    let changed = false;
+
+    const nextLicenseUrl = this.normalizeLegacyImageUrl(base.licenseUrl);
+    if (nextLicenseUrl !== base.licenseUrl) {
+      base.licenseUrl = nextLicenseUrl;
+      changed = true;
+    }
+
+    const descriptionText = this.trimText(base.description);
+    if (!descriptionText) return changed;
+
+    let parsed: any;
+    try {
+      parsed = JSON.parse(descriptionText);
+    } catch (_) {
+      return changed;
+    }
+
+    if (!parsed || typeof parsed !== 'object') return changed;
+
+    if (Object.prototype.hasOwnProperty.call(parsed, 'licenseUrl')) {
+      const normalized = this.normalizeLegacyImageUrl(parsed.licenseUrl);
+      if (normalized !== parsed.licenseUrl) {
+        parsed.licenseUrl = normalized;
+        changed = true;
+      }
+    }
+
+    const imageKeys = ['workEnvImages', 'environmentImages', 'envImages', 'images'];
+    let hasValidImage = false;
+    for (let i = 0; i < imageKeys.length; i += 1) {
+      const key = imageKeys[i];
+      if (!Object.prototype.hasOwnProperty.call(parsed, key)) continue;
+      const normalized = this.parseImageCollection(parsed[key])
+        .map((item) => this.normalizeLegacyImageUrl(item))
+        .filter(Boolean);
+
+      if (Array.isArray(parsed[key])) {
+        if (JSON.stringify(parsed[key]) !== JSON.stringify(normalized)) {
+          parsed[key] = normalized;
+          changed = true;
+        }
+      } else {
+        parsed[key] = normalized;
+        changed = true;
+      }
+
+      if (normalized.length > 0) hasValidImage = true;
+    }
+
+    if (!hasValidImage) {
+      const summaryKeys = ['environmentSummary', 'workEnvSummary'];
+      for (let i = 0; i < summaryKeys.length; i += 1) {
+        const key = summaryKeys[i];
+        const text = this.trimText(parsed[key]);
+        if (/已上传\s*\d+\s*张/.test(text)) {
+          parsed[key] = '';
+          changed = true;
+        }
+      }
+    }
+
+    if (!changed) return false;
+    base.description = JSON.stringify(parsed);
+    return true;
+  }
+
   private isTemporaryImageUrl(value: string): boolean {
     const text = String(value || '').trim();
     if (!text) return false;
@@ -317,6 +477,16 @@ export class BaseService {
     if (!base) {
       this.logger.warn(`[鏌ヨ鍩哄湴璇︽儏] 涓嶅瓨鍦? id=${id}`);
       throw new NotFoundException(`Base ID=${id} not found`);
+    }
+
+    const sanitized = this.sanitizeBaseImagesForRead(base);
+    if (sanitized) {
+      try {
+        await this.baseRepo.save(base);
+        this.logger.log(`[sanitize legacy base image urls] baseId=${base.id}`);
+      } catch (error) {
+        this.logger.warn(`[sanitize legacy base image urls failed] baseId=${base.id}, error=${error?.message || 'unknown'}`);
+      }
     }
 
     this.logger.log(`[鏌ヨ鍩哄湴璇︽儏] 鎴愬姛: id=${base.id}, 鍚嶇О=${base.baseName}`);
