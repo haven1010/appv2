@@ -1,9 +1,84 @@
 /**
  * Layer: Mini Program Page
- * Responsibility: Implements the List page lifecycle, local interaction state, and backend integration for the WeChat client.
- * Notes: Keep comments focused on intent, invariants, side effects, and cross-module contracts.
+ * Responsibility: Job list for worker exploration and boss recruitment overview.
  */
 const app = getApp();
+const { resolveRole } = require('../../../utils/role');
+
+function trimText(value) {
+  return String(value || '').trim();
+}
+
+function normalizePhone(value) {
+  const digits = String(value || '').replace(/\D/g, '');
+  if (!digits) return '';
+  return digits.length > 11 ? digits.slice(-11) : digits;
+}
+
+function normalizeName(value) {
+  return trimText(value).replace(/\s+/g, '');
+}
+
+function safeParseJson(value) {
+  if (!value) return {};
+  if (typeof value === 'object') return value;
+  try {
+    return JSON.parse(String(value));
+  } catch (_) {
+    return {};
+  }
+}
+
+function buildBossIdentity(profile, cachedUser) {
+  const merged = Object.assign({}, cachedUser || {}, profile || {});
+  return {
+    userId: Number(merged.id || merged.userId || 0),
+    name: normalizeName(merged.name),
+    phone: normalizePhone(merged.phone || merged.mobile),
+  };
+}
+
+function isBossRelatedBase(base, bossIdentity) {
+  if (!base || !bossIdentity) return false;
+
+  const ownerId = Number(base.ownerId || 0);
+  if (bossIdentity.userId && ownerId === bossIdentity.userId) {
+    return true;
+  }
+
+  const description = safeParseJson(base.description);
+  const ownerProfile = description && typeof description.ownerProfile === 'object' ? description.ownerProfile : {};
+  const companyAdminContact = description && typeof description.companyAdminContact === 'object'
+    ? description.companyAdminContact
+    : {};
+
+  const ownerPhone = normalizePhone(ownerProfile.phone);
+  const companyAdminPhone = normalizePhone(companyAdminContact.phone);
+  if (bossIdentity.phone && (ownerPhone === bossIdentity.phone || companyAdminPhone === bossIdentity.phone)) {
+    return true;
+  }
+
+  const ownerName = normalizeName(ownerProfile.name);
+  return Boolean(bossIdentity.name && ownerName && ownerName === bossIdentity.name);
+}
+
+function normalizeJobItem(job, baseName) {
+  const recruitTarget = Number(job && (job.recruitCount || job.headcount || job.count || 0)) || 0;
+  const applicantCount = Number(job && job.applicantCount) || 0;
+  const cappedApplicant = recruitTarget > 0 ? Math.min(applicantCount, recruitTarget) : applicantCount;
+  const signupProgressText = recruitTarget > 0 ? `${cappedApplicant}/${recruitTarget}` : `${applicantCount}/-`;
+  const signupProgressPercent = recruitTarget > 0
+    ? Math.min(100, Math.round((cappedApplicant / recruitTarget) * 100))
+    : 0;
+
+  return Object.assign({}, job, {
+    baseName: trimText(baseName || (job && job.baseName) || '-'),
+    recruitTarget,
+    applicantCount,
+    signupProgressText,
+    signupProgressPercent,
+  });
+}
 
 Page({
   data: {
@@ -16,23 +91,48 @@ Page({
     statusFilter: 'all',
     openCount: 0,
     closedCount: 0,
+    role: 'worker',
+    isBossView: false,
   },
 
   onLoad(options) {
+    this.initRoleView();
+
     if (options.baseId) {
       this.setData({ baseId: parseInt(options.baseId, 10) });
     }
+
     if (options.baseName) {
       const decodedBaseName = decodeURIComponent(options.baseName);
       this.setData({ baseName: decodedBaseName });
-      wx.setNavigationBarTitle({ title: `${decodedBaseName} - 岗位` });
+      wx.setNavigationBarTitle({ title: `${decodedBaseName} - 招聘情况` });
     }
+
     this.loadJobs();
+  },
+
+  onShow() {
+    this.initRoleView();
+    if (this.data.isBossView) {
+      const tabBar = this.getTabBar && this.getTabBar();
+      if (tabBar) {
+        tabBar.setData({ selected: 1 });
+      }
+    }
   },
 
   onPullDownRefresh() {
     this.loadJobs();
     setTimeout(() => wx.stopPullDownRefresh(), 1000);
+  },
+
+  initRoleView() {
+    const userInfo = wx.getStorageSync('userInfo') || {};
+    const role = resolveRole(userInfo);
+    this.setData({
+      role,
+      isBossView: role === 'boss',
+    });
   },
 
   isOpenStatus(status) {
@@ -80,30 +180,58 @@ Page({
     });
   },
 
+  async loadBossBases() {
+    const cachedUser = wx.getStorageSync('userInfo') || {};
+    const ownerId = Number(cachedUser.id || cachedUser.userId || 0);
+    const ownedBases = ownerId
+      ? await app.request({ url: `/base?ownerId=${ownerId}&showAll=1`, method: 'GET' }).catch(() => [])
+      : [];
+    const normalizedOwnedBases = Array.isArray(ownedBases) ? ownedBases : [];
+    if (normalizedOwnedBases.length > 0) return normalizedOwnedBases;
+
+    const profile = await app.request({ url: '/user/profile', method: 'GET' }).catch(() => ({}));
+    const bossIdentity = buildBossIdentity(profile, cachedUser);
+    const allBases = await app.request({ url: '/base?showAll=1', method: 'GET' }).catch(() => []);
+    return (Array.isArray(allBases) ? allBases : []).filter((base) => isBossRelatedBase(base, bossIdentity));
+  },
+
+  async loadJobsForBases(baseList) {
+    const list = Array.isArray(baseList) ? baseList : [];
+    const jobsByBase = await Promise.all(
+      list.map(async (base) => {
+        try {
+          const jobs = await app.request({
+            url: '/base/' + base.id + '/jobs',
+            method: 'GET',
+          });
+          if (!Array.isArray(jobs)) return [];
+          const baseName = base.baseName || base.name || '-';
+          return jobs.map((job) => normalizeJobItem(job, baseName));
+        } catch (_) {
+          return [];
+        }
+      }),
+    );
+
+    let merged = [];
+    jobsByBase.forEach((jobs) => {
+      if (Array.isArray(jobs) && jobs.length) {
+        merged = merged.concat(jobs);
+      }
+    });
+    return merged;
+  },
+
   async loadJobs() {
     this.setData({ loading: true });
 
     try {
       if (!this.data.baseId) {
-        // No baseId: load all approved bases' jobs (flatten)
-        const bases = await app.request({ url: '/base', method: 'GET' });
-        let allJobs = [];
-        for (const base of (bases || [])) {
-          try {
-            const jobs = await app.request({
-              url: '/base/' + base.id + '/jobs',
-              method: 'GET',
-            });
-            if (Array.isArray(jobs)) {
-              jobs.forEach((job) => {
-                job.baseName = base.baseName || base.name || '-';
-              });
-              allJobs = allJobs.concat(jobs);
-            }
-          } catch (_) {
-            // Keep loading other bases.
-          }
-        }
+        const baseList = this.data.isBossView
+          ? await this.loadBossBases()
+          : await app.request({ url: '/base', method: 'GET' });
+        const allJobs = await this.loadJobsForBases(baseList);
+
         this.setData({ jobs: allJobs, loading: false }, () => {
           this.applyFilters();
         });
@@ -112,7 +240,7 @@ Page({
           url: '/base/' + this.data.baseId + '/jobs',
           method: 'GET',
         });
-        const list = Array.isArray(res) ? res : [];
+        const list = (Array.isArray(res) ? res : []).map((job) => normalizeJobItem(job, this.data.baseName || job.baseName || '-'));
         this.setData(
           {
             jobs: list,
@@ -140,6 +268,14 @@ Page({
   applyJob(e) {
     const jobId = e.currentTarget.dataset.id;
     const baseId = e.currentTarget.dataset.baseid;
+
+    if (this.data.isBossView) {
+      wx.navigateTo({
+        url: '/pages/job/detail/detail?id=' + jobId,
+      });
+      return;
+    }
+
     wx.navigateTo({
       url: '/pages/signup/signup?jobId=' + jobId + '&baseId=' + (baseId || this.data.baseId || ''),
     });

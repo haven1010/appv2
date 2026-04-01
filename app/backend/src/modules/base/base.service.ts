@@ -664,6 +664,15 @@ export class BaseService {
     qb.orderBy('job.createdAt', 'DESC');
 
     const results = await qb.getMany();
+    if (results.length) {
+      const applicantCountMap = await this.jobApplicationService.getApplicantCountsByJobIds(
+        results.map((job) => Number(job.id)),
+      );
+      results.forEach((job) => {
+        const count = applicantCountMap[Number(job.id)];
+        job.applicantCount = Number.isInteger(count) ? count : Number(job.applicantCount) || 0;
+      });
+    }
     this.logger.log(`[List base jobs] result count: ${results.length}`);
     return results;
   }

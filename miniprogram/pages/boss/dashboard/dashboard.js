@@ -1,4 +1,4 @@
-﻿const app = getApp();
+const app = getApp();
 const { resolveRole } = require('../../../utils/role');
 
 const CATEGORY_OPTIONS = [
@@ -135,6 +135,10 @@ Page({
   },
 
   onShow() {
+    const tabBar = this.getTabBar && this.getTabBar();
+    if (tabBar) {
+      tabBar.setData({ selected: 2 });
+    }
     this.sanitizeTransientImages();
   },
 

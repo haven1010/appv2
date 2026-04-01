@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Layer: Mini Program Page
  * Responsibility: Handles warm-style role-based login interactions and authentication flow.
  */
@@ -305,7 +305,7 @@ Page({
 
   navigateToBossDashboard() {
     if (isPageDeclared(BOSS_DASHBOARD_URL)) {
-      wx.reLaunch({
+      wx.switchTab({
         url: BOSS_DASHBOARD_URL,
         fail: () => {
           wx.reLaunch({ url: BOSS_FALLBACK_URL });

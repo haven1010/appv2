@@ -5,7 +5,7 @@
  */
 import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, In, Repository } from 'typeorm';
 import { JobApplication, ApplicationStatus } from '../entities/job-application.entity';
 import { RecruitmentJob } from '../entities/recruitment-job.entity';
 import { SysUser } from '../../user/entities/sys-user.entity';
@@ -32,6 +32,50 @@ export class JobApplicationService {
       throw new BadRequestException('您已申请过该岗位，请勿重复申请');
     }
     throw error;
+  }
+
+  private getProgressStatuses(): ApplicationStatus[] {
+    return [ApplicationStatus.PENDING, ApplicationStatus.APPROVED];
+  }
+
+  private async refreshApplicantCount(jobId: number): Promise<number> {
+    const targetJobId = Number(jobId);
+    if (!targetJobId) return 0;
+
+    const applicantCount = await this.applicationRepo.count({
+      where: {
+        jobId: targetJobId,
+        status: In(this.getProgressStatuses()),
+      },
+    });
+
+    await this.jobRepo.update({ id: targetJobId }, { applicantCount });
+    return applicantCount;
+  }
+
+  async getApplicantCountsByJobIds(jobIds: number[]): Promise<Record<number, number>> {
+    const normalizedIds = (Array.isArray(jobIds) ? jobIds : [])
+      .map((id) => Number(id))
+      .filter((id) => Number.isInteger(id) && id > 0);
+
+    if (!normalizedIds.length) return {};
+
+    const rows = await this.applicationRepo
+      .createQueryBuilder('application')
+      .select('application.jobId', 'jobId')
+      .addSelect('COUNT(*)', 'applicantCount')
+      .where('application.jobId IN (:...jobIds)', { jobIds: normalizedIds })
+      .andWhere('application.status IN (:...statuses)', { statuses: this.getProgressStatuses() })
+      .groupBy('application.jobId')
+      .getRawMany();
+
+    const result: Record<number, number> = {};
+    rows.forEach((row: any) => {
+      const key = Number(row?.jobId);
+      if (!Number.isInteger(key) || key <= 0) return;
+      result[key] = Number(row?.applicantCount) || 0;
+    });
+    return result;
   }
 
   async create(userId: number, jobId: number, baseId: number, note?: string, context?: OperationLogContext): Promise<JobApplication> {
@@ -77,6 +121,10 @@ export class JobApplicationService {
     } catch (error) {
       this.rethrowDuplicatePendingApplication(error);
     }
+    const applicantCount = await this.refreshApplicantCount(saved.jobId).catch((error) => {
+      this.logger.warn(`[刷新报名统计失败] jobId=${saved.jobId}, reason=${error?.message || error}`);
+      return null;
+    });
     await this.operationLogService.logWithContext({
       operationType: OperationType.CREATE,
       resourceType: ResourceType.JOB,
@@ -88,6 +136,7 @@ export class JobApplicationService {
         applicationId: saved.id,
         baseId: saved.baseId,
         status: saved.status,
+        applicantCount: applicantCount === null ? undefined : applicantCount,
       },
     });
     return saved;
@@ -123,6 +172,10 @@ export class JobApplicationService {
       const next = await manager.save(JobApplication, application);
       return { saved: next, beforeStatus: previousStatus };
     });
+    const applicantCount = await this.refreshApplicantCount(saved.jobId).catch((error) => {
+      this.logger.warn(`[刷新报名统计失败] jobId=${saved.jobId}, reason=${error?.message || error}`);
+      return null;
+    });
     await this.operationLogService.logWithContext({
       operationType: OperationType.AUDIT,
       resourceType: ResourceType.JOB,
@@ -138,6 +191,7 @@ export class JobApplicationService {
         applicationId: saved.id,
         status: saved.status,
         rejectReason: saved.rejectReason,
+        applicantCount: applicantCount === null ? undefined : applicantCount,
       },
     });
     return saved;

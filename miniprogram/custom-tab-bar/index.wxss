@@ -6,6 +6,12 @@
   z-index: 999;
 }
 
+.compact-shell {
+  left: 12rpx;
+  right: 12rpx;
+  bottom: 8rpx;
+}
+
 .tab-bar {
   height: 126rpx;
   padding: 8rpx 14rpx calc(env(safe-area-inset-bottom) + 10rpx);
@@ -16,6 +22,13 @@
   display: flex;
   align-items: flex-end;
   backdrop-filter: blur(12rpx);
+}
+
+.compact-bar {
+  height: 96rpx;
+  padding: 4rpx 10rpx calc(env(safe-area-inset-bottom) + 6rpx);
+  border-radius: 28rpx;
+  box-shadow: 0 8rpx 18rpx rgba(100, 76, 43, 0.16);
 }
 
 .tab-item {
@@ -49,6 +62,25 @@
   font-size: 20rpx;
   line-height: 1.2;
   color: #7e6a4f;
+}
+
+.compact-bar .tab-item {
+  padding-bottom: 4rpx;
+}
+
+.compact-bar .icon-wrap {
+  width: 50rpx;
+  height: 36rpx;
+  margin-bottom: 2rpx;
+}
+
+.compact-bar .icon-text {
+  font-size: 24rpx;
+}
+
+.compact-bar .tab-text {
+  font-size: 18rpx;
+  line-height: 1.1;
 }
 
 .tab-item.active .icon-wrap {

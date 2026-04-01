@@ -3,6 +3,7 @@
     "pages/index/index",
     "pages/login/login",
     "pages/boss/dashboard/dashboard",
+    "pages/boss/profile/profile",
     "pages/register/register",
     "pages/profile/profile",
     "pages/profile/settings/settings",
@@ -71,16 +72,20 @@
         "text": "\u5de5\u4f5c\u53f0"
       },
       {
-        "pagePath": "pages/field/scan/scan",
-        "text": "\u626b\u7801\u7b7e\u5230"
+        "pagePath": "pages/base/list/list",
+        "text": "\u6211\u7684\u57fa\u5730"
       },
       {
-        "pagePath": "pages/field/records/records",
-        "text": "\u8003\u52e4\u8bb0\u5f55"
+        "pagePath": "pages/job/list/list",
+        "text": "\u62db\u8058\u60c5\u51b5"
       },
       {
-        "pagePath": "pages/field/profile/profile",
-        "text": "\u6211\u7684(\u7ba1\u7406)"
+        "pagePath": "pages/boss/dashboard/dashboard",
+        "text": "\u4f01\u4e1a\u5165\u9a7b\u5ba1\u6838"
+      },
+      {
+        "pagePath": "pages/boss/profile/profile",
+        "text": "\u6211\u7684\u4fe1\u606f"
       }
     ]
   },

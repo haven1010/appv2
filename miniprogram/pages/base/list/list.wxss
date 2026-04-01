@@ -1,6 +1,6 @@
 .page {
   min-height: 100vh;
-  padding: 24rpx 24rpx 48rpx;
+  padding: 24rpx 24rpx calc(220rpx + env(safe-area-inset-bottom));
   box-sizing: border-box;
   background:
     radial-gradient(circle at right top, rgba(143, 219, 190, 0.28) 0%, rgba(143, 219, 190, 0) 46%),

@@ -1,0 +1,67 @@
+<view class="page page-enter">
+  <view class="paper-bg"></view>
+
+  <view class="container">
+    <view class="hero-card">
+      <text class="hero-title">我的信息</text>
+      <text class="hero-subtitle">老板账号资料与企业入驻状态总览</text>
+    </view>
+
+    <view wx:if="{{loading}}" class="section-card loading-card">
+      <text class="loading-text">加载中...</text>
+    </view>
+
+    <block wx:else>
+      <view class="section-card">
+        <view class="section-title">账户信息</view>
+
+        <view class="info-row">
+          <text class="info-label">姓名</text>
+          <text class="info-value">{{profile.name}}</text>
+        </view>
+        <view class="info-row">
+          <text class="info-label">UID</text>
+          <text class="info-value">{{profile.uid}}</text>
+        </view>
+        <view class="info-row">
+          <text class="info-label">手机号</text>
+          <text class="info-value">{{profile.phoneMasked}}</text>
+        </view>
+        <view class="info-row">
+          <text class="info-label">身份证</text>
+          <text class="info-value">{{profile.idCardMasked}}</text>
+        </view>
+        <view class="info-row">
+          <text class="info-label">角色</text>
+          <text class="info-value">{{roleText}}</text>
+        </view>
+      </view>
+
+      <view class="section-card">
+        <view class="section-title">最近基地入驻信息</view>
+
+        <block wx:if="{{latestBase}}">
+          <view class="info-row">
+            <text class="info-label">基地名称</text>
+            <text class="info-value">{{latestBase.baseName}}</text>
+          </view>
+          <view class="info-row">
+            <text class="info-label">审核状态</text>
+            <text class="info-value">{{latestBase.auditStatusText}}</text>
+          </view>
+          <view class="info-row">
+            <text class="info-label">基地地址</text>
+            <text class="info-value multiline">{{latestBase.address}}</text>
+          </view>
+        </block>
+
+        <view wx:else class="empty-text">暂未提交基地入驻信息</view>
+      </view>
+    </block>
+
+    <view class="actions-row">
+      <button class="action-btn action-secondary" bindtap="loadProfile">刷新信息</button>
+      <button class="action-btn action-danger" bindtap="logout">退出登录</button>
+    </view>
+  </view>
+</view>

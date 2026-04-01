@@ -25,7 +25,7 @@
   z-index: 1;
   min-height: 100vh;
   box-sizing: border-box;
-  padding: 28rpx 26rpx calc(56rpx + env(safe-area-inset-bottom));
+  padding: 28rpx 26rpx calc(170rpx + env(safe-area-inset-bottom));
   display: flex;
   flex-direction: column;
   gap: 20rpx;

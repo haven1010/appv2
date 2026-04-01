@@ -120,11 +120,11 @@ Page({
   },
 
   goScan() {
-    wx.switchTab({ url: '/pages/field/scan/scan' });
+    wx.navigateTo({ url: '/pages/field/scan/scan' });
   },
 
   goRecords() {
-    wx.switchTab({ url: '/pages/field/records/records' });
+    wx.navigateTo({ url: '/pages/field/records/records' });
   },
 
   goSettings() {

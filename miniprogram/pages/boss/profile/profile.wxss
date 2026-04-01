@@ -1,0 +1,140 @@
+.page {
+  min-height: 100vh;
+  position: relative;
+  background: #f6efdf;
+}
+
+.paper-bg {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, #fbf4e6 0%, #eef3e4 52%, #f6efdf 100%),
+    radial-gradient(circle at 12% 8%, rgba(102, 138, 79, 0.16) 0%, rgba(102, 138, 79, 0) 32%),
+    radial-gradient(circle at 90% 12%, rgba(202, 164, 90, 0.16) 0%, rgba(202, 164, 90, 0) 30%);
+}
+
+.container {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  box-sizing: border-box;
+  padding: 28rpx 26rpx calc(200rpx + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+}
+
+.hero-card,
+.section-card {
+  background: rgba(255, 248, 235, 0.95);
+  border: 4rpx solid rgba(140, 112, 72, 0.32);
+  border-radius: 32rpx 28rpx 30rpx 24rpx;
+  box-shadow: 0 10rpx 20rpx rgba(98, 76, 46, 0.12);
+}
+
+.hero-card {
+  padding: 24rpx 22rpx;
+}
+
+.hero-title {
+  display: block;
+  color: #473421;
+  font-size: 36rpx;
+  font-weight: 800;
+}
+
+.hero-subtitle {
+  display: block;
+  margin-top: 8rpx;
+  color: #725f49;
+  font-size: 26rpx;
+  line-height: 1.5;
+}
+
+.section-card {
+  padding: 22rpx;
+}
+
+.section-title {
+  margin-bottom: 14rpx;
+  color: #4a3823;
+  font-size: 30rpx;
+  font-weight: 800;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16rpx;
+  padding: 14rpx 0;
+  border-bottom: 1rpx dashed rgba(140, 112, 72, 0.28);
+}
+
+.info-row:last-child {
+  border-bottom: none;
+}
+
+.info-label {
+  width: 150rpx;
+  flex-shrink: 0;
+  color: #6f5e49;
+  font-size: 26rpx;
+  font-weight: 700;
+}
+
+.info-value {
+  flex: 1;
+  color: #3f3222;
+  font-size: 26rpx;
+  text-align: right;
+  word-break: break-all;
+}
+
+.info-value.multiline {
+  text-align: left;
+}
+
+.loading-card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 160rpx;
+}
+
+.loading-text,
+.empty-text {
+  color: #6f5e49;
+  font-size: 26rpx;
+}
+
+.actions-row {
+  display: flex;
+  gap: 14rpx;
+}
+
+.action-btn {
+  flex: 1;
+  height: 90rpx;
+  line-height: 90rpx;
+  border-radius: 999rpx;
+  border: 3rpx solid transparent;
+  font-size: 30rpx;
+  font-weight: 700;
+}
+
+.action-btn::after {
+  border: none;
+}
+
+.action-secondary {
+  border-color: rgba(78, 115, 58, 0.25);
+  background: rgba(240, 246, 226, 0.9);
+  color: #4a6b34;
+}
+
+.action-danger {
+  border-color: rgba(145, 89, 66, 0.35);
+  background: rgba(248, 225, 214, 0.92);
+  color: #8e4a2e;
+}

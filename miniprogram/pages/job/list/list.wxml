@@ -1,10 +1,10 @@
 <view class="page page-enter">
   <view class="hero-card">
     <view class="hero-head">
-      <text class="hero-title">{{baseName ? baseName + ' · 招聘岗位' : '招聘管理'}}</text>
-      <text class="hero-badge">TDesign Layout</text>
+      <text class="hero-title">{{baseName ? (baseName + ' · 招聘情况') : (isBossView ? '招聘情况' : '招聘管理')}}</text>
+      <text class="hero-badge">{{isBossView ? 'Boss View' : 'TDesign Layout'}}</text>
     </view>
-    <text class="hero-subtitle">共 {{jobs.length}} 个岗位，支持筛选与快速报名</text>
+    <text class="hero-subtitle">{{isBossView ? ('共 ' + jobs.length + ' 个岗位，展示老板名下基地招聘状态') : ('共 ' + jobs.length + ' 个岗位，支持筛选与快速报名')}}</text>
     <view class="hero-stats">
       <view class="hero-stat">
         <text class="hero-stat-value">{{jobs.length}}</text>
@@ -61,7 +61,7 @@
 
   <view wx:elif="{{viewJobs.length === 0}}" class="state-panel">
     <text class="state-title">暂无符合条件的岗位</text>
-    <text class="state-desc">尝试清空筛选或切换基地</text>
+    <text class="state-desc">尝试清空筛选条件后重试</text>
   </view>
 
   <view wx:else class="job-list">
@@ -84,7 +84,15 @@
       <view class="job-meta">
         <text class="meta-tag" wx:if="{{item.baseName}}">{{item.baseName}}</text>
         <text class="meta-item">招聘 {{item.recruitCount || item.headcount || item.count || '-'}} 人</text>
+        <text wx:if="{{isBossView}}" class="meta-item">报名 {{item.signupProgressText || '0/-'}}</text>
         <text class="meta-item">{{item.workDateRange || '时间待定'}}</text>
+      </view>
+
+      <view wx:if="{{isBossView}}" class="signup-progress">
+        <view class="signup-progress-track">
+          <view class="signup-progress-fill" style="width: {{item.signupProgressPercent || 0}}%;"></view>
+        </view>
+        <text class="signup-progress-text">{{item.signupProgressPercent || 0}}%</text>
       </view>
 
       <view wx:if="{{item.requirements || item.description}}" class="job-desc">
@@ -102,7 +110,7 @@
           hover-stay-time="100"
           data-id="{{item.id}}"
           data-baseid="{{item.baseId}}"
-        >立即报名</view>
+        >{{isBossView ? '查看详情' : '立即报名'}}</view>
       </view>
     </view>
   </view>

@@ -127,13 +127,13 @@ Page({
   },
 
   goScan() {
-    wx.switchTab({
+    wx.navigateTo({
       url: '/pages/field/scan/scan',
     });
   },
 
   goRecords() {
-    wx.switchTab({
+    wx.navigateTo({
       url: '/pages/field/records/records',
     });
   },
