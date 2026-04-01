@@ -40,6 +40,69 @@ function mapAuditLabel(auditStatus) {
   return '待审核';
 }
 
+function resolveApiOrigin() {
+  const baseUrl = toText((app && app.globalData && app.globalData.baseUrl) || wx.getStorageSync('apiBaseUrl'));
+  const match = baseUrl.match(/^(https?:\/\/[^/]+)/i);
+  return match ? match[1] : '';
+}
+
+function isHttpUrl(value) {
+  return /^https?:\/\//i.test(toText(value));
+}
+
+function isLoopbackHttpUrl(value) {
+  return /^https?:\/\/(127\.0\.0\.1|localhost)(:\d+)?(\/|$)/i.test(toText(value));
+}
+
+function isLoopbackOrigin(value) {
+  return /^https?:\/\/(127\.0\.0\.1|localhost)(:\d+)?$/i.test(toText(value));
+}
+
+function extractImageText(value) {
+  if (typeof value === 'string') return toText(value);
+  if (!value || typeof value !== 'object') return '';
+
+  const candidates = [
+    value.url,
+    value.src,
+    value.path,
+    value.image,
+    value.imageUrl,
+  ];
+
+  for (let i = 0; i < candidates.length; i += 1) {
+    const text = toText(candidates[i]);
+    if (text) return text;
+  }
+
+  return '';
+}
+
+function parseImageCollection(value) {
+  if (Array.isArray(value)) {
+    return value.map((item) => extractImageText(item)).filter(Boolean);
+  }
+
+  if (!value) return [];
+  const text = extractImageText(value);
+  if (!text) return [];
+  if (/^data:image\//i.test(text)) return [text];
+
+  if (text.startsWith('[') || text.startsWith('{')) {
+    try {
+      return parseImageCollection(JSON.parse(text));
+    } catch (_) {
+      // Fall through to plain text split.
+    }
+  }
+
+  if (!/[,\n\r;，；]/.test(text)) return [text];
+  return text
+    .split(/[,\n\r;，；]+/)
+    .map((item) => toText(item))
+    .filter(Boolean);
+}
+
 function normalizeImageList(meta) {
   if (!meta) return [];
 
@@ -51,10 +114,8 @@ function normalizeImageList(meta) {
   ];
 
   for (let i = 0; i < candidates.length; i += 1) {
-    const item = candidates[i];
-    if (Array.isArray(item)) {
-      return item.map((src) => toText(src)).filter(Boolean);
-    }
+    const urls = parseImageCollection(candidates[i]);
+    if (urls.length) return urls;
   }
   return [];
 }
@@ -63,13 +124,27 @@ function isDevtoolsTmpUrl(value) {
   return /^https?:\/\/127\.0\.0\.1:\d+\/__tmp__\//i.test(toText(value));
 }
 
-function normalizePersistedImageUrl(value) {
+function normalizePersistedImageUrl(value, apiOrigin = '') {
   const text = toText(value);
   if (!text) return '';
   if (isDevtoolsTmpUrl(text)) return '';
   if (/^wxfile:\/\//i.test(text)) return '';
   if (/^[a-zA-Z]:\\/.test(text)) return '';
   if (/^file:\/\//i.test(text)) return '';
+  if (/^data:image\//i.test(text)) return text;
+
+  if (text.startsWith('//')) return `https:${text}`;
+
+  if (!isHttpUrl(text)) {
+    const cleanPath = text.replace(/^\/+/, '');
+    if (!cleanPath) return '';
+    return apiOrigin ? `${apiOrigin}/${cleanPath}` : '';
+  }
+
+  if (apiOrigin && !isLoopbackOrigin(apiOrigin) && isLoopbackHttpUrl(text)) {
+    return text.replace(/^(https?:\/\/[^/]+)/i, apiOrigin);
+  }
+
   return text;
 }
 
@@ -120,6 +195,7 @@ Page({
         method: 'GET',
       });
 
+      const apiOrigin = resolveApiOrigin();
       const meta = safeParseDescription(baseInfo && baseInfo.description);
       const addressText = toText(baseInfo && baseInfo.address, '待补充');
       const jobRequirementText = pickFieldText([
@@ -129,7 +205,7 @@ Page({
         meta.description,
       ], '待补充');
       const rawEnvImages = normalizeImageList(meta);
-      const envImages = rawEnvImages.map((item) => normalizePersistedImageUrl(item)).filter(Boolean);
+      const envImages = rawEnvImages.map((item) => normalizePersistedImageUrl(item, apiOrigin)).filter(Boolean);
       const envSummaryText = pickFieldText([
         meta.environmentSummary,
         meta.workEnvSummary,
@@ -137,7 +213,7 @@ Page({
         meta.workEnvironment,
       ], envImages.length ? `已上传 ${envImages.length} 张环境图片` : '待补充');
       const rawLicenseUrl = toText((baseInfo && baseInfo.licenseUrl) || meta.licenseUrl, '');
-      const licenseUrl = normalizePersistedImageUrl(rawLicenseUrl);
+      const licenseUrl = normalizePersistedImageUrl(rawLicenseUrl, apiOrigin);
       const hasExpiredTempImage = (rawLicenseUrl && !licenseUrl) || envImages.length < rawEnvImages.length;
 
       this.setData({
