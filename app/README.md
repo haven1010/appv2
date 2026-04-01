@@ -186,6 +186,14 @@ COS_REGION=ap-guangzhou
 
 ---
 
+## 🎨 产品与交互设计文档
+
+* [登录与角色分流系统设计（Crayon UI 版）](frontend/docs/login-role-split-crayon-ui.md)
+* [前端页面设计规范（TDesign）](frontend/docs/tdesign-frontend-page-design-guide.md)
+* [设计系统（v1.0）](frontend/docs/picker-design-system-v1.md)
+
+---
+
 ## 👥 作者
 
 * **赵张阳** - 后端架构 / 数据库设计 / DevOps
