@@ -14,7 +14,10 @@ import {
   Query,
   ParseIntPipe,
   UseGuards,
-  Request
+  Request,
+  UseInterceptors,
+  UploadedFile,
+  BadRequestException,
 } from '@nestjs/common';
 import { BaseService } from './base.service';
 import { CreateBaseDto } from './dto/create-base.dto';
@@ -24,19 +27,27 @@ import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from '../user/entities/sys-user.entity';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { extname, join } from 'path';
+import { mkdirSync } from 'fs';
 
 @ApiTags('基地管理')
 @Controller('base')
 export class BaseController {
-  constructor(private readonly baseService: BaseService) { }
+  private static readonly baseAssetDir = join(process.cwd(), 'uploads', 'base-assets');
+  private static readonly baseAssetRetentionDays = 30;
+
+  constructor(private readonly baseService: BaseService) {}
 
   @ApiOperation({ summary: '创建基地' })
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.BOSS, UserRole.BASE_MANAGER)
   @Post()
   async create(
     @Body() createBaseDto: CreateBaseDto,
-    @Request() req
+    @Request() req,
   ) {
     return this.baseService.create(createBaseDto, req.user.id, { request: req, userId: req.user.id });
   }
@@ -47,7 +58,51 @@ export class BaseController {
     return this.baseService.findAll(query);
   }
 
-  @ApiOperation({ summary: '当前用户的岗位申请列表（工人端「我的报名」）' })
+  @ApiOperation({ summary: '上传基地资质图片（营业执照/环境图）' })
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.BOSS, UserRole.BASE_MANAGER, UserRole.SUPER_ADMIN, UserRole.REGION_ADMIN)
+  @Post('upload/image')
+  @UseInterceptors(FileInterceptor('file', {
+    storage: diskStorage({
+      destination: (_req, _file, cb) => {
+        mkdirSync(BaseController.baseAssetDir, { recursive: true });
+        cb(null, BaseController.baseAssetDir);
+      },
+      filename: (_req, file, cb) => {
+        const timestamp = `${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+        const safeName = file.originalname.replace(/[^a-zA-Z0-9._-]/g, '_');
+        cb(null, `${timestamp}${extname(safeName) || ''}`);
+      },
+    }),
+    fileFilter: (_req, file, cb) => {
+      if (file.mimetype && file.mimetype.startsWith('image/')) {
+        return cb(null, true);
+      }
+      return cb(new BadRequestException('仅支持图片文件'), false);
+    },
+    limits: { fileSize: 10 * 1024 * 1024 },
+  }))
+  async uploadBaseImage(@UploadedFile() file: any, @Request() req) {
+    if (!file) {
+      throw new BadRequestException('请上传图片文件');
+    }
+
+    const publicBaseUrl = process.env.PUBLIC_API_BASE_URL?.replace(/\/$/, '')
+      || `${req.protocol}://${req.get('host')}`;
+    const retainedUntil = new Date(Date.now() + BaseController.baseAssetRetentionDays * 24 * 60 * 60 * 1000);
+
+    return {
+      url: `${publicBaseUrl}/uploads/base-assets/${file.filename}`,
+      name: file.originalname,
+      size: file.size,
+      type: file.mimetype,
+      retentionDays: BaseController.baseAssetRetentionDays,
+      retainedUntil: retainedUntil.toISOString(),
+    };
+  }
+
+  @ApiOperation({ summary: '当前用户的岗位申请列表（工人端“我的报名”）' })
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
   @Get('applications/me')
@@ -60,14 +115,12 @@ export class BaseController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.SUPER_ADMIN)
   @Get('jobs/expiring')
-  async getExpiringJobs(
-    @Query('days') days: string
-  ) {
-    const daysNum = days ? parseInt(days) : 3;
+  async getExpiringJobs(@Query('days') days: string) {
+    const daysNum = days ? parseInt(days, 10) : 3;
     return this.baseService.getExpiringJobs(daysNum);
   }
 
-  @ApiOperation({ summary: '批量下架过期招聘岗位（管理用）' })
+  @ApiOperation({ summary: '批量下架过期岗位（管理用）' })
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.SUPER_ADMIN)
@@ -80,6 +133,19 @@ export class BaseController {
   @Get(':id')
   async findOne(@Param('id', ParseIntPipe) id: number) {
     return this.baseService.findOne(id);
+  }
+
+  @ApiOperation({ summary: '更新基地信息（老板/基地管理员）' })
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.BOSS, UserRole.BASE_MANAGER, UserRole.SUPER_ADMIN, UserRole.REGION_ADMIN)
+  @Patch(':id')
+  async updateBase(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateBaseDto: Partial<CreateBaseDto>,
+    @Request() req,
+  ) {
+    return this.baseService.updateBase(id, updateBaseDto, req.user.id, { request: req, userId: req.user.id });
   }
 
   @ApiOperation({ summary: '删除基地（超级管理员）' })
@@ -96,33 +162,48 @@ export class BaseController {
 
   @ApiOperation({ summary: '审核基地' })
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN)
   @Patch(':id/audit')
   async audit(
     @Param('id', ParseIntPipe) id: number,
     @Body('status') status: any,
-    @Request() req
+    @Request() req,
   ) {
     return this.baseService.audit(id, status, { request: req, userId: req.user.id });
   }
 
+  @ApiOperation({ summary: '转交基地负责人（超级管理员）' })
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN)
+  @Patch(':id/owner')
+  async transferOwner(
+    @Param('id', ParseIntPipe) id: number,
+    @Body('ownerId', ParseIntPipe) ownerId: number,
+    @Request() req,
+  ) {
+    return this.baseService.transferOwner(id, ownerId, req.user.id, { request: req, userId: req.user.id });
+  }
+
   @ApiOperation({ summary: '发布招聘岗位' })
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.BASE_MANAGER)
   @Post(':id/jobs')
   async createJob(
     @Param('id', ParseIntPipe) baseId: number,
     @Body() createJobDto: CreateJobDto,
-    @Request() req
+    @Request() req,
   ) {
     return this.baseService.createJob(baseId, createJobDto, req.user.id, { request: req, userId: req.user.id });
   }
 
-  @ApiOperation({ summary: '获取基地的招聘岗位列表' })
+  @ApiOperation({ summary: '获取基地招聘岗位列表' })
   @Get(':id/jobs')
   async getJobsByBase(
     @Param('id', ParseIntPipe) baseId: number,
-    @Query() query: any
+    @Query() query: any,
   ) {
     return this.baseService.getJobsByBase(baseId, query);
   }
@@ -130,30 +211,32 @@ export class BaseController {
   @ApiOperation({ summary: '获取招聘岗位详情' })
   @Get('jobs/:jobId')
   async getJobById(
-    @Param('jobId', ParseIntPipe) jobId: number
+    @Param('jobId', ParseIntPipe) jobId: number,
   ) {
     return this.baseService.getJobById(jobId);
   }
 
   @ApiOperation({ summary: '更新招聘岗位状态' })
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.BASE_MANAGER)
   @Patch('jobs/:jobId/status')
   async updateJobStatus(
     @Param('jobId', ParseIntPipe) jobId: number,
     @Body('status') status: any,
-    @Request() req
+    @Request() req,
   ) {
     return this.baseService.updateJobStatus(jobId, status, req.user.id, { request: req, userId: req.user.id });
   }
 
   @ApiOperation({ summary: '续期招聘岗位' })
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.BASE_MANAGER)
   @Patch('jobs/:jobId/renew')
   async renewJob(
     @Param('jobId', ParseIntPipe) jobId: number,
-    @Request() req
+    @Request() req,
   ) {
     return this.baseService.renewJob(jobId, req.user.id, { request: req, userId: req.user.id });
   }
@@ -178,22 +261,24 @@ export class BaseController {
     @Param('jobId', ParseIntPipe) jobId: number,
     @Body('baseId') baseId: number,
     @Body('note') note: string,
-    @Request() req
+    @Request() req,
   ) {
     return this.baseService.applyJob(req.user.id, jobId, baseId, note, { request: req, userId: req.user.id });
   }
 
-  @ApiOperation({ summary: '获取岗位申请列表（基地管理员查看）' })
+  @ApiOperation({ summary: '获取岗位申请列表（管理员）' })
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.REGION_ADMIN, UserRole.BASE_MANAGER, UserRole.FIELD_MANAGER)
   @Get('jobs/:jobId/applications')
   async getJobApplications(@Param('jobId', ParseIntPipe) jobId: number) {
     return this.baseService.getJobApplications(jobId);
   }
 
-  @ApiOperation({ summary: '获取某基地的全部申请（现场管理员查看本基地人员）' })
+  @ApiOperation({ summary: '获取基地申请列表（管理员）' })
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.REGION_ADMIN, UserRole.BASE_MANAGER, UserRole.FIELD_MANAGER)
   @Get(':id/applications')
   async getBaseApplications(
     @Param('id', ParseIntPipe) baseId: number,
@@ -204,45 +289,49 @@ export class BaseController {
 
   @ApiOperation({ summary: '审核岗位申请' })
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.REGION_ADMIN, UserRole.BASE_MANAGER, UserRole.FIELD_MANAGER)
   @Patch('applications/:applicationId/review')
   async reviewApplication(
     @Param('applicationId', ParseIntPipe) applicationId: number,
     @Body('status') status: number,
     @Body('rejectReason') rejectReason: string,
-    @Request() req
+    @Request() req,
   ) {
     return this.baseService.reviewApplication(applicationId, status, req.user.id, rejectReason, { request: req, userId: req.user.id });
   }
 
-  @ApiOperation({ summary: '提交基地合作申请（区域管理员/超级管理员）' })
+  @ApiOperation({ summary: '提交基地合作申请（区管/超管）' })
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.REGION_ADMIN)
   @Post('cooperation')
   async createCooperation(
     @Body('baseId') baseId: number,
     @Body('requirement') requirement: string,
-    @Request() req
+    @Request() req,
   ) {
     return this.baseService.createCooperation(req.user.id, baseId, requirement, { request: req, userId: req.user.id });
   }
 
   @ApiOperation({ summary: '审核基地合作申请' })
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.REGION_ADMIN)
   @Patch('cooperation/:cooperationId/review')
   async reviewCooperation(
     @Param('cooperationId', ParseIntPipe) cooperationId: number,
     @Body('status') status: number,
     @Body('rejectReason') rejectReason: string,
-    @Request() req
+    @Request() req,
   ) {
     return this.baseService.reviewCooperation(cooperationId, status, req.user.id, rejectReason, { request: req, userId: req.user.id });
   }
 
   @ApiOperation({ summary: '获取基地合作申请列表' })
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.REGION_ADMIN, UserRole.BASE_MANAGER, UserRole.FIELD_MANAGER)
   @Get(':id/cooperations')
   async getBaseCooperations(@Param('id', ParseIntPipe) baseId: number) {
     return this.baseService.getBaseCooperations(baseId);

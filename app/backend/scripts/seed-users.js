@@ -14,6 +14,7 @@ const BOOTSTRAP_SUPER_ADMIN_IDCARD_LAST6 = process.env.SUPER_ADMIN_IDCARD_LAST6;
 
 const USERS = [
   { name: '采摘工测试', roleKey: 'worker', phone: '13800000001', idCard: '330106199001011234' },
+  { name: '企业老板测试', roleKey: 'boss', phone: '13800000006', idCard: '330106199006061234' },
   { name: '基地管理员测试', roleKey: 'base_manager', phone: '13800000002', idCard: '330106199002021234' },
   { name: '现场管理员测试', roleKey: 'field_manager', phone: '13800000004', idCard: '330106199004041234', assignedBaseId: 1 },
   { name: '次级超级管理员测试', roleKey: 'super_admin', phone: '13800000005', idCard: '330106199005051234' },
@@ -45,6 +46,24 @@ async function registerWorker(user) {
     throw new Error(extractErrorMessage(data, res.statusText));
   }
   return data;
+}
+
+async function registerBoss(user) {
+  const res = await fetch(`${API_BASE}/api/user/register/boss`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(buildBody(user)),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(extractErrorMessage(data, res.statusText));
+  }
+  return data;
+}
+
+async function registerPublicUser(user) {
+  if (user.roleKey === 'boss') return registerBoss(user);
+  return registerWorker(user);
 }
 
 async function loginAsBootstrapSuperAdmin() {
@@ -102,12 +121,12 @@ async function main() {
   console.log('API 地址:', API_BASE);
   console.log('开始创建测试用户...\n');
 
-  const publicUsers = USERS.filter((user) => user.roleKey === 'worker');
-  const managedUsers = USERS.filter((user) => user.roleKey !== 'worker');
+  const publicUsers = USERS.filter((user) => user.roleKey === 'worker' || user.roleKey === 'boss');
+  const managedUsers = USERS.filter((user) => user.roleKey !== 'worker' && user.roleKey !== 'boss');
 
   for (const user of publicUsers) {
     try {
-      const result = await registerWorker(user);
+      const result = await registerPublicUser(user);
       console.log(`[OK] ${user.name} (${user.roleKey}) -> UID: ${result.uid || result.id}`);
     } catch (error) {
       if (isDuplicateError(error)) {
