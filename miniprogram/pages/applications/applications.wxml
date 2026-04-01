@@ -1,76 +1,75 @@
-<!--pages/applications/applications.wxml-->
-<view class="page page-enter">
-  <view class="brand-head card">
-    <view class="brand-row">
-      <image class="brand-logo" src="/images/zhihui-logo.jpg" mode="aspectFit" />
-      <view class="brand-copy">
-        <text class="brand-title">智汇就业</text>
-        <text class="brand-sub">劳务协同与就业服务平台</text>
+<view class="page">
+
+  <view class="page-body {{pageReady ? 'page-enter' : ''}}">
+    <view class="welcome-card ds-card card-in">
+      <text class="welcome-icon">🤖</text>
+      <text class="welcome-title">智能助手</text>
+      <text class="welcome-subtitle">可以帮你找工作、解答问题</text>
+      <text class="welcome-status">功能开发中</text>
+
+      <view class="learning-box">
+        <text class="learning-title">AI助手正在学习中 🌱</text>
+        <text class="learning-item">· 智能岗位推荐</text>
+        <text class="learning-item">· 收入分析</text>
+        <text class="learning-item">· 问题解答</text>
       </view>
     </view>
-    <view class="hero-line"></view>
-    <view class="hero-title">我的报名进度</view>
-    <view class="hero-desc">查看岗位申请状态与待确认工资，关键进展一目了然</view>
-  </view>
 
-  <view class="section-header">
-    <text class="section-title">报名记录</text>
-    <text class="section-note">实时更新</text>
-  </view>
-
-  <view wx:if="{{loading}}" class="state-card">加载中...</view>
-
-  <view wx:elif="{{applications.length === 0}}" class="state-card">
-    暂无报名记录，去广场看看推荐岗位吧
-  </view>
-
-  <view wx:else class="app-list">
-    <view
-      class="app-card"
-      wx:for="{{applications}}"
-      wx:key="id"
-      bindtap="goToDetail"
-      data-job-id="{{item.raw.jobId}}"
-      data-base-id="{{item.raw.baseId}}"
-    >
-      <view class="app-top">
-        <view>
-          <view class="app-title">{{item.title}}</view>
-          <view class="app-base">{{item.base}}</view>
-        </view>
-        <view class="status-chip {{item.status === '已录用' ? 'ok' : item.status === '已拒绝' || item.status === '已取消' ? 'fail' : 'pending'}}">
-          {{item.status}}
+    <view class="section card-in delay-1">
+      <text class="section-title">能力预览</text>
+      <view class="feature-list">
+        <view class="feature-card ds-card" wx:for="{{featureCards}}" wx:key="id">
+          <text class="feature-icon">{{item.icon}}</text>
+          <view class="feature-content">
+            <text class="feature-title">{{item.title}}</text>
+            <text class="feature-desc">{{item.desc}}</text>
+          </view>
         </view>
       </view>
-      <view class="app-date">报名日期：{{item.date}}</view>
     </view>
-  </view>
 
-  <view class="section-header section-gap">
-    <text class="section-title">待发放核对</text>
-    <text class="section-note">确认后可发放</text>
-  </view>
-
-  <view wx:if="{{pendingLoading}}" class="state-card">加载中...</view>
-
-  <view wx:elif="{{workerPending.length === 0}}" class="state-card">
-    暂无待确认工资
-  </view>
-
-  <view wx:else class="pending-list">
-    <view class="pending-card" wx:for="{{workerPending}}" wx:key="id">
-      <view class="pending-top">
-        <view class="pending-title">{{item.baseName}} · {{item.jobTitle}}</view>
-        <view class="pending-date">{{item.workDate ? item.workDate : '-'}}</view>
+    <view class="section card-in delay-2">
+      <text class="section-title">快捷入口</text>
+      <view class="quick-row">
+        <button
+          class="quick-btn btn-primary"
+          hover-class="quick-btn-press"
+          hover-stay-time="100"
+          bindtap="handleQuickAction"
+          data-action="recommend"
+        >推荐岗位</button>
+        <button
+          class="quick-btn btn-secondary"
+          hover-class="quick-btn-press"
+          hover-stay-time="100"
+          bindtap="handleQuickAction"
+          data-action="ask"
+        >问一问</button>
       </view>
-      <view class="pending-amount">¥ {{item.totalAmountText}}</view>
-      <button
-        class="btn-confirm"
-        wx:if="{{item.status === 0}}"
-        bindtap="confirmSalary"
-        data-id="{{item.id}}"
-      >确认无误</button>
-      <view wx:else class="status-done">已确认</view>
     </view>
+
+    <view class="section card-in delay-3">
+      <text class="section-title">对话区（预留）</text>
+      <view class="chat-placeholder ds-card">
+        <view class="chat-empty">
+          <text class="chat-empty-icon">💬</text>
+          <text class="chat-empty-text">未来将在这里进行对话</text>
+        </view>
+
+        <view class="chat-input-shell">
+          <input
+            class="chat-input"
+            value="{{draftInput}}"
+            placeholder="输入问题（即将开放）"
+            disabled="{{true}}"
+          />
+          <button class="send-btn" disabled="{{true}}">发送</button>
+        </view>
+      </view>
+    </view>
+
+    <button class="back-btn btn-ghost card-in delay-3" bindtap="goToHome">返回广场</button>
+
+    <view class="page-bottom-gap"></view>
   </view>
 </view>

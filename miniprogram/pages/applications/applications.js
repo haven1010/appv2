@@ -1,50 +1,79 @@
 /**
  * Layer: Mini Program Page
- * Responsibility: Implements the Applications page lifecycle, local interaction state, and backend integration for the WeChat client.
- * Notes: Keep comments focused on intent, invariants, side effects, and cross-module contracts.
+ * Responsibility: Provides AI assistant preview UI and placeholder interaction for future chat/recommendation features.
+ * Notes: No API integration yet; state shape is prepared for future expansion.
  */
-// pages/applications/applications.js
-const app = getApp();
 const { resolveRole, isAdminRole } = require('../../utils/role');
-
-const STATUS_MAP = { 0: '审核中', 1: '已录取', 2: '已拒绝', 3: '已取消' };
 
 Page({
   data: {
-    userInfo: null,
-    applications: [],
-    workerPending: [],
-    loading: true,
-    pendingLoading: true,
+    pageReady: false,
+    draftInput: '',
+    featureCards: [
+      {
+        id: 'recommend',
+        icon: '🧭',
+        title: '找工作推荐',
+        desc: '根据你的情况推荐岗位',
+      },
+      {
+        id: 'salary',
+        icon: '🧮',
+        title: '工资计算',
+        desc: '自动帮你算收入',
+      },
+      {
+        id: 'qa',
+        icon: '💬',
+        title: '问答助手',
+        desc: '有问题随时问',
+      },
+    ],
+    quickActions: [
+      { id: 'recommend', text: '推荐岗位' },
+      { id: 'ask', text: '问一问' },
+    ],
+    // Future extensibility:
+    // 1. Append bot/user messages to chatMessages.
+    // 2. Bind input for streaming chat.
+    // 3. Integrate model API request in send flow.
+    chatMessages: [],
+    isSending: false,
   },
 
   onLoad() {
-    if (this.redirectAdminIfNeeded()) return;
-    this.checkLogin();
+    if (this.redirectIfRoleNotWorker()) return;
+    this.readyTimer = setTimeout(() => {
+      this.setData({ pageReady: true });
+    }, 30);
   },
 
   onShow() {
-    if (this.redirectAdminIfNeeded()) return;
+    if (this.redirectIfRoleNotWorker()) return;
     const tabBar = this.getTabBar && this.getTabBar();
     if (tabBar) {
-      tabBar.setData({ selected: 1 });
+      tabBar.setData({ selected: 3 });
     }
-    this.loadData();
   },
 
   onPullDownRefresh() {
-    this.loadData();
-    setTimeout(() => wx.stopPullDownRefresh(), 1500);
+    wx.stopPullDownRefresh();
   },
 
-  checkLogin() {
-    const userInfo = wx.getStorageSync('userInfo');
-    if (userInfo) this.setData({ userInfo });
+  onUnload() {
+    if (this.readyTimer) {
+      clearTimeout(this.readyTimer);
+      this.readyTimer = null;
+    }
   },
 
-  redirectAdminIfNeeded() {
+  redirectIfRoleNotWorker() {
     const userInfo = wx.getStorageSync('userInfo');
     const role = resolveRole(userInfo);
+    if (role === 'boss') {
+      wx.reLaunch({ url: '/pages/boss/dashboard/dashboard' });
+      return true;
+    }
     if (isAdminRole(role)) {
       wx.reLaunch({ url: '/pages/admin/home/home' });
       return true;
@@ -52,77 +81,14 @@ Page({
     return false;
   },
 
-  async loadData() {
-    const token = wx.getStorageSync('token');
-    if (!token) {
-      this.setData({ loading: false, pendingLoading: false });
-      return;
-    }
-    this.loadApplications();
-    this.loadWorkerPending();
-  },
-
-  async loadApplications() {
-    try {
-      const res = await app.request({ url: '/base/applications/me', method: 'GET' });
-      const list = Array.isArray(res) ? res : [];
-      var applications = list.map(function(item) {
-        return {
-          id: item.id,
-          title: (item.job && item.job.jobTitle) || '岗位',
-          base: (item.base && item.base.baseName) || '基地',
-          status: STATUS_MAP[item.status] || '审核中',
-          date: item.createdAt ? new Date(item.createdAt).toLocaleDateString() : '',
-          raw: item,
-        };
-      });
-      this.setData({ applications, loading: false });
-    } catch (err) {
-      console.error('加载报名列表失败:', err);
-      this.setData({ applications: [], loading: false });
-    }
-  },
-
-  async loadWorkerPending() {
-    try {
-      const res = await app.request({ url: '/salary/worker/pending', method: 'GET' });
-      const list = Array.isArray(res) ? res : [];
-      var workerPending = list.map(function(item) {
-        return Object.assign({}, item, {
-          totalAmountText:
-            item.totalAmount != null
-              ? Number(item.totalAmount).toFixed(2)
-              : '0.00',
-        });
-      });
-      this.setData({ workerPending, pendingLoading: false });
-    } catch (err) {
-      console.error('加载待发放失败:', err);
-      this.setData({ workerPending: [], pendingLoading: false });
-    }
-  },
-
-  goToDetail(e) {
-    const jobId = e.currentTarget.dataset.jobId;
-    const baseId = e.currentTarget.dataset.baseId;
-    if (!jobId || !baseId) return;
-    wx.navigateTo({
-      url: `/pages/job/detail/detail?id=${jobId}&baseId=${baseId}`,
+  handleQuickAction() {
+    wx.showToast({
+      title: '功能开发中',
+      icon: 'none',
     });
   },
 
-  async confirmSalary(e) {
-    const id = e.currentTarget.dataset.id;
-    if (!id) return;
-    try {
-      await app.request({
-        url: `/salary/worker/${id}/confirm`,
-        method: 'POST',
-      });
-      wx.showToast({ title: '已确认', icon: 'success' });
-      this.loadWorkerPending();
-    } catch (err) {
-      wx.showToast({ title: err.message || '确认失败', icon: 'none' });
-    }
+  goToHome() {
+    wx.switchTab({ url: '/pages/index/index' });
   },
 });

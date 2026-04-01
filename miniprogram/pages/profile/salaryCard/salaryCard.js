@@ -1,233 +1,325 @@
-/**
- * Layer: Mini Program Page
- * Responsibility: Implements the Salary Card page lifecycle, local interaction state, and backend integration for the WeChat client.
- * Notes: Keep comments focused on intent, invariants, side effects, and cross-module contracts.
- */
-// pages/profile/salaryCard/salaryCard.js
 const app = getApp();
 
-const AUTO_MASK_DELAY_MS = 12000;
+const AUTO_HIDE_DELAY_MS = 3000;
+const ANIM_RESTART_DELAY_MS = 18;
 
 function digitsOnly(value) {
   return String(value || '').replace(/\D/g, '');
 }
 
-function formatBankCard(cardNo) {
-  const digits = digitsOnly(cardNo);
+function formatBankCard(cardNumber) {
+  const digits = digitsOnly(cardNumber);
   if (!digits) return '';
   return digits.replace(/(.{4})(?=.)/g, '$1 ');
 }
 
-function maskBankCard(cardNo) {
-  const digits = digitsOnly(cardNo);
+function maskBankCard(cardNumber) {
+  const digits = digitsOnly(cardNumber);
   if (!digits) return '**** **** **** ****';
-  if (digits.length <= 8) {
-    return formatBankCard(digits.replace(/.(?=.{2})/g, '*'));
-  }
-  const head = digits.slice(0, 4);
-  const tail = digits.slice(-4);
-  const middle = '*'.repeat(digits.length - 8);
-  return formatBankCard(head + middle + tail);
+  return `**** **** **** ${digits.slice(-4)}`;
 }
 
-function formatDate(dateValue) {
-  if (!dateValue) return '-';
-  const date = new Date(dateValue);
-  if (Number.isNaN(date.getTime())) return '-';
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return year + '-' + month + '-' + day;
+function resolveBankTheme(bankName) {
+  const name = String(bankName || '');
+  if (name.includes('农业')) return 'abc';
+  if (name.includes('建行') || name.includes('建设')) return 'ccb';
+  return 'default';
 }
 
-function pickFirst(obj, keys) {
-  for (let i = 0; i < keys.length; i += 1) {
-    const value = obj[keys[i]];
-    if (value) return value;
-  }
-  return '';
+function createCardView(profile) {
+  const cardNumber = digitsOnly(profile?.bankCardNo);
+  if (!cardNumber) return null;
+
+  const bankName = String(profile?.bankName || '').trim() || '未命名银行卡';
+  const theme = resolveBankTheme(bankName);
+
+  return {
+    id: 'primary',
+    bankName,
+    cardNumber,
+    name: profile?.name || '用户',
+    updateTime: profile?.updatedAt ? String(profile.updatedAt).slice(0, 10) : '-',
+    theme,
+    last4: cardNumber.slice(-4),
+    formattedNumber: formatBankCard(cardNumber),
+    maskedNumber: maskBankCard(cardNumber),
+  };
+}
+
+function normalizePaidRecord(item) {
+  const amount = Number(item?.totalAmount || 0);
+  const paidAt = item?.paidAt || item?.workDate || '';
+  const jobTitle = item?.jobTitle || '岗位';
+  const baseName = item?.baseName || '基地';
+  const date = String(paidAt).slice(0, 10) || '-';
+
+  return {
+    cardId: 'primary',
+    amount: Number.isFinite(amount) ? amount.toFixed(2) : '0.00',
+    date,
+    job: `${baseName} · ${jobTitle}`,
+    paidAt,
+  };
+}
+
+function pickLatestSalary(salaryList, cardId) {
+  const list = (salaryList || [])
+    .filter((item) => item.cardId === cardId)
+    .sort((a, b) => {
+      const at = new Date(a.paidAt || a.date || 0).getTime();
+      const bt = new Date(b.paidAt || b.date || 0).getTime();
+      return bt - at;
+    });
+  return list.length ? list[0] : null;
+}
+
+function syncUserInfoCache(profile = {}) {
+  const cached = wx.getStorageSync('userInfo') || {};
+  const merged = Object.assign({}, cached, profile);
+  wx.setStorageSync('userInfo', merged);
+  app.globalData.userInfo = merged;
 }
 
 Page({
   data: {
     pageReady: false,
-    topShadeOpacity: 0,
-    scrollTop: 0,
-    loading: true,
-    cardInfo: {
+    loading: false,
+    saving: false,
+    cards: [],
+    salaryList: [],
+    currentIndex: 0,
+    showFull: false,
+    currentCard: null,
+    recentSalary: null,
+    amountAnimate: false,
+    currentTheme: 'default',
+    form: {
       bankName: '',
-      cardNo: '',
-      holderName: '',
-      updateTimeText: '-',
+      bankCardNo: '',
     },
-    hasCard: false,
-    visible: false,
-    displayCardNo: '**** **** **** ****',
-    copySuccess: false,
-    cardLifted: false,
   },
 
   onLoad() {
-    this.loadCardInfo();
+    this.loadCardData();
     setTimeout(() => {
       this.setData({ pageReady: true });
-    }, 30);
-  },
-
-  onShow() {
-    this.startAutoMaskTimer();
-  },
-
-  onHide() {
-    this.clearAutoMaskTimer();
-  },
-
-  onUnload() {
-    this.clearAutoMaskTimer();
-    if (this.copyFeedbackTimer) {
-      clearTimeout(this.copyFeedbackTimer);
-      this.copyFeedbackTimer = null;
-    }
-    if (this.cardLiftTimer) {
-      clearTimeout(this.cardLiftTimer);
-      this.cardLiftTimer = null;
-    }
+    }, 20);
   },
 
   onPullDownRefresh() {
-    this.loadCardInfo().finally(() => wx.stopPullDownRefresh());
+    this.loadCardData().finally(() => wx.stopPullDownRefresh());
   },
 
-  onScroll(e) {
-    const scrollTop = (e.detail && e.detail.scrollTop) || 0;
-    if (Math.abs(scrollTop - this.data.scrollTop) < 8) return;
-    this.setData({
-      scrollTop,
-      topShadeOpacity: Math.min(1, scrollTop / 150),
-    });
-    this.startAutoMaskTimer();
+  onUnload() {
+    this.clearTimers();
   },
 
-  noop() {},
-
-  handleBlankTap() {
-    if (!this.data.visible) return;
-    this.hideCardNumber(false);
-  },
-
-  onTapCard() {
-    this.setData({ cardLifted: true });
-    if (this.cardLiftTimer) clearTimeout(this.cardLiftTimer);
-    this.cardLiftTimer = setTimeout(() => {
-      this.setData({ cardLifted: false });
-    }, 260);
-    this.startAutoMaskTimer();
-  },
-
-  getDisplayCardNo(cardNo, visible) {
-    return visible ? formatBankCard(cardNo) : maskBankCard(cardNo);
-  },
-
-  hideCardNumber(isAuto) {
-    const cardNo = this.data.cardInfo.cardNo;
-    this.setData({
-      visible: false,
-      displayCardNo: this.getDisplayCardNo(cardNo, false),
-    });
-    this.clearAutoMaskTimer();
-    if (isAuto) {
-      wx.showToast({ title: '已自动隐藏卡号', icon: 'none' });
+  clearTimers() {
+    if (this.maskTimer) {
+      clearTimeout(this.maskTimer);
+      this.maskTimer = null;
+    }
+    if (this.amountTimer) {
+      clearTimeout(this.amountTimer);
+      this.amountTimer = null;
     }
   },
 
-  toggleVisible() {
-    if (!this.data.hasCard) {
-      wx.showToast({ title: '暂未绑定银行卡', icon: 'none' });
+  async loadCardData() {
+    this.setData({ loading: true });
+
+    try {
+      const [profile, paidListRes] = await Promise.all([
+        app.request({
+          url: '/user/profile',
+          method: 'GET',
+        }),
+        app.request({
+          url: '/salary/worker/paid?limit=20',
+          method: 'GET',
+        }).catch(() => []),
+      ]);
+
+      syncUserInfoCache(profile);
+
+      const card = createCardView(profile);
+      const cards = card ? [card] : [];
+      const salaryList = (Array.isArray(paidListRes) ? paidListRes : []).map(normalizePaidRecord);
+
+      this.setData(
+        {
+          cards,
+          salaryList,
+          currentIndex: 0,
+          showFull: false,
+          form: {
+            bankName: profile?.bankName || '',
+            bankCardNo: card ? card.cardNumber : '',
+          },
+        },
+        () => {
+          this.syncCurrentData(false);
+        },
+      );
+    } catch (err) {
+      wx.showToast({
+        title: err?.message || '加载银行卡失败',
+        icon: 'none',
+      });
+    } finally {
+      this.setData({ loading: false });
+    }
+  },
+
+  syncCurrentData(animate) {
+    const { cards, currentIndex, salaryList } = this.data;
+    const currentCard = cards[currentIndex] || null;
+    const recentSalary = currentCard ? pickLatestSalary(salaryList, currentCard.id) : null;
+
+    this.setData({
+      currentCard,
+      recentSalary,
+      currentTheme: currentCard ? currentCard.theme : resolveBankTheme(this.data.form.bankName),
+    });
+
+    if (animate && recentSalary) {
+      this.triggerAmountAnimation();
       return;
     }
 
-    const nextVisible = !this.data.visible;
-    const cardNo = this.data.cardInfo.cardNo;
     this.setData({
-      visible: nextVisible,
-      displayCardNo: this.getDisplayCardNo(cardNo, nextVisible),
+      amountAnimate: Boolean(recentSalary),
     });
-    this.startAutoMaskTimer();
   },
 
-  copyCardNo() {
-    if (!this.data.hasCard) {
-      wx.showToast({ title: '暂无可复制卡号', icon: 'none' });
+  triggerAmountAnimation() {
+    if (this.amountTimer) {
+      clearTimeout(this.amountTimer);
+      this.amountTimer = null;
+    }
+
+    this.setData({ amountAnimate: false });
+    this.amountTimer = setTimeout(() => {
+      this.setData({ amountAnimate: true });
+    }, ANIM_RESTART_DELAY_MS);
+  },
+
+  onSwiperChange(e) {
+    const nextIndex = e.detail.current;
+    this.clearTimers();
+
+    this.setData(
+      {
+        currentIndex: nextIndex,
+        showFull: false,
+      },
+      () => {
+        this.syncCurrentData(true);
+      },
+    );
+  },
+
+  onInputBankName(e) {
+    const bankName = String(e.detail.value || '');
+    this.setData({
+      'form.bankName': bankName,
+      currentTheme: resolveBankTheme(bankName),
+    });
+  },
+
+  onInputBankCardNo(e) {
+    const bankCardNo = digitsOnly(e.detail.value).slice(0, 30);
+    this.setData({ 'form.bankCardNo': bankCardNo });
+  },
+
+  toggleCard() {
+    const { cards, showFull } = this.data;
+    if (!cards.length) {
+      wx.showToast({
+        title: '暂无银行卡',
+        icon: 'none',
+      });
+      return;
+    }
+
+    const nextShowFull = !showFull;
+    this.setData({ showFull: nextShowFull });
+
+    if (!nextShowFull) {
+      if (this.maskTimer) {
+        clearTimeout(this.maskTimer);
+        this.maskTimer = null;
+      }
+      return;
+    }
+
+    this.maskTimer = setTimeout(() => {
+      this.setData({ showFull: false });
+    }, AUTO_HIDE_DELAY_MS);
+  },
+
+  copyCard() {
+    const { currentCard } = this.data;
+    if (!currentCard) {
+      wx.showToast({
+        title: '暂无可复制卡号',
+        icon: 'none',
+      });
       return;
     }
 
     wx.setClipboardData({
-      data: this.data.cardInfo.cardNo,
+      data: currentCard.cardNumber,
       success: () => {
-        this.setData({ copySuccess: true });
-        wx.showToast({ title: '卡号已复制', icon: 'none' });
-        if (this.copyFeedbackTimer) clearTimeout(this.copyFeedbackTimer);
-        this.copyFeedbackTimer = setTimeout(() => {
-          this.setData({ copySuccess: false });
-        }, 1000);
-        this.startAutoMaskTimer();
+        wx.showToast({
+          title: '已复制',
+          icon: 'success',
+        });
       },
     });
   },
 
-  startAutoMaskTimer() {
-    this.clearAutoMaskTimer();
-    if (!this.data.visible) return;
-    this.autoMaskTimer = setTimeout(() => {
-      if (!this.data.visible) return;
-      this.hideCardNumber(true);
-    }, AUTO_MASK_DELAY_MS);
-  },
+  async saveCard() {
+    const bankName = String(this.data.form.bankName || '').trim();
+    const bankCardNo = digitsOnly(this.data.form.bankCardNo);
 
-  clearAutoMaskTimer() {
-    if (!this.autoMaskTimer) return;
-    clearTimeout(this.autoMaskTimer);
-    this.autoMaskTimer = null;
-  },
+    if (!bankName) {
+      wx.showToast({ title: '请输入开户银行', icon: 'none' });
+      return;
+    }
 
-  async loadCardInfo() {
-    this.setData({ loading: true });
+    if (bankCardNo.length < 12) {
+      wx.showToast({ title: '请输入正确的银行卡号', icon: 'none' });
+      return;
+    }
+
+    this.setData({ saving: true });
+
     try {
-      const profile = await app.request({ url: '/user/profile', method: 'GET' });
-      const cardNo = pickFirst(profile || {}, [
-        'bankCardNo',
-        'bankCard',
-        'cardNo',
-        'salaryCardNo',
-        'accountNo',
-      ]);
-      const bankName = pickFirst(profile || {}, [
-        'bankName',
-        'bank',
-        'bankBranchName',
-        'depositBank',
-        'salaryBankName',
-      ]);
-
-      const cardInfo = {
-        bankName: bankName || '未设置开户行',
-        cardNo: digitsOnly(cardNo),
-        holderName: (profile && profile.name) || '',
-        updateTimeText: formatDate(profile && profile.updatedAt),
-      };
-      const hasCard = Boolean(cardInfo.cardNo);
-
-      this.setData({
-        loading: false,
-        cardInfo,
-        hasCard,
-        visible: false,
-        copySuccess: false,
-        displayCardNo: this.getDisplayCardNo(cardInfo.cardNo, false),
+      const profile = await app.request({
+        url: '/user/profile',
+        method: 'PATCH',
+        data: {
+          bankName,
+          bankCardNo,
+        },
       });
+
+      syncUserInfoCache(profile || {});
+
+      wx.showToast({
+        title: '银行卡已更新',
+        icon: 'success',
+      });
+
+      await this.loadCardData();
     } catch (err) {
-      this.setData({ loading: false });
-      wx.showToast({ title: '加载失败，请稍后重试', icon: 'none' });
+      wx.showToast({
+        title: err?.message || '更新失败，请稍后重试',
+        icon: 'none',
+      });
+    } finally {
+      this.setData({ saving: false });
     }
   },
 });

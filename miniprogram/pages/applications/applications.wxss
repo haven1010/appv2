@@ -1,191 +1,225 @@
-/* pages/applications/applications.wxss */
 .page {
-  min-height: 100vh;
+  background-color: #f5efe3;
+}
+
+.page-body {
   padding: 24rpx;
-  padding-bottom: 156rpx;
+  padding-bottom: calc(186rpx + env(safe-area-inset-bottom));
   box-sizing: border-box;
-  background:
-    radial-gradient(circle at 84% -8%, rgba(46, 143, 77, 0.16) 0%, rgba(46, 143, 77, 0) 34%),
-    radial-gradient(circle at 8% 8%, rgba(231, 168, 58, 0.14) 0%, rgba(231, 168, 58, 0) 30%),
-    linear-gradient(180deg, #f6fbff 0%, #eef6ff 100%);
 }
 
-.card {
-  background: rgba(255, 255, 255, 0.95);
-  border: 1rpx solid rgba(45, 115, 199, 0.16);
-  border-radius: 28rpx;
-  box-shadow: 0 14rpx 32rpx rgba(45, 115, 199, 0.12);
+.welcome-card {
+  text-align: center;
+  background: linear-gradient(155deg, #fff8e8 0%, #eef8e6 54%, #fcefd9 100%);
 }
 
-.brand-head {
-  padding: 28rpx;
-  margin-bottom: 24rpx;
-}
-
-.brand-row {
-  display: flex;
-  align-items: center;
-  gap: 14rpx;
-}
-
-.brand-logo {
-  width: 72rpx;
-  height: 72rpx;
-  border-radius: 16rpx;
-  background: #fff;
-  border: 1rpx solid rgba(45, 115, 199, 0.2);
-}
-
-.brand-title {
+.welcome-icon {
   display: block;
-  font-size: 40rpx;
-  line-height: 1.2;
-  font-weight: 800;
-  color: #153457;
+  font-size: 78rpx;
+  line-height: 1;
 }
 
-.brand-sub {
+.welcome-title {
   display: block;
-  font-size: 22rpx;
-  color: #62829d;
-  margin-top: 4rpx;
-}
-
-.hero-line {
-  height: 1rpx;
-  margin: 20rpx 0 16rpx;
-  background: linear-gradient(90deg, rgba(45, 115, 199, 0), rgba(45, 115, 199, 0.22), rgba(45, 115, 199, 0));
-}
-
-.hero-title {
-  font-size: 34rpx;
+  margin-top: 12rpx;
+  font-size: 44rpx;
+  line-height: 1.3;
+  color: #333333;
   font-weight: 800;
-  color: #1b3f62;
 }
 
-.hero-desc {
-  margin-top: 8rpx;
-  font-size: 24rpx;
-  color: #67869f;
+.welcome-subtitle {
+  display: block;
+  margin-top: 10rpx;
+  font-size: 30rpx;
   line-height: 1.6;
+  color: #666666;
 }
 
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16rpx;
+.welcome-status {
+  margin: 14rpx auto 0;
+  display: inline-block;
+  padding: 8rpx 16rpx;
+  border-radius: 999rpx;
+  font-size: 28rpx;
+  line-height: 1.3;
+  color: #f4a261;
+  background: #fff2df;
+  font-weight: 700;
 }
 
-.section-gap {
-  margin-top: 34rpx;
+.learning-box {
+  margin-top: 18rpx;
+  text-align: left;
+  border-radius: 20rpx;
+  background: rgba(255, 255, 255, 0.75);
+  padding: 16rpx 18rpx;
+}
+
+.learning-title {
+  display: block;
+  font-size: 30rpx;
+  line-height: 1.4;
+  color: #466e34;
+  font-weight: 700;
+}
+
+.learning-item {
+  display: block;
+  margin-top: 8rpx;
+  font-size: 28rpx;
+  line-height: 1.5;
+  color: #666666;
+}
+
+.section {
+  margin-top: 32rpx;
 }
 
 .section-title {
+  display: block;
+  margin: 0 4rpx 12rpx;
   font-size: 34rpx;
+  line-height: 1.35;
+  color: #333333;
   font-weight: 800;
-  color: #153457;
 }
 
-.section-note {
-  font-size: 22rpx;
-  color: #7b95ab;
-}
-
-.state-card {
-  text-align: center;
-  color: #70889d;
-  font-size: 25rpx;
-  padding: 52rpx 24rpx;
-  border-radius: 22rpx;
-  border: 1rpx solid rgba(45, 115, 199, 0.14);
-  background: rgba(255, 255, 255, 0.9);
-}
-
-.app-list,
-.pending-list {
+.feature-list {
   display: flex;
   flex-direction: column;
-  gap: 18rpx;
+  gap: 14rpx;
 }
 
-.app-card,
-.pending-card {
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 22rpx;
-  padding: 24rpx;
-  border: 1rpx solid rgba(45, 115, 199, 0.16);
-  box-shadow: 0 10rpx 24rpx rgba(45, 115, 199, 0.1);
-}
-
-.app-top,
-.pending-top {
+.feature-card {
   display: flex;
-  justify-content: space-between;
   align-items: flex-start;
   gap: 14rpx;
 }
 
-.app-title,
-.pending-title {
+.feature-icon {
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: 50%;
+  background: #e3f0d0;
+  color: #466e34;
   font-size: 30rpx;
-  color: #153457;
-  font-weight: 800;
+  line-height: 56rpx;
+  text-align: center;
+  flex-shrink: 0;
 }
 
-.app-base,
-.pending-date,
-.app-date {
-  margin-top: 8rpx;
-  font-size: 23rpx;
-  color: #7290a8;
+.feature-content {
+  flex: 1;
+  min-width: 0;
 }
 
-.status-chip {
-  padding: 8rpx 18rpx;
-  border-radius: 999rpx;
-  font-size: 21rpx;
+.feature-title {
+  display: block;
+  font-size: 32rpx;
+  line-height: 1.4;
+  color: #333333;
   font-weight: 700;
-  white-space: nowrap;
 }
 
-.status-chip.ok {
-  color: #2e8f4d;
-  background: rgba(46, 143, 77, 0.14);
+.feature-desc {
+  display: block;
+  margin-top: 6rpx;
+  font-size: 28rpx;
+  line-height: 1.5;
+  color: #999999;
 }
 
-.status-chip.fail {
-  color: #c44b38;
-  background: rgba(230, 90, 71, 0.14);
+.quick-row {
+  display: flex;
+  gap: 12rpx;
 }
 
-.status-chip.pending {
-  color: #9a6414;
-  background: rgba(231, 168, 58, 0.18);
+.quick-btn {
+  flex: 1;
+  min-width: 0;
 }
 
-.pending-amount {
-  margin: 20rpx 0;
-  font-size: 40rpx;
-  color: #2e8f4d;
-  font-weight: 800;
+.quick-btn-press {
+  transform: scale(0.95);
 }
 
-.btn-confirm {
-  background: linear-gradient(135deg, #2e8f4d 0%, #2d73c7 62%, #1f5ca9 100%);
-  color: #fff;
-  border-radius: 14rpx;
-  padding: 20rpx;
-  font-size: 27rpx;
+.chat-placeholder {
+  background: #fff8e8;
+}
+
+.chat-empty {
+  border-radius: 18rpx;
+  background: rgba(255, 255, 255, 0.75);
+  padding: 22rpx 18rpx;
+  text-align: center;
+}
+
+.chat-empty-icon {
+  display: block;
+  font-size: 60rpx;
+  line-height: 1;
+}
+
+.chat-empty-text {
+  display: block;
+  margin-top: 10rpx;
+  font-size: 30rpx;
+  line-height: 1.5;
+  color: #666666;
+}
+
+.chat-input-shell {
+  margin-top: 14rpx;
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+}
+
+.chat-input {
+  flex: 1;
+  min-width: 0;
+  height: 80rpx;
+  border-radius: 16rpx;
+  background: #ffffff;
+  color: #999999;
+  font-size: 28rpx;
+  padding: 0 24rpx;
+}
+
+.send-btn {
+  width: 150rpx;
+  height: 80rpx;
+  line-height: 80rpx;
+  border-radius: 16rpx;
+  background: #c3ceb9;
+  color: #ffffff;
+  font-size: 28rpx;
   font-weight: 700;
+}
+
+.send-btn::after {
   border: none;
 }
 
-.btn-confirm::after {
-  border: none;
+.back-btn {
+  margin-top: 18rpx;
+  background: #fff8e8;
+  color: #6a994e;
 }
 
-.status-done {
-  font-size: 24rpx;
-  color: #6f8aa2;
+.delay-1 {
+  animation-delay: 80ms;
+}
+
+.delay-2 {
+  animation-delay: 140ms;
+}
+
+.delay-3 {
+  animation-delay: 200ms;
+}
+
+.page-bottom-gap {
+  height: 24rpx;
 }

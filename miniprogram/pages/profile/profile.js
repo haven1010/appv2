@@ -1,50 +1,121 @@
 /**
  * Layer: Mini Program Page
- * Responsibility: Implements the Profile page lifecycle, local interaction state, and backend integration for the WeChat client.
- * Notes: Keep comments focused on intent, invariants, side effects, and cross-module contracts.
+ * Responsibility: Implements the Profile page lifecycle and navigation for worker users.
  */
-// pages/profile/profile.js
 const app = getApp();
 const { resolveRole, isAdminRole, roleLabel } = require('../../utils/role');
 
-function maskPhone(phone) {
-  if (!phone || phone.length < 7) return phone || '';
-  return phone.slice(0, 3) + '****' + phone.slice(-4);
+function trimText(value) {
+  return String(value || '').trim();
+}
+
+function isTemporaryImageUrl(value) {
+  const text = trimText(value);
+  if (!text) return false;
+  return (
+    /^https?:\/\/127\.0\.0\.1:\d+\/__tmp__\//i.test(text)
+    || /^wxfile:\/\//i.test(text)
+    || /^[a-zA-Z]:\\/.test(text)
+    || /^file:\/\//i.test(text)
+  );
+}
+
+function resolveAvatar(userInfo) {
+  if (!userInfo) return '';
+  const candidates = [
+    userInfo.faceImgUrl,
+    userInfo.avatarUrl,
+    userInfo.headImgUrl,
+    userInfo.photoUrl,
+  ];
+
+  for (let i = 0; i < candidates.length; i += 1) {
+    const url = trimText(candidates[i]);
+    if (url && !isTemporaryImageUrl(url)) return url;
+  }
+
+  return '';
+}
+
+function sanitizeAvatarInCache() {
+  const cached = wx.getStorageSync('userInfo') || {};
+  if (!cached || typeof cached !== 'object') return;
+
+  const next = Object.assign({}, cached);
+  let changed = false;
+  ['faceImgUrl', 'avatarUrl', 'headImgUrl', 'photoUrl'].forEach((key) => {
+    if (isTemporaryImageUrl(next[key])) {
+      next[key] = '';
+      changed = true;
+    }
+  });
+
+  if (!changed) return;
+  wx.setStorageSync('userInfo', next);
+  app.globalData.userInfo = next;
+}
+
+function toAmountText(value) {
+  const num = Number(value);
+  return Number.isFinite(num) ? num.toFixed(2) : '0.00';
 }
 
 Page({
   data: {
+    pageReady: false,
     userInfo: null,
-    profileData: null,
-    workerStats: null,
-    workRecords: [],
     role: 'worker',
     roleText: '采摘工',
-    canOpenAdmin: false,
+    avatarUrl: '',
+    displayInitial: '?',
+    displayName: '未登录用户',
+    displayUid: '--',
+    workerStats: {
+      workDays: 0,
+      pendingAmount: 0,
+      totalEarned: 0,
+    },
+    workDaysText: '0',
+    totalIncomeText: '0.00',
+    signupCountText: '0',
+    badgeNewbieActive: false,
+    badgeAttendanceActive: false,
+    badgeSalaryActive: false,
+    growthHint: '完成 3 天工作可升级',
     loading: true,
-    workRecordsLoading: false,
   },
 
   onLoad() {
-    if (this.redirectAdminIfNeeded()) return;
+    if (this.redirectIfRoleNotWorker()) return;
     this.checkLogin();
+    this.readyTimer = setTimeout(() => {
+      this.setData({ pageReady: true });
+    }, 30);
   },
 
   onShow() {
-    if (this.redirectAdminIfNeeded()) return;
+    if (this.redirectIfRoleNotWorker()) return;
     const tabBar = this.getTabBar && this.getTabBar();
     if (tabBar) {
-      tabBar.setData({ selected: 3 });
+      tabBar.setData({ selected: 4 });
     }
     this.loadProfile();
   },
 
   onPullDownRefresh() {
     this.loadProfile();
-    setTimeout(() => wx.stopPullDownRefresh(), 1500);
+    setTimeout(() => wx.stopPullDownRefresh(), 1000);
+  },
+
+  onUnload() {
+    if (this.readyTimer) {
+      clearTimeout(this.readyTimer);
+      this.readyTimer = null;
+    }
   },
 
   checkLogin() {
+    sanitizeAvatarInCache();
     const userInfo = wx.getStorageSync('userInfo');
     if (!userInfo) {
       wx.showModal({
@@ -55,23 +126,56 @@ Page({
       });
       return;
     }
+
     const role = resolveRole(userInfo);
+    const name = userInfo.name || '未登录用户';
     this.setData({
       userInfo,
       role,
       roleText: roleLabel(role),
-      canOpenAdmin: isAdminRole(role),
+      avatarUrl: resolveAvatar(userInfo),
+      displayName: name,
+      displayUid: userInfo.uid || '--',
+      displayInitial: name && name.length ? name[0] : '?',
     });
   },
 
-  redirectAdminIfNeeded() {
+  redirectIfRoleNotWorker() {
     const userInfo = wx.getStorageSync('userInfo');
     const role = resolveRole(userInfo);
+    if (role === 'boss') {
+      wx.reLaunch({ url: '/pages/boss/dashboard/dashboard' });
+      return true;
+    }
     if (isAdminRole(role)) {
       wx.reLaunch({ url: '/pages/admin/home/home' });
       return true;
     }
     return false;
+  },
+
+  updateGrowthState(workDays, totalIncome) {
+    const badgeNewbieActive = workDays >= 1;
+    const badgeAttendanceActive = workDays >= 10;
+    const badgeSalaryActive = totalIncome >= 2000;
+
+    let growthHint = '完成 3 天工作可升级';
+    if (workDays < 3) {
+      growthHint = '完成 3 天工作可升级';
+    } else if (workDays < 10) {
+      growthHint = `再完成 ${10 - workDays} 天可解锁「出勤达人」`;
+    } else if (!badgeSalaryActive) {
+      growthHint = '累计收入满 2000 可点亮「结算先锋」';
+    } else {
+      growthHint = '已解锁全部成长徽章，继续保持';
+    }
+
+    this.setData({
+      badgeNewbieActive,
+      badgeAttendanceActive,
+      badgeSalaryActive,
+      growthHint,
+    });
   },
 
   async loadProfile() {
@@ -84,37 +188,56 @@ Page({
     this.setData({ loading: true });
 
     try {
-      const results = await Promise.all([
-        app.request({ url: '/user/profile', method: 'GET' }),
-        app.request({ url: '/salary/worker/stats', method: 'GET' }),
+      const [profile, stats, records] = await Promise.all([
+        app.request({ url: '/user/profile', method: 'GET' }).catch(() => null),
+        app.request({ url: '/salary/worker/stats', method: 'GET' }).catch(() => null),
+        app.request({ url: '/attendance/worker/records?limit=200', method: 'GET' }).catch(() => []),
       ]);
 
-      const profile = results[0] || {};
-      const stats = results[1] || { workDays: 0, pendingAmount: 0 };
+      sanitizeAvatarInCache();
+      const userInfo = wx.getStorageSync('userInfo') || {};
+      const mergedUser = Object.assign({}, userInfo, profile || {});
+      const role = resolveRole(mergedUser);
+
+      const name = mergedUser.name || '未登录用户';
+      const workDays = Number((stats && (stats.workDays ?? stats.totalDays)) || 0);
+      const totalIncome = Number((stats && (stats.totalEarned ?? stats.totalPaid ?? stats.pendingAmount)) || 0);
+      const signupCount = Array.isArray(records) ? records.length : 0;
 
       this.setData({
-        profileData: Object.assign({}, profile, {
-          phoneMasked: maskPhone(profile.phone),
-          emergencyPhoneMasked: maskPhone(profile.emergencyPhone),
-        }),
-        workerStats: stats,
+        userInfo: mergedUser,
+        role,
+        roleText: roleLabel(role),
+        avatarUrl: resolveAvatar(mergedUser),
+        displayName: name,
+        displayUid: mergedUser.uid || '--',
+        displayInitial: name && name.length ? name[0] : '?',
+        workerStats: Object.assign(
+          {
+            workDays: 0,
+            pendingAmount: 0,
+            totalEarned: 0,
+          },
+          stats || {},
+        ),
+        workDaysText: String(workDays),
+        totalIncomeText: toAmountText(totalIncome),
+        signupCountText: String(signupCount),
         loading: false,
       });
+
+      this.updateGrowthState(workDays, totalIncome);
     } catch (err) {
       console.error('加载资料失败:', err);
       this.setData({ loading: false });
+      wx.showToast({ title: '加载失败，请稍后重试', icon: 'none' });
     }
   },
 
-  async loadWorkRecords() {
-    this.setData({ workRecordsLoading: true });
-    try {
-      const res = await app.request({ url: '/attendance/worker/records', method: 'GET' });
-      const list = Array.isArray(res) ? res : [];
-      this.setData({ workRecords: list, workRecordsLoading: false });
-    } catch (err) {
-      this.setData({ workRecords: [], workRecordsLoading: false });
-    }
+
+  onAvatarError() {
+    sanitizeAvatarInCache();
+    this.setData({ avatarUrl: '' });
   },
 
   goBasicInfo() {
@@ -125,22 +248,12 @@ Page({
     wx.navigateTo({ url: '/pages/profile/salaryCard/salaryCard' });
   },
 
+  goMySignups() {
+    wx.navigateTo({ url: '/pages/profile/signups/signups' });
+  },
+
   showWorkHistory() {
-    this.loadWorkRecords();
     wx.navigateTo({ url: '/pages/profile/workHistory/workHistory' });
-  },
-
-  goSettings() {
-    wx.navigateTo({ url: '/pages/profile/settings/settings' });
-  },
-
-  goAdminCenter() {
-    const role = this.data.role || resolveRole(this.data.userInfo);
-    if (!isAdminRole(role)) {
-      wx.showToast({ title: '当前账号无管理权限', icon: 'none' });
-      return;
-    }
-    wx.navigateTo({ url: '/pages/admin/home/home' });
   },
 
   logout() {

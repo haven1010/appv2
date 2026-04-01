@@ -1,4 +1,6 @@
 {
   "usingComponents": {},
-  "navigationBarTitleText": "签到码"
+  "navigationBarTitleText": "今日上工码",
+  "navigationBarBackgroundColor": "#f7ebcf",
+  "navigationBarTextStyle": "black"
 }

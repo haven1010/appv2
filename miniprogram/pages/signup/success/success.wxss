@@ -1,0 +1,106 @@
+.page {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #f8f2e6 0%, #ecf3e2 48%, #f5efe3 100%);
+}
+
+.success-card {
+  text-align: center;
+  border-radius: 32rpx;
+  border: 2rpx solid rgba(106, 153, 78, 0.18);
+}
+
+.stamp-wrap {
+  width: 130rpx;
+  height: 130rpx;
+  margin: 6rpx auto 14rpx;
+  border-radius: 50%;
+  background: rgba(106, 153, 78, 0.12);
+  border: 4rpx dashed rgba(106, 153, 78, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stamp-icon {
+  font-size: 56rpx;
+  line-height: 1;
+}
+
+.title {
+  display: block;
+  color: #3d3228;
+  font-size: 40rpx;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.subtitle {
+  display: block;
+  margin-top: 12rpx;
+  color: #7a6754;
+  font-size: 28rpx;
+  line-height: 1.55;
+}
+
+.cancelled-tip {
+  display: block;
+  margin-top: 16rpx;
+  color: #dd7f42;
+  font-size: 26rpx;
+  line-height: 1.5;
+  font-weight: 600;
+}
+
+.detail-card {
+  margin-top: 20rpx;
+  border-radius: 30rpx;
+}
+
+.detail-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18rpx;
+}
+
+.detail-row + .detail-row {
+  margin-top: 14rpx;
+  padding-top: 14rpx;
+  border-top: 1rpx dashed rgba(122, 103, 84, 0.24);
+}
+
+.label {
+  flex-shrink: 0;
+  color: #7a6754;
+  font-size: 28rpx;
+}
+
+.value {
+  flex: 1;
+  text-align: right;
+  color: #3d3228;
+  font-size: 30rpx;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.action-card {
+  margin-top: 20rpx;
+  border-radius: 30rpx;
+}
+
+.btn-danger {
+  margin-top: 16rpx;
+}
+
+.btn-ghost {
+  margin-top: 16rpx;
+}
+
+.delay-1 {
+  animation-delay: 80ms;
+}
+
+.delay-2 {
+  animation-delay: 140ms;
+}

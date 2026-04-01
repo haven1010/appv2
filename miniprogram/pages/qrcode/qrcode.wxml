@@ -1,35 +1,55 @@
-<!--pages/qrcode/qrcode.wxml-->
 <view class="page page-enter">
-  <view class="brand-head card">
-    <view class="brand-row">
-      <image class="brand-logo" src="/images/zhihui-logo.jpg" mode="aspectFit" />
-      <view>
-        <view class="brand-title">智汇就业</view>
-        <view class="brand-sub">签到码凭证</view>
+  <view class="paper-bg"></view>
+
+  <view class="container">
+    <view class="user-card">
+      <image class="avatar" src="{{avatar}}" mode="aspectFill" binderror="onAvatarError"></image>
+      <view class="user-meta">
+        <text class="name">{{name}}</text>
+        <text class="job">{{job}}</text>
       </view>
     </view>
 
-    <view class="title">个人签到二维码</view>
-    <view class="subtitle">向现场管理员出示二维码完成签到</view>
+    <view class="ticket-card {{refreshing ? 'ticket-refreshing' : ''}}">
+      <view class="ticket-header">
+        <text class="ticket-title">🎫 今日上工码</text>
+        <text class="ticket-status">{{checkinStatusText}}</text>
+      </view>
+      <text class="ticket-time">最近更新：{{lastRefreshTime}}</text>
 
-    <view class="qr-box" wx:if="{{!loading && qrImageUrl}}">
-      <image class="qr-image" src="{{qrImageUrl}}" mode="aspectFit" />
+      <view class="qr-card">
+        <image
+          wx:if="{{qrCodeUrl}}"
+          class="qr-image {{refreshing ? 'qr-image-refresh' : ''}}"
+          src="{{qrCodeUrl}}"
+          mode="aspectFit"
+          binderror="onQrImageError"
+        ></image>
+        <view wx:else class="qr-placeholder">二维码加载中...</view>
+
+        <view wx:if="{{showStamp}}" class="stamp-overlay">
+          <view class="stamp-image {{stampAnim}}">
+            <text class="stamp-char">签</text>
+          </view>
+        </view>
+      </view>
     </view>
 
-    <view class="qr-box qr-loading" wx:if="{{loading}}">
-      <text>生成中...</text>
+    <view class="growth-card">
+      <view class="growth-item">
+        <text class="growth-label">🌱 连续上工</text>
+        <text class="growth-value">{{streakDays}} 天</text>
+      </view>
+      <view class="growth-item">
+        <text class="growth-label">🍎 累计收入</text>
+        <text class="growth-value">¥{{totalEarnings}}</text>
+      </view>
     </view>
 
-    <view class="qr-box qr-error" wx:if="{{!loading && !qrImageUrl}}">
-      <text>加载失败，请刷新后重试</text>
-    </view>
+    <text class="tip">出示上工码给负责人扫码签到（盖章）</text>
 
-    <view class="uid-box">
-      <text class="uid-label">工号</text>
-      <text class="uid-text">{{userInfo.uid}}</text>
-      <text class="valid-text">有效期：{{validDuration}}</text>
-    </view>
-
-    <button class="btn-refresh" bindtap="refreshQrCode">刷新二维码</button>
+    <button class="refresh-btn" bindtap="refreshQR" disabled="{{refreshing}}">
+      {{refreshing ? '生成中...' : '刷新上工码'}}
+    </button>
   </view>
 </view>

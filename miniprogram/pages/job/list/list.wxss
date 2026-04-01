@@ -1,48 +1,141 @@
 .page {
   min-height: 100vh;
-  padding: 0 24rpx 48rpx;
+  padding: 24rpx 24rpx 48rpx;
   box-sizing: border-box;
   background:
-    radial-gradient(circle at right top, rgba(255, 226, 180, 0.9) 0%, rgba(255, 226, 180, 0) 46%),
-    linear-gradient(180deg, #fffef8 0%, #fff2dc 100%);
+    radial-gradient(circle at right top, rgba(143, 219, 190, 0.28) 0%, rgba(143, 219, 190, 0) 46%),
+    radial-gradient(circle at left top, rgba(145, 196, 235, 0.24) 0%, rgba(145, 196, 235, 0) 42%),
+    linear-gradient(180deg, #f9fefe 0%, #f2fbf8 100%);
 }
 
-.sticky-shell {
-  position: sticky;
-  top: 0;
-  z-index: 8;
-  padding: 24rpx 2rpx 16rpx;
-  background: linear-gradient(180deg, rgba(255, 247, 230, 0.98) 0%, rgba(255, 247, 230, 0.72) 74%, rgba(255, 247, 230, 0) 100%);
+.hero-card {
+  border-radius: 24rpx;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1rpx solid rgba(95, 170, 193, 0.2);
+  box-shadow: 0 12rpx 24rpx rgba(83, 157, 186, 0.12);
+  padding: 24rpx;
 }
 
-.title {
-  display: block;
-  font-size: 36rpx;
+.hero-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.hero-title {
+  flex: 1;
+  font-size: 34rpx;
   font-weight: 800;
-  color: #2f2316;
+  color: #143a50;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.subtitle {
+.hero-badge {
+  margin-left: 12rpx;
+  font-size: 20rpx;
+  color: #2f8f78;
+  background: rgba(130, 219, 189, 0.2);
+  border: 1rpx solid rgba(130, 219, 189, 0.34);
+  border-radius: 999rpx;
+  padding: 6rpx 14rpx;
+}
+
+.hero-subtitle {
+  margin-top: 10rpx;
   display: block;
-  margin-top: 8rpx;
   font-size: 24rpx;
-  color: #8b7a64;
+  color: #6b8ea5;
 }
 
-.state-card {
-  margin-top: 24rpx;
+.hero-stats {
+  margin-top: 16rpx;
+  display: flex;
+  gap: 10rpx;
+}
+
+.hero-stat {
+  flex: 1;
+  background: rgba(246, 252, 252, 0.9);
+  border: 1rpx solid rgba(95, 170, 193, 0.16);
+  border-radius: 16rpx;
+  padding: 14rpx 10rpx;
+  text-align: center;
+}
+
+.hero-stat-value {
+  display: block;
+  font-size: 28rpx;
+  font-weight: 800;
+  color: #143a50;
+}
+
+.hero-stat-label {
+  margin-top: 6rpx;
+  display: block;
+  font-size: 21rpx;
+  color: #6b8ea5;
+}
+
+.filter-card {
+  margin-top: 14rpx;
+  border-radius: 20rpx;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1rpx solid rgba(95, 170, 193, 0.2);
+  box-shadow: 0 8rpx 16rpx rgba(83, 157, 186, 0.1);
+  padding: 16rpx;
+}
+
+.search-input {
+  width: 100%;
+  box-sizing: border-box;
+  border-radius: 14rpx;
+  border: 1rpx solid rgba(95, 170, 193, 0.24);
+  background: rgba(246, 252, 252, 0.9);
+  padding: 16rpx 18rpx;
+  font-size: 24rpx;
+  color: #143a50;
+}
+
+.segment-row {
+  margin-top: 12rpx;
+  display: flex;
+  gap: 8rpx;
+}
+
+.segment-item {
+  flex: 1;
+  text-align: center;
+  padding: 12rpx 0;
+  border-radius: 999rpx;
+  font-size: 22rpx;
+  font-weight: 700;
+  color: #6a8ea4;
+  background: rgba(246, 252, 252, 0.9);
+  border: 1rpx solid rgba(95, 170, 193, 0.14);
+}
+
+.segment-item.active {
+  color: #ffffff;
+  background: linear-gradient(135deg, #58c2a6 0%, #4f98d8 100%);
+  box-shadow: 0 8rpx 16rpx rgba(83, 157, 186, 0.22);
+}
+
+.state-panel {
+  margin-top: 16rpx;
   border-radius: 24rpx;
   text-align: center;
   padding: 52rpx 28rpx;
-  border: 1rpx solid rgba(201, 153, 85, 0.2);
-  background: rgba(255, 252, 246, 0.92);
-  box-shadow: 0 12rpx 22rpx rgba(190, 139, 49, 0.08);
+  border: 1rpx solid rgba(95, 170, 193, 0.2);
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 12rpx 22rpx rgba(83, 157, 186, 0.1);
 }
 
 .state-title {
   display: block;
   font-size: 30rpx;
-  color: #5d4a31;
+  color: #30526a;
   font-weight: 700;
 }
 
@@ -50,74 +143,76 @@
   display: block;
   margin-top: 8rpx;
   font-size: 24rpx;
-  color: #8b7a64;
+  color: #6b8ea5;
 }
 
 .job-list {
+  margin-top: 14rpx;
   display: flex;
   flex-direction: column;
-  gap: 18rpx;
+  gap: 12rpx;
 }
 
 .job-card {
-  border-radius: 24rpx;
-  border: 1rpx solid rgba(201, 153, 85, 0.2);
-  background: rgba(255, 251, 244, 0.95);
-  box-shadow: 0 12rpx 22rpx rgba(186, 134, 41, 0.1);
-  padding: 24rpx;
+  border-radius: 20rpx;
+  border: 1rpx solid rgba(95, 170, 193, 0.2);
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 10rpx 20rpx rgba(83, 157, 186, 0.1);
+  padding: 18rpx;
 }
 
 .job-top {
   display: flex;
-  align-items: flex-start;
   justify-content: space-between;
-  gap: 16rpx;
+  align-items: flex-start;
+  gap: 12rpx;
 }
 
 .job-title {
   flex: 1;
-  font-size: 31rpx;
+  font-size: 28rpx;
   font-weight: 800;
-  color: #2f2316;
+  color: #143a50;
 }
 
 .job-salary {
-  font-size: 27rpx;
+  font-size: 24rpx;
   font-weight: 800;
-  color: #3da785;
+  color: #2f8f78;
+  text-align: right;
 }
 
 .job-meta {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 10rpx;
-  margin-top: 14rpx;
+  gap: 8rpx;
+  margin-top: 10rpx;
 }
 
 .meta-tag {
-  font-size: 21rpx;
-  color: #3f9b7c;
-  background: rgba(111, 223, 191, 0.2);
-  border: 1rpx solid rgba(111, 223, 191, 0.38);
-  padding: 5rpx 14rpx;
+  font-size: 20rpx;
+  color: #2f8f78;
+  background: rgba(130, 219, 189, 0.2);
+  border: 1rpx solid rgba(130, 219, 189, 0.34);
   border-radius: 999rpx;
+  padding: 4rpx 12rpx;
 }
 
 .meta-item {
-  font-size: 23rpx;
-  color: #6f604d;
+  font-size: 21rpx;
+  color: #5f8298;
 }
 
 .job-desc {
-  margin-top: 14rpx;
-  font-size: 24rpx;
-  color: #6f604d;
+  margin-top: 10rpx;
+  font-size: 22rpx;
+  color: #5f8298;
   line-height: 1.6;
-  padding: 14rpx 16rpx;
-  border-radius: 16rpx;
-  border: 1rpx solid rgba(201, 153, 85, 0.14);
-  background: rgba(255, 255, 255, 0.76);
+  padding: 12rpx 14rpx;
+  border-radius: 14rpx;
+  border: 1rpx solid rgba(95, 170, 193, 0.14);
+  background: rgba(246, 252, 252, 0.9);
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -125,98 +220,36 @@
 }
 
 .job-bottom {
-  margin-top: 14rpx;
-  padding-top: 14rpx;
-  border-top: 1rpx solid rgba(201, 153, 85, 0.16);
+  margin-top: 12rpx;
+  padding-top: 12rpx;
+  border-top: 1rpx solid rgba(95, 170, 193, 0.14);
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
 .status {
-  font-size: 22rpx;
+  font-size: 20rpx;
   font-weight: 700;
   border-radius: 999rpx;
-  padding: 6rpx 14rpx;
+  padding: 4rpx 12rpx;
 }
 
 .status-open {
-  color: #2f9d73;
-  background: rgba(130, 219, 189, 0.24);
+  color: #2f8f78;
+  background: rgba(130, 219, 189, 0.22);
 }
 
 .status-closed {
-  color: #c25b4b;
-  background: rgba(233, 148, 134, 0.18);
+  color: #5f88a2;
+  background: rgba(145, 196, 235, 0.2);
 }
 
 .apply-btn {
   border-radius: 999rpx;
-  padding: 10rpx 24rpx;
-  font-size: 24rpx;
-  font-weight: 800;
-  color: #2f2316;
-  background: linear-gradient(135deg, #8ce3c8 0%, #86d9f5 52%, #ffd786 100%);
-}
-
-@media (prefers-color-scheme: dark) {
-  .page {
-    background:
-      radial-gradient(circle at right top, rgba(74, 96, 109, 0.54) 0%, rgba(74, 96, 109, 0) 46%),
-      linear-gradient(180deg, #1a2028 0%, #121820 100%);
-  }
-
-  .sticky-shell {
-    background: linear-gradient(180deg, rgba(25, 31, 41, 0.98) 0%, rgba(25, 31, 41, 0.74) 74%, rgba(25, 31, 41, 0) 100%);
-  }
-
-  .title,
-  .job-title,
-  .state-title {
-    color: #ecf3ff;
-  }
-
-  .subtitle,
-  .meta-item,
-  .job-desc,
-  .state-desc {
-    color: #a8bace;
-  }
-
-  .job-card,
-  .state-card {
-    background: rgba(30, 39, 50, 0.94);
-    border-color: rgba(129, 152, 176, 0.24);
-    box-shadow: 0 14rpx 28rpx rgba(0, 0, 0, 0.28);
-  }
-
-  .job-desc {
-    background: rgba(22, 29, 39, 0.85);
-    border-color: rgba(129, 152, 176, 0.22);
-  }
-
-  .job-salary {
-    color: #89e0c5;
-  }
-
-  .meta-tag {
-    color: #9ce9ce;
-    background: rgba(61, 141, 114, 0.34);
-    border-color: rgba(98, 188, 159, 0.36);
-  }
-
-  .status-open {
-    color: #8de0c5;
-    background: rgba(61, 141, 114, 0.35);
-  }
-
-  .status-closed {
-    color: #f0a79c;
-    background: rgba(160, 77, 64, 0.34);
-  }
-
-  .apply-btn {
-    color: #eff8ff;
-    background: linear-gradient(135deg, #3f8c72 0%, #3b6e88 52%, #a17f3e 100%);
-  }
+  padding: 8rpx 20rpx;
+  font-size: 22rpx;
+  font-weight: 700;
+  color: #ffffff;
+  background: linear-gradient(135deg, #58c2a6 0%, #4f98d8 100%);
 }

@@ -1,69 +1,76 @@
-<view class="page page-enter">
-  <view class="sticky-shell">
-    <text class="title">薪资结算</text>
-    <text class="subtitle">查看待确认工资并完成确认</text>
-  </view>
+<view class="page">
 
-  <view wx:if="{{loading}}" class="state-card">
-    <text class="state-title">正在加载薪资数据...</text>
-    <text class="state-desc">请稍候</text>
-  </view>
+  <view class="page-body page-enter">
+    <view class="summary-card ds-card card-in">
+      <text class="summary-title">我的收入</text>
+      <text class="summary-time">更新于 {{lastUpdated || '--:--'}}</text>
+      <text class="summary-amount">¥{{stats ? stats.totalEarned : '0.00'}}</text>
 
-  <block wx:else>
-    <view wx:if="{{stats}}" class="stats-row">
-      <view class="stat-card">
-        <text class="stat-value">{{stats.totalDays || 0}}</text>
-        <text class="stat-label">累计工作天数</text>
+      <view class="summary-row">
+        <view class="summary-item">
+          <text class="summary-icon">🧺</text>
+          <text class="summary-text">{{stats ? stats.totalDays : 0}}天</text>
+        </view>
+        <view class="summary-item">
+          <text class="summary-icon">💰</text>
+          <text class="summary-text">¥{{stats ? stats.totalEarned : '0.00'}}</text>
+        </view>
+        <view class="summary-item">
+          <text class="summary-icon">⏳</text>
+          <text class="summary-text">¥{{stats ? stats.pendingAmount : '0.00'}}</text>
+        </view>
       </view>
-      <view class="stat-card accent">
-        <text class="stat-value">¥{{stats.totalEarned || '0.00'}}</text>
-        <text class="stat-label">累计收入</text>
-      </view>
-      <view class="stat-card warn">
-        <text class="stat-value">¥{{stats.pendingAmount || '0.00'}}</text>
-        <text class="stat-label">待发放</text>
-      </view>
+
+      <button class="refresh-btn" bindtap="refreshData">刷新数据</button>
     </view>
 
-    <view class="section-head">
+    <view class="section-head card-in delay-1">
       <text class="section-title">待确认工资</text>
+      <text class="section-count">{{pendingList.length}}</text>
     </view>
 
-    <view wx:if="{{pendingList.length === 0}}" class="state-card empty-card">
+    <view wx:if="{{loading}}" class="state-card ds-card card-in delay-1">
+      <text class="state-title">正在加载薪资数据...</text>
+      <text class="state-desc">请稍候</text>
+    </view>
+
+    <view wx:elif="{{pendingList.length === 0}}" class="empty-card ds-card card-in delay-1">
+      <text class="empty-icon">💼</text>
       <text class="state-title">暂无待确认工资</text>
-      <text class="state-desc">当前没有需要确认的薪资记录</text>
+      <text class="state-desc">完成工作后自动记录</text>
+      <button class="go-job-btn" bindtap="goFindJobs">去找工作</button>
     </view>
 
-    <view wx:else class="salary-list">
-      <view wx:for="{{pendingList}}" wx:key="id" class="salary-card">
-        <view class="salary-top">
-          <view class="salary-info">
-            <text class="salary-base">{{item.baseName || '基地'}}</text>
-            <text class="salary-date">{{item.workDate || '-'}}</text>
+    <view wx:else class="pending-list">
+      <view wx:for="{{pendingList}}" wx:key="id" class="pending-card ds-card card-in" style="animation-delay: {{index * 70}}ms;">
+        <view class="pending-top">
+          <view class="pending-main">
+            <text class="pending-base">{{item.baseName || '基地'}}</text>
+            <text class="pending-date">{{item.workDate || '-'}}</text>
           </view>
-          <text class="salary-amount">¥{{item.totalAmount || item.amount || '0.00'}}</text>
+          <text class="pending-amount">¥{{item.amountText}}</text>
         </view>
 
-        <view class="salary-detail">
-          <text wx:if="{{item.jobTitle}}" class="detail-item">岗位：{{item.jobTitle}}</text>
-          <text wx:if="{{item.workHours}}" class="detail-item">工时：{{item.workHours}}h</text>
-          <text wx:if="{{item.pieceCount}}" class="detail-item">计件：{{item.pieceCount}}</text>
+        <view class="pending-meta">
+          <text wx:if="{{item.jobTitle}}" class="meta-chip">岗位 {{item.jobTitle}}</text>
+          <text wx:if="{{item.workHours}}" class="meta-chip">工时 {{item.workHours}}h</text>
+          <text wx:if="{{item.pieceCount}}" class="meta-chip">计件 {{item.pieceCount}}</text>
         </view>
 
-        <view class="salary-bottom">
-          <text class="salary-status {{item.status === 'paid' || item.status === 2 ? 'paid' : item.status === 'confirmed' || item.status === 1 ? 'confirmed' : 'pending'}}">
-            {{item.status === 'paid' || item.status === 2 ? '已发放' : item.status === 'confirmed' || item.status === 1 ? '已确认' : '待确认'}}
-          </text>
-          <view
-            wx:if="{{item.status === 'draft' || item.status === 0}}"
-            class="confirm-btn pressable"
-            hover-class="pressing"
+        <view class="pending-foot">
+          <text class="status-chip {{item.statusClass}}">{{item.statusText}}</text>
+          <button
+            wx:if="{{item.canConfirm}}"
+            class="confirm-btn"
+            hover-class="confirm-btn-press"
             hover-stay-time="100"
             bindtap="confirmSalary"
             data-id="{{item.id}}"
-          >确认工资</view>
+          >确认工资</button>
         </view>
       </view>
     </view>
-  </block>
+
+    <view class="page-bottom-gap"></view>
+  </view>
 </view>

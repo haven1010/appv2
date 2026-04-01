@@ -1,0 +1,43 @@
+﻿<view class="page">
+  <view class="page-body page-enter">
+    <view class="success-card ds-card card-in">
+      <view class="stamp-wrap">
+        <text class="stamp-icon">OK</text>
+      </view>
+      <text class="title">{{duplicate ? '今日已报名，无需重复提交' : '报名成功'}}</text>
+      <text class="subtitle">人员信息已写入报名表，管理员端可查看</text>
+      <text wx:if="{{cancelled}}" class="cancelled-tip">当前报名已取消，记录已删除</text>
+    </view>
+
+    <view class="detail-card ds-card card-in delay-1">
+      <view class="detail-row">
+        <text class="label">报名人</text>
+        <text class="value">{{workerName}}（{{workerUid}}）</text>
+      </view>
+      <view class="detail-row">
+        <text class="label">报名基地</text>
+        <text class="value">{{baseName}}</text>
+      </view>
+      <view class="detail-row">
+        <text class="label">报名岗位</text>
+        <text class="value">{{jobTitle}}</text>
+      </view>
+      <view class="detail-row" wx:if="{{workDate}}">
+        <text class="label">工作日期</text>
+        <text class="value">{{workDate}}</text>
+      </view>
+    </view>
+
+    <view class="action-card ds-card card-in delay-2">
+      <button class="btn-primary" bindtap="goWorkHistory">查看我的报名记录</button>
+      <button
+        wx:if="{{canCancel}}"
+        class="btn-danger"
+        bindtap="onCancelSignup"
+        loading="{{cancelling}}"
+        disabled="{{cancelling || cancelled}}"
+      >{{cancelling ? '取消中...' : '取消报名并删除记录'}}</button>
+      <button class="btn-ghost" bindtap="backToSquare">返回广场</button>
+    </view>
+  </view>
+</view>

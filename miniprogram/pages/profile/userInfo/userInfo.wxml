@@ -1,27 +1,17 @@
-<!-- pages/profile/userInfo/userInfo.wxml -->
-<view class="page {{pageReady ? 'page-enter' : ''}}" bindtap="handleBlankTap">
-  <scroll-view class="scroll-wrap" scroll-y enhanced bounces bindscroll="onScroll">
-    <view class="sticky-shell">
-      <view class="sticky-glow" style="opacity: {{topShadeOpacity}};"></view>
-      <view class="brand-row">
-        <image class="brand-logo" src="/images/zhihui-logo.jpg" mode="aspectFit" />
-        <view>
-          <text class="sticky-title">基本信息</text>
-          <text class="sticky-sub">点击卡片可展开编辑，长按可快速复制</text>
-        </view>
-      </view>
-    </view>
-
+﻿<view class="page {{pageReady ? 'page-enter' : ''}}" bindtap="handleBlankTap">
+  <scroll-view class="scroll-wrap" scroll-y enhanced bounces>
     <view class="module-card {{infoExpanded ? 'open' : 'closed'}}" wx:if="{{profile}}" catchtap="noop">
       <view class="module-head pressable" hover-class="pressing" hover-stay-time="110" bindtap="toggleInfoCard">
         <view class="avatar-wrap pressable" hover-class="pressing" hover-stay-time="90" catchtap="previewAvatar">
-          <image class="avatar-image" wx:if="{{profile.avatarUrl}}" src="{{profile.avatarUrl}}" mode="aspectFill"></image>
+          <image class="avatar-image" wx:if="{{profile.avatarUrl}}" src="{{profile.avatarUrl}}" mode="aspectFill" binderror="onAvatarError"></image>
           <text class="avatar-text" wx:else>{{profile.name ? profile.name[0] : '工'}}</text>
         </view>
+
         <view class="head-main">
           <text class="head-name" bindlongpress="copyByLongPress" data-copy="{{profile.name}}" data-label="姓名">{{profile.name || '未填写姓名'}}</text>
           <text class="head-sub">{{profile.roleText || '务工人员'}} · {{auditStatusText}}</text>
         </view>
+
         <text class="head-toggle">{{infoExpanded ? '收起' : '展开'}}</text>
       </view>
 
@@ -49,23 +39,83 @@
 
         <view class="field-group">
           <text class="field-label">姓名</text>
-          <input class="field-input" value="{{form.name}}" placeholder="请输入姓名" bindinput="onInputName" />
+          <input
+            class="field-input {{focusField === 'name' ? 'focus' : ''}} {{errors.name ? 'invalid' : ''}}"
+            value="{{form.name}}"
+            placeholder="请输入真实姓名（2-20个字）"
+            data-field="name"
+            bindfocus="handleFocus"
+            bindblur="handleBlur"
+            bindinput="onInput"
+          />
+          <text wx:if="{{errors.name}}" class="error">{{errors.name}}</text>
         </view>
+
         <view class="field-group">
           <text class="field-label">手机号</text>
-          <input class="field-input" type="number" maxlength="11" value="{{form.phone}}" placeholder="请输入手机号" bindinput="onInputPhone" />
+          <input
+            class="field-input {{focusField === 'phone' ? 'focus' : ''}} {{errors.phone ? 'invalid' : ''}}"
+            type="text"
+            maxlength="13"
+            value="{{form.phone}}"
+            placeholder="请输入手机号"
+            data-field="phone"
+            bindfocus="handleFocus"
+            bindblur="handleBlur"
+            bindinput="onInput"
+          />
+          <text wx:if="{{errors.phone}}" class="error">{{errors.phone}}</text>
         </view>
+
+        <view class="field-group">
+          <text class="field-label">家庭地址</text>
+          <textarea
+            class="field-input field-textarea {{focusField === 'homeAddress' ? 'focus' : ''}} {{errors.homeAddress ? 'invalid' : ''}}"
+            value="{{form.homeAddress}}"
+            placeholder="请填写家庭详细地址"
+            data-field="homeAddress"
+            bindfocus="handleFocus"
+            bindblur="handleBlur"
+            bindinput="onInput"
+            maxlength="120"
+            auto-height
+          />
+          <text wx:if="{{errors.homeAddress}}" class="error">{{errors.homeAddress}}</text>
+        </view>
+
         <view class="field-group">
           <text class="field-label">身份证号</text>
           <text class="field-value">{{profile.idCardMasked || '-'}}</text>
         </view>
+
         <view class="field-group">
           <text class="field-label">紧急联系人</text>
-          <input class="field-input" value="{{form.emergencyContact}}" placeholder="请输入联系人姓名及关系" bindinput="onInputEmergencyContact" />
+          <input
+            class="field-input {{focusField === 'emergencyContact' ? 'focus' : ''}} {{errors.emergencyContact ? 'invalid' : ''}}"
+            value="{{form.emergencyContact}}"
+            placeholder="请输入联系人姓名及关系"
+            data-field="emergencyContact"
+            bindfocus="handleFocus"
+            bindblur="handleBlur"
+            bindinput="onInput"
+          />
+          <text wx:if="{{errors.emergencyContact}}" class="error">{{errors.emergencyContact}}</text>
         </view>
+
         <view class="field-group">
           <text class="field-label">联系人电话</text>
-          <input class="field-input" type="number" maxlength="11" value="{{form.emergencyPhone}}" placeholder="请输入紧急联系人电话" bindinput="onInputEmergencyPhone" />
+          <input
+            class="field-input {{focusField === 'emergencyPhone' ? 'focus' : ''}} {{errors.emergencyPhone ? 'invalid' : ''}}"
+            type="text"
+            maxlength="13"
+            value="{{form.emergencyPhone}}"
+            placeholder="请输入紧急联系人电话"
+            data-field="emergencyPhone"
+            bindfocus="handleFocus"
+            bindblur="handleBlur"
+            bindinput="onInput"
+          />
+          <text wx:if="{{errors.emergencyPhone}}" class="error">{{errors.emergencyPhone}}</text>
         </view>
       </view>
     </view>

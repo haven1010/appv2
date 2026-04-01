@@ -1,4 +1,7 @@
 {
-  "navigationBarTitleText": "薪资卡/银行卡",
+  "navigationBarTitleText": "银行卡",
+  "navigationBarBackgroundColor": "#f7ebcf",
+  "navigationBarTextStyle": "black",
+  "enablePullDownRefresh": true,
   "usingComponents": {}
 }

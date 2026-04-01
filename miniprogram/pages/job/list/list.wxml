@@ -1,22 +1,72 @@
 <view class="page page-enter">
-  <view class="sticky-shell">
-    <text class="title">{{baseName ? baseName + ' · 招聘岗位' : '招聘管理'}}</text>
-    <text class="subtitle">共 {{jobs.length}} 个岗位，支持快速报名</text>
+  <view class="hero-card">
+    <view class="hero-head">
+      <text class="hero-title">{{baseName ? baseName + ' · 招聘岗位' : '招聘管理'}}</text>
+      <text class="hero-badge">TDesign Layout</text>
+    </view>
+    <text class="hero-subtitle">共 {{jobs.length}} 个岗位，支持筛选与快速报名</text>
+    <view class="hero-stats">
+      <view class="hero-stat">
+        <text class="hero-stat-value">{{jobs.length}}</text>
+        <text class="hero-stat-label">岗位总数</text>
+      </view>
+      <view class="hero-stat">
+        <text class="hero-stat-value">{{openCount}}</text>
+        <text class="hero-stat-label">招聘中</text>
+      </view>
+      <view class="hero-stat">
+        <text class="hero-stat-value">{{closedCount}}</text>
+        <text class="hero-stat-label">已关闭</text>
+      </view>
+    </view>
   </view>
 
-  <view wx:if="{{loading}}" class="state-card">
+  <view class="filter-card">
+    <input
+      class="search-input"
+      placeholder="搜索岗位名或基地名"
+      value="{{keyword}}"
+      bindinput="onKeywordInput"
+      confirm-type="search"
+    />
+    <view class="segment-row">
+      <view
+        class="segment-item pressable {{statusFilter === 'all' ? 'active' : ''}}"
+        hover-class="pressing"
+        hover-stay-time="90"
+        data-status="all"
+        bindtap="onStatusChange"
+      >全部</view>
+      <view
+        class="segment-item pressable {{statusFilter === 'open' ? 'active' : ''}}"
+        hover-class="pressing"
+        hover-stay-time="90"
+        data-status="open"
+        bindtap="onStatusChange"
+      >招聘中</view>
+      <view
+        class="segment-item pressable {{statusFilter === 'closed' ? 'active' : ''}}"
+        hover-class="pressing"
+        hover-stay-time="90"
+        data-status="closed"
+        bindtap="onStatusChange"
+      >已关闭</view>
+    </view>
+  </view>
+
+  <view wx:if="{{loading}}" class="state-panel">
     <text class="state-title">正在加载招聘岗位...</text>
     <text class="state-desc">请稍候</text>
   </view>
 
-  <view wx:elif="{{jobs.length === 0}}" class="state-card">
-    <text class="state-title">暂无招聘岗位</text>
-    <text class="state-desc">稍后刷新或更换基地后再试</text>
+  <view wx:elif="{{viewJobs.length === 0}}" class="state-panel">
+    <text class="state-title">暂无符合条件的岗位</text>
+    <text class="state-desc">尝试清空筛选或切换基地</text>
   </view>
 
   <view wx:else class="job-list">
     <view
-      wx:for="{{jobs}}"
+      wx:for="{{viewJobs}}"
       wx:key="id"
       class="job-card pressable"
       bindtap="goToDetail"
@@ -26,12 +76,14 @@
     >
       <view class="job-top">
         <text class="job-title">{{item.jobTitle || item.title || '未命名岗位'}}</text>
-        <text class="job-salary">{{item.salaryAmount || '-'}} 元/{{item.payType == 1 ? '天' : item.payType == 2 ? '小时' : '件'}}</text>
+        <text class="job-salary">
+          {{item.salaryAmount || item.hourlyRate || item.unitPrice || '-'}} 元/{{item.payType == 1 ? '天' : item.payType == 2 ? '小时' : '件'}}
+        </text>
       </view>
 
       <view class="job-meta">
         <text class="meta-tag" wx:if="{{item.baseName}}">{{item.baseName}}</text>
-        <text class="meta-item">招聘 {{item.headcount || item.count || '-'}} 人</text>
+        <text class="meta-item">招聘 {{item.recruitCount || item.headcount || item.count || '-'}} 人</text>
         <text class="meta-item">{{item.workDateRange || '时间待定'}}</text>
       </view>
 
@@ -40,8 +92,8 @@
       </view>
 
       <view class="job-bottom">
-        <text class="status {{item.status === 'recruiting' || item.status === 1 ? 'status-open' : 'status-closed'}}">
-          {{item.status === 'recruiting' || item.status === 1 ? '招聘中' : '已关闭'}}
+        <text class="status {{item.status === 'recruiting' || item.status === 'open' || item.status === 1 ? 'status-open' : 'status-closed'}}">
+          {{item.status === 'recruiting' || item.status === 'open' || item.status === 1 ? '招聘中' : '已关闭'}}
         </text>
         <view
           class="apply-btn pressable"

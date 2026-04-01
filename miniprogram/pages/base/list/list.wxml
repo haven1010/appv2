@@ -1,34 +1,47 @@
 <!-- pages/base/list/list.wxml -->
 <view class="page page-enter">
-  <view class="sticky-shell">
-    <text class="title">基地管理</text>
-    <text class="subtitle">按品类筛选基地，风格与个人页统一</text>
+  <view class="hero-card">
+    <view class="hero-head">
+      <text class="hero-title">基地管理</text>
+      <text class="hero-badge">TDesign Layout</text>
+    </view>
+    <text class="hero-subtitle">按品类筛选基地，快速进入详情与岗位信息</text>
+    <view class="hero-stats">
+      <view class="hero-stat">
+        <text class="hero-stat-value">{{bases.length}}</text>
+        <text class="hero-stat-label">当前结果</text>
+      </view>
+      <view class="hero-stat">
+        <text class="hero-stat-value">{{category === 0 ? '全部' : category === 1 ? '水果' : category === 2 ? '蔬菜' : '其他'}}</text>
+        <text class="hero-stat-label">筛选分类</text>
+      </view>
+    </view>
   </view>
 
-  <view class="filter-bar">
+  <view class="segment-card">
     <view
-      class="filter-item pressable {{category === 0 ? 'active' : ''}}"
+      class="segment-item pressable {{category === 0 ? 'active' : ''}}"
       bindtap="filterByCategory"
       hover-class="pressing"
       hover-stay-time="90"
       data-category="0"
     >全部</view>
     <view
-      class="filter-item pressable {{category === 1 ? 'active' : ''}}"
+      class="segment-item pressable {{category === 1 ? 'active' : ''}}"
       bindtap="filterByCategory"
       hover-class="pressing"
       hover-stay-time="90"
       data-category="1"
     >水果</view>
     <view
-      class="filter-item pressable {{category === 2 ? 'active' : ''}}"
+      class="segment-item pressable {{category === 2 ? 'active' : ''}}"
       bindtap="filterByCategory"
       hover-class="pressing"
       hover-stay-time="90"
       data-category="2"
     >蔬菜</view>
     <view
-      class="filter-item pressable {{category === 3 ? 'active' : ''}}"
+      class="segment-item pressable {{category === 3 ? 'active' : ''}}"
       bindtap="filterByCategory"
       hover-class="pressing"
       hover-stay-time="90"
@@ -36,19 +49,19 @@
     >其他</view>
   </view>
 
-  <view wx:if="{{loading}}" class="state-card">
+  <view wx:if="{{loading}}" class="state-panel">
     <text class="state-title">正在加载基地列表...</text>
     <text class="state-desc">请稍候</text>
   </view>
 
-  <view wx:elif="{{bases.length === 0}}" class="state-card">
+  <view wx:elif="{{bases.length === 0}}" class="state-panel">
     <text class="state-title">暂无基地信息</text>
-    <text class="state-desc">稍后刷新或调整筛选条件</text>
+    <text class="state-desc">可下拉刷新或切换筛选条件</text>
   </view>
 
   <view wx:else class="base-list">
     <view
-      class="base-item pressable"
+      class="base-card pressable"
       wx:for="{{bases}}"
       wx:key="id"
       bindtap="goToDetail"
@@ -56,18 +69,17 @@
       hover-stay-time="100"
       data-id="{{item.id}}"
     >
-      <view class="item-head">
-        <text class="base-name">{{item.baseName || '未命名基地'}}</text>
-        <text class="audit-tag {{item.auditStatus === 1 ? 'approved' : 'pending'}}">{{item.auditStatus === 1 ? '已审核' : '待审核'}}</text>
+      <view class="base-main">
+        <view class="base-header">
+          <text class="base-name">{{item.baseName || '未命名基地'}}</text>
+          <text class="status-tag {{item.auditStatus === 1 ? 'ok' : 'wait'}}">{{item.auditStatus === 1 ? '已审核' : '待审核'}}</text>
+        </view>
+        <view class="base-meta">
+          <text class="category-tag">{{item.category === 1 ? '水果' : item.category === 2 ? '蔬菜' : '其他'}}</text>
+          <text class="base-address">{{item.address || '地址待补充'}}</text>
+        </view>
       </view>
-      <view class="item-meta">
-        <text class="category-tag">{{item.category === 1 ? '水果' : item.category === 2 ? '蔬菜' : '其他'}}</text>
-        <text class="base-address" wx:if="{{item.address}}">{{item.address}}</text>
-        <text class="base-address" wx:else>地址待补充</text>
-      </view>
-      <view class="item-foot">
-        <text class="foot-hint">点击查看基地详情与岗位信息</text>
-      </view>
+      <text class="cell-arrow">›</text>
     </view>
   </view>
 </view>

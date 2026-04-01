@@ -8,18 +8,24 @@ const app = getApp();
 Page({
   data: {
     jobs: [],
+    viewJobs: [],
     loading: true,
     baseId: null,
     baseName: '',
+    keyword: '',
+    statusFilter: 'all',
+    openCount: 0,
+    closedCount: 0,
   },
 
   onLoad(options) {
     if (options.baseId) {
-      this.setData({ baseId: parseInt(options.baseId) });
+      this.setData({ baseId: parseInt(options.baseId, 10) });
     }
     if (options.baseName) {
-      this.setData({ baseName: decodeURIComponent(options.baseName) });
-      wx.setNavigationBarTitle({ title: options.baseName + ' - 岗位' });
+      const decodedBaseName = decodeURIComponent(options.baseName);
+      this.setData({ baseName: decodedBaseName });
+      wx.setNavigationBarTitle({ title: `${decodedBaseName} - 岗位` });
     }
     this.loadJobs();
   },
@@ -29,6 +35,51 @@ Page({
     setTimeout(() => wx.stopPullDownRefresh(), 1000);
   },
 
+  isOpenStatus(status) {
+    return status === 1 || status === 'recruiting' || status === 'open';
+  },
+
+  applyFilters() {
+    const allJobs = Array.isArray(this.data.jobs) ? this.data.jobs : [];
+    const keyword = (this.data.keyword || '').trim().toLowerCase();
+    const statusFilter = this.data.statusFilter;
+
+    const viewJobs = allJobs.filter((item) => {
+      const title = (item.jobTitle || item.title || '').toLowerCase();
+      const base = (item.baseName || '').toLowerCase();
+      const matchKeyword = !keyword || title.includes(keyword) || base.includes(keyword);
+      const open = this.isOpenStatus(item.status);
+      const matchStatus =
+        statusFilter === 'all' ||
+        (statusFilter === 'open' && open) ||
+        (statusFilter === 'closed' && !open);
+      return matchKeyword && matchStatus;
+    });
+
+    const openCount = allJobs.filter((item) => this.isOpenStatus(item.status)).length;
+    const closedCount = Math.max(0, allJobs.length - openCount);
+
+    this.setData({
+      viewJobs,
+      openCount,
+      closedCount,
+    });
+  },
+
+  onKeywordInput(e) {
+    this.setData({ keyword: e.detail.value || '' }, () => {
+      this.applyFilters();
+    });
+  },
+
+  onStatusChange(e) {
+    const status = e.currentTarget.dataset.status || 'all';
+    if (status === this.data.statusFilter) return;
+    this.setData({ statusFilter: status }, () => {
+      this.applyFilters();
+    });
+  },
+
   async loadJobs() {
     this.setData({ loading: true });
 
@@ -36,7 +87,7 @@ Page({
       if (!this.data.baseId) {
         // No baseId: load all approved bases' jobs (flatten)
         const bases = await app.request({ url: '/base', method: 'GET' });
-        const allJobs = [];
+        let allJobs = [];
         for (const base of (bases || [])) {
           try {
             const jobs = await app.request({
@@ -44,23 +95,33 @@ Page({
               method: 'GET',
             });
             if (Array.isArray(jobs)) {
-              jobs.forEach(j => {
-                j.baseName = base.baseName || base.name || '-';
+              jobs.forEach((job) => {
+                job.baseName = base.baseName || base.name || '-';
               });
               allJobs = allJobs.concat(jobs);
             }
-          } catch (_) {}
+          } catch (_) {
+            // Keep loading other bases.
+          }
         }
-        this.setData({ jobs: allJobs, loading: false });
+        this.setData({ jobs: allJobs, loading: false }, () => {
+          this.applyFilters();
+        });
       } else {
         const res = await app.request({
           url: '/base/' + this.data.baseId + '/jobs',
           method: 'GET',
         });
-        this.setData({
-          jobs: Array.isArray(res) ? res : [],
-          loading: false,
-        });
+        const list = Array.isArray(res) ? res : [];
+        this.setData(
+          {
+            jobs: list,
+            loading: false,
+          },
+          () => {
+            this.applyFilters();
+          },
+        );
       }
     } catch (err) {
       console.error('加载岗位列表失败:', err);
