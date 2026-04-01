@@ -1,6 +1,6 @@
-/**
+﻿/**
  * Layer: Mini Program Page
- * Responsibility: Provides super-admin-only payroll center with filter, export, and history archive.
+ * Responsibility: Super-admin payroll center for querying, collapsing, exporting, and archiving salary reports.
  */
 const app = getApp();
 const { resolveRole, isSuperAdminRole, roleLabel } = require('../../../utils/role');
@@ -36,17 +36,26 @@ function inferGender(idCard) {
   return code % 2 === 0 ? '女' : '男';
 }
 
-function toCsvCell(value) {
-  const text = String(value == null ? '' : value);
-  if (/[",\n]/.test(text)) {
-    return `"${text.replace(/"/g, '""')}"`;
-  }
-  return text;
-}
-
 function formatTime(value) {
   if (!value) return '-';
-  return String(value).replace('T', ' ').slice(0, 19);
+  const raw = String(value).trim();
+  const date = new Date(raw);
+  if (Number.isNaN(date.getTime())) {
+    return raw.replace('T', ' ').slice(0, 19);
+  }
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  const hh = String(date.getHours()).padStart(2, '0');
+  const mm = String(date.getMinutes()).padStart(2, '0');
+  const ss = String(date.getSeconds()).padStart(2, '0');
+  return `${y}-${m}-${d} ${hh}:${mm}:${ss}`;
+}
+
+function buildFilterSummary(baseLabel, dateFrom, dateTo, keyword) {
+  const rangeText = `${dateFrom || '-'} ~ ${dateTo || '-'}`;
+  const keywordText = keyword ? ` · 关键字: ${keyword}` : '';
+  return `${baseLabel || '全部基地'} · ${rangeText}${keywordText}`;
 }
 
 Page({
@@ -64,6 +73,11 @@ Page({
     dateFrom: monthStartString(),
     dateTo: todayString(),
     keyword: '',
+
+    hasReport: false,
+    reportExpanded: false,
+    reportFilterText: '',
+    reportGeneratedAtText: '',
 
     rows: [],
     totalWorkers: 0,
@@ -112,7 +126,6 @@ Page({
       roleText: roleLabel(role),
       userInfo,
     });
-
     return true;
   },
 
@@ -120,7 +133,6 @@ Page({
     this.setData({ loading: true });
     try {
       await this.loadBaseOptions();
-      await this.loadPayrollReport();
       this.loadHistory();
     } catch (err) {
       wx.showToast({ title: err.message || '初始化工资中心失败', icon: 'none' });
@@ -155,10 +167,19 @@ Page({
     if (dateTo) params.push(`dateTo=${encodeURIComponent(dateTo)}`);
     if (keyword) params.push(`keyword=${encodeURIComponent(keyword)}`);
 
-    return `/salary/list?${params.join('&')}`;
+    const query = params.join('&');
+    return query ? `/salary/list?${query}` : '/salary/list';
   },
 
-  async loadPayrollReport() {
+  buildCurrentFilterSummary() {
+    const baseLabel = this.data.baseOptions[this.data.baseIndex]?.label || '全部基地';
+    const keyword = String(this.data.keyword || '').trim();
+    return buildFilterSummary(baseLabel, this.data.dateFrom, this.data.dateTo, keyword);
+  },
+
+  async loadPayrollReport(options = {}) {
+    const { autoExpand = false } = options;
+
     if (this.data.dateFrom && this.data.dateTo && this.data.dateFrom > this.data.dateTo) {
       wx.showToast({ title: '开始日期不能晚于结束日期', icon: 'none' });
       return;
@@ -194,7 +215,7 @@ Page({
           };
         }
 
-        grouped[key].totalIncome += Number(row.totalAmount || 0);
+        grouped[key].totalIncome += Number(row.totalAmount || row.amount || 0);
       }
 
       const rows = Object.keys(grouped)
@@ -212,21 +233,36 @@ Page({
           };
         })
         .sort((a, b) => b.totalIncome - a.totalIncome)
-        .map((item, index) => Object.assign({}, item, { serial: index + 1 }));
+        .map((item, index) => ({ ...item, serial: index + 1 }));
 
-      const totalIncome = Number(rows.reduce((sum, item) => sum + Number(item.totalIncome || 0), 0).toFixed(2));
+      const totalIncome = Number(
+        rows.reduce((sum, item) => sum + Number(item.totalIncome || 0), 0).toFixed(2),
+      );
 
       this.setData({
         rows,
         totalWorkers: rows.length,
         totalIncome,
         selectedHistoryId: '',
+        hasReport: true,
+        reportExpanded: rows.length > 0 ? autoExpand : false,
+        reportFilterText: this.buildCurrentFilterSummary(),
+        reportGeneratedAtText: formatTime(new Date().toISOString()),
       });
+
+      if (!rows.length) {
+        wx.showToast({ title: '当前筛选暂无工资数据', icon: 'none' });
+      }
     } catch (err) {
       wx.showToast({ title: err.message || '加载工资表失败', icon: 'none' });
     } finally {
       this.setData({ reportLoading: false });
     }
+  },
+
+  toggleReport() {
+    if (!this.data.hasReport) return;
+    this.setData({ reportExpanded: !this.data.reportExpanded });
   },
 
   onBaseChange(e) {
@@ -246,7 +282,7 @@ Page({
   },
 
   searchReport() {
-    this.loadPayrollReport();
+    this.loadPayrollReport({ autoExpand: false });
   },
 
   resetReport() {
@@ -256,41 +292,44 @@ Page({
       dateTo: todayString(),
       keyword: '',
       selectedHistoryId: '',
+      rows: [],
+      totalWorkers: 0,
+      totalIncome: 0,
+      hasReport: false,
+      reportExpanded: false,
+      reportFilterText: '',
+      reportGeneratedAtText: '',
     });
-    this.loadPayrollReport();
   },
 
-  exportReport() {
+  async exportReport() {
     const rows = this.data.rows || [];
     if (!rows.length) {
-      wx.showToast({ title: '暂无可导出工资表', icon: 'none' });
+      wx.showToast({ title: '暂无可导出的工资表', icon: 'none' });
       return;
     }
 
-    const header = ['序号', '姓名', '性别', '身份证号', '家庭住址', '是否贫困户', '务工总收入', '领款人签章'];
-    const body = rows.map((item) => [
-      item.serial,
-      item.name,
-      item.gender,
-      item.idCard,
-      item.address,
-      item.poorHousehold,
-      item.totalIncome,
-      item.signature,
-    ].map(toCsvCell).join(','));
+    const listUrl = this.buildSalaryUrl();
+    const exportUrl = listUrl
+      .replace('/salary/list?', '/salary/export/report?')
+      .replace('/salary/list', '/salary/export/report');
 
-    const csv = [header.map(toCsvCell).join(',')].concat(body).join('\n');
-    wx.setClipboardData({
-      data: csv,
-      success: () => {
-        wx.showModal({
-          title: '导出成功',
-          content: `已复制 ${rows.length} 条工资记录，可直接粘贴到 Excel。`,
-          showCancel: false,
-        });
-      },
-      fail: () => wx.showToast({ title: '导出失败', icon: 'none' }),
-    });
+    wx.showLoading({ title: '导出中...', mask: true });
+    try {
+      const res = await app.exportXlsx({
+        url: exportUrl,
+        method: 'GET',
+        fileName: `salary-report-${todayString()}.xlsx`,
+      });
+      wx.showToast({ title: '导出成功', icon: 'success' });
+      if (res?.filePath) {
+        console.log('[export] salary xlsx file =', res.filePath);
+      }
+    } catch (err) {
+      wx.showToast({ title: err.message || '导出失败', icon: 'none' });
+    } finally {
+      wx.hideLoading();
+    }
   },
 
   archiveReport() {
@@ -329,7 +368,12 @@ Page({
     const list = (Array.isArray(history) ? history : []).map((item) => ({
       id: item.id,
       createdAtText: formatTime(item.createdAt),
-      label: `${item.filter?.baseLabel || '全部基地'} · ${item.filter?.dateFrom || '-'} ~ ${item.filter?.dateTo || '-'}`,
+      label: buildFilterSummary(
+        item.filter?.baseLabel || '全部基地',
+        item.filter?.dateFrom || '-',
+        item.filter?.dateTo || '-',
+        item.filter?.keyword || '',
+      ),
       totalWorkers: item.summary?.totalWorkers || 0,
       totalIncome: item.summary?.totalIncome || 0,
     }));
@@ -354,6 +398,15 @@ Page({
       totalWorkers: item.summary?.totalWorkers || 0,
       totalIncome: item.summary?.totalIncome || 0,
       selectedHistoryId: id,
+      hasReport: true,
+      reportExpanded: false,
+      reportFilterText: buildFilterSummary(
+        item.filter?.baseLabel || '全部基地',
+        item.filter?.dateFrom || '-',
+        item.filter?.dateTo || '-',
+        item.filter?.keyword || '',
+      ),
+      reportGeneratedAtText: formatTime(item.createdAt),
     });
   },
 

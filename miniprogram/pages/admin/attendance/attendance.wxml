@@ -1,7 +1,7 @@
-<view class="page-admin">
+﻿<view class="page-admin">
   <view class="hero-card">
     <view class="hero-title">扫码操作（辅助）</view>
-    <view class="hero-sub">{{roleText}} · 全场景扫码签到与实时同步</view>
+    <view class="hero-sub">{{roleText}} 路 全场景扫码签到与实时同步</view>
 
     <view class="form-label">日期</view>
     <picker mode="date" value="{{selectedDate}}" bindchange="onDateChange">
@@ -53,15 +53,40 @@
 
     <view class="list-item" wx:for="{{baseStats}}" wx:key="key">
       <view class="item-title">{{item.baseName}}</view>
-      <view class="item-sub">{{item.present}} / {{item.total}} · 出勤率 {{item.attendanceRate}}%</view>
+      <view class="item-sub">{{item.present}} / {{item.total}} 路 出勤率 {{item.attendanceRate}}%</view>
+    </view>
+
+    <view class="actions-row">
+      <button class="btn-secondary" bindtap="exportBaseStats">导出签到统计</button>
+    </view>
+  </view>
+
+  <view class="section-card" wx:if="{{canManageSalary}}">
+    <view class="section-title">当日工资统计</view>
+    <view class="chip-row">
+      <text class="chip info">工资记录：{{salarySummary.totalRecords}}</text>
+      <text class="chip pending">待确认：{{salarySummary.pendingCount}}</text>
+      <text class="chip info">已确认：{{salarySummary.confirmedCount}}</text>
+      <text class="chip success">已发放：{{salarySummary.paidCount}}</text>
+      <text class="chip success">总金额：{{salarySummary.totalAmount}}</text>
+    </view>
+    <view class="actions-row">
+      <button class="btn-primary" bindtap="generateSalaryDrafts" loading="{{salaryDraftLoading}}" disabled="{{salaryDraftLoading}}">生成当日工资草稿</button>
+      <button class="btn-ghost" bindtap="refreshSalarySummary">刷新工资统计</button>
     </view>
   </view>
 
   <view class="section-card">
-    <view class="section-title">签到记录</view>
-    <view class="empty-text" wx:if="{{!records.length}}">暂无签到记录</view>
+    <view class="section-title">人员信息表（报名/签到）</view>
+    <view class="actions-row">
+      <button class="btn-secondary" bindtap="exportRecords" loading="{{exportLoading}}">导出报名/签到表</button>
+    </view>
+
+    <view class="empty-text" wx:if="{{!records.length}}">暂无报名/签到记录</view>
     <view class="list-item" wx:for="{{records}}" wx:key="id">
       <view class="item-title">{{item.workerName}}（{{item.workerUid}}）</view>
+      <view class="item-sub">手机号：{{item.workerPhone}} ｜ 身份证：{{item.workerIdCard}}</view>
+      <view class="item-sub">基地：{{item.baseName}}</view>
       <view class="item-sub">岗位：{{item.jobTitle}}</view>
       <view class="chip-row">
         <text class="chip info">{{item.statusText}}</text>

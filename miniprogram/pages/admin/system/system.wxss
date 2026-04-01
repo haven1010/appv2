@@ -11,8 +11,44 @@
   margin-top: 0;
 }
 
-.table-wrap {
+.collapse-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16rpx;
+  padding: 8rpx 0 10rpx;
+}
+
+.collapse-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.collapse-tag {
+  flex-shrink: 0;
+  margin-top: 4rpx;
+  padding: 8rpx 16rpx;
+  border-radius: 999rpx;
+  font-size: 22rpx;
+  font-weight: 700;
+  color: #5f7f74;
+  background: linear-gradient(135deg, #dff0e8 0%, #e8f1f9 56%, #fef8dc 100%);
+  border: 1rpx solid rgba(166, 194, 183, 0.44);
+}
+
+.collapse-tip {
+  margin-top: 8rpx;
+  font-size: 22rpx;
+  color: #7f9189;
+}
+
+.table-scroll {
+  width: 100%;
   margin-top: 14rpx;
+}
+
+.table-wrap {
+  min-width: 1150rpx;
   border: 1rpx solid rgba(45, 115, 199, 0.2);
   border-radius: 14rpx;
   overflow: hidden;
@@ -67,7 +103,7 @@
 }
 
 .cell.addr {
-  width: 220rpx;
+  width: 260rpx;
 }
 
 .cell.poor {
@@ -76,12 +112,16 @@
 }
 
 .cell.amount {
-  width: 140rpx;
+  width: 160rpx;
   text-align: right;
 }
 
 .cell.sign {
   flex: 1;
+}
+
+.report-actions {
+  margin-top: 18rpx;
 }
 
 .history-active {

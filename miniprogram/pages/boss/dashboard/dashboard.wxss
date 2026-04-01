@@ -1,0 +1,245 @@
+.page {
+  min-height: 100vh;
+  position: relative;
+  background: #f6efdf;
+}
+
+.paper-bg {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, #fbf4e6 0%, #eef3e4 52%, #f6efdf 100%),
+    radial-gradient(circle at 12% 8%, rgba(102, 138, 79, 0.16) 0%, rgba(102, 138, 79, 0) 32%),
+    radial-gradient(circle at 90% 12%, rgba(202, 164, 90, 0.16) 0%, rgba(202, 164, 90, 0) 30%),
+    repeating-linear-gradient(
+      8deg,
+      rgba(255, 255, 255, 0.2) 0rpx,
+      rgba(255, 255, 255, 0.2) 4rpx,
+      rgba(120, 92, 52, 0.04) 4rpx,
+      rgba(120, 92, 52, 0.04) 10rpx
+    );
+}
+
+.container {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  box-sizing: border-box;
+  padding: 28rpx 26rpx calc(56rpx + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+}
+
+.hero-card,
+.form-card,
+.status-card {
+  background: rgba(255, 248, 235, 0.95);
+  border: 4rpx solid rgba(140, 112, 72, 0.32);
+  border-radius: 32rpx 28rpx 30rpx 24rpx;
+  box-shadow: 0 10rpx 20rpx rgba(98, 76, 46, 0.12);
+}
+
+.hero-card {
+  padding: 24rpx 22rpx;
+}
+
+.hero-title {
+  display: block;
+  color: #473421;
+  font-size: 36rpx;
+  font-weight: 800;
+}
+
+.hero-subtitle {
+  display: block;
+  margin-top: 8rpx;
+  color: #725f49;
+  font-size: 26rpx;
+  line-height: 1.5;
+}
+
+.form-card {
+  padding: 26rpx 22rpx 30rpx;
+}
+
+.section-title {
+  margin-top: 10rpx;
+  margin-bottom: 12rpx;
+  color: #4a3823;
+  font-size: 30rpx;
+  font-weight: 800;
+}
+
+.field + .field {
+  margin-top: 18rpx;
+}
+
+.label {
+  display: block;
+  margin-bottom: 8rpx;
+  color: #4f3c26;
+  font-size: 28rpx;
+  font-weight: 700;
+}
+
+.input,
+.textarea,
+.picker-box {
+  width: 100%;
+  box-sizing: border-box;
+  border-radius: 18rpx;
+  border: 3rpx solid rgba(145, 114, 72, 0.22);
+  background: #f9f2e3;
+  color: #3f3222;
+  font-size: 30rpx;
+  padding: 18rpx;
+}
+
+.textarea {
+  min-height: 132rpx;
+}
+
+.picker-box {
+  min-height: 84rpx;
+  display: flex;
+  align-items: center;
+}
+
+.readonly-box {
+  width: 100%;
+  box-sizing: border-box;
+  border-radius: 18rpx;
+  border: 3rpx solid rgba(145, 114, 72, 0.18);
+  background: #efe8da;
+  color: #6e5e4a;
+  font-size: 30rpx;
+  padding: 18rpx;
+}
+
+.upload-box {
+  height: 210rpx;
+  border-radius: 20rpx;
+  border: 3rpx dashed rgba(138, 106, 64, 0.6);
+  background: #f8efdd;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.upload-preview {
+  width: 100%;
+  height: 100%;
+}
+
+.upload-text {
+  color: #6f5e49;
+  font-size: 28rpx;
+  font-weight: 700;
+}
+
+.env-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+}
+
+.env-item,
+.env-add {
+  width: 150rpx;
+  height: 150rpx;
+  border-radius: 16rpx;
+  position: relative;
+}
+
+.env-item {
+  border: 2rpx solid rgba(123, 95, 58, 0.4);
+  overflow: hidden;
+}
+
+.env-preview {
+  width: 100%;
+  height: 100%;
+}
+
+.remove-env {
+  position: absolute;
+  top: 6rpx;
+  right: 6rpx;
+  width: 34rpx;
+  height: 34rpx;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.45);
+  color: #fff;
+  font-size: 22rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.env-add {
+  border: 2rpx dashed rgba(123, 95, 58, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #5b7f42;
+  background: #e5efd0;
+  font-size: 44rpx;
+  font-weight: 700;
+}
+
+.env-add-disabled {
+  opacity: 0.65;
+}
+
+.error-msg {
+  margin-top: 14rpx;
+  border-radius: 14rpx;
+  border: 2rpx solid rgba(198, 120, 91, 0.42);
+  background: rgba(248, 225, 214, 0.86);
+  color: #915942;
+  padding: 12rpx 14rpx;
+  font-size: 26rpx;
+}
+
+.submit-btn {
+  margin-top: 22rpx;
+  height: 94rpx;
+  line-height: 94rpx;
+  border-radius: 999rpx;
+  border: 3rpx solid rgba(78, 115, 58, 0.35);
+  background: linear-gradient(90deg, #6f9951 0%, #4f9286 100%);
+  color: #fff;
+  font-size: 32rpx;
+  font-weight: 800;
+  box-shadow: 0 8rpx 16rpx rgba(63, 101, 76, 0.24);
+}
+
+.submit-btn::after {
+  border: none;
+}
+
+.submit-btn[disabled] {
+  opacity: 0.7;
+}
+
+.status-card {
+  padding: 20rpx 18rpx;
+  border-style: dashed;
+}
+
+.status-title {
+  display: block;
+  color: #3f6f35;
+  font-size: 30rpx;
+  font-weight: 800;
+}
+
+.status-desc {
+  display: block;
+  margin-top: 8rpx;
+  color: #6f5e49;
+  font-size: 26rpx;
+  line-height: 1.5;
+}

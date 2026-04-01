@@ -15,7 +15,52 @@ function todayString() {
 
 function formatDateTime(value) {
   if (!value) return '-';
-  return String(value).replace('T', ' ').slice(0, 19);
+  const raw = String(value).trim();
+  const date = new Date(raw);
+  if (Number.isNaN(date.getTime())) {
+    return raw.replace('T', ' ').slice(0, 19);
+  }
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  const hh = String(date.getHours()).padStart(2, '0');
+  const mm = String(date.getMinutes()).padStart(2, '0');
+  const ss = String(date.getSeconds()).padStart(2, '0');
+  return `${y}-${m}-${d} ${hh}:${mm}:${ss}`;
+}
+
+function safeNumber(value, fallback = 0) {
+  const num = Number(value);
+  return Number.isFinite(num) ? num : fallback;
+}
+
+function toCsvCell(value) {
+  const text = String(value == null ? '' : value);
+  if (/[",\n]/.test(text)) {
+    return `"${text.replace(/"/g, '""')}"`;
+  }
+  return text;
+}
+
+function parseDurationFromWorkHours(workHours) {
+  const text = String(workHours || '').trim();
+  if (!text) return 8;
+
+  const match = text.match(/(\d{1,2}):(\d{1,2})\s*[-~]\s*(\d{1,2}):(\d{1,2})/);
+  if (!match) return 8;
+
+  const startHour = safeNumber(match[1], 0);
+  const startMinute = safeNumber(match[2], 0);
+  const endHour = safeNumber(match[3], 0);
+  const endMinute = safeNumber(match[4], 0);
+
+  let start = startHour * 60 + startMinute;
+  let end = endHour * 60 + endMinute;
+  if (end < start) end += 24 * 60;
+
+  const duration = (end - start) / 60;
+  if (!Number.isFinite(duration) || duration <= 0) return 8;
+  return Math.max(0.5, Math.round(duration * 10) / 10);
 }
 
 function normalizeArray(res) {
@@ -27,20 +72,23 @@ function normalizeArray(res) {
 }
 
 function statusText(status) {
-  if (status === 1) return '已签到';
-  if (status === 2) return '缺勤';
-  if (status === 3) return '已取消';
-  if (status === 0) return '已报名';
-  return '未签到';
+  if (status === 1) return 'checked_in';
+  if (status === 2) return 'absent';
+  if (status === 3) return 'cancelled';
+  if (status === 0) return 'signed_up';
+  return 'not_checked_in';
 }
 
 Page({
   data: {
     loading: true,
     checkinLoading: false,
+    exportLoading: false,
+    salaryDraftLoading: false,
 
     role: 'worker',
     roleText: '',
+    canManageSalary: false,
     userInfo: null,
     activeNav: 'scan',
 
@@ -55,6 +103,13 @@ Page({
     stats: {},
     records: [],
     baseStats: [],
+    salarySummary: {
+      totalRecords: 0,
+      pendingCount: 0,
+      confirmedCount: 0,
+      paidCount: 0,
+      totalAmount: 0,
+    },
   },
 
   onLoad() {
@@ -83,15 +138,16 @@ Page({
 
     if (!isAdminRole(role)) {
       wx.showModal({
-        title: '无权限',
-        content: '该页面仅管理员可访问。',
+        title: 'No Permission',
+        content: 'This page is for admin roles only.',
         showCancel: false,
         success: () => wx.switchTab({ url: '/pages/index/index' }),
       });
       return false;
     }
 
-    this.setData({ role, roleText: roleLabel(role), userInfo });
+    const canManageSalary = role === 'base_manager' || isSuperAdminRole(role);
+    this.setData({ role, roleText: roleLabel(role), userInfo, canManageSalary });
     return true;
   },
 
@@ -121,20 +177,20 @@ Page({
       if (baseId) {
         const base = await app.request({ url: `/base/${baseId}`, method: 'GET' }).catch(() => null);
         if (base) {
-          bases = [{ id: String(base.id || baseId), baseName: base.baseName || base.name || `基地#${baseId}` }];
+          bases = [{ id: String(base.id || baseId), baseName: base.baseName || base.name || `閸╁搫婀?${baseId}` }];
         }
       }
     } else if (role === 'base_manager') {
       const list = await app.request({ url: `/base?ownerId=${userInfo.id}`, method: 'GET' }).catch(() => []);
       bases = normalizeArray(list).map((item) => ({
         id: String(item.id),
-        baseName: item.baseName || item.name || `基地#${item.id}`,
+        baseName: item.baseName || item.name || `閸╁搫婀?${item.id}`,
       }));
     } else if (isSuperAdminRole(role)) {
       const list = await app.request({ url: '/base?showAll=true', method: 'GET' }).catch(() => []);
       bases = normalizeArray(list).map((item) => ({
         id: String(item.id),
-        baseName: item.baseName || item.name || `基地#${item.id}`,
+        baseName: item.baseName || item.name || `閸╁搫婀?${item.id}`,
       }));
     }
 
@@ -155,7 +211,7 @@ Page({
       await this.loadBaseOptions();
       await this.loadAttendanceData();
     } catch (err) {
-      wx.showToast({ title: err.message || '加载签到数据失败', icon: 'none' });
+      wx.showToast({ title: err.message || '加载失败', icon: 'none' });
     } finally {
       this.setData({ loading: false });
     }
@@ -177,11 +233,19 @@ Page({
 
     const records = normalizeArray(recordsRes).map((item) => ({
       id: item.id,
+      signupId: safeNumber(item.id, 0),
+      baseId: safeNumber(item.baseId || baseId, 0),
+      jobId: safeNumber(item.jobId, 0),
+      status: safeNumber(item.status, -1),
+      workDate: item.workDate || date,
       workerName: item.workerName || item.user?.name || '-',
       workerUid: item.workerUid || item.user?.uid || '-',
+      workerPhone: item.workerPhone || item.user?.phone || '-',
+      workerIdCard: item.workerIdCard || item.user?.idCard || '-',
       statusText: statusText(Number(item.status)),
       checkinTimeText: formatDateTime(item.checkinTime || item.createdAt),
       jobTitle: item.jobTitle || '-',
+      baseName: item.baseName || '-',
     }));
 
     const baseStats = normalizeArray(baseStatsRes).map((item) => ({
@@ -196,6 +260,54 @@ Page({
       stats: statsRes || {},
       records,
       baseStats,
+    });
+
+    await this.loadSalarySummary(date, baseId);
+  },
+
+  async loadSalarySummary(date, baseId) {
+    if (!this.data.canManageSalary || !baseId) {
+      this.setData({
+        salarySummary: {
+          totalRecords: 0,
+          pendingCount: 0,
+          confirmedCount: 0,
+          paidCount: 0,
+          totalAmount: 0,
+        },
+      });
+      return;
+    }
+
+    const listRes = await app.request({
+      url: `/salary/list?baseId=${encodeURIComponent(baseId)}&dateFrom=${encodeURIComponent(date)}&dateTo=${encodeURIComponent(date)}`,
+      method: 'GET',
+    }).catch(() => ({ list: [] }));
+
+    const rows = normalizeArray(listRes);
+    let pendingCount = 0;
+    let confirmedCount = 0;
+    let paidCount = 0;
+    let totalAmount = 0;
+
+    for (let i = 0; i < rows.length; i += 1) {
+      const row = rows[i] || {};
+      const status = safeNumber(row.status, -1);
+      const amount = safeNumber(row.totalAmount, 0);
+      totalAmount += amount;
+      if (status === 0) pendingCount += 1;
+      if (status === 1) confirmedCount += 1;
+      if (status === 2) paidCount += 1;
+    }
+
+    this.setData({
+      salarySummary: {
+        totalRecords: rows.length,
+        pendingCount,
+        confirmedCount,
+        paidCount,
+        totalAmount: Number(totalAmount.toFixed(2)),
+      },
     });
   },
 
@@ -212,6 +324,10 @@ Page({
       selectedBaseId: picked ? picked.id : '',
     });
     this.loadAttendanceData();
+  },
+
+  refreshSalarySummary() {
+    this.loadSalarySummary(this.data.selectedDate, this.data.selectedBaseId);
   },
 
   onCheckinInput(e) {
@@ -232,7 +348,7 @@ Page({
       this.setData({ checkinQrContent: res.result || '' });
       this.submitCheckin();
     } catch (_) {
-      wx.showToast({ title: '扫码已取消', icon: 'none' });
+      wx.showToast({ title: 'Scan cancelled', icon: 'none' });
     }
   },
 
@@ -241,12 +357,11 @@ Page({
     const qrContent = String(this.data.checkinQrContent || '').trim();
 
     if (!baseId) {
-      wx.showToast({ title: '请先选择基地', icon: 'none' });
+      wx.showToast({ title: 'Please select a base first', icon: 'none' });
       return;
     }
     if (!qrContent) {
       wx.showToast({ title: '请输入二维码内容', icon: 'none' });
-      return;
     }
 
     this.setData({ checkinLoading: true });
@@ -260,17 +375,161 @@ Page({
         },
       });
 
-      const name = res?.user?.name || res?.workerName || '人员';
+      const name = res?.user?.name || res?.workerName || 'Worker';
       this.setData({
         checkinQrContent: '',
-        checkinResult: `${name} 签到成功 · ${formatDateTime(res?.checkinTime || new Date().toISOString())}`,
+        checkinResult: `${name} check-in success | ${formatDateTime(res?.checkinTime || new Date().toISOString())}`,
       });
-      wx.showToast({ title: '签到成功', icon: 'success' });
+      wx.showToast({ title: 'Check-in success', icon: 'success' });
       this.loadAttendanceData();
     } catch (err) {
-      wx.showToast({ title: err.message || '签到失败', icon: 'none' });
+      wx.showToast({ title: err.message || 'Check-in failed', icon: 'none' });
     } finally {
       this.setData({ checkinLoading: false });
+    }
+  },
+
+  async exportRecords() {
+    const records = this.data.records || [];
+    if (!records.length) {
+      wx.showToast({ title: '暂无报名/签到记录', icon: 'none' });
+      return;
+    }
+
+    const date = encodeURIComponent(this.data.selectedDate || todayString());
+    const baseId = this.data.selectedBaseId ? `&baseId=${encodeURIComponent(this.data.selectedBaseId)}` : '';
+    const url = `/attendance/export/records?date=${date}${baseId}`;
+
+    this.setData({ exportLoading: true });
+    wx.showLoading({ title: '导出中...', mask: true });
+    try {
+      const res = await app.exportXlsx({
+        url,
+        method: 'GET',
+        fileName: `attendance-records-${this.data.selectedDate || todayString()}.xlsx`,
+      });
+      wx.showToast({ title: '导出成功', icon: 'success' });
+      if (res?.filePath) {
+        console.log('[export] attendance records xlsx file =', res.filePath);
+      }
+    } catch (err) {
+      wx.showToast({ title: err.message || '导出失败', icon: 'none' });
+    } finally {
+      wx.hideLoading();
+      this.setData({ exportLoading: false });
+    }
+  },
+  async exportBaseStats() {
+    const list = this.data.baseStats || [];
+    if (!list.length) {
+      wx.showToast({ title: '暂无签到统计数据', icon: 'none' });
+      return;
+    }
+
+    const date = encodeURIComponent(this.data.selectedDate || todayString());
+    const url = `/attendance/export/base-stats?date=${date}`;
+
+    wx.showLoading({ title: '导出中...', mask: true });
+    try {
+      const res = await app.exportXlsx({
+        url,
+        method: 'GET',
+        fileName: `attendance-base-stats-${this.data.selectedDate || todayString()}.xlsx`,
+      });
+      wx.showToast({ title: '导出成功', icon: 'success' });
+      if (res?.filePath) {
+        console.log('[export] attendance base stats xlsx file =', res.filePath);
+      }
+    } catch (err) {
+      wx.showToast({ title: err.message || '导出失败', icon: 'none' });
+    } finally {
+      wx.hideLoading();
+    }
+  },
+  async generateSalaryDrafts() {
+    if (!this.data.canManageSalary) {
+      wx.showToast({ title: 'Current role cannot calculate salary', icon: 'none' });
+      return;
+    }
+
+    const baseId = this.data.selectedBaseId;
+    if (!baseId) {
+      wx.showToast({ title: 'Please select a base first', icon: 'none' });
+      return;
+    }
+
+    const checkedInRecords = (this.data.records || []).filter((item) => Number(item.status) === 1);
+    if (!checkedInRecords.length) {
+      wx.showToast({ title: 'No checked-in records for selected day', icon: 'none' });
+      return;
+    }
+
+    this.setData({ salaryDraftLoading: true });
+    wx.showLoading({ title: 'Calculating...', mask: true });
+
+    const jobCache = {};
+    let successCount = 0;
+    let skippedCount = 0;
+    let failedCount = 0;
+    const failedNames = [];
+
+    try {
+      for (let i = 0; i < checkedInRecords.length; i += 1) {
+        const record = checkedInRecords[i] || {};
+        const signupId = safeNumber(record.signupId, 0);
+        const jobId = safeNumber(record.jobId, 0);
+        if (!signupId || !jobId) {
+          skippedCount += 1;
+          continue;
+        }
+
+        let job = jobCache[jobId];
+        if (!job) {
+          job = await app.request({
+            url: `/base/jobs/${jobId}`,
+            method: 'GET',
+          }).catch(() => null);
+          jobCache[jobId] = job;
+        }
+
+        const payType = safeNumber(job?.payType, 0);
+        const payload = {};
+        if (payType === 2) {
+          payload.duration = parseDurationFromWorkHours(job?.workHours);
+        } else if (payType === 3) {
+          const targetCount = safeNumber(job?.targetCount, 0);
+          payload.count = targetCount > 0 ? targetCount : 1;
+        }
+
+        try {
+          await app.request({
+            url: `/salary/calculate/${signupId}`,
+            method: 'POST',
+            data: payload,
+          });
+          successCount += 1;
+        } catch (error) {
+          const message = String(error?.message || '');
+          if (/(未签到|not checked in|not_checked_in)/i.test(message)) {
+            skippedCount += 1;
+          } else {
+            failedCount += 1;
+            if (failedNames.length < 5) failedNames.push(record.workerName || `record-${signupId}`);
+          }
+        }
+      }
+
+      await this.loadSalarySummary(this.data.selectedDate, this.data.selectedBaseId);
+
+      const extra = failedNames.length ? `\nFailed samples: ${failedNames.join(', ')}` : '';
+      wx.showModal({
+        title: 'Daily salary draft done',
+        content: `success ${successCount}, skipped ${skippedCount}, failed ${failedCount}.${extra}`,
+        showCancel: false,
+      });
+    } finally {
+      wx.hideLoading();
+      this.setData({ salaryDraftLoading: false });
     }
   },
 
@@ -289,3 +548,4 @@ Page({
     wx.redirectTo({ url });
   },
 });
+

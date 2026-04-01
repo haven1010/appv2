@@ -1,0 +1,108 @@
+﻿<view class="page page-enter">
+  <view class="paper-bg"></view>
+
+  <view class="container">
+    <view class="hero-card">
+      <text class="hero-title">🏢 企业入驻审核</text>
+      <text class="hero-subtitle">老板账号仅可提交企业资料与联系人信息，审核通过后由超级管理员进入后续配置。</text>
+    </view>
+
+    <view class="form-card">
+      <view class="section-title">老板个人信息</view>
+
+      <view class="field">
+        <text class="label">老板姓名</text>
+        <input class="input" placeholder="请输入老板姓名" value="{{ownerName}}" data-field="ownerName" bindinput="onFieldInput" />
+      </view>
+
+      <view class="field">
+        <text class="label">老板手机号</text>
+        <input class="input" type="number" maxlength="11" placeholder="用于身份核验" value="{{ownerPhone}}" data-field="ownerPhone" bindinput="onFieldInput" />
+      </view>
+
+      <view class="field">
+        <text class="label">身份证（脱敏）</text>
+        <view class="readonly-box">{{ownerIdCardMasked || '登录后自动拉取'}}</view>
+      </view>
+
+      <view class="section-title">公司管理员联系方式</view>
+
+      <view class="field">
+        <text class="label">公司管理员姓名</text>
+        <input class="input" placeholder="请填写公司管理员姓名" value="{{companyAdminName}}" data-field="companyAdminName" bindinput="onFieldInput" />
+      </view>
+
+      <view class="field">
+        <text class="label">公司管理员手机号</text>
+        <input class="input" type="number" maxlength="11" placeholder="用于审核沟通" value="{{companyAdminPhone}}" data-field="companyAdminPhone" bindinput="onFieldInput" />
+      </view>
+
+      <view class="section-title">企业信息</view>
+
+      <view class="field">
+        <text class="label">企业名称</text>
+        <input class="input" placeholder="请输入企业名称" value="{{companyName}}" data-field="companyName" bindinput="onFieldInput" />
+      </view>
+
+      <view class="field">
+        <text class="label">企业类别</text>
+        <picker mode="selector" range="{{categoryOptions}}" range-key="label" value="{{categoryIndex}}" bindchange="onCategoryChange">
+          <view class="picker-box">{{categoryOptions[categoryIndex].label}}</view>
+        </picker>
+      </view>
+
+      <view class="field">
+        <text class="label">区域编码</text>
+        <input class="input" type="number" placeholder="如 610100" value="{{regionCode}}" data-field="regionCode" bindinput="onFieldInput" />
+      </view>
+
+      <view class="field">
+        <text class="label">营业执照</text>
+        <view class="upload-box" bindtap="chooseLicenseImage">
+          <text wx:if="{{uploadingLicense}}" class="upload-text">上传中...</text>
+          <image wx:elif="{{licenseImage}}" class="upload-preview" src="{{licenseImage}}" mode="aspectFill" binderror="onLicensePreviewError"></image>
+          <text wx:else class="upload-text">📷 点击上传营业执照</text>
+        </view>
+      </view>
+
+      <view class="field">
+        <text class="label">工作环境图片（最多 3 张）</text>
+        <view class="env-list">
+          <block wx:for="{{envImages}}" wx:key="*this" wx:for-item="img" wx:for-index="idx">
+            <view class="env-item">
+              <image class="env-preview" src="{{img}}" mode="aspectFill" binderror="onEnvPreviewError" data-index="{{idx}}"></image>
+              <text class="remove-env" data-index="{{idx}}" bindtap="removeEnvImage">✕</text>
+            </view>
+          </block>
+          <view wx:if="{{envImages.length < 3}}" class="env-add {{uploadingEnv ? 'env-add-disabled' : ''}}" bindtap="chooseEnvImages">{{uploadingEnv ? '上传中' : '+ 添加'}}</view>
+        </view>
+      </view>
+
+      <view class="field">
+        <text class="label">工作地址</text>
+        <textarea class="textarea" placeholder="请输入详细工作地址" value="{{address}}" data-field="address" bindinput="onFieldInput" maxlength="120"></textarea>
+      </view>
+
+      <view class="field">
+        <text class="label">工资标准</text>
+        <input class="input" placeholder="如：日结 180 元 / 计件 0.8 元/斤" value="{{salary}}" data-field="salary" bindinput="onFieldInput" />
+      </view>
+
+      <view class="field">
+        <text class="label">岗位描述</text>
+        <textarea class="textarea" placeholder="请输入岗位职责、上班时间、食宿情况等" value="{{jobDescription}}" data-field="jobDescription" bindinput="onFieldInput" maxlength="240"></textarea>
+      </view>
+
+      <view wx:if="{{error}}" class="error-msg">{{error}}</view>
+
+      <button class="submit-btn" loading="{{submitting}}" disabled="{{submitting || uploadingLicense || uploadingEnv}}" bindtap="submitForAudit">
+        {{submitting ? '提交中...' : (uploadingLicense || uploadingEnv ? '图片上传中...' : '提交审核')}}
+      </button>
+    </view>
+
+    <view wx:if="{{auditSubmitted}}" class="status-card">
+      <text class="status-title">审核状态：{{auditStatusText}}</text>
+      <text class="status-desc">资料已进入超级管理员审核队列，审核通过后会分配管理角色进入运营流程。</text>
+    </view>
+  </view>
+</view>

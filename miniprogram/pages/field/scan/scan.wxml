@@ -1,22 +1,19 @@
-<!--pages/field/scan/scan.wxml-->
+<!-- pages/field/scan/scan.wxml -->
 <view class="page">
-  <!-- 头部信息 -->
   <view class="scan-header">
     <text class="scan-title">扫码签到</text>
     <text class="scan-base" wx:if="{{baseName}}">当前基地：{{baseName}}</text>
     <text class="scan-base warn" wx:elif="{{!baseId}}">未绑定基地</text>
   </view>
 
-  <!-- 签到结果展示 -->
   <view class="result-card {{scanResult.success ? 'success' : 'fail'}}" wx:if="{{scanResult}}">
-    <view class="result-icon">{{scanResult.success ? '✓' : '✗'}}</view>
+    <view class="result-icon">{{scanResult.success ? '✅' : '❌'}}</view>
     <view class="result-name" wx:if="{{scanResult.name}}">{{scanResult.name}}</view>
     <view class="result-msg">{{scanResult.message}}</view>
     <view class="result-time" wx:if="{{scanResult.time}}">{{scanResult.time}}</view>
     <view class="btn-clear" bindtap="clearResult">确定</view>
   </view>
 
-  <!-- 扫码区域 -->
   <view class="scan-area" wx:if="{{!scanResult}}">
     <view class="scan-visual">
       <view class="scan-frame">
@@ -34,7 +31,6 @@
       <text class="btn-scan-text">{{loading ? '处理中...' : '打开摄像头扫码'}}</text>
     </button>
 
-    <!-- 手动输入区域 -->
     <view class="manual-section">
       <view class="manual-title">或手动输入二维码内容</view>
       <view class="manual-row">
@@ -49,12 +45,11 @@
     </view>
   </view>
 
-  <!-- 本次扫码历史 -->
   <view class="history-section" wx:if="{{history.length > 0}}">
     <view class="section-title">本次扫码记录 ({{history.length}})</view>
     <view class="history-list">
       <view class="history-item {{item.success ? 'success' : 'fail'}}" wx:for="{{history}}" wx:key="index">
-        <view class="history-status">{{item.success ? '✓' : '✗'}}</view>
+        <view class="history-status">{{item.success ? '✅' : '❌'}}</view>
         <view class="history-info">
           <text class="history-name">{{item.name || '未知'}}</text>
           <text class="history-msg">{{item.message}}</text>

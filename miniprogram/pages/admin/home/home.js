@@ -6,10 +6,11 @@ const app = getApp();
 const { resolveRole, isAdminRole, roleLabel } = require('../../../utils/role');
 
 const SUPER_ROLE_OPTIONS = [
-  { label: '全部人员', value: '' },
-  { label: '现场管理员', value: 'field_manager' },
-  { label: '基地管理员', value: 'base_manager' },
-  { label: '采摘工', value: 'worker' },
+  { label: 'All Users', value: '' },
+  { label: 'Boss', value: 'boss' },
+  { label: 'Field Manager', value: 'field_manager' },
+  { label: 'Base Manager', value: 'base_manager' },
+  { label: 'Worker', value: 'worker' },
 ];
 
 function todayString() {
@@ -32,7 +33,18 @@ function nowMinuteString() {
 
 function formatDateTime(value) {
   if (!value) return '-';
-  return String(value).replace('T', ' ').slice(0, 19);
+  const raw = String(value).trim();
+  const date = new Date(raw);
+  if (Number.isNaN(date.getTime())) {
+    return raw.replace('T', ' ').slice(0, 19);
+  }
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  const hh = String(date.getHours()).padStart(2, '0');
+  const mm = String(date.getMinutes()).padStart(2, '0');
+  const ss = String(date.getSeconds()).padStart(2, '0');
+  return `${y}-${m}-${d} ${hh}:${mm}:${ss}`;
 }
 
 function normalizeArray(res) {
@@ -44,11 +56,11 @@ function normalizeArray(res) {
 }
 
 function attendanceText(status) {
-  if (status === 1) return '已签到';
-  if (status === 2) return '缺勤';
-  if (status === 3) return '已取消';
-  if (status === 0) return '已报名';
-  return '未签到';
+  if (status === 1) return 'checked_in';
+  if (status === 2) return 'absent';
+  if (status === 3) return 'cancelled';
+  if (status === 0) return 'signed_up';
+  return 'not_checked_in';
 }
 
 function attendanceChip(status) {
@@ -59,10 +71,10 @@ function attendanceChip(status) {
 }
 
 function salaryText(status) {
-  if (status === 2) return '已发放';
-  if (status === 1) return '已确认';
-  if (status === 0) return '待确认';
-  return '未生成';
+  if (status === 2) return 'paid';
+  if (status === 1) return 'confirmed';
+  if (status === 0) return 'pending';
+  return 'none';
 }
 
 function salaryChip(status) {
@@ -73,9 +85,9 @@ function salaryChip(status) {
 }
 
 function auditText(status) {
-  if (status === 1) return '已通过';
-  if (status === 2) return '已拒绝';
-  return '待审核';
+  if (status === 1) return 'approved';
+  if (status === 2) return 'rejected';
+  return 'pending';
 }
 
 Page({
@@ -142,8 +154,8 @@ Page({
 
     if (!isAdminRole(role)) {
       wx.showModal({
-        title: '无权限',
-        content: '当前账号不是管理员角色。',
+        title: 'No Permission',
+        content: 'Current account is not an admin role.',
         showCancel: false,
         success: () => wx.switchTab({ url: '/pages/index/index' }),
       });
@@ -196,7 +208,7 @@ Page({
     const baseId = await this.resolveAssignedBaseId();
     if (!baseId) {
       this.setData({
-        fieldError: '当前账号未绑定基地，无法执行签到。',
+        fieldError: 'Current account is not bound to a base.',
         fieldBaseId: '',
         fieldBaseName: '',
         fieldCheckedRows: [],
@@ -234,8 +246,8 @@ Page({
       const user = row.user || {};
       const userId = String(row.userId || user.id || '');
       const uid = user.uid || row.workerUid || '';
-      const name = user.name || row.workerName || '未知人员';
-      const trace = `UID: ${uid || '-'} · 记录ID: ${row.id || '-'} · 状态: ${attendanceText(status)}`;
+      const name = user.name || row.workerName || 'Unknown Worker';
+      const trace = `UID: ${uid || '-'} | 报名记录: ${row.id || '-'} | 状态: ${attendanceText(status)}`;
       const packed = {
         key: `record-${row.id || i}`,
         userId,
@@ -252,7 +264,7 @@ Page({
 
       if (status !== 1 || (userId && !approvedByUser[userId])) {
         firstVisitRows.push(Object.assign({}, packed, {
-          trace: `${trace} · 归类: 首次到访/补签到`,
+          trace: `${trace} | Type: first_visit_or_offline_checkin`,
         }));
       }
     }
@@ -265,12 +277,12 @@ Page({
       .map((item, index) => {
         const user = item.user || {};
         const uid = user.uid || '';
-        const name = user.name || item.workerName || '待签到人员';
+        const name = user.name || item.workerName || 'Pending Worker';
         return {
           key: `pending-${item.id || index}`,
           uid,
           name,
-          trace: `UID: ${uid || '-'} · 申请ID: ${item.id || '-'} · 审核通过待签到`,
+          trace: `UID: ${uid || '-'} | ApplyID: ${item.id || '-'} | approved_waiting_checkin`,
           checkinTime: '-',
         };
       });
@@ -278,7 +290,7 @@ Page({
     this.setData({
       fieldError: '',
       fieldBaseId: String(baseId),
-      fieldBaseName: baseRes?.baseName || baseRes?.name || `基地#${baseId}`,
+      fieldBaseName: baseRes?.baseName || baseRes?.name || `基地 #${baseId}`,
       fieldCheckedRows: checkedRows,
       fieldPendingRows: pendingRows,
       fieldFirstVisitRows: firstVisitRows,
@@ -309,7 +321,7 @@ Page({
       this.setData({ fieldScanText: scanRes.result || '' });
       this.submitFieldCheckin();
     } catch (_) {
-      wx.showToast({ title: '扫码已取消', icon: 'none' });
+      wx.showToast({ title: 'Scan cancelled', icon: 'none' });
     }
   },
 
@@ -318,11 +330,11 @@ Page({
     const qrContent = String(this.data.fieldScanText || '').trim();
 
     if (!baseId) {
-      wx.showToast({ title: '未绑定基地', icon: 'none' });
+      wx.showToast({ title: 'Base not bound', icon: 'none' });
       return;
     }
     if (!qrContent) {
-      wx.showToast({ title: '请先输入或扫码', icon: 'none' });
+      wx.showToast({ title: 'Scan code or input first', icon: 'none' });
       return;
     }
 
@@ -336,79 +348,45 @@ Page({
         },
       });
 
-      const displayName = res?.user?.name || res?.workerName || '人员';
+      const displayName = res?.user?.name || res?.workerName || 'Worker';
       this.setData({
         fieldScanText: '',
-        fieldCheckinResult: `${displayName} 签到成功 · ${formatDateTime(res?.checkinTime || new Date().toISOString())}`,
+        fieldCheckinResult: `${displayName} check-in success | ${formatDateTime(res?.checkinTime || new Date().toISOString())}`,
       });
-      wx.showToast({ title: '签到成功', icon: 'success' });
+      wx.showToast({ title: 'Check-in success', icon: 'success' });
       this.loadFieldHome();
     } catch (err) {
-      wx.showToast({ title: err.message || '签到失败', icon: 'none' });
+      wx.showToast({ title: err.message || 'Check-in failed', icon: 'none' });
     }
   },
 
-  exportFieldSheet() {
-    const rows = [];
-    const checked = this.data.fieldCheckedRows || [];
-    const pending = this.data.fieldPendingRows || [];
-    const firstVisit = this.data.fieldFirstVisitRows || [];
+  async exportFieldSheet() {
+    const baseId = String(this.data.fieldBaseId || '').trim();
+    const workDate = this.data.fieldDate || todayString();
 
-    for (let i = 0; i < checked.length; i += 1) {
-      rows.push({
-        uid: checked[i].uid || '',
-        name: checked[i].name || '',
-        status: '已签到',
-        checkinTime: checked[i].checkinTime || '-',
-        trace: checked[i].trace || '',
-      });
-    }
-    for (let i = 0; i < pending.length; i += 1) {
-      rows.push({
-        uid: pending[i].uid || '',
-        name: pending[i].name || '',
-        status: '未签到',
-        checkinTime: '-',
-        trace: pending[i].trace || '',
-      });
-    }
-    for (let i = 0; i < firstVisit.length; i += 1) {
-      rows.push({
-        uid: firstVisit[i].uid || '',
-        name: firstVisit[i].name || '',
-        status: '首次到访/补签到',
-        checkinTime: firstVisit[i].checkinTime || '-',
-        trace: firstVisit[i].trace || '',
-      });
-    }
-
-    if (!rows.length) {
-      wx.showToast({ title: '暂无签到数据', icon: 'none' });
+    if (!baseId) {
+      wx.showToast({ title: 'Current base is not bound', icon: 'none' });
       return;
     }
 
-    const header = 'UID,姓名,状态,签到时间,信息追溯';
-    const body = rows.map((item) => [item.uid, item.name, item.status, item.checkinTime, item.trace]
-      .map((cell) => {
-        const text = String(cell || '');
-        return /[",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
-      })
-      .join(','));
-    const csv = [header].concat(body).join('\n');
-
-    wx.setClipboardData({
-      data: csv,
-      success: () => {
-        wx.showModal({
-          title: '签到表已生成',
-          content: `已复制 ${rows.length} 条签到记录，可直接粘贴到 Excel。`,
-          showCancel: false,
-        });
-      },
-      fail: () => wx.showToast({ title: '生成失败', icon: 'none' }),
-    });
+    const url = `/attendance/export/records?date=${encodeURIComponent(workDate)}&baseId=${encodeURIComponent(baseId)}`;
+    wx.showLoading({ title: '导出中...', mask: true });
+    try {
+      const res = await app.exportXlsx({
+        url,
+        method: 'GET',
+        fileName: `field-attendance-${workDate}.xlsx`,
+      });
+      wx.showToast({ title: 'Export success', icon: 'success' });
+      if (res?.filePath) {
+        console.log('[export] field attendance xlsx file =', res.filePath);
+      }
+    } catch (err) {
+      wx.showToast({ title: err.message || '导出失败', icon: 'none' });
+    } finally {
+      wx.hideLoading();
+    }
   },
-
   async loadBaseManagerHome() {
     const userInfo = this.data.userInfo || {};
     const list = await app.request({
@@ -418,7 +396,7 @@ Page({
 
     const bases = normalizeArray(list).map((item) => ({
       id: String(item.id),
-      baseName: item.baseName || item.name || `基地#${item.id}`,
+      baseName: item.baseName || item.name || `基地 #${item.id}`,
     }));
 
     if (!bases.length) {
@@ -491,9 +469,9 @@ Page({
       return {
         key: `worker-${item.id || idx}`,
         expanded: false,
-        name: user.name || item.workerName || '未知人员',
+        name: user.name || item.workerName || 'Unknown Worker',
         uid,
-        trace: `申请ID: ${item.id || '-'} · 手机: ${user.phone || '-'} · 身份证: ${user.idCard || '-'}`,
+        trace: `报名ID: ${item.id || '-'} | 手机: ${user.phone || '-'} | 身份证: ${user.idCard || '-'}`,
         attendanceStatusText: attendanceText(attendanceStatus),
         attendanceChipType: attendanceChip(attendanceStatus),
         checkinTime: formatDateTime(attendance?.checkinTime || attendance?.createdAt),
@@ -509,8 +487,8 @@ Page({
       managedBaseRows: cards,
       managedSummary: {
         totalWorkers: cards.length,
-        checkedIn: cards.filter((item) => item.attendanceStatusText === '已签到').length,
-        withSalary: cards.filter((item) => item.salaryStatusText !== '未生成').length,
+        checkedIn: cards.filter((item) => item.attendanceStatusText === 'checked_in').length,
+        withSalary: cards.filter((item) => item.salaryStatusText !== 'none').length,
       },
       managedSyncedAt: nowMinuteString(),
     });
@@ -582,7 +560,7 @@ Page({
       uid: item.uid || '-',
       roleText: roleLabel(item.roleKey || item.role || 'worker'),
       auditText: auditText(Number(item.infoAuditStatus)),
-      trace: `手机: ${item.phone || '-'} · 基地: ${item.assignedBaseId || '-'} · 更新时间: ${formatDateTime(item.updatedAt)}`,
+      trace: `手机号: ${item.phone || '-'} | 指派基地: ${item.assignedBaseId || '-'} | 更新时间: ${formatDateTime(item.updatedAt)}`,
     }));
 
     this.setData({
