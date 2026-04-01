@@ -9,6 +9,10 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { SalaryService } from './salary.service';
 import { SalaryPaymentService } from './services/salary-payment.service';
 import { PaymentMethod } from './entities/salary-payment.entity';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { UserRole } from '../user/entities/sys-user.entity';
+import { buildXlsxBase64 } from '../common/utils/xlsx-export.util';
 
 @ApiTags('薪资结算')
 @Controller('salary')
@@ -20,12 +24,22 @@ export class SalaryController {
     private paymentService: SalaryPaymentService,
   ) {}
 
+  private inferGender(idCard: string): string {
+    const id = String(idCard || '').trim();
+    if (id.length !== 18) return 'unknown';
+    const marker = Number(id.charAt(16));
+    if (!Number.isFinite(marker)) return 'unknown';
+    return marker % 2 === 0 ? 'female' : 'male';
+  }
+
   @Get('list')
   @ApiOperation({ summary: '获取工资记录列表' })
   @ApiQuery({ name: 'baseId', required: false, description: '基地ID' })
   @ApiQuery({ name: 'dateFrom', required: false, description: '开始日期 YYYY-MM-DD' })
   @ApiQuery({ name: 'dateTo', required: false, description: '结束日期 YYYY-MM-DD' })
   @ApiQuery({ name: 'status', required: false, description: '状态 0:待审核 1:已确认 2:已发放' })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.REGION_ADMIN, UserRole.BASE_MANAGER, UserRole.FIELD_MANAGER)
   async getList(@Query() query: any, @Req() req: any) {
     return this.salaryService.getList(query, req.user);
   }
@@ -35,24 +49,41 @@ export class SalaryController {
   @ApiQuery({ name: 'baseId', required: false, description: '基地ID' })
   @ApiQuery({ name: 'dateFrom', required: false, description: '开始日期' })
   @ApiQuery({ name: 'dateTo', required: false, description: '结束日期' })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.REGION_ADMIN, UserRole.BASE_MANAGER, UserRole.FIELD_MANAGER)
   async getStats(@Query() query: any, @Req() req: any) {
     return this.salaryService.getStats(query, req.user);
   }
 
   @Get('worker/stats')
   @ApiOperation({ summary: '采摘工端：获取个人统计（已做天数、待收工资）' })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.WORKER)
   async getWorkerStats(@Req() req: any) {
     return this.salaryService.getWorkerStats(req.user.id);
   }
 
   @Get('worker/pending')
   @ApiOperation({ summary: '采摘工端：获取待确认工资列表' })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.WORKER)
   async getWorkerPending(@Req() req: any) {
     return this.salaryService.getWorkerPendingList(req.user.id);
   }
 
+  @Get('worker/paid')
+  @ApiOperation({ summary: '工人端：获取已到账工资列表' })
+  @ApiQuery({ name: 'limit', required: false, description: '返回条数，默认20' })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.WORKER)
+  async getWorkerPaid(@Req() req: any, @Query('limit') limit?: string) {
+    return this.salaryService.getWorkerPaidList(req.user.id, limit ? Number(limit) : 20);
+  }
+
   @Post('worker/:salaryId/confirm')
   @ApiOperation({ summary: '采摘工端：确认工资无误' })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.WORKER)
   async workerConfirmSalary(
     @Param('salaryId', ParseIntPipe) salaryId: number,
     @Req() req: any,
@@ -62,6 +93,8 @@ export class SalaryController {
 
   @Post('calculate/:signupId')
   @ApiOperation({ summary: '根据签到记录生成/更新工资草稿' })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.REGION_ADMIN, UserRole.BASE_MANAGER, UserRole.FIELD_MANAGER)
   async calculateAndDraft(
     @Param('signupId', ParseIntPipe) signupId: number,
     @Body() body: { duration?: number; count?: number },
@@ -72,6 +105,8 @@ export class SalaryController {
 
   @Post(':salaryId/payment')
   @ApiOperation({ summary: '创建支付记录（发起发放）' })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.REGION_ADMIN, UserRole.BASE_MANAGER)
   async createPayment(
     @Param('salaryId', ParseIntPipe) salaryId: number,
     @Body() body: { paymentMethod: PaymentMethod },
@@ -87,6 +122,8 @@ export class SalaryController {
 
   @Patch('payment/:id/confirm')
   @ApiOperation({ summary: '确认支付（签字）' })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.REGION_ADMIN, UserRole.BASE_MANAGER, UserRole.WORKER)
   async confirmPayment(
     @Param('id', ParseIntPipe) id: number,
     @Body() body: { confirmSignatureUrl: string },
@@ -97,6 +134,8 @@ export class SalaryController {
 
   @Patch('payment/:id/complete')
   @ApiOperation({ summary: '完成支付（上传凭证）' })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.REGION_ADMIN, UserRole.BASE_MANAGER)
   async completePayment(
     @Param('id', ParseIntPipe) id: number,
     @Body() body: { paymentVoucherUrl: string },
@@ -110,8 +149,89 @@ export class SalaryController {
     );
   }
 
+  @Get('export/report')
+  @ApiOperation({ summary: 'Export salary report as XLSX' })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.REGION_ADMIN, UserRole.BASE_MANAGER, UserRole.FIELD_MANAGER)
+  async exportReport(@Query() query: any, @Req() req: any) {
+    const listRes = await this.salaryService.getList(query, req.user);
+    const list: any[] = Array.isArray(listRes?.list) ? listRes.list : [];
+
+    const grouped: Record<string, any> = {};
+    for (let i = 0; i < list.length; i += 1) {
+      const row: any = list[i] || {};
+      const name = row.workerName || '-';
+      const uid = row.workerUid || `unknown-${i}`;
+      const idCard = row.workerIdCard || '';
+      const groupKey = `${uid}__${idCard || name}`;
+
+      if (!grouped[groupKey]) {
+        grouped[groupKey] = {
+          name,
+          gender: this.inferGender(idCard),
+          idCard: idCard || '-',
+          address: row.workerAddress || row.address || '-',
+          poorHousehold:
+            row.isPoorHousehold === true || row.isPoor === true
+              ? 'yes'
+              : row.isPoorHousehold === false || row.isPoor === false
+                ? 'no'
+                : 'unknown',
+          totalIncome: 0,
+        };
+      }
+
+      grouped[groupKey].totalIncome += Number(row.totalAmount || row.amount || 0);
+    }
+
+    const rows = Object.keys(grouped)
+      .map((key, index) => {
+        const item = grouped[key];
+        return {
+          serial: index + 1,
+          name: item.name,
+          gender: item.gender,
+          idCard: item.idCard,
+          address: item.address,
+          poorHousehold: item.poorHousehold,
+          totalIncome: Number(item.totalIncome.toFixed(2)),
+        };
+      })
+      .sort((a, b) => b.totalIncome - a.totalIncome)
+      .map((item, index) => Object.assign({}, item, { serial: index + 1 }));
+
+    const excelRows = rows.map((item) => ([
+      item.serial,
+      item.name,
+      item.gender,
+      item.idCard,
+      item.address,
+      item.poorHousehold,
+      item.totalIncome,
+      '',
+    ]));
+
+    const dateFrom = String(query?.dateFrom || '').trim();
+    const dateTo = String(query?.dateTo || '').trim();
+    const range = dateFrom && dateTo ? `${dateFrom}_${dateTo}` : new Date().toISOString().slice(0, 10);
+
+    return {
+      fileName: `salary-report-${range}.xlsx`,
+      rowCount: excelRows.length,
+      fileBase64: buildXlsxBase64([
+        {
+          name: 'salary_report',
+          columns: ['Serial', 'Name', 'Gender', 'IDCard', 'Address', 'PoorHousehold', 'TotalIncome', 'Signature'],
+          rows: excelRows,
+        },
+      ]),
+    };
+  }
+
   @Get(':salaryId/payments')
   @ApiOperation({ summary: '查询工资单关联的支付记录' })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.REGION_ADMIN, UserRole.BASE_MANAGER, UserRole.FIELD_MANAGER, UserRole.WORKER)
   async getPaymentsBySalary(
     @Param('salaryId', ParseIntPipe) salaryId: number,
   ) {

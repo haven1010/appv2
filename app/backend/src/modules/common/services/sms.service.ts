@@ -65,4 +65,35 @@ export class SmsService {
       return false;
     }
   }
+
+  /**
+   * 发送工资到账提醒（银行卡转账场景）。
+   */
+  async sendSalaryPaidNotification(
+    phone: string,
+    payload: {
+      amount: number;
+      bankName?: string;
+      bankCardLast4?: string;
+      paidAt?: string;
+      baseName?: string;
+      jobTitle?: string;
+    },
+  ): Promise<boolean> {
+    try {
+      const amountText = Number(payload?.amount || 0).toFixed(2);
+      const bankName = payload?.bankName || '银行卡';
+      const bankCardLast4 = payload?.bankCardLast4 ? `尾号${payload.bankCardLast4}` : '';
+      const paidAt = payload?.paidAt || '';
+      const baseName = payload?.baseName || '基地';
+      const jobTitle = payload?.jobTitle || '岗位';
+
+      this.logger.log(`[短信] 发送工资到账提醒到 ${phone}`);
+      this.logger.log(`内容: 您在${baseName}-${jobTitle}的工资 ¥${amountText} 已到账（${bankName}${bankCardLast4}），时间：${paidAt}`);
+      return true;
+    } catch (error) {
+      this.logger.error(`[短信] 工资到账提醒发送失败: ${error.message}`);
+      return false;
+    }
+  }
 }

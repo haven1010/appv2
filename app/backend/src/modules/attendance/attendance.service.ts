@@ -376,7 +376,7 @@ export class AttendanceService {
    * 生成用户签到二维码载荷。
    * 编码格式为 `Encrypted(UID|Timestamp)`，用于现场扫码时的身份确认和时效校验。
    */
-  async generateUserQrCode(userId: number): Promise<{ content: string, validDuration: string }> {
+  async generateUserQrCode(userId: number): Promise<{ content: string, validDuration: string, qrImageBase64: string }> {
     const user = await this.userRepo.findOne({ where: { id: userId } });
     if (!user) throw new NotFoundException('用户不存在');
 
@@ -387,9 +387,17 @@ export class AttendanceService {
     const payload = `${identifier}|${Date.now()}`;
     const content = this.securityService.encrypt(payload);
 
+    let qrImageBase64 = '';
+    try {
+      qrImageBase64 = await this.qrcodeService.generateDataUrl(content);
+    } catch (error) {
+      this.logger.warn(`二维码图片生成失败: user=${user.uid}, error=${error?.message || error}`);
+    }
+
     return {
       content,
-      validDuration: '24h' // 前端展示用
+      validDuration: '24h', // 前端展示用
+      qrImageBase64,
     };
   }
 
@@ -1029,6 +1037,80 @@ export class AttendanceService {
   }
 
   /**
+   * 工人端取消报名：删除报名表中的记录。
+   * 仅允许删除“已报名/已取消”状态，已签到或缺勤记录不允许删除。
+   */
+  async cancelSignup(
+    userId: number,
+    dto: { signupId?: number; baseId?: number; workDate?: string },
+    context?: OperationLogContext,
+  ) {
+    const signupId = Number(dto?.signupId || 0);
+    const baseId = Number(dto?.baseId || 0);
+    const workDate = dto?.workDate || this.getTodayDateString();
+
+    if (!signupId && !baseId) {
+      throw new BadRequestException('缺少报名定位参数');
+    }
+
+    const deletedSignup = await this.dataSource.transaction(async (manager) => {
+      const signupRepo = manager.getRepository(DailySignup);
+      const where: any = signupId
+        ? { id: signupId, userId }
+        : { userId, baseId, workDate };
+
+      const signup = await signupRepo.findOne({
+        where,
+        lock: { mode: 'pessimistic_write' },
+      });
+
+      if (!signup) {
+        throw new NotFoundException('未找到可取消的报名记录');
+      }
+
+      if (signup.status === SignupStatus.CHECKED_IN) {
+        throw new BadRequestException('已签到记录不可取消');
+      }
+      if (signup.status === SignupStatus.ABSENT) {
+        throw new BadRequestException('缺勤记录不可取消');
+      }
+
+      await signupRepo.delete({ id: signup.id });
+      return signup;
+    });
+
+    await this.operationLogService.logWithContext({
+      operationType: OperationType.DELETE,
+      resourceType: ResourceType.SIGNUP,
+      resourceId: deletedSignup.id,
+      userId,
+      request: context?.request,
+      description: `取消报名并删除记录: signupId=${deletedSignup.id}, baseId=${deletedSignup.baseId}, jobId=${deletedSignup.jobId}`,
+      beforeData: {
+        id: deletedSignup.id,
+        userId: deletedSignup.userId,
+        baseId: deletedSignup.baseId,
+        jobId: deletedSignup.jobId,
+        workDate: deletedSignup.workDate,
+        status: deletedSignup.status,
+        isProxy: deletedSignup.isProxy,
+      },
+      afterData: {
+        deleted: true,
+      },
+    });
+
+    return {
+      success: true,
+      deleted: true,
+      signupId: deletedSignup.id,
+      baseId: deletedSignup.baseId,
+      jobId: deletedSignup.jobId,
+      workDate: deletedSignup.workDate,
+    };
+  }
+
+  /**
    * 采摘工端：获取个人签到/工作历程
    */
   /**
@@ -1043,7 +1125,9 @@ export class AttendanceService {
     });
     return list.map((r) => ({
       id: r.id,
+      baseId: r.baseId,
       baseName: r.base?.baseName ?? '-',
+      jobId: r.jobId,
       jobTitle: r.job?.jobTitle ?? '-',
       workDate: r.workDate,
       status: r.status,
@@ -1112,6 +1196,8 @@ export class AttendanceService {
         userId: r.userId,
         workerName: r.user?.name || '-',
         workerUid: r.user?.uid || '-',
+        workerPhone: r.user?.phone || '-',
+        workerIdCard: r.user?.idCard || '-',
         baseId: r.baseId,
         baseName: r.base?.baseName || '-',
         jobId: r.jobId,

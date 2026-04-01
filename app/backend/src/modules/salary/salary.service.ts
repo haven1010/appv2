@@ -7,6 +7,7 @@ import { Injectable, BadRequestException, ForbiddenException, NotFoundException 
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { LaborSalary, SalaryStatus } from './entities/labor-salary.entity';
+import { SalaryPayment, PaymentStatus } from './entities/salary-payment.entity';
 import { DailySignup, SignupStatus } from '../attendance/entities/daily-signup.entity';
 import { BaseInfo } from '../base/entities/base-info.entity';
 import { SalaryCalculatorFactory } from './services/salary-calculator.strategy';
@@ -25,6 +26,8 @@ export class SalaryService {
   constructor(
     @InjectRepository(LaborSalary)
     private salaryRepo: Repository<LaborSalary>,
+    @InjectRepository(SalaryPayment)
+    private paymentRepo: Repository<SalaryPayment>,
     @InjectRepository(DailySignup)
     private signupRepo: Repository<DailySignup>,
     @InjectRepository(BaseInfo)
@@ -192,6 +195,8 @@ export class SalaryService {
         workerUid: signup?.user?.uid ?? '-',
         workerPhone: signup?.user?.phone ?? '',
         workerIdCard: signup?.user?.idCard ?? '',
+        workerAddress: signup?.user?.homeAddress ?? '',
+        address: signup?.user?.homeAddress ?? '',
         workerEmergencyContact: signup?.user?.emergencyContact ?? '',
         workerEmergencyPhone: signup?.user?.emergencyPhone ?? '',
         baseId: signup?.baseId,
@@ -285,8 +290,20 @@ export class SalaryService {
 
     const pendingAmount = pendingSalaries.reduce((sum, s) => sum + Number(s.totalAmount), 0);
 
+    const paidSalaries = await this.salaryRepo
+      .createQueryBuilder('salary')
+      .leftJoin('salary.signup', 'signup')
+      .where('signup.userId = :userId', { userId })
+      .andWhere('salary.status = :paidStatus', { paidStatus: SalaryStatus.PAID })
+      .getMany();
+
+    const totalEarned = paidSalaries.reduce((sum, s) => sum + Number(s.totalAmount), 0);
+
     return {
       workDays,
+      totalDays: workDays,
+      totalEarned: Math.round(totalEarned * 100) / 100,
+      totalPaid: Math.round(totalEarned * 100) / 100,
       pendingAmount: Math.round(pendingAmount * 100) / 100,
     };
   }
@@ -320,6 +337,40 @@ export class SalaryService {
         totalAmount: Number(s.totalAmount),
         status: s.status,
         createdAt: s.createdAt,
+      };
+    });
+  }
+
+  async getWorkerPaidList(userId: number, limit = 20) {
+    const safeLimit = Math.min(Math.max(Number(limit) || 20, 1), 100);
+    const list = await this.paymentRepo
+      .createQueryBuilder('payment')
+      .leftJoinAndSelect('payment.salary', 'salary')
+      .leftJoinAndSelect('salary.signup', 'signup')
+      .leftJoinAndSelect('signup.base', 'base')
+      .leftJoinAndSelect('signup.job', 'job')
+      .where('signup.userId = :userId', { userId })
+      .andWhere('payment.status = :paymentStatus', { paymentStatus: PaymentStatus.PAID })
+      .orderBy('payment.paidAt', 'DESC')
+      .addOrderBy('payment.updatedAt', 'DESC')
+      .take(safeLimit)
+      .getMany();
+
+    return list.map((payment) => {
+      const salary = payment.salary as any;
+      const signup = salary?.signup as any;
+      return {
+        paymentId: payment.id,
+        salaryId: salary?.id,
+        signupId: salary?.signupId,
+        workDate: signup?.workDate || '',
+        baseName: signup?.base?.baseName || '-',
+        jobTitle: signup?.job?.jobTitle || '-',
+        totalAmount: Number(salary?.totalAmount || 0),
+        paymentMethod: payment.paymentMethod,
+        paidAt: payment.paidAt,
+        paymentVoucherUrl: payment.paymentVoucherUrl || '',
+        status: payment.status,
       };
     });
   }

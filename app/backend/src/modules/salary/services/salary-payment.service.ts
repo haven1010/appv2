@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Layer: Backend Service
  * Responsibility: Implements the Salary Payment application service for the Salary module, including business rules, side effects, and persistence coordination.
  * Notes: Keep comments focused on intent, invariants, side effects, and cross-module contracts.
@@ -10,12 +10,9 @@ import { SalaryPayment, PaymentMethod, PaymentStatus } from '../entities/salary-
 import { LaborSalary, SalaryStatus } from '../entities/labor-salary.entity';
 import { OperationLogService, OperationLogContext } from '../../common/services/operation-log.service';
 import { OperationType, ResourceType } from '../../common/entities/operation-log.entity';
+import { SmsService } from '../../common/services/sms.service';
 
 @Injectable()
-/**
- * 支付单服务负责工资支付记录创建、签收确认和最终打款完成流转。
- * 它保证支付单与工资单状态保持一致，并补齐支付操作日志。
- */
 export class SalaryPaymentService {
   private readonly logger = new Logger(SalaryPaymentService.name);
 
@@ -26,12 +23,9 @@ export class SalaryPaymentService {
     private salaryRepo: Repository<LaborSalary>,
     private dataSource: DataSource,
     private operationLogService: OperationLogService,
+    private smsService: SmsService,
   ) {}
 
-  /**
-   * 为已确认的工资单创建唯一支付单。
-   * 前置条件: 工资状态必须已经由工人确认，且当前工资单尚未存在支付单。
-   */
   async createPayment(
     salaryId: number,
     paymentMethod: PaymentMethod,
@@ -93,9 +87,6 @@ export class SalaryPaymentService {
     return saved;
   }
 
-  /**
-   * 记录支付确认签字图，通常用于纸面或电子签收回执回填。
-   */
   async confirmPayment(
     paymentId: number,
     signatureUrl: string,
@@ -121,6 +112,7 @@ export class SalaryPaymentService {
       const next = await manager.save(SalaryPayment, payment);
       return { saved: next, beforeStatus: previousStatus };
     });
+
     await this.operationLogService.logWithContext({
       operationType: OperationType.UPDATE,
       resourceType: ResourceType.SALARY,
@@ -138,23 +130,17 @@ export class SalaryPaymentService {
         confirmSignatureUrl: saved.confirmSignatureUrl,
       },
     });
+
     return saved;
   }
 
-  /**
-   * 完成支付并同步工资状态到 `PAID`。
-   * 副作用:
-   * 1. 写入支付凭证、支付人和支付时间。
-   * 2. 联动更新对应工资记录状态。
-   * 3. 写入支付操作日志。
-   */
   async completePayment(
     paymentId: number,
     voucherUrl: string,
     paidBy: number,
     context?: OperationLogContext,
   ): Promise<SalaryPayment> {
-    const { saved, beforeStatus } = await this.dataSource.transaction(async (manager) => {
+    const { saved, beforeStatus, notifyContext } = await this.dataSource.transaction(async (manager) => {
       const paymentRepo = manager.getRepository(SalaryPayment);
       const salaryRepo = manager.getRepository(LaborSalary);
 
@@ -177,6 +163,7 @@ export class SalaryPaymentService {
 
       const salary = await salaryRepo.findOne({
         where: { id: payment.salaryId },
+        relations: ['signup', 'signup.user', 'signup.base', 'signup.job'],
         lock: { mode: 'pessimistic_write' },
       });
       if (!salary) {
@@ -189,8 +176,22 @@ export class SalaryPaymentService {
       salary.status = SalaryStatus.PAID;
       await salaryRepo.save(salary);
 
+      const signup = salary.signup as any;
+      const worker = signup?.user || null;
+      const notify = worker
+        ? {
+            phone: worker.phone,
+            amount: Number(salary.totalAmount || 0),
+            bankName: worker.bankName || '',
+            bankCardNo: worker.bankCardNo || '',
+            paidAt: payment.paidAt ? payment.paidAt.toISOString() : '',
+            baseName: signup?.base?.baseName || '',
+            jobTitle: signup?.job?.jobTitle || '',
+          }
+        : null;
+
       const next = await paymentRepo.save(payment);
-      return { saved: next, beforeStatus: previousStatus };
+      return { saved: next, beforeStatus: previousStatus, notifyContext: notify };
     });
 
     await this.operationLogService.logWithContext({
@@ -212,12 +213,23 @@ export class SalaryPaymentService {
       },
     });
 
+    if (notifyContext?.phone) {
+      const bankCardLast4 = String(notifyContext.bankCardNo || '').replace(/\D/g, '').slice(-4);
+      await this.smsService.sendSalaryPaidNotification(notifyContext.phone, {
+        amount: Number(notifyContext.amount || 0),
+        bankName: notifyContext.bankName || '银行卡',
+        bankCardLast4,
+        paidAt: notifyContext.paidAt,
+        baseName: notifyContext.baseName,
+        jobTitle: notifyContext.jobTitle,
+      }).catch((error) => {
+        this.logger.warn(`工资到账提醒发送失败: paymentId=${paymentId}, error=${error?.message || error}`);
+      });
+    }
+
     return saved;
   }
 
-  /**
-   * 查询某张工资单关联的支付记录，按时间倒序返回。
-   */
   async getPaymentsBySalary(salaryId: number): Promise<SalaryPayment[]> {
     return this.paymentRepo.find({
       where: { salaryId },
