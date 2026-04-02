@@ -26,6 +26,8 @@ import * as crypto from 'crypto';
  * 该服务同时承担数据库唯一键异常到业务错误的翻译职责。
  */
 export class UserService {
+  private readonly bankCardChallengeTtlMs = 10 * 60 * 1000;
+
   constructor(
     @InjectRepository(SysUser)
     private userRepository: Repository<SysUser>,
@@ -83,6 +85,99 @@ export class UserService {
     }
   }
 
+  private normalizeBankCardNo(bankCardNo?: string | null): string | null {
+    const normalized = String(bankCardNo || '').replace(/\D/g, '');
+    return normalized || null;
+  }
+
+  private async hasOtherWorkerWithBankCard(
+    bankCardNoHash: string,
+    excludeUserId?: number,
+    manager?: EntityManager,
+  ): Promise<boolean> {
+    const userRepository = manager ? manager.getRepository(SysUser) : this.userRepository;
+
+    const qb = userRepository
+      .createQueryBuilder('user')
+      .where('user.bankCardNoHash = :bankCardNoHash', { bankCardNoHash })
+      .andWhere('user.isDeleted = :isDeleted', { isDeleted: false })
+      .andWhere('user.roleKey = :roleKey', { roleKey: UserRole.WORKER });
+
+    if (excludeUserId) {
+      qb.andWhere('user.id <> :excludeUserId', { excludeUserId });
+    }
+
+    return (await qb.getCount()) > 0;
+  }
+
+  private async findLatestResubmittableCase(
+    workerUserId: number,
+    manager?: EntityManager,
+  ): Promise<ProxyRegistrationCase | null> {
+    const proxyCaseRepository = manager ? manager.getRepository(ProxyRegistrationCase) : this.proxyRegistrationRepository;
+
+    return proxyCaseRepository.findOne({
+      where: {
+        workerUserId,
+        status: In([ProxyRegistrationStatus.REJECTED, ProxyRegistrationStatus.REVOKED]),
+      },
+      order: { updatedAt: 'DESC' },
+    });
+  }
+
+  private signBankCardChallengePayload(payload: string): string {
+    const secret = process.env.BANK_CARD_CHALLENGE_SECRET || process.env.JWT_SECRET || 'defaultSecretKey';
+    return crypto.createHmac('sha256', secret).update(payload).digest('hex');
+  }
+
+  private buildBankCardChallengeToken(userId: number, targetBankCardNoHash: string): { token: string; expiresAt: string } {
+    const expiresAtTs = Date.now() + this.bankCardChallengeTtlMs;
+    const nonce = crypto.randomBytes(8).toString('hex');
+    const payload = `${userId}:${targetBankCardNoHash}:${expiresAtTs}:${nonce}`;
+    const signature = this.signBankCardChallengePayload(payload);
+
+    return {
+      token: `${expiresAtTs}.${nonce}.${signature}`,
+      expiresAt: new Date(expiresAtTs).toISOString(),
+    };
+  }
+
+  private verifyBankCardChallengeToken(token: string, userId: number, targetBankCardNoHash: string): boolean {
+    try {
+      if (!token) {
+        return false;
+      }
+
+      const [expiresAtRaw, nonce, signature] = String(token).split('.');
+      if (!expiresAtRaw || !nonce || !signature) {
+        return false;
+      }
+
+      const expiresAtTs = Number(expiresAtRaw);
+      if (!Number.isFinite(expiresAtTs) || Date.now() > expiresAtTs) {
+        return false;
+      }
+
+      const payload = `${userId}:${targetBankCardNoHash}:${expiresAtTs}:${nonce}`;
+      const expectedSignature = this.signBankCardChallengePayload(payload);
+      if (expectedSignature.length !== signature.length) {
+        return false;
+      }
+
+      return crypto.timingSafeEqual(
+        Buffer.from(expectedSignature, 'utf8'),
+        Buffer.from(signature, 'utf8'),
+      );
+    } catch (_) {
+      return false;
+    }
+  }
+
+  private maskBankCardNo(normalizedBankCardNo: string): string {
+    const tail4 = String(normalizedBankCardNo || '').slice(-4);
+    return `**** **** **** ${tail4 || '****'}`;
+  }
+
   /**
    * 创建用户并完成敏感字段 hash 计算、唯一性校验和默认审核状态初始化。
    * 副作用:
@@ -121,11 +216,13 @@ export class UserService {
     let bankCardNoHash = null;
     let normalizedBankCardNo = null;
     if (createUserDto.bankCardNo) {
-      normalizedBankCardNo = String(createUserDto.bankCardNo).replace(/\D/g, '');
-      bankCardNoHash = this.securityService.hash(normalizedBankCardNo);
-      const existingUserByBankCard = await this.userRepository.findOne({ where: { bankCardNoHash, isDeleted: false } });
-      if (existingUserByBankCard) {
-        throw new ConflictException('银行卡号已被使用');
+      normalizedBankCardNo = this.normalizeBankCardNo(createUserDto.bankCardNo);
+      if (normalizedBankCardNo) {
+        bankCardNoHash = this.securityService.hash(normalizedBankCardNo);
+        const existingUserByBankCard = await this.userRepository.findOne({ where: { bankCardNoHash, isDeleted: false } });
+        if (existingUserByBankCard) {
+          throw new ConflictException('银行卡号已被使用');
+        }
       }
     }
 
@@ -170,7 +267,10 @@ export class UserService {
     }
   }
 
-  private async evaluateProxyRisk(proxyPhoneHash: string): Promise<{ level: ProxyRiskLevel; tags: string[] }> {
+  private async evaluateProxyRisk(
+    proxyPhoneHash: string,
+    workerBankCardNoHash?: string | null,
+  ): Promise<{ level: ProxyRiskLevel; tags: string[] }> {
     const tags: string[] = [];
 
     const recentCount = await this.proxyRegistrationRepository
@@ -184,6 +284,13 @@ export class UserService {
 
     if (recentCount >= 3) {
       tags.push('high_freq_proxy_phone_24h');
+    }
+
+    if (workerBankCardNoHash) {
+      const hasSharedBankCard = await this.hasOtherWorkerWithBankCard(workerBankCardNoHash);
+      if (hasSharedBankCard) {
+        tags.push('shared_bank_card_multi_worker');
+      }
     }
 
     return {
@@ -203,18 +310,30 @@ export class UserService {
     const idCardHash = this.securityService.hash(dto.workerIdCard);
     const phoneHash = this.securityService.hash(dto.workerPhone);
     const proxyPhoneHash = this.securityService.hash(dto.proxyPhone);
+    const normalizedWorkerBankCardNo = this.normalizeBankCardNo(dto.workerBankCardNo);
+    const workerBankCardNoHash = normalizedWorkerBankCardNo
+      ? this.securityService.hash(normalizedWorkerBankCardNo)
+      : null;
 
     const existingUserByIdCard = await this.userRepository.findOne({ where: { idCardHash, isDeleted: false } });
     if (existingUserByIdCard) {
+      const resubmittableCase = await this.findLatestResubmittableCase(existingUserByIdCard.id);
+      if (resubmittableCase) {
+        throw new ConflictException(`身份证号已有驳回记录，请改用重提接口并传入 caseId=${resubmittableCase.id}`);
+      }
       throw new ConflictException('身份证号已被注册');
     }
 
     const existingUserByPhone = await this.userRepository.findOne({ where: { phoneHash, isDeleted: false } });
     if (existingUserByPhone) {
+      const resubmittableCase = await this.findLatestResubmittableCase(existingUserByPhone.id);
+      if (resubmittableCase) {
+        throw new ConflictException(`手机号已有驳回记录，请改用重提接口并传入 caseId=${resubmittableCase.id}`);
+      }
       throw new ConflictException('手机号已被注册');
     }
 
-    const risk = await this.evaluateProxyRisk(proxyPhoneHash);
+    const risk = await this.evaluateProxyRisk(proxyPhoneHash, workerBankCardNoHash);
     const uid = 'U' + Date.now().toString(36).toUpperCase() + crypto.randomBytes(2).toString('hex').toUpperCase();
 
     const { savedUser, savedCase } = await this.dataSource.transaction(async (manager) => {
@@ -223,9 +342,6 @@ export class UserService {
 
       const emergencyPhoneHash = dto.workerEmergencyPhone
         ? this.securityService.hash(dto.workerEmergencyPhone)
-        : null;
-      const bankCardNoHash = dto.workerBankCardNo
-        ? this.securityService.hash(dto.workerBankCardNo)
         : null;
 
       const workerUser = userRepository.create({
@@ -241,8 +357,8 @@ export class UserService {
         emergencyPhoneHash,
         homeAddress: dto.workerHomeAddress,
         bankName: dto.workerBankName,
-        bankCardNo: dto.workerBankCardNo,
-        bankCardNoHash,
+        bankCardNo: normalizedWorkerBankCardNo,
+        bankCardNoHash: workerBankCardNoHash,
         infoAuditStatus: 0,
         registerMode: RegisterMode.PROXY,
         accountOwnerVerified: false,
@@ -308,6 +424,122 @@ export class UserService {
       status: savedCase.status,
       riskLevel: savedCase.riskLevel,
       msg: '代注册提交成功，等待审核',
+    };
+  }
+
+  async resubmitProxyRegistration(caseId: number, dto: CreateProxyRegistrationDto, request?: any) {
+    const idCardHash = this.securityService.hash(dto.workerIdCard);
+    const phoneHash = this.securityService.hash(dto.workerPhone);
+    const proxyPhoneHash = this.securityService.hash(dto.proxyPhone);
+    const normalizedWorkerBankCardNo = this.normalizeBankCardNo(dto.workerBankCardNo);
+    const workerBankCardNoHash = normalizedWorkerBankCardNo
+      ? this.securityService.hash(normalizedWorkerBankCardNo)
+      : null;
+    const risk = await this.evaluateProxyRisk(proxyPhoneHash, workerBankCardNoHash);
+
+    const { savedCase, savedWorker } = await this.dataSource.transaction(async (manager) => {
+      const userRepository = manager.getRepository(SysUser);
+      const proxyCaseRepository = manager.getRepository(ProxyRegistrationCase);
+
+      const proxyCase = await proxyCaseRepository.findOne({
+        where: { id: caseId },
+        lock: { mode: 'pessimistic_write' },
+      });
+      if (!proxyCase) {
+        throw new NotFoundException('代注册单不存在');
+      }
+
+      if (![ProxyRegistrationStatus.REJECTED, ProxyRegistrationStatus.REVOKED].includes(proxyCase.status)) {
+        throw new ConflictException('仅驳回或撤销状态的代注册单可重提');
+      }
+
+      const workerUser = await userRepository.findOne({
+        where: { id: proxyCase.workerUserId },
+        lock: { mode: 'pessimistic_write' },
+      });
+      if (!workerUser || workerUser.isDeleted) {
+        throw new NotFoundException('代注册单对应工人用户不存在');
+      }
+
+      const existingIdCardUser = await userRepository.findOne({ where: { idCardHash, isDeleted: false } });
+      if (existingIdCardUser && existingIdCardUser.id !== workerUser.id) {
+        throw new ConflictException('身份证号已被其他账号使用');
+      }
+
+      const existingPhoneUser = await userRepository.findOne({ where: { phoneHash, isDeleted: false } });
+      if (existingPhoneUser && existingPhoneUser.id !== workerUser.id) {
+        throw new ConflictException('手机号已被其他账号使用');
+      }
+
+      if (workerBankCardNoHash) {
+        const existingBankCardUser = await userRepository.findOne({ where: { bankCardNoHash: workerBankCardNoHash, isDeleted: false } });
+        if (existingBankCardUser && existingBankCardUser.id !== workerUser.id) {
+          const isWorkerSharedCard = existingBankCardUser.roleKey === UserRole.WORKER;
+          if (!isWorkerSharedCard) {
+            throw new ConflictException('银行卡号已被其他账号使用');
+          }
+        }
+      }
+
+      workerUser.name = dto.workerName;
+      workerUser.idCard = dto.workerIdCard;
+      workerUser.idCardHash = idCardHash;
+      workerUser.phone = dto.workerPhone;
+      workerUser.phoneHash = phoneHash;
+      workerUser.emergencyContact = dto.workerEmergencyContact || null;
+      workerUser.emergencyPhone = dto.workerEmergencyPhone || null;
+      workerUser.emergencyPhoneHash = dto.workerEmergencyPhone
+        ? this.securityService.hash(dto.workerEmergencyPhone)
+        : null;
+      workerUser.homeAddress = dto.workerHomeAddress || null;
+      workerUser.bankName = dto.workerBankName || null;
+      workerUser.bankCardNo = normalizedWorkerBankCardNo;
+      workerUser.bankCardNoHash = workerBankCardNoHash;
+      workerUser.infoAuditStatus = 0;
+      workerUser.registerMode = RegisterMode.PROXY;
+      workerUser.accountOwnerVerified = false;
+      workerUser.loginLockReason = '代注册待审核';
+
+      proxyCase.proxyName = dto.proxyName;
+      proxyCase.proxyPhone = dto.proxyPhone;
+      proxyCase.proxyPhoneHash = proxyPhoneHash;
+      proxyCase.relationToWorker = dto.relationToWorker;
+      proxyCase.consentType = dto.consentType || 'family_confirm';
+      proxyCase.consentStatement = dto.consentStatement || null;
+      proxyCase.consentEvidenceUrl = dto.consentEvidenceUrl || null;
+      proxyCase.status = ProxyRegistrationStatus.PENDING_REVIEW;
+      proxyCase.riskLevel = risk.level;
+      proxyCase.riskTagsJson = risk.tags.length > 0 ? JSON.stringify(risk.tags) : null;
+      proxyCase.rejectReason = null;
+      proxyCase.reviewedBy = null;
+      proxyCase.reviewedAt = null;
+
+      const nextWorker = await userRepository.save(workerUser);
+      const nextCase = await proxyCaseRepository.save(proxyCase);
+      return { savedCase: nextCase, savedWorker: nextWorker };
+    });
+
+    await this.operationLogService.logWithContext({
+      operationType: OperationType.UPDATE,
+      resourceType: ResourceType.PROXY_REGISTRATION_CASE,
+      resourceId: savedCase.id,
+      userId: 0,
+      request,
+      description: `代注册单重提: case=${savedCase.id}, worker=${savedWorker.uid}`,
+      afterData: {
+        status: savedCase.status,
+        riskLevel: savedCase.riskLevel,
+        workerInfoAuditStatus: savedWorker.infoAuditStatus,
+      },
+    });
+
+    return {
+      caseId: savedCase.id,
+      status: savedCase.status,
+      workerUserId: savedWorker.id,
+      workerUid: savedWorker.uid,
+      riskLevel: savedCase.riskLevel,
+      msg: '代注册已重新提交，等待审核',
     };
   }
 
@@ -380,13 +612,53 @@ export class UserService {
     return this.userRepository.findOne({ where: { uid } });
   }
 
+  async requestBankCardChangeChallenge(userId: number, bankCardNo: string) {
+    const user = await this.userRepository.findOne({
+      where: {
+        id: userId,
+        isDeleted: false,
+      },
+    });
+    if (!user) {
+      throw new NotFoundException('用户不存在');
+    }
+
+    const normalizedBankCardNo = this.normalizeBankCardNo(bankCardNo);
+    if (!normalizedBankCardNo || normalizedBankCardNo.length < 12) {
+      throw new BadRequestException('请输入正确的银行卡号');
+    }
+
+    const nextBankCardNoHash = this.securityService.hash(normalizedBankCardNo);
+    const needsChallenge =
+      user.infoAuditStatus === 1 &&
+      Boolean(user.bankCardNoHash) &&
+      user.bankCardNoHash !== nextBankCardNoHash;
+
+    if (!needsChallenge) {
+      return {
+        required: false,
+        challengeToken: null,
+        expiresAt: null,
+        maskedBankCardNo: this.maskBankCardNo(normalizedBankCardNo),
+      };
+    }
+
+    const challenge = this.buildBankCardChallengeToken(userId, nextBankCardNoHash);
+    return {
+      required: true,
+      challengeToken: challenge.token,
+      expiresAt: challenge.expiresAt,
+      maskedBankCardNo: this.maskBankCardNo(normalizedBankCardNo),
+    };
+  }
+
   /**
    * 更新用户资料，并在必要时重算 hash 与回退审核状态。
    * 当更新涉及手机号或紧急联系人时，服务会强制重新进入待审核。
    */
   async update(userId: number, updateDto: any, context?: OperationLogContext): Promise<SysUser> {
     try {
-      const { saved, beforeSnapshot } = await this.dataSource.transaction(async (manager) => {
+      const { saved, beforeSnapshot, bankCardRiskTags } = await this.dataSource.transaction(async (manager) => {
         const userRepository = manager.getRepository(SysUser);
         const user = await userRepository.findOne({
           where: { id: userId },
@@ -397,6 +669,8 @@ export class UserService {
         }
 
         const nextUpdate = { ...updateDto };
+        const bankCardChallengeToken = String(nextUpdate.bankCardChallengeToken || '').trim();
+        delete nextUpdate.bankCardChallengeToken;
         const before = {
           roleKey: user.roleKey,
           assignedBaseId: user.assignedBaseId,
@@ -405,6 +679,7 @@ export class UserService {
           phoneUpdated: false,
           emergencyPhoneUpdated: false,
         };
+        const bankCardRiskTags: string[] = [];
 
         if (nextUpdate.assignedBaseId !== undefined) {
           await this.validateAssignedBase(user.roleKey, nextUpdate.assignedBaseId, manager);
@@ -425,13 +700,30 @@ export class UserService {
 
         const bankCardNoTouched = Object.prototype.hasOwnProperty.call(nextUpdate, 'bankCardNo');
         if (bankCardNoTouched) {
-          const rawBankCardNo = String(nextUpdate.bankCardNo || '').replace(/\D/g, '');
+          const rawBankCardNo = this.normalizeBankCardNo(nextUpdate.bankCardNo);
           if (rawBankCardNo) {
             const bankCardNoHash = this.securityService.hash(rawBankCardNo);
+            const requiresChallenge =
+              user.infoAuditStatus === 1 &&
+              Boolean(user.bankCardNoHash) &&
+              user.bankCardNoHash !== bankCardNoHash;
+            if (requiresChallenge && !this.verifyBankCardChallengeToken(bankCardChallengeToken, userId, bankCardNoHash)) {
+              throw new BadRequestException('银行卡修改需二次确认，请先调用挑战接口');
+            }
+
             const existingUser = await userRepository.findOne({ where: { bankCardNoHash, isDeleted: false } });
             if (existingUser && existingUser.id !== userId) {
-              throw new ConflictException('银行卡号已被使用');
+              const isWorkerSharedCard = user.roleKey === UserRole.WORKER && existingUser.roleKey === UserRole.WORKER;
+              if (!isWorkerSharedCard) {
+                throw new ConflictException('银行卡号已被使用');
+              }
             }
+
+            const hasSharedWorkerBankCard = await this.hasOtherWorkerWithBankCard(bankCardNoHash, userId, manager);
+            if (hasSharedWorkerBankCard) {
+              bankCardRiskTags.push('shared_bank_card_multi_worker');
+            }
+
             nextUpdate.bankCardNo = rawBankCardNo;
             nextUpdate.bankCardNoHash = bankCardNoHash;
           } else {
@@ -453,7 +745,7 @@ export class UserService {
 
         Object.assign(user, nextUpdate);
         const next = await userRepository.save(user);
-        return { saved: next, beforeSnapshot: before };
+        return { saved: next, beforeSnapshot: before, bankCardRiskTags };
       });
 
       await this.operationLogService.logWithContext({
@@ -471,6 +763,8 @@ export class UserService {
           regionCode: saved.regionCode,
           phoneUpdated: Boolean(updateDto.phone),
           emergencyPhoneUpdated: Boolean(updateDto.emergencyPhone),
+          bankCardRiskLevel: bankCardRiskTags.length > 0 ? ProxyRiskLevel.HIGH : ProxyRiskLevel.LOW,
+          bankCardRiskTags,
         },
       });
 
