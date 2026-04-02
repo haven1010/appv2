@@ -332,6 +332,20 @@ async function main() {
 
   console.log('Checks passed. Applying schema changes...');
 
+  if (!(await hasColumn('sys_user', 'gender'))) {
+    await connection.query(
+      "ALTER TABLE sys_user ADD COLUMN gender enum('male','female') NULL COMMENT 'male:男, female:女' AFTER face_img_url",
+    );
+    console.log('Added sys_user.gender');
+  }
+
+  if (!(await hasColumn('sys_user', 'is_poor_household'))) {
+    await connection.query(
+      "ALTER TABLE sys_user ADD COLUMN is_poor_household tinyint NULL COMMENT '1:是, 0:否' AFTER gender",
+    );
+    console.log('Added sys_user.is_poor_household');
+  }
+
   await ensureIndex(
     'sys_user',
     'UQ_sys_user_id_card_hash',
@@ -442,6 +456,27 @@ async function main() {
       'ALTER TABLE job_application ADD COLUMN pending_guard tinyint GENERATED ALWAYS AS (case when status = 0 then 1 else NULL end) STORED',
     );
     console.log('Added job_application.pending_guard');
+  }
+
+  if (!(await hasColumn('job_application', 'work_end_time'))) {
+    await connection.query(
+      "ALTER TABLE job_application ADD COLUMN work_end_time datetime NULL COMMENT '结束务工时间' AFTER reviewed_at",
+    );
+    console.log('Added job_application.work_end_time');
+  }
+
+  if (!(await hasColumn('job_application', 'work_end_by'))) {
+    await connection.query(
+      "ALTER TABLE job_application ADD COLUMN work_end_by bigint NULL COMMENT '结束务工操作人ID' AFTER work_end_time",
+    );
+    console.log('Added job_application.work_end_by');
+  }
+
+  if (!(await hasColumn('job_application', 'work_end_recorded_at'))) {
+    await connection.query(
+      "ALTER TABLE job_application ADD COLUMN work_end_recorded_at datetime NULL COMMENT '结束务工记录创建时间' AFTER work_end_by",
+    );
+    console.log('Added job_application.work_end_recorded_at');
   }
 
   await ensureIndex(
