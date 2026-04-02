@@ -206,21 +206,15 @@ Page({
       ], '待补充');
       const rawEnvImages = normalizeImageList(meta);
       const envImages = rawEnvImages.map((item) => normalizePersistedImageUrl(item, apiOrigin)).filter(Boolean);
-      const rawLicenseUrl = toText((baseInfo && baseInfo.licenseUrl) || meta.licenseUrl, '');
-      const licenseUrl = normalizePersistedImageUrl(rawLicenseUrl, apiOrigin);
-      const hasExpiredTempImage = (rawLicenseUrl && !licenseUrl) || envImages.length < rawEnvImages.length;
-      const envSummaryFallback = hasExpiredTempImage && !envImages.length
-        ? '历史图片地址失效，请老板重新上传'
-        : (envImages.length ? `已上传 ${envImages.length} 张环境图片` : '待补充');
-      let envSummaryText = pickFieldText([
+      const envSummaryText = pickFieldText([
         meta.environmentSummary,
         meta.workEnvSummary,
         meta.environment,
         meta.workEnvironment,
-      ], envSummaryFallback);
-      if (hasExpiredTempImage && !envImages.length && /已上传\s*\d+\s*张/.test(envSummaryText)) {
-        envSummaryText = envSummaryFallback;
-      }
+      ], envImages.length ? `已上传 ${envImages.length} 张环境图片` : '待补充');
+      const rawLicenseUrl = toText((baseInfo && baseInfo.licenseUrl) || meta.licenseUrl, '');
+      const licenseUrl = normalizePersistedImageUrl(rawLicenseUrl, apiOrigin);
+      const hasExpiredTempImage = (rawLicenseUrl && !licenseUrl) || envImages.length < rawEnvImages.length;
 
       this.setData({
         baseInfo,
