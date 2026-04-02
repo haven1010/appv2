@@ -8,6 +8,9 @@ import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { RegisterByOcrDto } from './dto/register-by-ocr.dto';
+import { CreateProxyRegistrationDto } from './dto/create-proxy-registration.dto';
+import { ReviewProxyRegistrationDto } from './dto/review-proxy-registration.dto';
+import { TakeoverProxyAccountDto } from './dto/takeover-proxy-account.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { TencentOcrService } from '../common/services/tencent-ocr.service';
@@ -130,6 +133,12 @@ export class UserController {
     };
   }
 
+  @Post('register/proxy')
+  @ApiOperation({ summary: '家人代注册（工人账号 + 代注册审核单）' })
+  async registerByProxy(@Req() req, @Body() dto: CreateProxyRegistrationDto) {
+    return this.userService.createProxyRegistration(dto, { request: req });
+  }
+
   @Post('admin')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.SUPER_ADMIN)
@@ -218,6 +227,50 @@ export class UserController {
     @Body('reason') reason?: string,
   ) {
     return this.userService.auditInfo(userId, status, reason, req.user.id, req);
+  }
+
+  @Get('proxy-registration/list')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.BASE_MANAGER)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: '获取代注册审核单列表' })
+  async getProxyRegistrationList(
+    @Query('status') status?: string,
+    @Query('keyword') keyword?: string,
+    @Query('page') page?: string,
+    @Query('pageSize') pageSize?: string,
+  ) {
+    return this.userService.getProxyRegistrationList({
+      status: status as any,
+      keyword: keyword || undefined,
+      page: page ? Number(page) : 1,
+      pageSize: pageSize ? Number(pageSize) : 20,
+    });
+  }
+
+  @Patch('proxy-registration/:id/review')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.BASE_MANAGER)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: '审核代注册单（通过/拒绝/撤销）' })
+  async reviewProxyRegistration(
+    @Req() req,
+    @Param('id', ParseIntPipe) caseId: number,
+    @Body() dto: ReviewProxyRegistrationDto,
+  ) {
+    return this.userService.reviewProxyRegistration(caseId, dto.status, dto.reason, req.user.id, req);
+  }
+
+  @Post('proxy-registration/:id/takeover')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: '工人本人接管代注册账号' })
+  async takeoverProxyAccount(
+    @Req() req,
+    @Param('id', ParseIntPipe) caseId: number,
+    @Body() dto: TakeoverProxyAccountDto,
+  ) {
+    return this.userService.takeoverProxyAccount(caseId, req.user.id, dto.phone, dto.idCardLast6, req);
   }
 
   @Delete(':id')

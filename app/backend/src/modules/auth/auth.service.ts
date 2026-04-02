@@ -3,7 +3,7 @@
  * Responsibility: Implements the Auth application service for the Auth module, including business rules, side effects, and persistence coordination.
  * Notes: Keep comments focused on intent, invariants, side effects, and cross-module contracts.
  */
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UserService } from '../user/user.service';
 import { OperationLogService } from '../common/services/operation-log.service';
@@ -37,6 +37,11 @@ export class AuthService {
     if (!user) {
       console.log(`[Auth] ❌ User not found for phone: ${phone}`);
       return null;
+    }
+
+    if (user.loginLockReason) {
+      console.log(`[Auth] ❌ Account login locked: ${user.loginLockReason}`);
+      throw new UnauthorizedException(user.loginLockReason);
     }
 
     // 🔥 关键修改：TypeORM 的 Transformer 已经自动解密了，这里直接取值即可！

@@ -6,8 +6,14 @@
 import { Injectable, BadRequestException, ConflictException, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In, DataSource, EntityManager } from 'typeorm';
-import { SysUser, UserRole } from './entities/sys-user.entity';
+import { SysUser, UserRole, RegisterMode } from './entities/sys-user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
+import { CreateProxyRegistrationDto } from './dto/create-proxy-registration.dto';
+import {
+  ProxyRegistrationCase,
+  ProxyRegistrationStatus,
+  ProxyRiskLevel,
+} from './entities/proxy-registration-case.entity';
 import { SecurityService } from '../common/services/security.service';
 import { OperationLogService, OperationLogContext } from '../common/services/operation-log.service';
 import { OperationType, ResourceType } from '../common/entities/operation-log.entity';
@@ -23,6 +29,8 @@ export class UserService {
   constructor(
     @InjectRepository(SysUser)
     private userRepository: Repository<SysUser>,
+    @InjectRepository(ProxyRegistrationCase)
+    private proxyRegistrationRepository: Repository<ProxyRegistrationCase>,
     @InjectRepository(BaseInfo)
     private baseRepository: Repository<BaseInfo>,
     private securityService: SecurityService,
@@ -133,6 +141,9 @@ export class UserService {
       bankCardNo: normalizedBankCardNo,
       bankCardNoHash,
       infoAuditStatus: 1, // 首次录入默认通过审核
+      registerMode: RegisterMode.SELF,
+      accountOwnerVerified: true,
+      loginLockReason: null,
     });
 
     try {
@@ -157,6 +168,147 @@ export class UserService {
     } catch (error) {
       this.rethrowDuplicateKey(error);
     }
+  }
+
+  private async evaluateProxyRisk(proxyPhoneHash: string): Promise<{ level: ProxyRiskLevel; tags: string[] }> {
+    const tags: string[] = [];
+
+    const recentCount = await this.proxyRegistrationRepository
+      .createQueryBuilder('case')
+      .where('case.proxyPhoneHash = :proxyPhoneHash', { proxyPhoneHash })
+      .andWhere('case.createdAt >= DATE_SUB(NOW(), INTERVAL 1 DAY)')
+      .andWhere('case.status IN (:...statuses)', {
+        statuses: [ProxyRegistrationStatus.PENDING_REVIEW, ProxyRegistrationStatus.APPROVED],
+      })
+      .getCount();
+
+    if (recentCount >= 3) {
+      tags.push('high_freq_proxy_phone_24h');
+    }
+
+    return {
+      level: tags.length > 0 ? ProxyRiskLevel.HIGH : ProxyRiskLevel.LOW,
+      tags,
+    };
+  }
+
+  /**
+   * 家人代注册流程：创建工人账号 + 创建代注册审核单。
+   * 默认行为：工人账号处于待审核状态，审核通过后才视为可用。
+   */
+  async createProxyRegistration(dto: CreateProxyRegistrationDto, context?: OperationLogContext) {
+    const roleKey = UserRole.WORKER;
+    await this.validateAssignedBase(roleKey, undefined);
+
+    const idCardHash = this.securityService.hash(dto.workerIdCard);
+    const phoneHash = this.securityService.hash(dto.workerPhone);
+    const proxyPhoneHash = this.securityService.hash(dto.proxyPhone);
+
+    const existingUserByIdCard = await this.userRepository.findOne({ where: { idCardHash, isDeleted: false } });
+    if (existingUserByIdCard) {
+      throw new ConflictException('身份证号已被注册');
+    }
+
+    const existingUserByPhone = await this.userRepository.findOne({ where: { phoneHash, isDeleted: false } });
+    if (existingUserByPhone) {
+      throw new ConflictException('手机号已被注册');
+    }
+
+    const risk = await this.evaluateProxyRisk(proxyPhoneHash);
+    const uid = 'U' + Date.now().toString(36).toUpperCase() + crypto.randomBytes(2).toString('hex').toUpperCase();
+
+    const { savedUser, savedCase } = await this.dataSource.transaction(async (manager) => {
+      const userRepository = manager.getRepository(SysUser);
+      const proxyCaseRepository = manager.getRepository(ProxyRegistrationCase);
+
+      const emergencyPhoneHash = dto.workerEmergencyPhone
+        ? this.securityService.hash(dto.workerEmergencyPhone)
+        : null;
+      const bankCardNoHash = dto.workerBankCardNo
+        ? this.securityService.hash(dto.workerBankCardNo)
+        : null;
+
+      const workerUser = userRepository.create({
+        uid,
+        name: dto.workerName,
+        idCard: dto.workerIdCard,
+        phone: dto.workerPhone,
+        roleKey,
+        idCardHash,
+        phoneHash,
+        emergencyContact: dto.workerEmergencyContact,
+        emergencyPhone: dto.workerEmergencyPhone,
+        emergencyPhoneHash,
+        homeAddress: dto.workerHomeAddress,
+        bankName: dto.workerBankName,
+        bankCardNo: dto.workerBankCardNo,
+        bankCardNoHash,
+        infoAuditStatus: 0,
+        registerMode: RegisterMode.PROXY,
+        accountOwnerVerified: false,
+        loginLockReason: '代注册待审核',
+      });
+      const savedWorker = await userRepository.save(workerUser);
+
+      const proxyCase = proxyCaseRepository.create({
+        workerUserId: savedWorker.id,
+        proxyName: dto.proxyName,
+        proxyPhone: dto.proxyPhone,
+        proxyPhoneHash,
+        relationToWorker: dto.relationToWorker,
+        consentType: dto.consentType || 'family_confirm',
+        consentStatement: dto.consentStatement || null,
+        consentEvidenceUrl: dto.consentEvidenceUrl || null,
+        status: ProxyRegistrationStatus.PENDING_REVIEW,
+        riskLevel: risk.level,
+        riskTagsJson: risk.tags.length > 0 ? JSON.stringify(risk.tags) : null,
+      });
+      const savedProxyCase = await proxyCaseRepository.save(proxyCase);
+
+      return {
+        savedUser: savedWorker,
+        savedCase: savedProxyCase,
+      };
+    });
+
+    await this.operationLogService.logWithContext({
+      operationType: OperationType.CREATE,
+      resourceType: ResourceType.USER,
+      resourceId: savedUser.id,
+      userId: context?.userId ?? savedUser.id,
+      request: context?.request,
+      description: `代注册创建工人用户: ${savedUser.name} (${savedUser.uid})`,
+      afterData: {
+        uid: savedUser.uid,
+        roleKey: savedUser.roleKey,
+        registerMode: savedUser.registerMode,
+        infoAuditStatus: savedUser.infoAuditStatus,
+      },
+    });
+
+    await this.operationLogService.logWithContext({
+      operationType: OperationType.CREATE,
+      resourceType: ResourceType.PROXY_REGISTRATION_CASE,
+      resourceId: savedCase.id,
+      userId: context?.userId ?? savedUser.id,
+      request: context?.request,
+      description: `创建代注册单: worker=${savedUser.uid}, proxy=${dto.proxyName}`,
+      afterData: {
+        workerUserId: savedCase.workerUserId,
+        status: savedCase.status,
+        riskLevel: savedCase.riskLevel,
+      },
+    });
+
+    return {
+      workerUserId: savedUser.id,
+      workerUid: savedUser.uid,
+      workerName: savedUser.name,
+      caseId: savedCase.id,
+      status: savedCase.status,
+      riskLevel: savedCase.riskLevel,
+      msg: '代注册提交成功，等待审核',
+    };
   }
 
   /**
@@ -271,7 +423,8 @@ export class UserService {
           nextUpdate.emergencyPhoneHash = this.securityService.hash(nextUpdate.emergencyPhone);
         }
 
-        if (Object.prototype.hasOwnProperty.call(nextUpdate, 'bankCardNo')) {
+        const bankCardNoTouched = Object.prototype.hasOwnProperty.call(nextUpdate, 'bankCardNo');
+        if (bankCardNoTouched) {
           const rawBankCardNo = String(nextUpdate.bankCardNo || '').replace(/\D/g, '');
           if (rawBankCardNo) {
             const bankCardNoHash = this.securityService.hash(rawBankCardNo);
@@ -287,7 +440,14 @@ export class UserService {
           }
         }
 
-        if (nextUpdate.phone || nextUpdate.emergencyContact || nextUpdate.emergencyPhone) {
+        if (
+          nextUpdate.phone ||
+          nextUpdate.emergencyContact ||
+          nextUpdate.emergencyPhone ||
+          nextUpdate.homeAddress ||
+          nextUpdate.bankName ||
+          bankCardNoTouched
+        ) {
           nextUpdate.infoAuditStatus = 0;
         }
 
@@ -362,6 +522,259 @@ export class UserService {
     return saved;
   }
 
+  async getProxyRegistrationList(query: {
+    status?: ProxyRegistrationStatus;
+    keyword?: string;
+    page?: number;
+    pageSize?: number;
+  }) {
+    const { status, keyword, page = 1, pageSize = 20 } = query;
+
+    const qb = this.proxyRegistrationRepository
+      .createQueryBuilder('proxyCase')
+      .leftJoinAndSelect('proxyCase.workerUser', 'worker')
+      .leftJoinAndSelect('proxyCase.reviewer', 'reviewer')
+      .orderBy('proxyCase.createdAt', 'DESC');
+
+    if (status) {
+      qb.andWhere('proxyCase.status = :status', { status });
+    }
+
+    if (keyword) {
+      qb.andWhere(
+        '(worker.name LIKE :kw OR worker.uid LIKE :kw OR proxyCase.proxyName LIKE :kw OR proxyCase.relationToWorker LIKE :kw)',
+        { kw: `%${keyword}%` },
+      );
+    }
+
+    const total = await qb.getCount();
+    const list = await qb
+      .skip((page - 1) * pageSize)
+      .take(pageSize)
+      .getMany();
+
+    return {
+      list: list.map((item) => ({
+        id: item.id,
+        status: item.status,
+        riskLevel: item.riskLevel,
+        relationToWorker: item.relationToWorker,
+        proxyName: item.proxyName,
+        proxyPhone: item.proxyPhone,
+        consentType: item.consentType,
+        consentStatement: item.consentStatement,
+        consentEvidenceUrl: item.consentEvidenceUrl,
+        rejectReason: item.rejectReason,
+        reviewedAt: item.reviewedAt,
+        reviewerName: item.reviewer?.name,
+        createdAt: item.createdAt,
+        updatedAt: item.updatedAt,
+        worker: item.workerUser
+          ? {
+              id: item.workerUser.id,
+              uid: item.workerUser.uid,
+              name: item.workerUser.name,
+              roleKey: item.workerUser.roleKey,
+              infoAuditStatus: item.workerUser.infoAuditStatus,
+              registerMode: item.workerUser.registerMode,
+              accountOwnerVerified: item.workerUser.accountOwnerVerified,
+            }
+          : null,
+      })),
+      total,
+      page: Number(page),
+      pageSize: Number(pageSize),
+    };
+  }
+
+  async reviewProxyRegistration(
+    caseId: number,
+    status: 'approved' | 'rejected' | 'revoked',
+    reason: string | undefined,
+    operatorId: number,
+    request?: any,
+  ) {
+    if (status === 'rejected' && !reason) {
+      throw new BadRequestException('拒绝时必须填写原因');
+    }
+
+    const { proxyCase, workerUser, previousStatus } = await this.dataSource.transaction(async (manager) => {
+      const proxyCaseRepository = manager.getRepository(ProxyRegistrationCase);
+      const userRepository = manager.getRepository(SysUser);
+
+      const item = await proxyCaseRepository.findOne({
+        where: { id: caseId },
+        lock: { mode: 'pessimistic_write' },
+      });
+
+      if (!item) {
+        throw new NotFoundException('代注册单不存在');
+      }
+
+      const worker = await userRepository.findOne({
+        where: { id: item.workerUserId },
+        lock: { mode: 'pessimistic_write' },
+      });
+      if (!worker || worker.isDeleted) {
+        throw new NotFoundException('代注册单对应工人用户不存在');
+      }
+
+      const beforeStatus = item.status;
+
+      if (status === 'approved') {
+        if (item.status !== ProxyRegistrationStatus.PENDING_REVIEW) {
+          throw new ConflictException('仅待审核状态可执行通过操作');
+        }
+        item.status = ProxyRegistrationStatus.APPROVED;
+        item.rejectReason = null;
+        worker.infoAuditStatus = 1;
+        worker.loginLockReason = null;
+      }
+
+      if (status === 'rejected') {
+        if (item.status !== ProxyRegistrationStatus.PENDING_REVIEW) {
+          throw new ConflictException('仅待审核状态可执行拒绝操作');
+        }
+        item.status = ProxyRegistrationStatus.REJECTED;
+        item.rejectReason = reason || '代注册审核未通过';
+        worker.infoAuditStatus = 2;
+        worker.loginLockReason = item.rejectReason;
+      }
+
+      if (status === 'revoked') {
+        if (item.status === ProxyRegistrationStatus.TAKEOVER_DONE) {
+          throw new ConflictException('已完成账号交接的代注册单不可撤销');
+        }
+        item.status = ProxyRegistrationStatus.REVOKED;
+        item.rejectReason = reason || '代注册已撤销';
+        worker.infoAuditStatus = 2;
+        worker.loginLockReason = item.rejectReason;
+      }
+
+      item.reviewedBy = operatorId;
+      item.reviewedAt = new Date();
+
+      const savedCase = await proxyCaseRepository.save(item);
+      const savedWorker = await userRepository.save(worker);
+
+      return { proxyCase: savedCase, workerUser: savedWorker, previousStatus: beforeStatus };
+    });
+
+    await this.operationLogService.logWithContext({
+      operationType: OperationType.AUDIT,
+      resourceType: ResourceType.PROXY_REGISTRATION_CASE,
+      resourceId: proxyCase.id,
+      userId: operatorId,
+      request,
+      description: `代注册单审核: ${previousStatus} -> ${proxyCase.status}`,
+      beforeData: {
+        status: previousStatus,
+      },
+      afterData: {
+        status: proxyCase.status,
+        workerInfoAuditStatus: workerUser.infoAuditStatus,
+        rejectReason: proxyCase.rejectReason,
+      },
+    });
+
+    return {
+      caseId: proxyCase.id,
+      status: proxyCase.status,
+      reviewedBy: proxyCase.reviewedBy,
+      reviewedAt: proxyCase.reviewedAt,
+      rejectReason: proxyCase.rejectReason,
+      workerInfoAuditStatus: workerUser.infoAuditStatus,
+    };
+  }
+
+  async takeoverProxyAccount(
+    caseId: number,
+    userId: number,
+    nextPhone: string,
+    idCardLast6: string,
+    request?: any,
+  ) {
+    const { proxyCase, workerUser } = await this.dataSource.transaction(async (manager) => {
+      const proxyCaseRepository = manager.getRepository(ProxyRegistrationCase);
+      const userRepository = manager.getRepository(SysUser);
+
+      const item = await proxyCaseRepository.findOne({
+        where: { id: caseId },
+        lock: { mode: 'pessimistic_write' },
+      });
+      if (!item) {
+        throw new NotFoundException('代注册单不存在');
+      }
+      if (item.workerUserId !== userId) {
+        throw new ForbiddenException('仅该代注册单对应的工人可执行账号接管');
+      }
+      if (item.status !== ProxyRegistrationStatus.APPROVED) {
+        throw new ConflictException('仅审核通过的代注册单可执行账号接管');
+      }
+
+      const worker = await userRepository.findOne({
+        where: { id: userId },
+        lock: { mode: 'pessimistic_write' },
+      });
+      if (!worker || worker.isDeleted) {
+        throw new NotFoundException('用户不存在');
+      }
+      if (worker.registerMode !== RegisterMode.PROXY) {
+        throw new BadRequestException('当前用户不是代注册账号，无需接管');
+      }
+      if (!worker.idCard || !worker.idCard.endsWith(idCardLast6)) {
+        throw new ForbiddenException('身份证后 6 位校验失败');
+      }
+
+      const nextPhoneHash = this.securityService.hash(nextPhone);
+      const existing = await userRepository.findOne({ where: { phoneHash: nextPhoneHash, isDeleted: false } });
+      if (existing && existing.id !== userId) {
+        throw new ConflictException('手机号已被使用');
+      }
+
+      worker.phone = nextPhone;
+      worker.phoneHash = nextPhoneHash;
+      worker.registerMode = RegisterMode.SELF;
+      worker.accountOwnerVerified = true;
+      worker.loginLockReason = null;
+      worker.infoAuditStatus = 1;
+
+      item.status = ProxyRegistrationStatus.TAKEOVER_DONE;
+      item.reviewedBy = userId;
+      item.reviewedAt = new Date();
+
+      const savedWorker = await userRepository.save(worker);
+      const savedCase = await proxyCaseRepository.save(item);
+
+      return {
+        proxyCase: savedCase,
+        workerUser: savedWorker,
+      };
+    });
+
+    await this.operationLogService.logWithContext({
+      operationType: OperationType.UPDATE,
+      resourceType: ResourceType.PROXY_REGISTRATION_CASE,
+      resourceId: proxyCase.id,
+      userId,
+      request,
+      description: `代注册账号完成接管: case=${proxyCase.id}, user=${workerUser.uid}`,
+      afterData: {
+        status: proxyCase.status,
+        registerMode: workerUser.registerMode,
+        accountOwnerVerified: workerUser.accountOwnerVerified,
+      },
+    });
+
+    return {
+      caseId: proxyCase.id,
+      status: proxyCase.status,
+      workerUserId: workerUser.id,
+      workerUid: workerUser.uid,
+      msg: '账号接管完成',
+    };
+  }
+
   /**
    * 获取管理端用户列表。
    * 支持角色、审核状态、关键字和分页筛选，并返回适合前端直接消费的扁平化结构。
@@ -411,6 +824,9 @@ export class UserService {
         emergencyPhone: u.emergencyPhone,
         homeAddress: u.homeAddress,
         infoAuditStatus: u.infoAuditStatus,
+        registerMode: u.registerMode,
+        accountOwnerVerified: u.accountOwnerVerified,
+        loginLockReason: u.loginLockReason,
         regionCode: u.regionCode,
         assignedBaseId: u.assignedBaseId,
         createdAt: u.createdAt,
@@ -479,6 +895,9 @@ export class UserService {
       user.bankCardNo = null;
       user.bankCardNoHash = null;
       user.infoAuditStatus = 2;
+      user.registerMode = RegisterMode.SELF;
+      user.accountOwnerVerified = false;
+      user.loginLockReason = '账号已删除';
       user.isDeleted = true;
       const saved = await userRepository.save(user);
       return { saved, originalRoleKey };

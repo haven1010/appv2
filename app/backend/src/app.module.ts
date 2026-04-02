@@ -11,6 +11,7 @@ import { AppService } from './app.service';
 
 // 所有实体一次性全局导入（终极解决方案！）
 import { SysUser } from './modules/user/entities/sys-user.entity';
+import { ProxyRegistrationCase } from './modules/user/entities/proxy-registration-case.entity';
 import { BaseInfo } from './modules/base/entities/base-info.entity';
 import { RecruitmentJob } from './modules/base/entities/recruitment-job.entity';
 import { JobApplication } from './modules/base/entities/job-application.entity';
@@ -85,6 +86,7 @@ import { CommonModule } from './modules/common/common.module';
           database: dbConfig.database,
           entities: [
             SysUser,
+            ProxyRegistrationCase,
             BaseInfo,
             RecruitmentJob,
             JobApplication,
