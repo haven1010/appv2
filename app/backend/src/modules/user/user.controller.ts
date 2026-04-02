@@ -139,6 +139,16 @@ export class UserController {
     return this.userService.createProxyRegistration(dto, { request: req });
   }
 
+  @Patch('proxy-registration/:id/resubmit')
+  @ApiOperation({ summary: '驳回后修订并重新提交代注册单' })
+  async resubmitProxyRegistration(
+    @Req() req,
+    @Param('id', ParseIntPipe) caseId: number,
+    @Body() dto: CreateProxyRegistrationDto,
+  ) {
+    return this.userService.resubmitProxyRegistration(caseId, dto, req);
+  }
+
   @Post('admin')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.SUPER_ADMIN)

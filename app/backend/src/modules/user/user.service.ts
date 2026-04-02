@@ -108,6 +108,21 @@ export class UserService {
     return (await qb.getCount()) > 0;
   }
 
+  private async findLatestResubmittableCase(
+    workerUserId: number,
+    manager?: EntityManager,
+  ): Promise<ProxyRegistrationCase | null> {
+    const proxyCaseRepository = manager ? manager.getRepository(ProxyRegistrationCase) : this.proxyRegistrationRepository;
+
+    return proxyCaseRepository.findOne({
+      where: {
+        workerUserId,
+        status: In([ProxyRegistrationStatus.REJECTED, ProxyRegistrationStatus.REVOKED]),
+      },
+      order: { updatedAt: 'DESC' },
+    });
+  }
+
   /**
    * 创建用户并完成敏感字段 hash 计算、唯一性校验和默认审核状态初始化。
    * 副作用:
@@ -247,11 +262,19 @@ export class UserService {
 
     const existingUserByIdCard = await this.userRepository.findOne({ where: { idCardHash, isDeleted: false } });
     if (existingUserByIdCard) {
+      const resubmittableCase = await this.findLatestResubmittableCase(existingUserByIdCard.id);
+      if (resubmittableCase) {
+        throw new ConflictException(`身份证号已有驳回记录，请改用重提接口并传入 caseId=${resubmittableCase.id}`);
+      }
       throw new ConflictException('身份证号已被注册');
     }
 
     const existingUserByPhone = await this.userRepository.findOne({ where: { phoneHash, isDeleted: false } });
     if (existingUserByPhone) {
+      const resubmittableCase = await this.findLatestResubmittableCase(existingUserByPhone.id);
+      if (resubmittableCase) {
+        throw new ConflictException(`手机号已有驳回记录，请改用重提接口并传入 caseId=${resubmittableCase.id}`);
+      }
       throw new ConflictException('手机号已被注册');
     }
 
@@ -346,6 +369,122 @@ export class UserService {
       status: savedCase.status,
       riskLevel: savedCase.riskLevel,
       msg: '代注册提交成功，等待审核',
+    };
+  }
+
+  async resubmitProxyRegistration(caseId: number, dto: CreateProxyRegistrationDto, request?: any) {
+    const idCardHash = this.securityService.hash(dto.workerIdCard);
+    const phoneHash = this.securityService.hash(dto.workerPhone);
+    const proxyPhoneHash = this.securityService.hash(dto.proxyPhone);
+    const normalizedWorkerBankCardNo = this.normalizeBankCardNo(dto.workerBankCardNo);
+    const workerBankCardNoHash = normalizedWorkerBankCardNo
+      ? this.securityService.hash(normalizedWorkerBankCardNo)
+      : null;
+    const risk = await this.evaluateProxyRisk(proxyPhoneHash, workerBankCardNoHash);
+
+    const { savedCase, savedWorker } = await this.dataSource.transaction(async (manager) => {
+      const userRepository = manager.getRepository(SysUser);
+      const proxyCaseRepository = manager.getRepository(ProxyRegistrationCase);
+
+      const proxyCase = await proxyCaseRepository.findOne({
+        where: { id: caseId },
+        lock: { mode: 'pessimistic_write' },
+      });
+      if (!proxyCase) {
+        throw new NotFoundException('代注册单不存在');
+      }
+
+      if (![ProxyRegistrationStatus.REJECTED, ProxyRegistrationStatus.REVOKED].includes(proxyCase.status)) {
+        throw new ConflictException('仅驳回或撤销状态的代注册单可重提');
+      }
+
+      const workerUser = await userRepository.findOne({
+        where: { id: proxyCase.workerUserId },
+        lock: { mode: 'pessimistic_write' },
+      });
+      if (!workerUser || workerUser.isDeleted) {
+        throw new NotFoundException('代注册单对应工人用户不存在');
+      }
+
+      const existingIdCardUser = await userRepository.findOne({ where: { idCardHash, isDeleted: false } });
+      if (existingIdCardUser && existingIdCardUser.id !== workerUser.id) {
+        throw new ConflictException('身份证号已被其他账号使用');
+      }
+
+      const existingPhoneUser = await userRepository.findOne({ where: { phoneHash, isDeleted: false } });
+      if (existingPhoneUser && existingPhoneUser.id !== workerUser.id) {
+        throw new ConflictException('手机号已被其他账号使用');
+      }
+
+      if (workerBankCardNoHash) {
+        const existingBankCardUser = await userRepository.findOne({ where: { bankCardNoHash: workerBankCardNoHash, isDeleted: false } });
+        if (existingBankCardUser && existingBankCardUser.id !== workerUser.id) {
+          const isWorkerSharedCard = existingBankCardUser.roleKey === UserRole.WORKER;
+          if (!isWorkerSharedCard) {
+            throw new ConflictException('银行卡号已被其他账号使用');
+          }
+        }
+      }
+
+      workerUser.name = dto.workerName;
+      workerUser.idCard = dto.workerIdCard;
+      workerUser.idCardHash = idCardHash;
+      workerUser.phone = dto.workerPhone;
+      workerUser.phoneHash = phoneHash;
+      workerUser.emergencyContact = dto.workerEmergencyContact || null;
+      workerUser.emergencyPhone = dto.workerEmergencyPhone || null;
+      workerUser.emergencyPhoneHash = dto.workerEmergencyPhone
+        ? this.securityService.hash(dto.workerEmergencyPhone)
+        : null;
+      workerUser.homeAddress = dto.workerHomeAddress || null;
+      workerUser.bankName = dto.workerBankName || null;
+      workerUser.bankCardNo = normalizedWorkerBankCardNo;
+      workerUser.bankCardNoHash = workerBankCardNoHash;
+      workerUser.infoAuditStatus = 0;
+      workerUser.registerMode = RegisterMode.PROXY;
+      workerUser.accountOwnerVerified = false;
+      workerUser.loginLockReason = '代注册待审核';
+
+      proxyCase.proxyName = dto.proxyName;
+      proxyCase.proxyPhone = dto.proxyPhone;
+      proxyCase.proxyPhoneHash = proxyPhoneHash;
+      proxyCase.relationToWorker = dto.relationToWorker;
+      proxyCase.consentType = dto.consentType || 'family_confirm';
+      proxyCase.consentStatement = dto.consentStatement || null;
+      proxyCase.consentEvidenceUrl = dto.consentEvidenceUrl || null;
+      proxyCase.status = ProxyRegistrationStatus.PENDING_REVIEW;
+      proxyCase.riskLevel = risk.level;
+      proxyCase.riskTagsJson = risk.tags.length > 0 ? JSON.stringify(risk.tags) : null;
+      proxyCase.rejectReason = null;
+      proxyCase.reviewedBy = null;
+      proxyCase.reviewedAt = null;
+
+      const nextWorker = await userRepository.save(workerUser);
+      const nextCase = await proxyCaseRepository.save(proxyCase);
+      return { savedCase: nextCase, savedWorker: nextWorker };
+    });
+
+    await this.operationLogService.logWithContext({
+      operationType: OperationType.UPDATE,
+      resourceType: ResourceType.PROXY_REGISTRATION_CASE,
+      resourceId: savedCase.id,
+      userId: 0,
+      request,
+      description: `代注册单重提: case=${savedCase.id}, worker=${savedWorker.uid}`,
+      afterData: {
+        status: savedCase.status,
+        riskLevel: savedCase.riskLevel,
+        workerInfoAuditStatus: savedWorker.infoAuditStatus,
+      },
+    });
+
+    return {
+      caseId: savedCase.id,
+      status: savedCase.status,
+      workerUserId: savedWorker.id,
+      workerUid: savedWorker.uid,
+      riskLevel: savedCase.riskLevel,
+      msg: '代注册已重新提交，等待审核',
     };
   }
 
