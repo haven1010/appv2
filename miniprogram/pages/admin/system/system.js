@@ -52,6 +52,31 @@ function inferGender(idCard) {
   return code % 2 === 0 ? '女' : '男';
 }
 
+function calcAgeFromIdCard(idCard) {
+  const text = String(idCard || '').trim();
+  if (!/^\d{17}[\dX]$/i.test(text)) return '';
+  const birth = text.slice(6, 14);
+  const year = Number(birth.slice(0, 4));
+  const month = Number(birth.slice(4, 6));
+  const day = Number(birth.slice(6, 8));
+  if (!year || !month || !day) return '';
+  const now = new Date();
+  let age = now.getFullYear() - year;
+  const nowMonth = now.getMonth() + 1;
+  const nowDay = now.getDate();
+  if (nowMonth < month || (nowMonth === month && nowDay < day)) {
+    age -= 1;
+  }
+  if (!Number.isFinite(age) || age < 0 || age > 120) return '';
+  return String(age);
+}
+
+function poorHouseholdText(value) {
+  if (value === true || value === 1 || value === '1') return '是';
+  if (value === false || value === 0 || value === '0') return '否';
+  return '未知';
+}
+
 function formatTime(value) {
   if (!value) return '-';
   const raw = String(value).trim();
@@ -132,8 +157,15 @@ function cloneBaseReportList(list) {
       name: row.name || '-',
       gender: row.gender || '未知',
       idCard: row.idCard || '-',
+      age: row.age || '',
       address: row.address || '-',
       poorHousehold: row.poorHousehold || '未知',
+      phone: row.phone || '-',
+      workLocation: row.workLocation || '-',
+      workType: row.workType || '-',
+      workStartTime: row.workStartTime || '',
+      workEndTime: row.workEndTime || '',
+      remark: row.remark || '',
       totalIncome: safeNumber(row.totalIncome, 0),
       signature: row.signature || '',
     })),
@@ -298,18 +330,43 @@ Page({
       if (!grouped[baseId].workerMap[workerKey]) {
         grouped[baseId].workerMap[workerKey] = {
           name: workerName,
-          gender: inferGender(idCard),
+          gender: row.workerGender === 'male' ? '男' : row.workerGender === 'female' ? '女' : inferGender(idCard),
           idCard: idCard || '-',
+          age: calcAgeFromIdCard(idCard),
           address: row.workerAddress || row.address || '-',
-          poorHousehold:
-            row.isPoorHousehold === true || row.isPoor === true
-              ? '是'
-              : row.isPoorHousehold === false || row.isPoor === false
-                ? '否'
-                : '未知',
+          poorHousehold: poorHouseholdText(row.isPoorHousehold ?? row.isPoor),
+          phone: row.workerPhone || '-',
+          workLocation: baseName,
+          workTypeSet: {},
+          workStartTime: row.workerWorkStartTime || '',
+          workEndTime: row.workerWorkEndTime || '',
+          remark: '',
           totalIncome: 0,
           signature: '',
         };
+      }
+
+      if (row.jobTitle) {
+        grouped[baseId].workerMap[workerKey].workTypeSet[row.jobTitle] = true;
+      }
+
+      const incomingStart = String(row.workerWorkStartTime || '').trim();
+      const incomingEnd = String(row.workerWorkEndTime || '').trim();
+      if (incomingStart) {
+        const currentStart = String(grouped[baseId].workerMap[workerKey].workStartTime || '').trim();
+        const incomingStartTs = new Date(incomingStart.replace(' ', 'T')).getTime();
+        const currentStartTs = currentStart ? new Date(currentStart.replace(' ', 'T')).getTime() : NaN;
+        if (!currentStart || (Number.isFinite(incomingStartTs) && (!Number.isFinite(currentStartTs) || incomingStartTs < currentStartTs))) {
+          grouped[baseId].workerMap[workerKey].workStartTime = incomingStart;
+        }
+      }
+      if (incomingEnd) {
+        const currentEnd = String(grouped[baseId].workerMap[workerKey].workEndTime || '').trim();
+        const incomingEndTs = new Date(incomingEnd.replace(' ', 'T')).getTime();
+        const currentEndTs = currentEnd ? new Date(currentEnd.replace(' ', 'T')).getTime() : NaN;
+        if (!currentEnd || (Number.isFinite(incomingEndTs) && (!Number.isFinite(currentEndTs) || incomingEndTs > currentEndTs))) {
+          grouped[baseId].workerMap[workerKey].workEndTime = incomingEnd;
+        }
       }
 
       grouped[baseId].workerMap[workerKey].totalIncome += safeNumber(row.totalAmount || row.amount, 0);
@@ -323,8 +380,15 @@ Page({
             name: base.workerMap[key].name,
             gender: base.workerMap[key].gender,
             idCard: base.workerMap[key].idCard,
+            age: base.workerMap[key].age,
             address: base.workerMap[key].address,
             poorHousehold: base.workerMap[key].poorHousehold,
+            phone: base.workerMap[key].phone,
+            workLocation: base.workerMap[key].workLocation,
+            workType: Object.keys(base.workerMap[key].workTypeSet || {}).join(' / ') || '-',
+            workStartTime: formatTime(base.workerMap[key].workStartTime),
+            workEndTime: formatTime(base.workerMap[key].workEndTime),
+            remark: base.workerMap[key].remark || '',
             totalIncome: Number(base.workerMap[key].totalIncome.toFixed(2)),
             signature: base.workerMap[key].signature,
           }))
@@ -334,8 +398,15 @@ Page({
             name: item.name,
             gender: item.gender,
             idCard: item.idCard,
+            age: item.age,
             address: item.address,
             poorHousehold: item.poorHousehold,
+            phone: item.phone,
+            workLocation: item.workLocation,
+            workType: item.workType,
+            workStartTime: item.workStartTime,
+            workEndTime: item.workEndTime,
+            remark: item.remark,
             totalIncome: item.totalIncome,
             signature: item.signature,
           }));
@@ -690,8 +761,15 @@ Page({
       name: row.name || '-',
       gender: row.gender || '未知',
       idCard: row.idCard || '-',
+      age: row.age || '',
       address: row.address || '-',
       poorHousehold: row.poorHousehold || '未知',
+      phone: row.phone || '-',
+      workLocation: row.workLocation || '-',
+      workType: row.workType || '-',
+      workStartTime: row.workStartTime || '',
+      workEndTime: row.workEndTime || '',
+      remark: row.remark || '',
       totalIncome: safeNumber(row.totalIncome, 0),
       signature: row.signature || '',
     }));

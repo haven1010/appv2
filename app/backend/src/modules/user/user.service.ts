@@ -6,12 +6,8 @@
 import { Injectable, BadRequestException, ConflictException, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In, DataSource, EntityManager } from 'typeorm';
-<<<<<<< HEAD
 import * as crypto from 'crypto';
-import { SysUser, UserRole } from './entities/sys-user.entity';
-=======
 import { SysUser, UserRole, RegisterMode } from './entities/sys-user.entity';
->>>>>>> 7db65abbab193ceea17c656d1c49b00cb723f13f
 import { CreateUserDto } from './dto/create-user.dto';
 import { CreateProxyRegistrationDto } from './dto/create-proxy-registration.dto';
 import {
@@ -361,6 +357,8 @@ export class UserService {
         name: dto.workerName,
         idCard: dto.workerIdCard,
         phone: dto.workerPhone,
+        gender: dto.workerGender,
+        isPoorHousehold: dto.workerIsPoorHousehold,
         roleKey,
         idCardHash,
         phoneHash,
@@ -498,6 +496,8 @@ export class UserService {
       workerUser.idCardHash = idCardHash;
       workerUser.phone = dto.workerPhone;
       workerUser.phoneHash = phoneHash;
+      workerUser.gender = dto.workerGender;
+      workerUser.isPoorHousehold = dto.workerIsPoorHousehold;
       workerUser.emergencyContact = dto.workerEmergencyContact || null;
       workerUser.emergencyPhone = dto.workerEmergencyPhone || null;
       workerUser.emergencyPhoneHash = dto.workerEmergencyPhone
@@ -1136,6 +1136,8 @@ export class UserService {
         registerMode: u.registerMode,
         accountOwnerVerified: u.accountOwnerVerified,
         loginLockReason: u.loginLockReason,
+        gender: u.gender,
+        isPoorHousehold: u.isPoorHousehold,
         regionCode: u.regionCode,
         assignedBaseId: u.assignedBaseId,
         createdAt: u.createdAt,
@@ -1275,8 +1277,6 @@ export class UserService {
           offlineEvents: offlineResult.affected || 0,
         });
       }
-<<<<<<< HEAD
-
       // 2) Delete/clean records directly related to this user.
       await manager
         .createQueryBuilder()
@@ -1369,23 +1369,6 @@ export class UserService {
         ownSignupCount: ownSignupIds.length,
         ownRatingCount: ownRatingResult.affected || 0,
       };
-=======
-      user.assignedBaseId = null;
-      user.emergencyContact = null;
-      user.emergencyPhone = null;
-      user.emergencyPhoneHash = null;
-      user.homeAddress = null;
-      user.bankName = null;
-      user.bankCardNo = null;
-      user.bankCardNoHash = null;
-      user.infoAuditStatus = 2;
-      user.registerMode = RegisterMode.SELF;
-      user.accountOwnerVerified = false;
-      user.loginLockReason = '账号已删除';
-      user.isDeleted = true;
-      const saved = await userRepository.save(user);
-      return { saved, originalRoleKey };
->>>>>>> 7db65abbab193ceea17c656d1c49b00cb723f13f
     });
 
     await this.operationLogService.logWithContext({

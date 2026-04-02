@@ -135,3 +135,64 @@
   padding-top: 12rpx;
   border-top: 1rpx dashed rgba(106, 153, 78, 0.2);
 }
+
+.btn-end-work-mini {
+  min-height: 58rpx;
+  line-height: 58rpx;
+  min-width: 182rpx;
+  width: auto !important;
+  padding: 0 20rpx;
+  font-size: 22rpx;
+  font-weight: 700;
+  margin: 0;
+  border-radius: 999rpx;
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+}
+
+.dialog-mask {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  background: rgba(26, 34, 45, 0.45);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 24rpx;
+  box-sizing: border-box;
+}
+
+.dialog-panel {
+  width: 100%;
+  background: #fffdf8;
+  border: 2rpx solid rgba(106, 153, 78, 0.16);
+  border-radius: 24rpx;
+  padding: 22rpx;
+  box-sizing: border-box;
+  box-shadow: 0 16rpx 32rpx rgba(30, 44, 59, 0.2);
+}
+
+.dialog-title {
+  font-size: 30rpx;
+  color: var(--ink-main);
+  font-weight: 800;
+}
+
+.dialog-sub {
+  margin-top: 8rpx;
+  font-size: 23rpx;
+  color: var(--ink-sub);
+}
+
+.dialog-picker-row {
+  margin-top: 12rpx;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12rpx;
+}
+
+.dialog-picker-item {
+  min-width: 0;
+}

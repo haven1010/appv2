@@ -12,6 +12,16 @@ const BOSS_BANK_OPTIONS = [
   { label: '招商银行', value: '招商银行' },
   { label: '中国邮政储蓄银行', value: '中国邮政储蓄银行' },
 ];
+const GENDER_OPTIONS = [
+  { label: '请选择性别', value: '' },
+  { label: '男', value: 'male' },
+  { label: '女', value: 'female' },
+];
+const POVERTY_OPTIONS = [
+  { label: '请选择是否贫困户', value: '' },
+  { label: '是', value: 'yes' },
+  { label: '否', value: 'no' },
+];
 
 function normalizeRegisterRole(role) {
   return role === 'boss' ? 'boss' : 'worker';
@@ -94,6 +104,10 @@ Page({
     registerRole: 'worker',
     bossBankOptions: BOSS_BANK_OPTIONS,
     bossBankIndex: 0,
+    genderOptions: GENDER_OPTIONS,
+    genderIndex: 0,
+    povertyOptions: POVERTY_OPTIONS,
+    povertyIndex: 0,
     registerMode: 'self',
     name: '',
     idCard: '',
@@ -156,6 +170,20 @@ Page({
 
   onInputPhone(e) {
     this.setData({ phone: cleanPhone(e.detail.value), error: '' });
+  },
+
+  onGenderChange(e) {
+    this.setData({
+      genderIndex: Number(e.detail.value || 0),
+      error: '',
+    });
+  },
+
+  onPovertyChange(e) {
+    this.setData({
+      povertyIndex: Number(e.detail.value || 0),
+      error: '',
+    });
   },
 
   onInputHomeAddress(e) {
@@ -289,6 +317,9 @@ Page({
     const proxyPhone = cleanPhone(this.data.proxyPhone);
     const relationToWorker = normalizeText(this.data.relationToWorker);
     const consentStatement = normalizeText(this.data.consentStatement);
+    const gender = this.data.genderOptions[this.data.genderIndex]?.value || '';
+    const povertySelection = this.data.povertyOptions[this.data.povertyIndex]?.value || '';
+    const isPoorHousehold = povertySelection === 'yes';
 
     if (!name) {
       this.setData({ error: '请输入真实姓名' });
@@ -323,6 +354,16 @@ Page({
     }
 
     if (registerRole === 'worker') {
+      if (!gender) {
+        this.setData({ error: '请选择性别' });
+        return;
+      }
+
+      if (!povertySelection) {
+        this.setData({ error: '请选择是否贫困户' });
+        return;
+      }
+
       if (!bankName) {
         this.setData({ error: '请输入开户银行' });
         return;
@@ -369,6 +410,8 @@ Page({
       proxyPhone,
       relationToWorker,
       consentStatement,
+      genderIndex: this.data.genderIndex,
+      povertyIndex: this.data.povertyIndex,
       loading: true,
       error: '',
     });
@@ -379,6 +422,8 @@ Page({
           workerName: name,
           workerIdCard: idCard,
           workerPhone: phone,
+          workerGender: gender,
+          workerIsPoorHousehold: isPoorHousehold,
           workerHomeAddress: homeAddress,
           workerBankName: bankName,
           workerBankCardNo: bankCardNo,
@@ -421,6 +466,8 @@ Page({
       };
 
       if (registerRole === 'worker') {
+        payload.gender = gender;
+        payload.isPoorHousehold = isPoorHousehold;
         payload.bankName = bankName;
         payload.bankCardNo = bankCardNo;
       }

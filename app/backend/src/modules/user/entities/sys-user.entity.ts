@@ -31,6 +31,11 @@ export enum RegisterMode {
   PROXY = 'proxy',
 }
 
+export enum Gender {
+  MALE = 'male',
+  FEMALE = 'female',
+}
+
 export const VALID_REGISTER_ROLES: UserRole[] = [
   UserRole.SUPER_ADMIN,
   UserRole.BOSS,
@@ -99,6 +104,25 @@ export class SysUser {
   @ApiProperty({ description: 'Face image URL', required: false, nullable: true })
   @Column({ name: 'face_img_url', length: 255, nullable: true, comment: 'COS URL for Face/ID Photo' })
   faceImgUrl: string;
+
+  @ApiProperty({ description: 'Gender', enum: Gender, required: false, nullable: true })
+  @Column({
+    name: 'gender',
+    type: 'enum',
+    enum: Gender,
+    nullable: true,
+    comment: 'male:男, female:女',
+  })
+  gender: Gender | null;
+
+  @ApiProperty({ description: '是否贫困户', required: false, nullable: true })
+  @Column({
+    name: 'is_poor_household',
+    type: 'tinyint',
+    nullable: true,
+    comment: '1:是, 0:否',
+  })
+  isPoorHousehold: boolean | null;
 
   @ApiProperty({ description: 'Region code (for regional admins)', required: false, nullable: true })
   @Column({ name: 'region_code', type: 'int', nullable: true, comment: 'For Region Admins' })

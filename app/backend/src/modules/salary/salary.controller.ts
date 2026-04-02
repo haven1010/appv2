@@ -32,6 +32,60 @@ export class SalaryController {
     return marker % 2 === 0 ? '女' : '男';
   }
 
+  private resolveGender(value: string | null | undefined, idCard: string): string {
+    const text = String(value || '').trim().toLowerCase();
+    if (text === 'male') return '男';
+    if (text === 'female') return '女';
+    return this.inferGender(idCard);
+  }
+
+  private calcAgeFromIdCard(idCard: string, now = new Date()): string {
+    const id = String(idCard || '').trim();
+    if (!/^\d{17}[\dX]$/i.test(id)) return '';
+
+    const birth = id.slice(6, 14);
+    const year = Number(birth.slice(0, 4));
+    const month = Number(birth.slice(4, 6));
+    const day = Number(birth.slice(6, 8));
+    if (!year || !month || !day) return '';
+
+    let age = now.getFullYear() - year;
+    const currentMonth = now.getMonth() + 1;
+    const currentDay = now.getDate();
+    if (currentMonth < month || (currentMonth === month && currentDay < day)) {
+      age -= 1;
+    }
+    if (!Number.isFinite(age) || age < 0 || age > 120) return '';
+    return String(age);
+  }
+
+  private normalizePoorHousehold(value: unknown): string {
+    if (value === true || value === 1 || value === '1') return '是';
+    if (value === false || value === 0 || value === '0') return '否';
+    return '未知';
+  }
+
+  private formatDateTime(value: string | Date | null | undefined): string {
+    if (!value) return '';
+    const date = value instanceof Date ? value : new Date(String(value).replace(' ', 'T'));
+    if (Number.isNaN(date.getTime())) {
+      return String(value).replace('T', ' ').slice(0, 19);
+    }
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    const hh = String(date.getHours()).padStart(2, '0');
+    const mm = String(date.getMinutes()).padStart(2, '0');
+    const ss = String(date.getSeconds()).padStart(2, '0');
+    return `${y}-${m}-${d} ${hh}:${mm}:${ss}`;
+  }
+
+  private normalizeSheetName(name: string, fallback: string): string {
+    const safe = String(name || '').replace(/[\\/?*[\]:]/g, '').trim();
+    const source = safe || fallback;
+    return source.slice(0, 31) || fallback;
+  }
+
   @Get('list')
   @ApiOperation({ summary: '获取工资记录列表' })
   @ApiQuery({ name: 'baseId', required: false, description: '基地ID' })
@@ -157,74 +211,147 @@ export class SalaryController {
     const listRes = await this.salaryService.getList(query, req.user);
     const list: any[] = Array.isArray(listRes?.list) ? listRes.list : [];
 
-    const grouped: Record<string, any> = {};
+    const groupedByBase: Record<string, any> = {};
     for (let i = 0; i < list.length; i += 1) {
-      const row: any = list[i] || {};
-      const name = row.workerName || '-';
+      const row = list[i] || {};
+      const baseId = String(row.baseId || 'unknown');
+      const baseName = row.baseName || `基地#${baseId}`;
       const uid = row.workerUid || `unknown-${i}`;
+      const name = row.workerName || '-';
       const idCard = row.workerIdCard || '';
-      const groupKey = `${uid}__${idCard || name}`;
+      const workerKey = `${uid}__${idCard || name}`;
 
-      if (!grouped[groupKey]) {
-        grouped[groupKey] = {
-          name,
-          gender: this.inferGender(idCard),
-          idCard: idCard || '-',
-          address: row.workerAddress || row.address || '-',
-          poorHousehold:
-            row.isPoorHousehold === true || row.isPoor === true
-              ? '是'
-              : row.isPoorHousehold === false || row.isPoor === false
-                ? '否'
-                : '未知',
-          totalIncome: 0,
+      if (!groupedByBase[baseId]) {
+        groupedByBase[baseId] = {
+          baseName,
+          workers: {},
         };
       }
 
-      grouped[groupKey].totalIncome += Number(row.totalAmount || row.amount || 0);
+      if (!groupedByBase[baseId].workers[workerKey]) {
+        groupedByBase[baseId].workers[workerKey] = {
+          name,
+          gender: this.resolveGender(row.workerGender, idCard),
+          idCard: idCard || '-',
+          age: this.calcAgeFromIdCard(idCard),
+          address: row.workerAddress || row.address || '-',
+          poorHousehold: this.normalizePoorHousehold(row.isPoorHousehold ?? row.isPoor),
+          phone: row.workerPhone || '-',
+          workLocation: baseName,
+          workTypeSet: {},
+          workStartTime: row.workerWorkStartTime || null,
+          workEndTime: row.workerWorkEndTime || null,
+          remark: '',
+        };
+      }
+
+      const target = groupedByBase[baseId].workers[workerKey];
+      if (row.jobTitle) {
+        target.workTypeSet[row.jobTitle] = true;
+      }
+
+      const startTime = row.workerWorkStartTime ? new Date(String(row.workerWorkStartTime).replace(' ', 'T')) : null;
+      const oldStartTime = target.workStartTime ? new Date(String(target.workStartTime).replace(' ', 'T')) : null;
+      if (startTime && !Number.isNaN(startTime.getTime()) && (!oldStartTime || startTime.getTime() < oldStartTime.getTime())) {
+        target.workStartTime = row.workerWorkStartTime;
+      }
+
+      const endTime = row.workerWorkEndTime ? new Date(String(row.workerWorkEndTime).replace(' ', 'T')) : null;
+      const oldEndTime = target.workEndTime ? new Date(String(target.workEndTime).replace(' ', 'T')) : null;
+      if (endTime && !Number.isNaN(endTime.getTime()) && (!oldEndTime || endTime.getTime() > oldEndTime.getTime())) {
+        target.workEndTime = row.workerWorkEndTime;
+      }
     }
 
-    const rows = Object.keys(grouped)
-      .map((key, index) => {
-        const item = grouped[key];
-        return {
-          serial: index + 1,
-          name: item.name,
-          gender: item.gender,
-          idCard: item.idCard,
-          address: item.address,
-          poorHousehold: item.poorHousehold,
-          totalIncome: Number(item.totalIncome.toFixed(2)),
-        };
-      })
-      .sort((a, b) => b.totalIncome - a.totalIncome)
-      .map((item, index) => Object.assign({}, item, { serial: index + 1 }));
+    const baseRows = Object.keys(groupedByBase).map((baseId) => {
+      const base = groupedByBase[baseId];
+      const rows = Object.keys(base.workers)
+        .map((workerKey) => {
+          const item = base.workers[workerKey];
+          return {
+            name: item.name,
+            gender: item.gender,
+            idCard: item.idCard,
+            age: item.age,
+            address: item.address,
+            poorHousehold: item.poorHousehold,
+            phone: item.phone,
+            workLocation: item.workLocation,
+            workType: Object.keys(item.workTypeSet).join(' / ') || '-',
+            workStartTime: this.formatDateTime(item.workStartTime),
+            workEndTime: this.formatDateTime(item.workEndTime),
+            remark: item.remark || '',
+          };
+        })
+        .sort((a, b) => String(a.name).localeCompare(String(b.name), 'zh-Hans-CN'))
+        .map((item, index) => ({ serial: index + 1, ...item }));
 
-    const excelRows = rows.map((item) => ([
-      item.serial,
-      item.name,
-      item.gender,
-      item.idCard,
-      item.address,
-      item.poorHousehold,
-      item.totalIncome,
-      '',
-    ]));
+      return {
+        baseId,
+        baseName: base.baseName,
+        rows,
+      };
+    });
+
+    const totalRows = baseRows
+      .flatMap((item) => item.rows.map((row) => ({ ...row, workLocation: item.baseName || row.workLocation })))
+      .map((item, index) => ({ ...item, serial: index + 1 }));
+
+    const columns = [
+      '序号',
+      '姓名',
+      '性别',
+      '身份证号',
+      '年龄',
+      '家庭住址',
+      '是否贫困户',
+      '联系电话',
+      '务工地点',
+      '从事工种',
+      '务工开始时间',
+      '务工结束时间',
+      '备注',
+    ];
+
+    const toSheetRows = (rows: any[]) =>
+      rows.map((item) => ([
+        item.serial,
+        item.name || '-',
+        item.gender || '未知',
+        item.idCard || '-',
+        item.age || '',
+        item.address || '-',
+        item.poorHousehold || '未知',
+        item.phone || '-',
+        item.workLocation || '-',
+        item.workType || '-',
+        item.workStartTime || '',
+        item.workEndTime || '',
+        item.remark || '',
+      ]));
 
     const dateFrom = String(query?.dateFrom || '').trim();
     const dateTo = String(query?.dateTo || '').trim();
     const range = dateFrom && dateTo ? `${dateFrom}_${dateTo}` : new Date().toISOString().slice(0, 10);
 
+    const sheets = [
+      {
+        name: this.normalizeSheetName(`总名单${totalRows.length}人`, '总名单'),
+        columns,
+        rows: toSheetRows(totalRows),
+      },
+    ].concat(
+      baseRows.map((item) => ({
+        name: this.normalizeSheetName(`${item.baseName}${item.rows.length}`, `基地${item.baseId}`),
+        columns,
+        rows: toSheetRows(item.rows),
+      })),
+    );
+
     return {
-      fileName: `薪资报表-${range}.xlsx`,
-      rowCount: excelRows.length,
-      fileBase64: buildXlsxBase64([
-        {
-          name: '薪资报表',
-          columns: ['序号', '姓名', '性别', '身份证号', '地址', '是否脱贫户', '总收入', '签字'],
-          rows: excelRows,
-        },
-      ]),
+      fileName: `人员信息表-${range}.xlsx`,
+      rowCount: totalRows.length,
+      fileBase64: buildXlsxBase64(sheets),
     };
   }
 

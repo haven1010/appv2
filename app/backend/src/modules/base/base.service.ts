@@ -1020,7 +1020,7 @@ export class BaseService {
     return this.jobApplicationService.getApplicationsByUser(userId);
   }
 
-  async getApplicationsByBase(baseId: number, status?: number, viewerId?: number, viewerRole?: string) {
+  private async assertBaseViewerPermission(baseId: number, viewerId?: number, viewerRole?: string): Promise<BaseInfo> {
     const base = await this.baseRepo.findOne({ where: { id: baseId, isDeleted: false } });
     if (!base) {
       throw new NotFoundException('Base not found');
@@ -1028,21 +1028,58 @@ export class BaseService {
 
     const role = String(viewerRole || '');
     const isSuperAdmin = [UserRole.SUPER_ADMIN, UserRole.REGION_ADMIN].includes(role as UserRole);
-    const isManager = [UserRole.BASE_MANAGER, UserRole.FIELD_MANAGER].includes(role as UserRole);
     const isBoss = role === UserRole.BOSS;
+    const isBaseManager = role === UserRole.BASE_MANAGER;
+    const isFieldManager = role === UserRole.FIELD_MANAGER;
 
     if (isBoss) {
       if (!viewerId || Number(base.ownerId) !== Number(viewerId)) {
         throw new ConflictException('无权限查看该基地报名记录');
       }
       if (Number(base.auditStatus) !== Number(AuditStatus.APPROVED)) {
-        return [];
+        throw new ConflictException('基地尚未通过审核，暂不可查看人员记录');
       }
-    } else if (!isSuperAdmin && !isManager) {
-      throw new ConflictException('无权限查看基地报名记录');
+      return base;
     }
 
+    if (isBaseManager) {
+      if (!viewerId || Number(base.ownerId) !== Number(viewerId)) {
+        throw new ConflictException('无权限查看该基地报名记录');
+      }
+      return base;
+    }
+
+    if (isFieldManager) {
+      if (!viewerId) {
+        throw new ConflictException('无权限查看基地报名记录');
+      }
+      const fm = await this.userRepo.findOne({ where: { id: Number(viewerId), isDeleted: false } });
+      if (!fm || Number(fm.assignedBaseId || 0) !== Number(baseId)) {
+        throw new ConflictException('无权限查看该基地报名记录');
+      }
+      return base;
+    }
+
+    if (!isSuperAdmin) {
+      throw new ConflictException('无权限查看基地报名记录');
+    }
+    return base;
+  }
+
+  async getApplicationsByBase(baseId: number, status?: number, viewerId?: number, viewerRole?: string) {
+    await this.assertBaseViewerPermission(baseId, viewerId, viewerRole);
+
     return this.jobApplicationService.getApplicationsByBase(baseId, status as ApplicationStatus);
+  }
+
+  async endWorkerWork(baseId: number, userId: number, endWorkTime: string, viewerId?: number, viewerRole?: string, context?: OperationLogContext) {
+    await this.assertBaseViewerPermission(baseId, viewerId, viewerRole);
+    return this.jobApplicationService.markWorkerEndWork(baseId, userId, endWorkTime, Number(viewerId || 0), context);
+  }
+
+  async endAllWorkersWork(baseId: number, endWorkTime: string, viewerId?: number, viewerRole?: string, context?: OperationLogContext) {
+    await this.assertBaseViewerPermission(baseId, viewerId, viewerRole);
+    return this.jobApplicationService.markAllWorkersEndWork(baseId, endWorkTime, Number(viewerId || 0), context);
   }
 
   async reviewApplication(applicationId: number, status: number, reviewedBy: number, rejectReason?: string, context?: OperationLogContext) {

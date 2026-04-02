@@ -9,6 +9,7 @@ import { DataSource, In, Repository } from 'typeorm';
 import { JobApplication, ApplicationStatus } from '../entities/job-application.entity';
 import { RecruitmentJob } from '../entities/recruitment-job.entity';
 import { SysUser } from '../../user/entities/sys-user.entity';
+import { DailySignup, SignupStatus } from '../../attendance/entities/daily-signup.entity';
 import { OperationLogService, OperationLogContext } from '../../common/services/operation-log.service';
 import { OperationType, ResourceType } from '../../common/entities/operation-log.entity';
 
@@ -51,6 +52,27 @@ export class JobApplicationService {
 
     await this.jobRepo.update({ id: targetJobId }, { applicantCount });
     return applicantCount;
+  }
+
+  private normalizeDateTimeInput(value: string | Date): Date {
+    if (value instanceof Date) {
+      if (Number.isNaN(value.getTime())) {
+        throw new BadRequestException('结束务工时间格式不正确');
+      }
+      return value;
+    }
+
+    const text = String(value || '').trim();
+    if (!text) {
+      throw new BadRequestException('结束务工时间不能为空');
+    }
+
+    const normalized = text.includes('T') ? text : text.replace(' ', 'T');
+    const date = new Date(normalized);
+    if (Number.isNaN(date.getTime())) {
+      throw new BadRequestException('结束务工时间格式不正确');
+    }
+    return date;
   }
 
   async getApplicantCountsByJobIds(jobIds: number[]): Promise<Record<number, number>> {
@@ -137,35 +159,10 @@ export class JobApplicationService {
         this.rethrowDuplicatePendingApplication(error);
       }
     });
-
-<<<<<<< HEAD
-    if (existing) {
-      this.logger.warn(
-        `[重复申请拦截] userId=${userId}, baseId=${effectiveBaseId}, jobId=${jobId}, existingApplicationId=${existing.id}`,
-      );
-      throw new BadRequestException('您已申请过该岗位，请勿重复申请');
-    }
-
-    const application = this.applicationRepo.create({
-      userId,
-      jobId,
-      baseId: effectiveBaseId,
-      status: ApplicationStatus.PENDING,
-      note,
-    });
-
-    let saved: JobApplication;
-    try {
-      saved = await this.applicationRepo.save(application);
-    } catch (error) {
-      this.rethrowDuplicatePendingApplication(error);
-    }
     const applicantCount = await this.refreshApplicantCount(saved.jobId).catch((error) => {
       this.logger.warn(`[刷新报名统计失败] jobId=${saved.jobId}, reason=${error?.message || error}`);
       return null;
     });
-=======
->>>>>>> 7db65abbab193ceea17c656d1c49b00cb723f13f
     await this.operationLogService.logWithContext({
       operationType: OperationType.CREATE,
       resourceType: ResourceType.JOB,
@@ -263,10 +260,202 @@ export class JobApplicationService {
     if (status !== undefined && status !== null) {
       where.status = status;
     }
-    return this.applicationRepo.find({
+    const applications = await this.applicationRepo.find({
       where,
       relations: ['user', 'job', 'base'],
       order: { createdAt: 'DESC' },
     });
+
+    if (!applications.length) {
+      return [];
+    }
+
+    const userIds = Array.from(new Set(applications.map((item) => Number(item.userId)).filter((id) => id > 0)));
+    if (!userIds.length) {
+      return applications;
+    }
+
+    const firstCheckinRows = await this.dataSource
+      .getRepository(DailySignup)
+      .createQueryBuilder('signup')
+      .select('signup.userId', 'userId')
+      .addSelect('MIN(signup.checkinTime)', 'workStartTime')
+      .where('signup.baseId = :baseId', { baseId })
+      .andWhere('signup.userId IN (:...userIds)', { userIds })
+      .andWhere('signup.status = :checkedIn', { checkedIn: SignupStatus.CHECKED_IN })
+      .andWhere('signup.checkinTime IS NOT NULL')
+      .groupBy('signup.userId')
+      .getRawMany();
+
+    const workStartMap: Record<string, string> = {};
+    firstCheckinRows.forEach((row: any) => {
+      const userId = Number(row?.userId);
+      if (!userId) return;
+      workStartMap[String(userId)] = row?.workStartTime ? String(row.workStartTime) : '';
+    });
+
+    return applications.map((item) => {
+      const plain = item as JobApplication & { workStartTime?: string | null };
+      plain.workStartTime = workStartMap[String(item.userId)] || null;
+      return plain;
+    });
+  }
+
+  async markWorkerEndWork(
+    baseId: number,
+    userId: number,
+    endWorkTime: string | Date,
+    operatorId: number,
+    context?: OperationLogContext,
+  ) {
+    const safeBaseId = Number(baseId);
+    const safeUserId = Number(userId);
+    if (!safeBaseId || !safeUserId) {
+      throw new BadRequestException('参数不正确');
+    }
+
+    const endTime = this.normalizeDateTimeInput(endWorkTime);
+
+    const result = await this.dataSource.transaction(async (manager) => {
+      const targetRows = await manager.find(JobApplication, {
+        where: {
+          baseId: safeBaseId,
+          userId: safeUserId,
+          status: In([ApplicationStatus.PENDING, ApplicationStatus.APPROVED]),
+        },
+        lock: { mode: 'pessimistic_write' },
+      });
+
+      if (!targetRows.length) {
+        throw new NotFoundException('未找到可结束务工的人员记录');
+      }
+
+      const firstSignup = await manager.findOne(DailySignup, {
+        where: {
+          baseId: safeBaseId,
+          userId: safeUserId,
+          status: SignupStatus.CHECKED_IN,
+        },
+        order: { checkinTime: 'ASC' },
+      });
+
+      if (firstSignup?.checkinTime && endTime.getTime() < new Date(firstSignup.checkinTime).getTime()) {
+        throw new BadRequestException('结束务工时间不能早于首次签到时间');
+      }
+
+      const updateRes = await manager
+        .createQueryBuilder()
+        .update(JobApplication)
+        .set({
+          workEndTime: endTime,
+          workEndBy: operatorId,
+          workEndRecordedAt: new Date(),
+        })
+        .where('base_id = :baseId', { baseId: safeBaseId })
+        .andWhere('user_id = :userId', { userId: safeUserId })
+        .andWhere('status IN (:...statuses)', {
+          statuses: [ApplicationStatus.PENDING, ApplicationStatus.APPROVED],
+        })
+        .execute();
+
+      return {
+        affectedApplications: Number(updateRes.affected || 0),
+      };
+    });
+
+    await this.operationLogService.logWithContext({
+      operationType: OperationType.UPDATE,
+      resourceType: ResourceType.JOB,
+      resourceId: safeBaseId,
+      userId: operatorId,
+      request: context?.request,
+      description: `结束务工: baseId=${safeBaseId}, userId=${safeUserId}`,
+      afterData: {
+        baseId: safeBaseId,
+        userId: safeUserId,
+        endWorkTime: endTime.toISOString(),
+        affectedApplications: result.affectedApplications,
+      },
+    });
+
+    return {
+      baseId: safeBaseId,
+      userId: safeUserId,
+      endWorkTime: endTime.toISOString(),
+      affectedApplications: result.affectedApplications,
+    };
+  }
+
+  async markAllWorkersEndWork(
+    baseId: number,
+    endWorkTime: string | Date,
+    operatorId: number,
+    context?: OperationLogContext,
+  ) {
+    const safeBaseId = Number(baseId);
+    if (!safeBaseId) {
+      throw new BadRequestException('参数不正确');
+    }
+
+    const endTime = this.normalizeDateTimeInput(endWorkTime);
+
+    const targetUsers = await this.applicationRepo
+      .createQueryBuilder('application')
+      .select('DISTINCT application.userId', 'userId')
+      .where('application.baseId = :baseId', { baseId: safeBaseId })
+      .andWhere('application.status IN (:...statuses)', {
+        statuses: [ApplicationStatus.PENDING, ApplicationStatus.APPROVED],
+      })
+      .getRawMany();
+
+    const userIds = targetUsers
+      .map((item: any) => Number(item?.userId))
+      .filter((id) => Number.isInteger(id) && id > 0);
+
+    if (!userIds.length) {
+      return {
+        baseId: safeBaseId,
+        endWorkTime: endTime.toISOString(),
+        affectedUsers: 0,
+        affectedApplications: 0,
+      };
+    }
+
+    const updateRes = await this.applicationRepo
+      .createQueryBuilder()
+      .update(JobApplication)
+      .set({
+        workEndTime: endTime,
+        workEndBy: operatorId,
+        workEndRecordedAt: new Date(),
+      })
+      .where('base_id = :baseId', { baseId: safeBaseId })
+      .andWhere('user_id IN (:...userIds)', { userIds })
+      .andWhere('status IN (:...statuses)', {
+        statuses: [ApplicationStatus.PENDING, ApplicationStatus.APPROVED],
+      })
+      .execute();
+
+    await this.operationLogService.logWithContext({
+      operationType: OperationType.UPDATE,
+      resourceType: ResourceType.JOB,
+      resourceId: safeBaseId,
+      userId: operatorId,
+      request: context?.request,
+      description: `批量结束务工: baseId=${safeBaseId}`,
+      afterData: {
+        baseId: safeBaseId,
+        endWorkTime: endTime.toISOString(),
+        affectedUsers: userIds.length,
+        affectedApplications: Number(updateRes.affected || 0),
+      },
+    });
+
+    return {
+      baseId: safeBaseId,
+      endWorkTime: endTime.toISOString(),
+      affectedUsers: userIds.length,
+      affectedApplications: Number(updateRes.affected || 0),
+    };
   }
 }

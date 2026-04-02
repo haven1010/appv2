@@ -21,6 +21,23 @@ function formatDateTime(value) {
   return `${y}-${m}-${d} ${hh}:${mm}:${ss}`;
 }
 
+function formatDate(value) {
+  const date = value instanceof Date ? value : new Date(value || Date.now());
+  if (Number.isNaN(date.getTime())) return '';
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+function formatTimeOfDay(value) {
+  const date = value instanceof Date ? value : new Date(value || Date.now());
+  if (Number.isNaN(date.getTime())) return '';
+  const hh = String(date.getHours()).padStart(2, '0');
+  const mm = String(date.getMinutes()).padStart(2, '0');
+  return `${hh}:${mm}`;
+}
+
 function normalizeArray(res) {
   if (Array.isArray(res)) return res;
   if (Array.isArray(res?.list)) return res.list;
@@ -99,6 +116,14 @@ Page({
     cardBaseInfoExpanded: true,
     cardWorkersExpanded: false,
     cardSalaryExpanded: false,
+
+    showEndWorkDialog: false,
+    endWorkTargetType: 'single',
+    endWorkTargetUserId: 0,
+    endWorkTargetName: '',
+    endWorkDate: formatDate(new Date()),
+    endWorkTime: formatTimeOfDay(new Date()),
+    endWorkSubmitting: false,
   },
 
   onLoad() {
@@ -229,6 +254,9 @@ Page({
       const status = Number(item.status);
       return {
         key: `worker-${item.id || idx}`,
+        applicationId: Number(item.id || 0),
+        userId: Number(item.userId || user.id || 0),
+        baseId: Number(baseId),
         name: user.name || item.workerName || '未知人员',
         uid: user.uid || '-',
         statusText: applicationText(status),
@@ -236,6 +264,12 @@ Page({
         jobTitle: job.jobTitle || item.jobTitle || '-',
         trace: `申请ID: ${item.id || '-'} · 手机: ${user.phone || '-'} · 身份证: ${user.idCard || '-'}`,
         updatedAtText: formatDateTime(item.updatedAt || item.createdAt),
+        workStartTime: item.workStartTime || null,
+        workEndTime: item.workEndTime || null,
+        workStartTimeText: formatDateTime(item.workStartTime),
+        workEndTimeText: formatDateTime(item.workEndTime),
+        canEndWork: [0, 1].includes(status),
+        isEnded: Boolean(item.workEndTime),
       };
     });
 
@@ -300,7 +334,113 @@ Page({
       cardBaseInfoExpanded: true,
       cardWorkersExpanded: false,
       cardSalaryExpanded: false,
+      showEndWorkDialog: false,
+      endWorkSubmitting: false,
     });
+  },
+
+  openEndWorkDialog(type, userId = 0, name = '') {
+    const now = new Date();
+    this.setData({
+      showEndWorkDialog: true,
+      endWorkTargetType: type === 'all' ? 'all' : 'single',
+      endWorkTargetUserId: Number(userId || 0),
+      endWorkTargetName: name || '',
+      endWorkDate: formatDate(now),
+      endWorkTime: formatTimeOfDay(now),
+      endWorkSubmitting: false,
+    });
+  },
+
+  onTapEndWork(e) {
+    const userId = Number(e.currentTarget.dataset.userId || 0);
+    const name = String(e.currentTarget.dataset.name || '');
+    if (!userId) {
+      wx.showToast({ title: '未识别到人员信息', icon: 'none' });
+      return;
+    }
+    this.openEndWorkDialog('single', userId, name);
+  },
+
+  onTapEndWorkAll() {
+    this.openEndWorkDialog('all');
+  },
+
+  onEndWorkDateChange(e) {
+    this.setData({ endWorkDate: e.detail.value || this.data.endWorkDate });
+  },
+
+  onEndWorkTimeChange(e) {
+    this.setData({ endWorkTime: e.detail.value || this.data.endWorkTime });
+  },
+
+  closeEndWorkDialog() {
+    if (this.data.endWorkSubmitting) return;
+    this.setData({ showEndWorkDialog: false });
+  },
+
+  async confirmEndWork() {
+    if (this.data.endWorkSubmitting) return;
+
+    const selectedBaseId = Number(this.data.selectedBaseId || 0);
+    if (!selectedBaseId) {
+      wx.showToast({ title: '请先选择基地', icon: 'none' });
+      return;
+    }
+
+    const endWorkDate = String(this.data.endWorkDate || '').trim();
+    const endWorkTime = String(this.data.endWorkTime || '').trim();
+    if (!endWorkDate || !endWorkTime) {
+      wx.showToast({ title: '请选择结束务工时间', icon: 'none' });
+      return;
+    }
+
+    const endWorkTimeValue = `${endWorkDate} ${endWorkTime}:00`;
+    const isAll = this.data.endWorkTargetType === 'all';
+    const targetUserId = Number(this.data.endWorkTargetUserId || 0);
+    if (!isAll && !targetUserId) {
+      wx.showToast({ title: '未识别到人员信息', icon: 'none' });
+      return;
+    }
+
+    const modalRes = await new Promise((resolve) => {
+      wx.showModal({
+        title: '确认结束务工',
+        content: isAll
+          ? `确认将当前基地全部人员的结束务工时间设为 ${endWorkTimeValue} 吗？`
+          : `确认将 ${this.data.endWorkTargetName || '该人员'} 的结束务工时间设为 ${endWorkTimeValue} 吗？`,
+        confirmText: '确认',
+        cancelText: '取消',
+        success: resolve,
+        fail: () => resolve({ confirm: false }),
+      });
+    });
+    if (!modalRes || !modalRes.confirm) {
+      return;
+    }
+
+    this.setData({ endWorkSubmitting: true });
+    wx.showLoading({ title: '提交中...', mask: true });
+    try {
+      const url = isAll
+        ? `/base/${selectedBaseId}/workers/end-work-all`
+        : `/base/${selectedBaseId}/workers/${targetUserId}/end-work`;
+      await app.request({
+        url,
+        method: 'PATCH',
+        data: {
+          endWorkTime: endWorkTimeValue,
+        },
+      });
+      wx.showToast({ title: isAll ? '已批量结束务工' : '已结束务工', icon: 'success' });
+      await this.loadBaseDetail(String(selectedBaseId));
+      this.setData({ showEndWorkDialog: false });
+    } catch (err) {
+      wx.showToast({ title: err.message || '结束务工失败', icon: 'none' });
+    } finally {
+      wx.hideLoading();
+      this.setData({ endWorkSubmitting: false });
+    }
   },
 
   async onBaseCardTap(e) {
@@ -381,6 +521,8 @@ Page({
   goHomeCenter() {
     wx.navigateTo({ url: '/pages/admin/home/home' });
   },
+
+  noop() {},
 
   switchAdminNav(e) {
     const target = e.currentTarget.dataset.target;

@@ -17,7 +17,7 @@ import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { TencentOcrService } from '../common/services/tencent-ocr.service';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
-import { UserRole } from './entities/sys-user.entity';
+import { Gender, UserRole } from './entities/sys-user.entity';
 
 @ApiTags('用户管理')
 @Controller('user')
@@ -51,6 +51,26 @@ export class UserController {
     dto.bankCardNo = bankCardNo;
   }
 
+  private normalizeWorkerDemographics(dto: { gender?: Gender; isPoorHousehold?: boolean }, required = true): void {
+    if (!dto) return;
+
+    if (dto.gender !== undefined && dto.gender !== null) {
+      const gender = String(dto.gender).trim().toLowerCase();
+      if (gender === Gender.MALE || gender === Gender.FEMALE) {
+        dto.gender = gender as Gender;
+      }
+    }
+
+    if (required) {
+      if (dto.gender !== Gender.MALE && dto.gender !== Gender.FEMALE) {
+        throw new BadRequestException('请在注册时选择性别');
+      }
+      if (typeof dto.isPoorHousehold !== 'boolean') {
+        throw new BadRequestException('请在注册时选择是否贫困户');
+      }
+    }
+  }
+
   @Post('register')
   @ApiOperation({ summary: '用户注册/实名录入（手动填写）' })
   async register(@Req() req, @Body() createUserDto: CreateUserDto) {
@@ -59,6 +79,7 @@ export class UserController {
     }
     createUserDto.roleKey = UserRole.WORKER;
     this.requireIdCardAddress(createUserDto);
+    this.normalizeWorkerDemographics(createUserDto, true);
     const user = await this.userService.create(createUserDto, { request: req });
     return {
       id: user.id,
@@ -125,6 +146,7 @@ export class UserController {
     }
     createUserDto.roleKey = UserRole.WORKER;
     this.requireIdCardAddress(createUserDto);
+    this.normalizeWorkerDemographics(createUserDto, true);
     const user = await this.userService.create(createUserDto, { request: req });
     return {
       id: user.id,
@@ -137,6 +159,13 @@ export class UserController {
   @Post('register/proxy')
   @ApiOperation({ summary: '家人代注册（工人账号 + 代注册审核单）' })
   async registerByProxy(@Req() req, @Body() dto: CreateProxyRegistrationDto) {
+    this.normalizeWorkerDemographics(
+      {
+        gender: dto.workerGender,
+        isPoorHousehold: dto.workerIsPoorHousehold,
+      },
+      true,
+    );
     return this.userService.createProxyRegistration(dto, { request: req });
   }
 
@@ -147,6 +176,13 @@ export class UserController {
     @Param('id', ParseIntPipe) caseId: number,
     @Body() dto: CreateProxyRegistrationDto,
   ) {
+    this.normalizeWorkerDemographics(
+      {
+        gender: dto.workerGender,
+        isPoorHousehold: dto.workerIsPoorHousehold,
+      },
+      true,
+    );
     return this.userService.resubmitProxyRegistration(caseId, dto, req);
   }
 

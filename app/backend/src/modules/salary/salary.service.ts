@@ -10,6 +10,7 @@ import { LaborSalary, SalaryStatus } from './entities/labor-salary.entity';
 import { SalaryPayment, PaymentStatus } from './entities/salary-payment.entity';
 import { DailySignup, SignupStatus } from '../attendance/entities/daily-signup.entity';
 import { BaseInfo } from '../base/entities/base-info.entity';
+import { JobApplication } from '../base/entities/job-application.entity';
 import { SalaryCalculatorFactory } from './services/salary-calculator.strategy';
 import { PayType } from '../base/entities/recruitment-job.entity';
 import { UserRole, isSuperAdmin } from '../user/entities/sys-user.entity';
@@ -200,6 +201,63 @@ export class SalaryService {
 
     const [list, total] = await qb.getManyAndCount();
 
+    const userBasePairs = list
+      .map((salary) => {
+        const signup = salary.signup as DailySignup | undefined;
+        const userId = Number(signup?.userId || 0);
+        const baseIdOfSignup = Number(signup?.baseId || 0);
+        if (!userId || !baseIdOfSignup) return null;
+        return { userId, baseId: baseIdOfSignup };
+      })
+      .filter((item): item is { userId: number; baseId: number } => Boolean(item));
+
+    const userIds = Array.from(new Set(userBasePairs.map((item) => item.userId)));
+    const baseIdsInList = Array.from(new Set(userBasePairs.map((item) => item.baseId)));
+
+    const firstCheckinMap: Record<string, string> = {};
+    const workEndMap: Record<string, string> = {};
+    if (userIds.length && baseIdsInList.length) {
+      const firstCheckinRows = await this.signupRepo
+        .createQueryBuilder('signup')
+        .select('signup.userId', 'userId')
+        .addSelect('signup.baseId', 'baseId')
+        .addSelect('MIN(signup.checkinTime)', 'workStartTime')
+        .where('signup.userId IN (:...userIds)', { userIds })
+        .andWhere('signup.baseId IN (:...baseIds)', { baseIds: baseIdsInList })
+        .andWhere('signup.status = :checkedIn', { checkedIn: SignupStatus.CHECKED_IN })
+        .andWhere('signup.checkinTime IS NOT NULL')
+        .groupBy('signup.userId')
+        .addGroupBy('signup.baseId')
+        .getRawMany();
+
+      firstCheckinRows.forEach((row: any) => {
+        const userId = Number(row?.userId);
+        const baseIdOfSignup = Number(row?.baseId);
+        if (!userId || !baseIdOfSignup) return;
+        firstCheckinMap[`${userId}__${baseIdOfSignup}`] = row?.workStartTime ? String(row.workStartTime) : '';
+      });
+
+      const workEndRows = await this.dataSource
+        .getRepository(JobApplication)
+        .createQueryBuilder('application')
+        .select('application.userId', 'userId')
+        .addSelect('application.baseId', 'baseId')
+        .addSelect('MAX(application.workEndTime)', 'workEndTime')
+        .where('application.userId IN (:...userIds)', { userIds })
+        .andWhere('application.baseId IN (:...baseIds)', { baseIds: baseIdsInList })
+        .andWhere('application.workEndTime IS NOT NULL')
+        .groupBy('application.userId')
+        .addGroupBy('application.baseId')
+        .getRawMany();
+
+      workEndRows.forEach((row: any) => {
+        const userId = Number(row?.userId);
+        const baseIdOfSignup = Number(row?.baseId);
+        if (!userId || !baseIdOfSignup) return;
+        workEndMap[`${userId}__${baseIdOfSignup}`] = row?.workEndTime ? String(row.workEndTime) : '';
+      });
+    }
+
     const records = list.map((s) => {
       const signup = s.signup as DailySignup & {
         user?: {
@@ -207,19 +265,30 @@ export class SalaryService {
           uid: string;
           phone?: string;
           idCard?: string;
+          gender?: string | null;
+          isPoorHousehold?: boolean | null;
+          homeAddress?: string | null;
           emergencyContact?: string;
           emergencyPhone?: string;
         };
         base?: { baseName: string };
         job?: { jobTitle: string; payType: number };
       };
+      const userId = Number(signup?.userId || 0);
+      const baseIdOfSignup = Number(signup?.baseId || 0);
+      const pairKey = `${userId}__${baseIdOfSignup}`;
       return {
         id: s.id,
         signupId: s.signupId,
+        userId,
         workerName: signup?.user?.name ?? '-',
         workerUid: signup?.user?.uid ?? '-',
         workerPhone: signup?.user?.phone ?? '',
         workerIdCard: signup?.user?.idCard ?? '',
+        workerGender: signup?.user?.gender ?? null,
+        isPoorHousehold: signup?.user?.isPoorHousehold ?? null,
+        workerWorkStartTime: firstCheckinMap[pairKey] || null,
+        workerWorkEndTime: workEndMap[pairKey] || null,
         workerAddress: signup?.user?.homeAddress ?? '',
         address: signup?.user?.homeAddress ?? '',
         workerEmergencyContact: signup?.user?.emergencyContact ?? '',

@@ -2,8 +2,9 @@
  * Layer: Backend DTO
  * Responsibility: Defines the Update User validation contract for data crossing the User module boundary.
  */
-import { IsString, IsOptional, IsNumber } from 'class-validator';
+import { IsString, IsOptional, IsNumber, IsEnum, IsBoolean } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { Gender } from '../entities/sys-user.entity';
 
 export class UpdateUserDto {
   @ApiProperty({ example: '张三', description: '真实姓名', required: false })
@@ -35,6 +36,16 @@ export class UpdateUserDto {
   @IsOptional()
   @IsString()
   faceImgUrl?: string;
+
+  @ApiProperty({ example: 'male', enum: Gender, required: false, description: '性别' })
+  @IsOptional()
+  @IsEnum(Gender)
+  gender?: Gender;
+
+  @ApiProperty({ example: false, required: false, description: '是否贫困户' })
+  @IsOptional()
+  @IsBoolean()
+  isPoorHousehold?: boolean;
 
   @ApiProperty({ example: 1, required: false, description: '绑定基地ID（现场管理员）' })
   @IsOptional()

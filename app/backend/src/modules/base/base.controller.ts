@@ -293,6 +293,46 @@ export class BaseController {
     );
   }
 
+  @ApiOperation({ summary: '结束单个人员务工（基地管理员端）' })
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.REGION_ADMIN, UserRole.BASE_MANAGER, UserRole.FIELD_MANAGER, UserRole.BOSS)
+  @Patch(':id/workers/:userId/end-work')
+  async endWorkerWork(
+    @Param('id', ParseIntPipe) baseId: number,
+    @Param('userId', ParseIntPipe) userId: number,
+    @Body('endWorkTime') endWorkTime: string,
+    @Request() req,
+  ) {
+    return this.baseService.endWorkerWork(
+      baseId,
+      userId,
+      endWorkTime,
+      Number(req?.user?.id || 0),
+      req?.user?.role || req?.user?.roleKey,
+      { request: req, userId: req.user.id },
+    );
+  }
+
+  @ApiOperation({ summary: '批量结束基地人员务工（基地管理员端）' })
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.REGION_ADMIN, UserRole.BASE_MANAGER, UserRole.FIELD_MANAGER, UserRole.BOSS)
+  @Patch(':id/workers/end-work-all')
+  async endAllWorkersWork(
+    @Param('id', ParseIntPipe) baseId: number,
+    @Body('endWorkTime') endWorkTime: string,
+    @Request() req,
+  ) {
+    return this.baseService.endAllWorkersWork(
+      baseId,
+      endWorkTime,
+      Number(req?.user?.id || 0),
+      req?.user?.role || req?.user?.roleKey,
+      { request: req, userId: req.user.id },
+    );
+  }
+
   @ApiOperation({ summary: '审核岗位申请' })
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, RolesGuard)

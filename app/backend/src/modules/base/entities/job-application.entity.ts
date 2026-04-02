@@ -51,6 +51,15 @@ export class JobApplication {
   @Column({ name: 'reviewed_at', type: 'datetime', nullable: true, comment: '审核时间' })
   reviewedAt: Date;
 
+  @Column({ name: 'work_end_time', type: 'datetime', nullable: true, comment: '结束务工时间' })
+  workEndTime: Date | null;
+
+  @Column({ name: 'work_end_by', type: 'bigint', nullable: true, comment: '结束务工操作人ID' })
+  workEndBy: number | null;
+
+  @Column({ name: 'work_end_recorded_at', type: 'datetime', nullable: true, comment: '结束务工记录创建时间' })
+  workEndRecordedAt: Date | null;
+
   @ManyToOne(() => SysUser)
   @JoinColumn({ name: 'user_id' })
   user: SysUser;

@@ -73,10 +73,15 @@
             <text class="cell name">姓名</text>
             <text class="cell gender">性别</text>
             <text class="cell idcard">身份证号</text>
+            <text class="cell age">年龄</text>
             <text class="cell addr">家庭住址</text>
             <text class="cell poor">是否贫困户</text>
-            <text class="cell amount">务工总收入</text>
-            <text class="cell sign">领款签字</text>
+            <text class="cell phone">联系电话</text>
+            <text class="cell location">务工地点</text>
+            <text class="cell worktype">从事工种</text>
+            <text class="cell start">务工开始时间</text>
+            <text class="cell end">务工结束时间</text>
+            <text class="cell remark">备注</text>
           </view>
 
           <view class="table-row" wx:for="{{item.rows}}" wx:key="serial" wx:for-item="row">
@@ -84,10 +89,15 @@
             <text class="cell name">{{row.name}}</text>
             <text class="cell gender">{{row.gender}}</text>
             <text class="cell idcard">{{row.idCard}}</text>
+            <text class="cell age">{{row.age}}</text>
             <text class="cell addr">{{row.address}}</text>
             <text class="cell poor">{{row.poorHousehold}}</text>
-            <text class="cell amount">{{row.totalIncome}}</text>
-            <text class="cell sign">{{row.signature || ' '}}</text>
+            <text class="cell phone">{{row.phone}}</text>
+            <text class="cell location">{{row.workLocation}}</text>
+            <text class="cell worktype">{{row.workType}}</text>
+            <text class="cell start">{{row.workStartTime}}</text>
+            <text class="cell end">{{row.workEndTime}}</text>
+            <text class="cell remark">{{row.remark || ' '}}</text>
           </view>
         </view>
       </scroll-view>
@@ -134,4 +144,3 @@
     <view class="admin-bottom-item {{activeNav === 'me' ? 'active' : ''}}" data-target="me" bindtap="switchAdminNav">我的信息</view>
   </view>
 </view>
-

@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString, IsBoolean, IsEnum } from 'class-validator';
+import { Gender } from '../entities/sys-user.entity';
 
 export class CreateProxyRegistrationDto {
   @ApiProperty({ example: '张三', description: '工人真实姓名' })
@@ -16,6 +17,14 @@ export class CreateProxyRegistrationDto {
   @IsString()
   @IsNotEmpty({ message: '工人手机号不能为空' })
   workerPhone: string;
+
+  @ApiProperty({ example: 'male', enum: Gender, description: '工人性别' })
+  @IsEnum(Gender)
+  workerGender: Gender;
+
+  @ApiProperty({ example: false, description: '工人是否贫困户' })
+  @IsBoolean()
+  workerIsPoorHousehold: boolean;
 
   @ApiProperty({ example: '山东省烟台市福山区演示村 12 号', description: '工人家庭地址', required: false })
   @IsOptional()

@@ -92,6 +92,32 @@
         </view>
       </view>
 
+      <block wx:if="{{registerRole === 'worker'}}">
+        <view class="form-item">
+          <view class="input-wrapper">
+            <text class="input-icon">性别</text>
+            <picker mode="selector" range="{{genderOptions}}" range-key="label" value="{{genderIndex}}" bindchange="onGenderChange">
+              <view class="input-field picker-field {{genderIndex === 0 ? 'picker-placeholder' : ''}}">
+                {{genderOptions[genderIndex].label}}
+              </view>
+            </picker>
+            <text class="required-star">*</text>
+          </view>
+        </view>
+
+        <view class="form-item">
+          <view class="input-wrapper">
+            <text class="input-icon">贫困</text>
+            <picker mode="selector" range="{{povertyOptions}}" range-key="label" value="{{povertyIndex}}" bindchange="onPovertyChange">
+              <view class="input-field picker-field {{povertyIndex === 0 ? 'picker-placeholder' : ''}}">
+                {{povertyOptions[povertyIndex].label}}
+              </view>
+            </picker>
+            <text class="required-star">*</text>
+          </view>
+        </view>
+      </block>
+
       <view class="form-item">
         <view class="input-wrapper input-wrapper-multiline">
           <text class="input-icon">住址</text>

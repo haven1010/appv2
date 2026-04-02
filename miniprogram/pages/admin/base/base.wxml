@@ -74,15 +74,31 @@
           <view class="chip-row">
             <text class="chip info">人员记录：{{workerFlows.length}}</text>
           </view>
+          <view class="actions-row">
+            <button class="btn-secondary" catchtap="onTapEndWorkAll" disabled="{{!workerFlows.length}}">全部结束务工</button>
+          </view>
           <view class="empty-text" wx:if="{{!workerFlows.length}}">暂无基地人员信息</view>
           <view class="mini-list-item" wx:for="{{workerFlows}}" wx:key="key">
             <view class="item-title">{{item.name}}（{{item.uid}}）</view>
             <view class="chip-row">
               <text class="chip {{item.statusChipType}}">{{item.statusText}}</text>
               <text class="chip info">岗位：{{item.jobTitle}}</text>
+              <text class="chip success" wx:if="{{item.isEnded}}">已结束务工</text>
             </view>
             <view class="item-sub">{{item.trace}}</view>
+            <view class="item-sub">务工开始：{{item.workStartTimeText || '-'}}</view>
+            <view class="item-sub">务工结束：{{item.workEndTimeText || '-'}}</view>
             <view class="item-sub">更新时间：{{item.updatedAtText}}</view>
+            <view class="actions-row">
+              <button
+                class="btn-danger btn-end-work-mini"
+                data-user-id="{{item.userId}}"
+                data-name="{{item.name}}"
+                catchtap="onTapEndWork"
+              >
+                {{item.isEnded ? '重新设置结束时间' : '结束务工'}}
+              </button>
+            </view>
           </view>
         </view>
       </view>
@@ -117,6 +133,34 @@
   </view>
 
   <view class="empty-text" wx:if="{{loading}}">加载中...</view>
+
+  <view class="dialog-mask" wx:if="{{showEndWorkDialog}}" catchtap="closeEndWorkDialog">
+    <view class="dialog-panel" catchtap="noop">
+      <view class="dialog-title">{{endWorkTargetType === 'all' ? '全部结束务工' : '结束务工'}}</view>
+      <view class="dialog-sub" wx:if="{{endWorkTargetType === 'single'}}">人员：{{endWorkTargetName || '-'}}</view>
+      <view class="dialog-sub">请选择结束务工时间</view>
+
+      <view class="dialog-picker-row">
+        <view class="dialog-picker-item">
+          <view class="form-label no-top">日期</view>
+          <picker mode="date" value="{{endWorkDate}}" bindchange="onEndWorkDateChange">
+            <view class="picker">{{endWorkDate}}</view>
+          </picker>
+        </view>
+        <view class="dialog-picker-item">
+          <view class="form-label no-top">时间</view>
+          <picker mode="time" value="{{endWorkTime}}" bindchange="onEndWorkTimeChange">
+            <view class="picker">{{endWorkTime}}</view>
+          </picker>
+        </view>
+      </view>
+
+      <view class="actions-row">
+        <button class="btn-ghost" catchtap="closeEndWorkDialog" disabled="{{endWorkSubmitting}}">取消</button>
+        <button class="btn-primary" catchtap="confirmEndWork" loading="{{endWorkSubmitting}}" disabled="{{endWorkSubmitting}}">确认结束</button>
+      </view>
+    </view>
+  </view>
 
   <view class="admin-bottom-nav">
     <view class="admin-bottom-item {{activeNav === 'home' ? 'active' : ''}}" data-target="home" bindtap="switchAdminNav">{{role === 'super_admin' || role === 'region_admin' ? '人员管理' : '首页'}}</view>
