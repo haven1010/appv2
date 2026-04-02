@@ -75,3 +75,63 @@
 .worker-tip.warn {
   color: #b33f2a;
 }
+
+.base-name-card {
+  margin-top: 12rpx;
+  background: #fffdf8;
+  border: 2rpx solid rgba(106, 153, 78, 0.14);
+  border-radius: 22rpx;
+  padding: 16rpx;
+}
+
+.base-name-card.active {
+  border-color: rgba(106, 153, 78, 0.35);
+  box-shadow: 0 8rpx 18rpx rgba(106, 153, 78, 0.14);
+}
+
+.base-name-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12rpx;
+}
+
+.base-name-bottom {
+  margin-top: 8rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12rpx;
+}
+
+.base-name-action {
+  font-size: 22rpx;
+  color: var(--warm-green);
+  font-weight: 700;
+}
+
+.detail-card {
+  margin-top: 14rpx;
+  background: #fffdf8;
+  border: 2rpx solid rgba(106, 153, 78, 0.14);
+  border-radius: 22rpx;
+  padding: 16rpx;
+}
+
+.detail-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12rpx;
+}
+
+.detail-card-arrow {
+  font-size: 22rpx;
+  color: var(--ink-sub);
+}
+
+.mini-list-item {
+  margin-top: 12rpx;
+  padding-top: 12rpx;
+  border-top: 1rpx dashed rgba(106, 153, 78, 0.2);
+}

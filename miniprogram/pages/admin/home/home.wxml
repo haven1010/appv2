@@ -128,7 +128,7 @@
         <view class="picker">{{superRoleOptions[superRoleIndex].label}}</view>
       </picker>
 
-      <view class="form-label">关键词</view>
+      <view class="form-label">关键字</view>
       <input class="input" value="{{superKeyword}}" bindinput="onSuperKeywordInput" placeholder="姓名 / UID" />
 
       <view class="actions-row">
@@ -139,13 +139,33 @@
     <view class="section-card">
       <view class="section-title">人员列表（{{superTotal}}）</view>
       <view class="empty-text" wx:if="{{!superList.length}}">暂无符合条件的人员</view>
-      <view class="list-item" wx:for="{{superList}}" wx:key="id">
-        <view class="item-title">{{item.name}}（{{item.uid}}）</view>
-        <view class="chip-row">
-          <text class="chip info">{{item.roleText}}</text>
-          <text class="chip pending">{{item.auditText}}</text>
+      <view class="list-item" wx:for="{{superList}}" wx:key="id" data-id="{{item.id}}" bindtap="toggleSuperUserDetail">
+        <view class="person-head-row">
+          <view class="person-head-main">
+            <view class="item-title">{{item.name}}</view>
+            <view class="item-sub">{{item.expanded ? '点击收起信息' : '点击查看信息'}}</view>
+          </view>
+          <button
+            wx:if="{{item.canDelete}}"
+            class="btn-danger btn-delete-mini"
+            data-id="{{item.id}}"
+            catchtap="deleteSuperUser"
+          >删除</button>
         </view>
-        <view class="item-sub">{{item.trace}}</view>
+
+        <block wx:if="{{item.expanded}}">
+          <view class="chip-row">
+            <text class="chip info">{{item.roleText}}</text>
+            <text class="chip pending">{{item.auditText}}</text>
+          </view>
+          <view class="item-sub">UID：{{item.uid}}</view>
+          <view class="item-sub">手机号：{{item.phone}}</view>
+          <view class="item-sub">身份证：{{item.idCard}}</view>
+          <view class="item-sub">指派基地：{{item.assignedBaseId}}</view>
+          <view class="item-sub">创建时间：{{item.createdAtText}}</view>
+          <view class="item-sub">更新时间：{{item.updatedAtText}}</view>
+          <view class="item-sub" wx:if="{{!item.canDelete}}">当前登录账号不可删除</view>
+        </block>
       </view>
     </view>
   </block>
@@ -153,11 +173,11 @@
   <view class="empty-text" wx:if="{{loading}}">加载中...</view>
 
   <view class="admin-bottom-nav">
-    <view class="admin-bottom-item {{activeNav === 'home' ? 'active' : ''}}" data-target="home" bindtap="switchAdminNav">首页</view>
-    <view class="admin-bottom-item {{activeNav === 'base' ? 'active' : ''}}" wx:if="{{role !== 'field_manager'}}" data-target="base" bindtap="switchAdminNav">基地</view>
-    <view class="admin-bottom-item {{activeNav === 'scan' ? 'active' : ''}}" data-target="scan" bindtap="switchAdminNav">扫码</view>
+    <view class="admin-bottom-item {{activeNav === 'home' ? 'active' : ''}}" data-target="home" bindtap="switchAdminNav">{{role === 'super_admin' || role === 'region_admin' ? '人员管理' : '首页'}}</view>
+    <view class="admin-bottom-item {{activeNav === 'base' ? 'active' : ''}}" wx:if="{{role !== 'field_manager'}}" data-target="base" bindtap="switchAdminNav">{{role === 'super_admin' || role === 'region_admin' ? '基地管理' : '基地'}}</view>
+    <view class="admin-bottom-item {{activeNav === 'scan' ? 'active' : ''}}" wx:if="{{role !== 'super_admin' && role !== 'region_admin'}}" data-target="scan" bindtap="switchAdminNav">扫码</view>
     <view class="admin-bottom-item {{activeNav === 'audit' ? 'active' : ''}}" wx:if="{{role === 'super_admin' || role === 'region_admin'}}" data-target="audit" bindtap="switchAdminNav">审核</view>
-    <view class="admin-bottom-item {{activeNav === 'payroll' ? 'active' : ''}}" wx:if="{{role === 'super_admin' || role === 'region_admin'}}" data-target="payroll" bindtap="switchAdminNav">工资</view>
-    <view class="admin-bottom-item {{activeNav === 'me' ? 'active' : ''}}" data-target="me" bindtap="switchAdminNav">我的</view>
+    <view class="admin-bottom-item {{activeNav === 'payroll' ? 'active' : ''}}" wx:if="{{role === 'super_admin' || role === 'region_admin'}}" data-target="payroll" bindtap="switchAdminNav">工资管理</view>
+    <view class="admin-bottom-item {{activeNav === 'me' ? 'active' : ''}}" data-target="me" bindtap="switchAdminNav">我的信息</view>
   </view>
 </view>

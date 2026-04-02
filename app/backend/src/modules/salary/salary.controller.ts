@@ -39,7 +39,7 @@ export class SalaryController {
   @ApiQuery({ name: 'dateTo', required: false, description: '结束日期 YYYY-MM-DD' })
   @ApiQuery({ name: 'status', required: false, description: '状态 0:待审核 1:已确认 2:已发放' })
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.SUPER_ADMIN, UserRole.REGION_ADMIN, UserRole.BASE_MANAGER, UserRole.FIELD_MANAGER)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.REGION_ADMIN, UserRole.BASE_MANAGER, UserRole.FIELD_MANAGER, UserRole.BOSS)
   async getList(@Query() query: any, @Req() req: any) {
     return this.salaryService.getList(query, req.user);
   }
@@ -50,7 +50,7 @@ export class SalaryController {
   @ApiQuery({ name: 'dateFrom', required: false, description: '开始日期' })
   @ApiQuery({ name: 'dateTo', required: false, description: '结束日期' })
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.SUPER_ADMIN, UserRole.REGION_ADMIN, UserRole.BASE_MANAGER, UserRole.FIELD_MANAGER)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.REGION_ADMIN, UserRole.BASE_MANAGER, UserRole.FIELD_MANAGER, UserRole.BOSS)
   async getStats(@Query() query: any, @Req() req: any) {
     return this.salaryService.getStats(query, req.user);
   }

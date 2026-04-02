@@ -5,8 +5,8 @@
 const app = getApp();
 
 const WORKER_HOME_URL = '/pages/index/index';
-const BOSS_DASHBOARD_URL = '/pages/boss/dashboard/dashboard';
-const BOSS_FALLBACK_URL = '/pages/admin/home/home';
+const BOSS_HOME_URL = '/pages/base/list/list';
+const ADMIN_HOME_URL = '/pages/admin/home/home';
 const LOGIN_FADE_MS = 260;
 const ADMIN_ROLES = ['super_admin', 'region_admin', 'base_manager', 'field_manager'];
 
@@ -58,16 +58,6 @@ function toErrorMessage(err) {
   }
 
   return raw || '登录失败，请稍后重试';
-}
-
-function isPageDeclared(url) {
-  try {
-    const normalizedPath = String(url || '').replace(/^\//, '');
-    const pages = typeof __wxConfig !== 'undefined' && __wxConfig ? __wxConfig.pages : [];
-    return Array.isArray(pages) && pages.includes(normalizedPath);
-  } catch (_) {
-    return false;
-  }
 }
 
 Page({
@@ -286,12 +276,12 @@ Page({
 
   navigateByRole(role) {
     if (isAdminRole(role)) {
-      wx.reLaunch({ url: BOSS_FALLBACK_URL });
+      wx.reLaunch({ url: ADMIN_HOME_URL });
       return;
     }
 
     if (role === 'boss') {
-      this.navigateToBossDashboard();
+      this.navigateToBossHome();
       return;
     }
 
@@ -303,18 +293,13 @@ Page({
     });
   },
 
-  navigateToBossDashboard() {
-    if (isPageDeclared(BOSS_DASHBOARD_URL)) {
-      wx.switchTab({
-        url: BOSS_DASHBOARD_URL,
-        fail: () => {
-          wx.reLaunch({ url: BOSS_FALLBACK_URL });
-        },
-      });
-      return;
-    }
-
-    wx.reLaunch({ url: BOSS_FALLBACK_URL });
+  navigateToBossHome() {
+    wx.switchTab({
+      url: BOSS_HOME_URL,
+      fail: () => {
+        wx.reLaunch({ url: BOSS_HOME_URL });
+      },
+    });
   },
 
   goToRegister() {

@@ -196,9 +196,9 @@ export class UserController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.SUPER_ADMIN)
   @ApiBearerAuth()
-  @ApiOperation({ summary: '删除用户（软删除）' })
+  @ApiOperation({ summary: '删除用户（彻底删除）' })
   async deleteUser(@Req() req, @Param('id', ParseIntPipe) userId: number) {
     await this.userService.softDelete(userId, req.user.id, req);
-    return { msg: '已删除' };
+    return { msg: '用户已彻底删除' };
   }
 }

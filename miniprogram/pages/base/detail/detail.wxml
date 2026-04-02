@@ -17,44 +17,122 @@
         <text class="status-tag {{baseInfo.auditStatus === 1 ? 'approved' : baseInfo.auditStatus === 2 ? 'rejected' : 'pending'}}">{{auditText}}</text>
       </view>
       <text class="hero-subtitle">{{categoryText}}</text>
-
     </view>
 
-    <view class="section-card">
-      <text class="section-title">基地具体信息</text>
-      <view class="info-row">
-        <text class="info-label">详细地址</text>
-        <text class="info-value">{{addressText}}</text>
-      </view>
-      <view class="info-row">
-        <text class="info-label">岗位要求</text>
-        <text class="info-value">{{jobRequirementText}}</text>
-      </view>
-      <view class="info-row">
-        <text class="info-label">环境情况</text>
-        <text class="info-value">{{envSummaryText}}</text>
-      </view>
+    <view wx:if="{{isBossView}}" class="panel-switch">
+      <view
+        class="panel-item pressable {{activePanel === 'base' ? 'active' : ''}}"
+        hover-class="pressing"
+        hover-stay-time="90"
+        data-panel="base"
+        bindtap="onPanelChange"
+      >基地信息</view>
+      <view
+        class="panel-item pressable {{activePanel === 'payroll' ? 'active' : ''}}"
+        hover-class="pressing"
+        hover-stay-time="90"
+        data-panel="payroll"
+        bindtap="onPanelChange"
+      >人员工资发放</view>
     </view>
 
-    <view class="section-card">
-      <text class="section-title">环境图片</text>
-      <view wx:if="{{envImages.length}}" class="env-grid">
-        <image
-          wx:for="{{envImages}}"
-          wx:key="index"
-          class="env-image"
-          src="{{item}}"
-          mode="aspectFill"
-          bindtap="previewImage"
-          binderror="onEnvImageError"
-          data-index="{{index}}"
-          data-src="{{item}}"
-        />
+    <block wx:if="{{activePanel === 'base'}}">
+      <view class="section-card">
+        <text class="section-title">基地具体信息</text>
+        <view class="info-row">
+          <text class="info-label">详细地址</text>
+          <text class="info-value">{{addressText}}</text>
+        </view>
+        <view class="info-row">
+          <text class="info-label">岗位要求</text>
+          <text class="info-value">{{jobRequirementText}}</text>
+        </view>
+        <view class="info-row">
+          <text class="info-label">环境情况</text>
+          <text class="info-value">{{envSummaryText}}</text>
+        </view>
       </view>
-      <view wx:else class="empty-box">
-        <text class="empty-text">暂未上传环境图片</text>
+
+      <view class="section-card">
+        <text class="section-title">环境图片</text>
+        <view wx:if="{{envImages.length}}" class="env-grid">
+          <image
+            wx:for="{{envImages}}"
+            wx:key="index"
+            class="env-image"
+            src="{{item}}"
+            mode="aspectFill"
+            bindtap="previewImage"
+            binderror="onEnvImageError"
+            data-index="{{index}}"
+            data-src="{{item}}"
+          />
+        </view>
+        <view wx:else class="empty-box">
+          <text class="empty-text">暂未上传环境图片</text>
+        </view>
+        <text wx:if="{{hasExpiredTempImage}}" class="warn-tip">部分图片地址已失效，请重新上传后提交。</text>
       </view>
-      <text wx:if="{{hasExpiredTempImage}}" class="warn-tip">部分图片为临时地址已失效，请老板重新上传并提交。</text>
-    </view>
+    </block>
+
+    <block wx:elif="{{isBossView}}">
+      <view class="section-card">
+        <text class="section-title">人员工资发放总览</text>
+        <view class="payroll-stats">
+          <view class="payroll-stat">
+            <text class="payroll-stat-value">{{payrollSummary.workerCount}}</text>
+            <text class="payroll-stat-label">上岗人数</text>
+          </view>
+          <view class="payroll-stat">
+            <text class="payroll-stat-value">¥{{payrollSummary.totalAmountText}}</text>
+            <text class="payroll-stat-label">累计工资</text>
+          </view>
+          <view class="payroll-stat">
+            <text class="payroll-stat-value">¥{{payrollSummary.pendingAmountText}}</text>
+            <text class="payroll-stat-label">待发放</text>
+          </view>
+        </view>
+      </view>
+
+      <view wx:if="{{payrollLoading}}" class="state-panel">
+        <text class="state-title">正在加载人员工资数据...</text>
+        <text class="state-desc">请稍候</text>
+      </view>
+
+      <view wx:elif="{{payrollError}}" class="state-panel">
+        <text class="state-title">{{payrollError}}</text>
+        <text class="state-desc">下拉可重试</text>
+      </view>
+
+      <view wx:elif="{{payrollRows.length === 0}}" class="state-panel">
+        <text class="state-title">暂无正式上岗人员工资记录</text>
+        <text class="state-desc">采摘工上岗并完成工资核算后，将在这里展示姓名与工资情况</text>
+      </view>
+
+      <view wx:else class="payroll-list">
+        <view
+          wx:for="{{payrollRows}}"
+          wx:key="key"
+          class="payroll-card"
+        >
+          <view class="payroll-head">
+            <text class="payroll-name">{{item.workerName}}</text>
+            <text class="payroll-status {{item.statusClass}}">{{item.statusText}}</text>
+          </view>
+
+          <view class="payroll-main">
+            <text class="payroll-total-label">累计工资</text>
+            <text class="payroll-total-value">¥{{item.totalAmountText}}</text>
+          </view>
+
+          <view class="payroll-meta">
+            <text>已发放 ¥{{item.paidAmountText}}</text>
+            <text>待发放 ¥{{item.pendingAmountText}}</text>
+            <text>上岗 {{item.recordCount}} 次</text>
+          </view>
+          <text class="payroll-date">最近上岗：{{item.lastWorkDateText}}</text>
+        </view>
+      </view>
+    </block>
   </block>
 </view>

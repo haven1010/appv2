@@ -276,7 +276,7 @@ Page({
     const role = resolveRole(userInfo);
 
     if (role === 'boss') {
-      wx.reLaunch({ url: '/pages/boss/dashboard/dashboard' });
+      wx.reLaunch({ url: '/pages/base/list/list' });
       return true;
     }
 

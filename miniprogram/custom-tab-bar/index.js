@@ -18,7 +18,7 @@ const FIELD_TABS = [
 
 const BOSS_TABS = [
   { pagePath: '/pages/base/list/list', text: '我的基地', icon: '基' },
-  { pagePath: '/pages/job/list/list', text: '招聘情况', icon: '招' },
+  { pagePath: '/pages/job/list/list', text: '报名进度', icon: '报' },
   { pagePath: '/pages/boss/dashboard/dashboard', text: '企业入驻审核', icon: '审' },
   { pagePath: '/pages/boss/profile/profile', text: '我的信息', icon: '我' },
 ];

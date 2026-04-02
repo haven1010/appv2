@@ -1,9 +1,21 @@
 /**
  * Layer: Mini Program Page
- * Responsibility: Super-admin audit center and user deletion panel.
+ * Responsibility: Super-admin audit center with full base/user visibility, manager creation, and card-level delete actions.
  */
 const app = getApp();
 const { resolveRole, isSuperAdminRole, roleLabel } = require('../../../utils/role');
+
+const CREATE_ROLE_OPTIONS = [
+  { label: '基地管理员', value: 'base_manager' },
+  { label: '现场管理员', value: 'field_manager' },
+];
+
+const ADMIN_ROLE_SET = {
+  super_admin: true,
+  region_admin: true,
+  base_manager: true,
+  field_manager: true,
+};
 
 function formatDateTime(value) {
   if (!value) return '-';
@@ -27,9 +39,49 @@ function normalizeArray(res) {
   return [];
 }
 
+function cleanPhone(value) {
+  return String(value || '').replace(/\D/g, '').slice(0, 11);
+}
+
+function cleanIdCard(value) {
+  return String(value || '').trim().toUpperCase().slice(0, 18);
+}
+
+function infoAuditText(status) {
+  const num = Number(status);
+  if (num === 1) return '已通过';
+  if (num === 2) return '已驳回';
+  return '待审核';
+}
+
+function baseAuditText(status) {
+  const num = Number(status);
+  if (num === 1) return '已通过';
+  if (num === 2) return '已驳回';
+  return '待审核';
+}
+
+function baseCategoryText(category) {
+  const num = Number(category);
+  if (num === 1) return '水果基地';
+  if (num === 2) return '蔬菜基地';
+  if (num === 3) return '其他基地';
+  return '-';
+}
+
+function createRoleValue(index) {
+  return CREATE_ROLE_OPTIONS[index]?.value || CREATE_ROLE_OPTIONS[0].value;
+}
+
+function safeText(value) {
+  const text = String(value == null ? '' : value).trim();
+  return text || '-';
+}
+
 Page({
   data: {
     loading: true,
+    creating: false,
     role: 'worker',
     roleText: '',
     userInfo: null,
@@ -39,7 +91,19 @@ Page({
     pendingUserList: [],
 
     userKeyword: '',
-    allUserList: [],
+
+    baseRawList: [],
+    allBaseList: [],
+    adminUserList: [],
+    workerUserList: [],
+
+    createRoleOptions: CREATE_ROLE_OPTIONS,
+    createRoleIndex: 0,
+    createName: '',
+    createIdCard: '',
+    createPhone: '',
+    fieldBaseOptions: [{ id: '', baseName: '请选择基地' }],
+    assignedBaseIndex: 0,
   },
 
   onLoad() {
@@ -86,11 +150,97 @@ Page({
   },
 
   onUserKeywordInput(e) {
-    this.setData({ userKeyword: e.detail.value });
+    this.setData({ userKeyword: e.detail.value || '' });
   },
 
   searchUsers() {
     this.loadAllUsers();
+  },
+
+  onCreateRoleChange(e) {
+    const nextIndex = Number(e.detail.value || 0);
+    this.setData({
+      createRoleIndex: nextIndex,
+      assignedBaseIndex: createRoleValue(nextIndex) === 'field_manager' ? this.data.assignedBaseIndex : 0,
+    });
+  },
+
+  onCreateNameInput(e) {
+    this.setData({ createName: (e.detail.value || '').trim() });
+  },
+
+  onCreateIdCardInput(e) {
+    this.setData({ createIdCard: cleanIdCard(e.detail.value) });
+  },
+
+  onCreatePhoneInput(e) {
+    this.setData({ createPhone: cleanPhone(e.detail.value) });
+  },
+
+  onCreateBaseChange(e) {
+    this.setData({ assignedBaseIndex: Number(e.detail.value || 0) });
+  },
+
+  async createManager() {
+    if (this.data.creating) return;
+
+    const roleKey = createRoleValue(this.data.createRoleIndex);
+    const name = String(this.data.createName || '').trim();
+    const idCard = cleanIdCard(this.data.createIdCard);
+    const phone = cleanPhone(this.data.createPhone);
+
+    if (!name) {
+      wx.showToast({ title: '请输入姓名', icon: 'none' });
+      return;
+    }
+    if (!/^\d{17}[\dX]$/.test(idCard)) {
+      wx.showToast({ title: '身份证格式不正确', icon: 'none' });
+      return;
+    }
+    if (phone.length !== 11) {
+      wx.showToast({ title: '请输入11位手机号', icon: 'none' });
+      return;
+    }
+
+    const payload = {
+      roleKey,
+      name,
+      idCard,
+      phone,
+    };
+
+    if (roleKey === 'field_manager') {
+      const picked = this.data.fieldBaseOptions[this.data.assignedBaseIndex] || {};
+      const assignedBaseId = Number(picked.id || 0);
+      if (!assignedBaseId) {
+        wx.showToast({ title: '请选择绑定基地', icon: 'none' });
+        return;
+      }
+      payload.assignedBaseId = assignedBaseId;
+    }
+
+    this.setData({ creating: true });
+    try {
+      await app.request({
+        url: '/user/admin',
+        method: 'POST',
+        data: payload,
+      });
+
+      wx.showToast({ title: '管理员创建成功', icon: 'success' });
+      this.setData({
+        createRoleIndex: 0,
+        createName: '',
+        createIdCard: '',
+        createPhone: '',
+        assignedBaseIndex: 0,
+      });
+      await this.loadAuditData();
+    } catch (err) {
+      wx.showToast({ title: err.message || '创建失败', icon: 'none' });
+    } finally {
+      this.setData({ creating: false });
+    }
   },
 
   async loadAuditData() {
@@ -98,13 +248,15 @@ Page({
     try {
       const [baseRes, pendingUserRes] = await Promise.all([
         app.request({ url: '/base?showAll=true', method: 'GET' }).catch(() => []),
-        app.request({ url: '/user/list?status=0&page=1&pageSize=100', method: 'GET' }).catch(() => ({ list: [] })),
+        app.request({ url: '/user/list?status=0&page=1&pageSize=200', method: 'GET' }).catch(() => ({ list: [] })),
       ]);
 
-      const pendingBaseList = normalizeArray(baseRes)
+      const baseRawList = normalizeArray(baseRes);
+
+      const pendingBaseList = baseRawList
         .filter((item) => Number(item.auditStatus) === 0)
         .map((item) => ({
-          id: item.id,
+          id: Number(item.id),
           baseName: item.baseName || item.name || `基地#${item.id}`,
           contactPhone: item.contactPhone || '-',
           regionCode: item.regionCode || '-',
@@ -115,7 +267,7 @@ Page({
       const pendingUserList = normalizeArray(pendingUserRes)
         .filter((item) => Number(item.infoAuditStatus) === 0)
         .map((item) => ({
-          id: item.id,
+          id: Number(item.id),
           name: item.name || '-',
           uid: item.uid || '-',
           roleText: roleLabel(item.roleKey || item.role || 'worker'),
@@ -124,8 +276,8 @@ Page({
           createdAtText: formatDateTime(item.createdAt),
         }));
 
-      this.setData({ pendingBaseList, pendingUserList });
-      await this.loadAllUsers();
+      this.setData({ pendingBaseList, pendingUserList, baseRawList });
+      await this.loadAllUsers(baseRawList);
     } catch (err) {
       wx.showToast({ title: err.message || '加载审核数据失败', icon: 'none' });
     } finally {
@@ -133,30 +285,103 @@ Page({
     }
   },
 
-  async loadAllUsers() {
+  async loadAllUsers(baseListOverride) {
     const keyword = String(this.data.userKeyword || '').trim();
-    const params = ['page=1', 'pageSize=200'];
+    const params = ['page=1', 'pageSize=500'];
     if (keyword) params.push(`keyword=${encodeURIComponent(keyword)}`);
 
     const res = await app.request({ url: `/user/list?${params.join('&')}`, method: 'GET' }).catch(() => ({ list: [] }));
+    const rawUsers = normalizeArray(res);
+    const rawBases = Array.isArray(baseListOverride) ? baseListOverride : normalizeArray(this.data.baseRawList);
+
     const meId = Number(this.data.userInfo?.id || 0);
 
-    const allUserList = normalizeArray(res).map((item) => {
-      const id = Number(item.id);
+    const nameByUserId = {};
+    for (let i = 0; i < rawUsers.length; i += 1) {
+      const row = rawUsers[i] || {};
+      const id = Number(row.id || 0);
+      if (id) nameByUserId[id] = row.name || '-';
+    }
+
+    const mappedBaseList = rawBases.map((item) => {
+      const ownerId = Number(item.ownerId || 0);
       return {
-        id,
-        name: item.name || '-',
-        uid: item.uid || '-',
-        roleText: roleLabel(item.roleKey || item.role || 'worker'),
-        phone: item.phone || '-',
-        assignedBaseId: item.assignedBaseId || '-',
-        auditText: Number(item.infoAuditStatus) === 1 ? '已通过' : Number(item.infoAuditStatus) === 2 ? '已拒绝' : '待审核',
+        id: Number(item.id || 0),
+        baseName: item.baseName || item.name || `基地#${item.id}`,
+        auditStatus: Number(item.auditStatus),
+        auditText: baseAuditText(item.auditStatus),
+        categoryText: baseCategoryText(item.category),
+        ownerId: ownerId || '-',
+        ownerName: ownerId ? (nameByUserId[ownerId] || '-') : '-',
+        contactPhone: safeText(item.contactPhone),
+        regionCode: safeText(item.regionCode),
+        address: safeText(item.address),
+        description: safeText(item.description),
+        licenseUrl: safeText(item.licenseUrl),
         createdAtText: formatDateTime(item.createdAt),
-        canDelete: id !== meId,
+        updatedAtText: formatDateTime(item.updatedAt),
       };
     });
 
-    this.setData({ allUserList });
+    const baseNameById = {};
+    for (let i = 0; i < mappedBaseList.length; i += 1) {
+      const base = mappedBaseList[i] || {};
+      const id = Number(base.id || 0);
+      if (id) baseNameById[id] = base.baseName || `基地#${id}`;
+    }
+
+    const allUsers = rawUsers.map((item) => {
+      const id = Number(item.id || 0);
+      const roleKey = item.roleKey || item.role || 'worker';
+      const assignedBaseId = Number(item.assignedBaseId || 0);
+      const assignedBaseName = assignedBaseId ? (baseNameById[assignedBaseId] || '-') : '-';
+      return {
+        id,
+        roleKey,
+        roleText: roleLabel(roleKey),
+        name: safeText(item.name),
+        uid: safeText(item.uid),
+        phone: safeText(item.phone),
+        idCard: safeText(item.idCard),
+        emergencyContact: safeText(item.emergencyContact),
+        emergencyPhone: safeText(item.emergencyPhone),
+        homeAddress: safeText(item.homeAddress),
+        bankName: safeText(item.bankName),
+        bankCardNo: safeText(item.bankCardNo),
+        faceImgUrl: safeText(item.faceImgUrl),
+        regionCode: safeText(item.regionCode),
+        assignedBaseId: assignedBaseId || '-',
+        assignedBaseText: assignedBaseId ? `${assignedBaseName} (ID:${assignedBaseId})` : '-',
+        auditText: infoAuditText(item.infoAuditStatus),
+        createdAtText: formatDateTime(item.createdAt),
+        updatedAtText: formatDateTime(item.updatedAt),
+        canDelete: id && id !== meId,
+      };
+    });
+
+    const adminUserList = allUsers.filter((item) => ADMIN_ROLE_SET[item.roleKey]);
+    const workerUserList = allUsers.filter((item) => item.roleKey === 'worker');
+
+    const approvedBases = mappedBaseList.filter((item) => Number(item.auditStatus) === 1);
+    const nextFieldBaseOptions = [{ id: '', baseName: '请选择基地' }].concat(
+      approvedBases.map((item) => ({
+        id: item.id,
+        baseName: `${item.baseName} (ID:${item.id})`,
+      })),
+    );
+
+    const currentSelectedId = Number((this.data.fieldBaseOptions[this.data.assignedBaseIndex] || {}).id || 0);
+    const nextAssignedBaseIndex = currentSelectedId
+      ? Math.max(0, nextFieldBaseOptions.findIndex((item) => Number(item.id || 0) === currentSelectedId))
+      : 0;
+
+    this.setData({
+      allBaseList: mappedBaseList,
+      adminUserList,
+      workerUserList,
+      fieldBaseOptions: nextFieldBaseOptions,
+      assignedBaseIndex: nextAssignedBaseIndex,
+    });
   },
 
   async auditBase(e) {
@@ -170,7 +395,7 @@ Page({
         method: 'PATCH',
         data: { status },
       });
-      wx.showToast({ title: status === 1 ? '已通过' : '已驳回', icon: 'success' });
+      wx.showToast({ title: status === 1 ? '审核通过' : '审核驳回', icon: 'success' });
       this.loadAuditData();
     } catch (err) {
       wx.showToast({ title: err.message || '基地审核失败', icon: 'none' });
@@ -205,7 +430,7 @@ Page({
           reason: reason || undefined,
         },
       });
-      wx.showToast({ title: status === 1 ? '已通过' : '已驳回', icon: 'success' });
+      wx.showToast({ title: status === 1 ? '审核通过' : '审核驳回', icon: 'success' });
       this.loadAuditData();
     } catch (err) {
       wx.showToast({ title: err.message || '信息审核失败', icon: 'none' });
@@ -223,7 +448,7 @@ Page({
     const modalRes = await new Promise((resolve) => {
       wx.showModal({
         title: '删除人员',
-        content: '删除后该账号将被软删除，是否继续？',
+        content: '删除后将彻底清理该人员全部信息，且不影响后续二次注册，是否继续？',
         success: resolve,
       });
     });
@@ -234,10 +459,35 @@ Page({
         url: `/user/${id}`,
         method: 'DELETE',
       });
-      wx.showToast({ title: '删除成功', icon: 'success' });
+      wx.showToast({ title: '人员删除成功', icon: 'success' });
       this.loadAuditData();
     } catch (err) {
       wx.showToast({ title: err.message || '删除失败', icon: 'none' });
+    }
+  },
+
+  async deleteBaseCard(e) {
+    const id = Number(e.currentTarget.dataset.id);
+    if (!id) return;
+
+    const modalRes = await new Promise((resolve) => {
+      wx.showModal({
+        title: '删除基地',
+        content: '删除后将彻底清理该基地全部信息，且支持后续重新入驻，是否继续？',
+        success: resolve,
+      });
+    });
+    if (!modalRes.confirm) return;
+
+    try {
+      await app.request({
+        url: `/base/${id}`,
+        method: 'DELETE',
+      });
+      wx.showToast({ title: '基地删除成功', icon: 'success' });
+      this.loadAuditData();
+    } catch (err) {
+      wx.showToast({ title: err.message || '基地删除失败', icon: 'none' });
     }
   },
 

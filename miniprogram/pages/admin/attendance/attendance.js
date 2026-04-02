@@ -146,7 +146,17 @@ Page({
       return false;
     }
 
-    const canManageSalary = role === 'base_manager' || isSuperAdminRole(role);
+    if (isSuperAdminRole(role)) {
+      wx.showModal({
+        title: 'Notice',
+        content: 'Super admin account does not participate in scan check-in or scan-based salary statistics.',
+        showCancel: false,
+        success: () => wx.redirectTo({ url: '/pages/admin/system/system' }),
+      });
+      return false;
+    }
+
+    const canManageSalary = role === 'base_manager';
     this.setData({ role, roleText: roleLabel(role), userInfo, canManageSalary });
     return true;
   },
@@ -361,7 +371,8 @@ Page({
       return;
     }
     if (!qrContent) {
-      wx.showToast({ title: '请输入二维码内容', icon: 'none' });
+      wx.showToast({ title: '请输入或扫码二维码内容', icon: 'none' });
+      return;
     }
 
     this.setData({ checkinLoading: true });

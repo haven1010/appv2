@@ -1,5 +1,6 @@
 // pages/base/detail/detail.js
 const app = getApp();
+const { resolveRole } = require('../../../utils/role');
 
 function toText(value, fallback = '') {
   const text = value == null ? '' : String(value).trim();
@@ -12,7 +13,7 @@ function safeParseDescription(value) {
 
   try {
     return JSON.parse(String(value));
-  } catch (error) {
+  } catch (_) {
     return {};
   }
 }
@@ -30,14 +31,20 @@ function mapCategoryLabel(category) {
   const code = Number(category);
   if (code === 1) return '水果种植';
   if (code === 2) return '蔬菜种植';
-  return '其他农作';
+  return '其他农业';
 }
 
 function mapAuditLabel(auditStatus) {
   const code = Number(auditStatus);
   if (code === 1) return '已审核';
-  if (code === 2) return '已拒绝';
+  if (code === 2) return '已驳回';
   return '待审核';
+}
+
+function normalizeArray(value) {
+  if (Array.isArray(value)) return value;
+  if (Array.isArray(value && value.list)) return value.list;
+  return [];
 }
 
 function resolveApiOrigin() {
@@ -92,7 +99,7 @@ function parseImageCollection(value) {
     try {
       return parseImageCollection(JSON.parse(text));
     } catch (_) {
-      // Fall through to plain text split.
+      // Keep fallback split.
     }
   }
 
@@ -148,9 +155,156 @@ function normalizePersistedImageUrl(value, apiOrigin = '') {
   return text;
 }
 
+function toMoneyText(value) {
+  const num = Number(value);
+  if (!Number.isFinite(num)) return '0.00';
+  return num.toFixed(2);
+}
+
+function toDateText(value) {
+  const raw = toText(value);
+  if (!raw) return '-';
+  const date = new Date(raw);
+  if (Number.isNaN(date.getTime())) return raw.slice(0, 10);
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+function toTimestamp(value) {
+  const raw = toText(value);
+  if (!raw) return 0;
+  const ts = new Date(raw).getTime();
+  return Number.isFinite(ts) ? ts : 0;
+}
+
+function mapSalaryStatus(status) {
+  const code = Number(status);
+  if (code === 2) return { text: '已发放', className: 'paid' };
+  if (code === 1) return { text: '待发放', className: 'confirm' };
+  return { text: '待核算', className: 'pending' };
+}
+
+function extractErrorMessage(err, fallback = '加载失败，请稍后重试') {
+  const messageFromResponse = Array.isArray(err?.response?.message)
+    ? err.response.message.join(' / ')
+    : err?.response?.message || err?.response?.msg || '';
+
+  const candidates = [err?.message, err?.errMsg, messageFromResponse];
+  for (let i = 0; i < candidates.length; i += 1) {
+    const text = toText(candidates[i]);
+    if (text) return text;
+  }
+
+  return fallback;
+}
+
+function buildPayrollRows(rawRows) {
+  const rows = normalizeArray(rawRows);
+  const grouped = {};
+
+  rows.forEach((item) => {
+    const workerName = toText(item && item.workerName, '未实名采摘工');
+    const workerUid = toText(item && item.workerUid);
+    const workerPhone = toText(item && item.workerPhone);
+    const key = workerUid || workerPhone || workerName;
+    if (!key) return;
+
+    const amount = Number(item && item.totalAmount) || 0;
+    const status = Number(item && item.status);
+    const currentTs = Math.max(
+      toTimestamp(item && item.createdAt),
+      toTimestamp(item && item.workDate),
+      0,
+    );
+
+    if (!grouped[key]) {
+      grouped[key] = {
+        key,
+        workerName,
+        workerUid: workerUid || '-',
+        totalAmount: 0,
+        paidAmount: 0,
+        pendingAmount: 0,
+        recordCount: 0,
+        latestStatus: status,
+        latestTime: currentTs,
+        lastWorkDateText: toDateText(item && item.workDate),
+      };
+    }
+
+    const target = grouped[key];
+    target.totalAmount += amount;
+    target.recordCount += 1;
+
+    if (status === 2) {
+      target.paidAmount += amount;
+    } else {
+      target.pendingAmount += amount;
+    }
+
+    if (currentTs >= target.latestTime) {
+      target.latestTime = currentTs;
+      target.latestStatus = status;
+      target.lastWorkDateText = toDateText(item && item.workDate);
+    }
+  });
+
+  return Object.keys(grouped)
+    .map((key) => {
+      const item = grouped[key];
+      const statusMeta = mapSalaryStatus(item.latestStatus);
+      return {
+        key: item.key,
+        workerName: item.workerName,
+        workerUid: item.workerUid,
+        recordCount: item.recordCount,
+        lastWorkDateText: item.lastWorkDateText || '-',
+        totalAmount: Number(item.totalAmount.toFixed(2)),
+        paidAmount: Number(item.paidAmount.toFixed(2)),
+        pendingAmount: Number(item.pendingAmount.toFixed(2)),
+        totalAmountText: toMoneyText(item.totalAmount),
+        paidAmountText: toMoneyText(item.paidAmount),
+        pendingAmountText: toMoneyText(item.pendingAmount),
+        statusText: statusMeta.text,
+        statusClass: statusMeta.className,
+        latestTime: item.latestTime,
+      };
+    })
+    .sort((a, b) => {
+      if (b.totalAmount !== a.totalAmount) return b.totalAmount - a.totalAmount;
+      return b.latestTime - a.latestTime;
+    });
+}
+
+function buildPayrollSummary(rows) {
+  const list = Array.isArray(rows) ? rows : [];
+  let totalAmount = 0;
+  let paidAmount = 0;
+  let pendingAmount = 0;
+
+  list.forEach((item) => {
+    totalAmount += Number(item && item.totalAmount) || 0;
+    paidAmount += Number(item && item.paidAmount) || 0;
+    pendingAmount += Number(item && item.pendingAmount) || 0;
+  });
+
+  return {
+    workerCount: list.length,
+    totalAmountText: toMoneyText(totalAmount),
+    paidAmountText: toMoneyText(paidAmount),
+    pendingAmountText: toMoneyText(pendingAmount),
+  };
+}
+
 Page({
   data: {
     baseId: null,
+    role: 'worker',
+    isBossView: false,
+    activePanel: 'base',
+
     baseInfo: null,
     loading: true,
     loadError: '',
@@ -163,10 +317,24 @@ Page({
     licenseUrl: '',
     envImages: [],
     hasExpiredTempImage: false,
+
+    payrollLoading: false,
+    payrollError: '',
+    payrollRows: [],
+    payrollSummary: {
+      workerCount: 0,
+      totalAmountText: '0.00',
+      paidAmountText: '0.00',
+      pendingAmountText: '0.00',
+    },
   },
 
   onLoad(options) {
+    const userInfo = wx.getStorageSync('userInfo') || {};
+    const role = resolveRole(userInfo);
+    const isBossView = role === 'boss';
     const baseId = Number(options && options.id);
+
     if (!baseId) {
       this.setData({
         loading: false,
@@ -175,12 +343,33 @@ Page({
       return;
     }
 
-    this.setData({ baseId });
-    this.loadBaseDetail();
+    this.setData({
+      role,
+      isBossView,
+      activePanel: 'base',
+      baseId,
+    });
+
+    this.refreshPageData();
   },
 
   onPullDownRefresh() {
-    this.loadBaseDetail().finally(() => wx.stopPullDownRefresh());
+    this.refreshPageData().finally(() => wx.stopPullDownRefresh());
+  },
+
+  async refreshPageData() {
+    const tasks = [this.loadBaseDetail()];
+    if (this.data.isBossView) {
+      tasks.push(this.loadPayrollData());
+    }
+    await Promise.all(tasks);
+  },
+
+  onPanelChange(e) {
+    const panel = e.currentTarget.dataset.panel;
+    if (panel !== 'base' && panel !== 'payroll') return;
+    if (panel === this.data.activePanel) return;
+    this.setData({ activePanel: panel });
   },
 
   async loadBaseDetail() {
@@ -237,6 +426,41 @@ Page({
       wx.showToast({
         title: '加载失败',
         icon: 'none',
+      });
+    }
+  },
+
+  async loadPayrollData() {
+    this.setData({
+      payrollLoading: true,
+      payrollError: '',
+    });
+
+    try {
+      const payload = await app.request({
+        url: `/salary/list?baseId=${this.data.baseId}`,
+        method: 'GET',
+      });
+      const payrollRows = buildPayrollRows(payload && payload.list);
+      const payrollSummary = buildPayrollSummary(payrollRows);
+
+      this.setData({
+        payrollLoading: false,
+        payrollRows,
+        payrollSummary,
+      });
+    } catch (err) {
+      console.error('[base detail] payroll load failed:', err);
+      this.setData({
+        payrollLoading: false,
+        payrollRows: [],
+        payrollSummary: {
+          workerCount: 0,
+          totalAmountText: '0.00',
+          paidAmountText: '0.00',
+          pendingAmountText: '0.00',
+        },
+        payrollError: extractErrorMessage(err, '工资数据加载失败，请稍后重试'),
       });
     }
   },

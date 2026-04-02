@@ -147,7 +147,7 @@ export class SalaryService {
       .leftJoinAndSelect('signup.job', 'job')
       .orderBy('salary.createdAt', 'DESC');
 
-    if (role === UserRole.BASE_MANAGER) {
+    if (role === UserRole.BASE_MANAGER || role === UserRole.BOSS) {
       const ownedBases = await this.baseRepo.find({ where: { ownerId: user.id }, select: ['id'] });
       const baseIds = ownedBases.map((b) => b.id);
       if (baseIds.length === 0) return { list: [], total: 0 };
@@ -231,7 +231,7 @@ export class SalaryService {
       .createQueryBuilder('salary')
       .leftJoin('salary.signup', 'signup');
 
-    if (role === UserRole.BASE_MANAGER) {
+    if (role === UserRole.BASE_MANAGER || role === UserRole.BOSS) {
       const ownedBases = await this.baseRepo.find({ where: { ownerId: user.id }, select: ['id'] });
       const baseIds = ownedBases.map((b) => b.id);
       if (baseIds.length === 0) {

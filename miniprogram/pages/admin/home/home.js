@@ -554,13 +554,20 @@ Page({
       app.request({ url: `/user/list?${params.join('&')}`, method: 'GET' }).catch(() => ({ list: [], total: 0 })),
     ]);
 
+    const meId = Number(this.data.userInfo?.id || 0);
     const list = normalizeArray(usersRes).map((item) => ({
-      id: item.id,
+      id: Number(item.id || 0),
       name: item.name || '-',
       uid: item.uid || '-',
       roleText: roleLabel(item.roleKey || item.role || 'worker'),
       auditText: auditText(Number(item.infoAuditStatus)),
-      trace: `手机号: ${item.phone || '-'} | 指派基地: ${item.assignedBaseId || '-'} | 更新时间: ${formatDateTime(item.updatedAt)}`,
+      phone: item.phone || '-',
+      idCard: item.idCard || '-',
+      assignedBaseId: item.assignedBaseId || '-',
+      updatedAtText: formatDateTime(item.updatedAt),
+      createdAtText: formatDateTime(item.createdAt),
+      canDelete: Number(item.id || 0) > 0 && Number(item.id || 0) !== meId,
+      expanded: false,
     }));
 
     this.setData({
@@ -568,6 +575,45 @@ Page({
       superList: list,
       superTotal: Number(usersRes?.total || list.length),
     });
+  },
+
+  toggleSuperUserDetail(e) {
+    const id = Number(e.currentTarget.dataset.id);
+    if (!id) return;
+    const list = Array.isArray(this.data.superList) ? this.data.superList.slice() : [];
+    const idx = list.findIndex((item) => Number(item.id) === id);
+    if (idx < 0) return;
+    list[idx] = Object.assign({}, list[idx], { expanded: !list[idx].expanded });
+    this.setData({ superList: list });
+  },
+
+  async deleteSuperUser(e) {
+    const id = Number(e.currentTarget.dataset.id);
+    if (!id) return;
+    if (id === Number(this.data.userInfo?.id || 0)) {
+      wx.showToast({ title: '不能删除当前登录账号', icon: 'none' });
+      return;
+    }
+
+    const modalRes = await new Promise((resolve) => {
+      wx.showModal({
+        title: '删除人员',
+        content: '删除后将彻底清理该人员全部信息，且不影响后续二次注册，是否继续？',
+        success: resolve,
+      });
+    });
+    if (!modalRes.confirm) return;
+
+    try {
+      await app.request({
+        url: `/user/${id}`,
+        method: 'DELETE',
+      });
+      wx.showToast({ title: '人员删除成功', icon: 'success' });
+      await this.loadSuperAdminHome();
+    } catch (err) {
+      wx.showToast({ title: err.message || '删除失败', icon: 'none' });
+    }
   },
 
   goBaseCenter() {

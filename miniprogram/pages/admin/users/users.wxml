@@ -1,7 +1,37 @@
 <view class="page-admin">
   <view class="hero-card">
     <view class="hero-title">审核中心</view>
-    <view class="hero-sub">{{roleText}} · 所有审核与删除操作仅超级管理员可执行</view>
+    <view class="hero-sub">{{roleText}} · 超级管理员可查看基地、管理员、采摘工全量信息并执行删除</view>
+  </view>
+
+  <view class="section-card">
+    <view class="section-title">新增管理员</view>
+    <view class="section-sub">支持创建基地管理员和现场管理员（现场管理员需绑定基地）</view>
+
+    <view class="form-label">管理员角色</view>
+    <picker mode="selector" value="{{createRoleIndex}}" range="{{createRoleOptions}}" range-key="label" bindchange="onCreateRoleChange">
+      <view class="picker">{{createRoleOptions[createRoleIndex].label}}</view>
+    </picker>
+
+    <view class="form-label">姓名</view>
+    <input class="input" value="{{createName}}" placeholder="请输入姓名" bindinput="onCreateNameInput" />
+
+    <view class="form-label">身份证号</view>
+    <input class="input" value="{{createIdCard}}" placeholder="请输入18位身份证号" maxlength="18" bindinput="onCreateIdCardInput" />
+
+    <view class="form-label">手机号</view>
+    <input class="input" value="{{createPhone}}" placeholder="请输入11位手机号" maxlength="11" bindinput="onCreatePhoneInput" />
+
+    <block wx:if="{{createRoleOptions[createRoleIndex].value === 'field_manager'}}">
+      <view class="form-label">绑定基地</view>
+      <picker mode="selector" value="{{assignedBaseIndex}}" range="{{fieldBaseOptions}}" range-key="baseName" bindchange="onCreateBaseChange">
+        <view class="picker">{{fieldBaseOptions[assignedBaseIndex].baseName}}</view>
+      </picker>
+    </block>
+
+    <view class="actions-row">
+      <button class="btn-primary" loading="{{creating}}" bindtap="createManager">创建管理员</button>
+    </view>
   </view>
 
   <view class="section-card">
@@ -12,7 +42,7 @@
     <view class="list-item" wx:for="{{pendingBaseList}}" wx:key="id">
       <view class="item-title">{{item.baseName}}</view>
       <view class="item-sub">联系方式：{{item.contactPhone}}</view>
-      <view class="item-sub">地区编码：{{item.regionCode}}</view>
+      <view class="item-sub">区域编码：{{item.regionCode}}</view>
       <view class="item-sub">地址：{{item.address}}</view>
       <view class="item-sub">提交时间：{{item.createdAtText}}</view>
       <view class="actions-row">
@@ -26,7 +56,7 @@
     <view class="section-title">信息变更审核</view>
     <view class="section-sub">待审核人员：{{pendingUserList.length}}</view>
 
-    <view class="empty-text" wx:if="{{!pendingUserList.length}}">暂无待审核信息变更</view>
+    <view class="empty-text" wx:if="{{!pendingUserList.length}}">暂无待审核人员信息</view>
     <view class="list-item" wx:for="{{pendingUserList}}" wx:key="id">
       <view class="item-title">{{item.name}}（{{item.uid}}）</view>
       <view class="item-sub">角色：{{item.roleText}}</view>
@@ -41,21 +71,79 @@
   </view>
 
   <view class="section-card">
-    <view class="section-title">人员列表（可删除）</view>
-    <view class="form-label">关键词</view>
-    <input class="input" value="{{userKeyword}}" bindinput="onUserKeywordInput" placeholder="姓名 / UID" />
+    <view class="section-title">全量信息检索</view>
+    <view class="form-label">关键字（姓名 / UID）</view>
+    <input class="input" value="{{userKeyword}}" bindinput="onUserKeywordInput" placeholder="请输入关键字" />
     <view class="actions-row">
       <button class="btn-primary" bindtap="searchUsers">搜索</button>
     </view>
+  </view>
 
-    <view class="empty-text" wx:if="{{!allUserList.length}}">暂无人员数据</view>
-    <view class="list-item" wx:for="{{allUserList}}" wx:key="id">
+  <view class="section-card">
+    <view class="section-title">基地信息（{{allBaseList.length}}）</view>
+    <view class="empty-text" wx:if="{{!allBaseList.length}}">暂无基地信息</view>
+    <view class="list-item" wx:for="{{allBaseList}}" wx:key="id">
+      <view class="item-title">{{item.baseName}}（ID:{{item.id}}）</view>
+      <view class="item-sub">状态：{{item.auditText}} · 类别：{{item.categoryText}}</view>
+      <view class="item-sub">基地负责人：{{item.ownerName}}（ID:{{item.ownerId}}）</view>
+      <view class="item-sub">联系方式：{{item.contactPhone}}</view>
+      <view class="item-sub">区域编码：{{item.regionCode}}</view>
+      <view class="item-sub">地址：{{item.address}}</view>
+      <view class="item-sub">描述：{{item.description}}</view>
+      <view class="item-sub">营业执照：{{item.licenseUrl}}</view>
+      <view class="item-sub">创建时间：{{item.createdAtText}}</view>
+      <view class="item-sub">更新时间：{{item.updatedAtText}}</view>
+      <view class="actions-row">
+        <button class="btn-danger btn-delete-mini" data-id="{{item.id}}" bindtap="deleteBaseCard">删除基地</button>
+      </view>
+    </view>
+  </view>
+
+  <view class="section-card">
+    <view class="section-title">管理员信息（{{adminUserList.length}}）</view>
+    <view class="empty-text" wx:if="{{!adminUserList.length}}">暂无管理员信息</view>
+    <view class="list-item" wx:for="{{adminUserList}}" wx:key="id">
       <view class="item-title">{{item.name}}（{{item.uid}}）</view>
       <view class="item-sub">角色：{{item.roleText}} · 审核：{{item.auditText}}</view>
-      <view class="item-sub">手机号：{{item.phone}} · 基地ID：{{item.assignedBaseId}}</view>
+      <view class="item-sub">手机号：{{item.phone}}</view>
+      <view class="item-sub">身份证：{{item.idCard}}</view>
+      <view class="item-sub">绑定基地：{{item.assignedBaseText}}</view>
+      <view class="item-sub">区域编码：{{item.regionCode}}</view>
+      <view class="item-sub">紧急联系人：{{item.emergencyContact}}</view>
+      <view class="item-sub">紧急联系电话：{{item.emergencyPhone}}</view>
+      <view class="item-sub">住址：{{item.homeAddress}}</view>
+      <view class="item-sub">银行卡开户行：{{item.bankName}}</view>
+      <view class="item-sub">银行卡号：{{item.bankCardNo}}</view>
+      <view class="item-sub">人脸图：{{item.faceImgUrl}}</view>
       <view class="item-sub">创建时间：{{item.createdAtText}}</view>
+      <view class="item-sub">更新时间：{{item.updatedAtText}}</view>
       <view class="actions-row" wx:if="{{item.canDelete}}">
-        <button class="btn-danger" data-id="{{item.id}}" bindtap="deleteUser">删除人员</button>
+        <button class="btn-danger btn-delete-mini" data-id="{{item.id}}" bindtap="deleteUser">删除人员</button>
+      </view>
+      <view class="item-sub" wx:else>当前登录账号不可删除</view>
+    </view>
+  </view>
+
+  <view class="section-card">
+    <view class="section-title">采摘工信息（{{workerUserList.length}}）</view>
+    <view class="empty-text" wx:if="{{!workerUserList.length}}">暂无采摘工信息</view>
+    <view class="list-item" wx:for="{{workerUserList}}" wx:key="id">
+      <view class="item-title">{{item.name}}（{{item.uid}}）</view>
+      <view class="item-sub">审核：{{item.auditText}}</view>
+      <view class="item-sub">手机号：{{item.phone}}</view>
+      <view class="item-sub">身份证：{{item.idCard}}</view>
+      <view class="item-sub">绑定基地：{{item.assignedBaseText}}</view>
+      <view class="item-sub">区域编码：{{item.regionCode}}</view>
+      <view class="item-sub">紧急联系人：{{item.emergencyContact}}</view>
+      <view class="item-sub">紧急联系电话：{{item.emergencyPhone}}</view>
+      <view class="item-sub">家庭住址：{{item.homeAddress}}</view>
+      <view class="item-sub">银行卡开户行：{{item.bankName}}</view>
+      <view class="item-sub">银行卡号：{{item.bankCardNo}}</view>
+      <view class="item-sub">人脸图：{{item.faceImgUrl}}</view>
+      <view class="item-sub">创建时间：{{item.createdAtText}}</view>
+      <view class="item-sub">更新时间：{{item.updatedAtText}}</view>
+      <view class="actions-row" wx:if="{{item.canDelete}}">
+        <button class="btn-danger btn-delete-mini" data-id="{{item.id}}" bindtap="deleteUser">删除人员</button>
       </view>
       <view class="item-sub" wx:else>当前登录账号不可删除</view>
     </view>
@@ -64,11 +152,11 @@
   <view class="empty-text" wx:if="{{loading}}">加载中...</view>
 
   <view class="admin-bottom-nav">
-    <view class="admin-bottom-item {{activeNav === 'home' ? 'active' : ''}}" data-target="home" bindtap="switchAdminNav">首页</view>
-    <view class="admin-bottom-item {{activeNav === 'base' ? 'active' : ''}}" wx:if="{{role !== 'field_manager'}}" data-target="base" bindtap="switchAdminNav">基地</view>
-    <view class="admin-bottom-item {{activeNav === 'scan' ? 'active' : ''}}" data-target="scan" bindtap="switchAdminNav">扫码</view>
+    <view class="admin-bottom-item {{activeNav === 'home' ? 'active' : ''}}" data-target="home" bindtap="switchAdminNav">{{role === 'super_admin' || role === 'region_admin' ? '人员管理' : '首页'}}</view>
+    <view class="admin-bottom-item {{activeNav === 'base' ? 'active' : ''}}" wx:if="{{role !== 'field_manager'}}" data-target="base" bindtap="switchAdminNav">{{role === 'super_admin' || role === 'region_admin' ? '基地管理' : '基地'}}</view>
+    <view class="admin-bottom-item {{activeNav === 'scan' ? 'active' : ''}}" wx:if="{{role !== 'super_admin' && role !== 'region_admin'}}" data-target="scan" bindtap="switchAdminNav">扫码</view>
     <view class="admin-bottom-item {{activeNav === 'audit' ? 'active' : ''}}" wx:if="{{role === 'super_admin' || role === 'region_admin'}}" data-target="audit" bindtap="switchAdminNav">审核</view>
-    <view class="admin-bottom-item {{activeNav === 'payroll' ? 'active' : ''}}" wx:if="{{role === 'super_admin' || role === 'region_admin'}}" data-target="payroll" bindtap="switchAdminNav">工资</view>
-    <view class="admin-bottom-item {{activeNav === 'me' ? 'active' : ''}}" data-target="me" bindtap="switchAdminNav">我的</view>
+    <view class="admin-bottom-item {{activeNav === 'payroll' ? 'active' : ''}}" wx:if="{{role === 'super_admin' || role === 'region_admin'}}" data-target="payroll" bindtap="switchAdminNav">工资管理</view>
+    <view class="admin-bottom-item {{activeNav === 'me' ? 'active' : ''}}" data-target="me" bindtap="switchAdminNav">我的信息</view>
   </view>
 </view>

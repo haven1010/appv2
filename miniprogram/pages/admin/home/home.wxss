@@ -1,1 +1,13 @@
 @import "../common.wxss";
+
+.person-head-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+}
+
+.person-head-main {
+  flex: 1;
+  min-width: 0;
+}

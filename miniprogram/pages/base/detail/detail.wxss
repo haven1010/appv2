@@ -2,19 +2,17 @@
   min-height: 100vh;
   padding: 24rpx 24rpx 56rpx;
   box-sizing: border-box;
-  background:
-    radial-gradient(circle at 0% 0%, rgba(183, 206, 159, 0.32) 0%, rgba(183, 206, 159, 0) 45%),
-    radial-gradient(circle at 100% 0%, rgba(233, 196, 106, 0.3) 0%, rgba(233, 196, 106, 0) 38%),
-    linear-gradient(180deg, #f7f1e3 0%, #efe7d8 100%);
+  background: transparent;
 }
 
 .hero-card,
 .section-card,
-.state-panel {
+.state-panel,
+.panel-switch {
   border-radius: 28rpx;
-  border: 2rpx solid rgba(112, 93, 69, 0.16);
-  background: rgba(255, 251, 243, 0.96);
-  box-shadow: 0 10rpx 22rpx rgba(112, 93, 69, 0.08);
+  border: 3rpx solid rgba(140, 112, 72, 0.2);
+  background: var(--warm-card);
+  box-shadow: var(--shadow-card);
 }
 
 .hero-card {
@@ -29,23 +27,23 @@
 
 .hero-title {
   flex: 1;
-  font-size: 42rpx;
+  font-size: 40rpx;
   line-height: 1.25;
-  color: #2f3b2a;
+  color: #473421;
   font-weight: 800;
 }
 
 .status-tag {
   flex-shrink: 0;
-  font-size: 24rpx;
+  font-size: 22rpx;
   font-weight: 700;
   padding: 6rpx 16rpx;
   border-radius: 999rpx;
 }
 
 .status-tag.approved {
-  color: #3f6d2f;
-  background: #dcecc8;
+  color: #4a6b34;
+  background: rgba(240, 246, 226, 0.9);
 }
 
 .status-tag.pending {
@@ -61,54 +59,46 @@
 .hero-subtitle {
   display: block;
   margin-top: 10rpx;
-  font-size: 28rpx;
+  font-size: 26rpx;
   line-height: 1.5;
-  color: #6f5f4a;
+  color: var(--ink-sub);
 }
 
-.hero-stats {
-  margin-top: 18rpx;
+.panel-switch {
+  margin-top: 14rpx;
+  padding: 8rpx;
   display: flex;
-  gap: 10rpx;
+  gap: 8rpx;
 }
 
-.hero-stat {
+.panel-item {
   flex: 1;
-  border-radius: 18rpx;
-  border: 2rpx solid rgba(112, 93, 69, 0.12);
-  background: #f9f2e4;
-  padding: 14rpx 12rpx;
   text-align: center;
+  border-radius: 999rpx;
+  padding: 14rpx 0;
+  font-size: 24rpx;
+  font-weight: 700;
+  color: #7a664e;
 }
 
-.hero-stat-value {
-  display: block;
-  font-size: 28rpx;
-  line-height: 1.35;
-  color: #3c4b34;
-  font-weight: 800;
-}
-
-.hero-stat-label {
-  display: block;
-  margin-top: 6rpx;
-  font-size: 22rpx;
-  line-height: 1.35;
-  color: #7d6b56;
+.panel-item.active {
+  color: #ffffff;
+  background: linear-gradient(90deg, var(--warm-green) 0%, var(--warm-blue) 100%);
+  box-shadow: 0 8rpx 16rpx rgba(86, 126, 67, 0.24);
 }
 
 .section-card {
-  margin-top: 18rpx;
+  margin-top: 16rpx;
   padding: 22rpx;
 }
 
 .section-title {
   display: block;
-  font-size: 34rpx;
+  font-size: 32rpx;
   line-height: 1.35;
-  color: #2f3b2a;
+  color: #473421;
   font-weight: 800;
-  margin-bottom: 14rpx;
+  margin-bottom: 12rpx;
 }
 
 .info-row {
@@ -130,23 +120,10 @@
 .info-value {
   display: block;
   margin-top: 6rpx;
-  font-size: 30rpx;
+  font-size: 28rpx;
   line-height: 1.45;
   color: #3b2f21;
   word-break: break-all;
-}
-
-.license-wrap {
-  border-radius: 20rpx;
-  overflow: hidden;
-  border: 2rpx solid rgba(112, 93, 69, 0.16);
-  background: #f5ebd7;
-}
-
-.license-image {
-  width: 100%;
-  height: 360rpx;
-  display: block;
 }
 
 .env-grid {
@@ -172,7 +149,7 @@
 }
 
 .empty-text {
-  font-size: 28rpx;
+  font-size: 26rpx;
   line-height: 1.45;
   color: #87735d;
 }
@@ -185,24 +162,136 @@
   color: #9a5d3d;
 }
 
-.state-panel {
+.payroll-stats {
+  display: flex;
+  gap: 10rpx;
+}
+
+.payroll-stat {
+  flex: 1;
+  border-radius: 16rpx;
+  border: 2rpx solid rgba(140, 112, 72, 0.2);
+  background: rgba(255, 255, 255, 0.66);
+  padding: 14rpx 10rpx;
+  text-align: center;
+}
+
+.payroll-stat-value {
+  display: block;
+  font-size: 26rpx;
+  font-weight: 800;
+  color: #3f3222;
+}
+
+.payroll-stat-label {
+  display: block;
+  margin-top: 6rpx;
+  font-size: 21rpx;
+  color: #7a664e;
+}
+
+.payroll-list {
+  margin-top: 14rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+}
+
+.payroll-card {
+  border-radius: 24rpx;
+  border: 3rpx solid rgba(140, 112, 72, 0.2);
+  background: var(--warm-card);
+  box-shadow: var(--shadow-card);
+  padding: 18rpx;
+}
+
+.payroll-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.payroll-name {
+  font-size: 30rpx;
+  font-weight: 800;
+  color: #473421;
+}
+
+.payroll-status {
+  font-size: 20rpx;
+  border-radius: 999rpx;
+  padding: 4rpx 12rpx;
+  font-weight: 700;
+}
+
+.payroll-status.pending {
+  color: #8e6a2f;
+  background: #f8e5b6;
+}
+
+.payroll-status.confirm {
+  color: #4a6b34;
+  background: rgba(240, 246, 226, 0.9);
+}
+
+.payroll-status.paid {
+  color: #3e5f2d;
+  background: #dbecc6;
+}
+
+.payroll-main {
+  margin-top: 12rpx;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.payroll-total-label {
+  font-size: 24rpx;
+  color: #7a664e;
+}
+
+.payroll-total-value {
+  font-size: 34rpx;
+  color: #4a6b34;
+  font-weight: 800;
+}
+
+.payroll-meta {
   margin-top: 10rpx;
-  padding: 56rpx 26rpx;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10rpx;
+  font-size: 22rpx;
+  color: #6f5e49;
+}
+
+.payroll-date {
+  display: block;
+  margin-top: 8rpx;
+  font-size: 22rpx;
+  color: #7a664e;
+}
+
+.state-panel {
+  margin-top: 16rpx;
+  padding: 52rpx 26rpx;
   text-align: center;
 }
 
 .state-title {
   display: block;
-  font-size: 32rpx;
+  font-size: 30rpx;
   line-height: 1.4;
-  color: #3b2f21;
+  color: #4a3823;
   font-weight: 700;
 }
 
 .state-desc {
   display: block;
   margin-top: 8rpx;
-  font-size: 26rpx;
+  font-size: 24rpx;
   line-height: 1.45;
-  color: #87735d;
+  color: #7a664e;
 }

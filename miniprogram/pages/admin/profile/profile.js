@@ -11,28 +11,75 @@ function maskPhone(phone) {
   return `${p.slice(0, 3)}****${p.slice(-4)}`;
 }
 
+function formatDateTime(value) {
+  if (!value) return '-';
+  const raw = String(value).trim();
+  const date = new Date(raw);
+  if (Number.isNaN(date.getTime())) {
+    return raw.replace('T', ' ').slice(0, 19);
+  }
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  const hh = String(date.getHours()).padStart(2, '0');
+  const mm = String(date.getMinutes()).padStart(2, '0');
+  const ss = String(date.getSeconds()).padStart(2, '0');
+  return `${y}-${m}-${d} ${hh}:${mm}:${ss}`;
+}
+
+function normalizeArray(res) {
+  if (Array.isArray(res)) return res;
+  if (Array.isArray(res?.list)) return res.list;
+  return [];
+}
+
+function operationTypeText(value) {
+  const key = String(value || '').toLowerCase();
+  if (key === 'create') return '新增';
+  if (key === 'update') return '修改';
+  if (key === 'delete') return '删除';
+  if (key === 'audit') return '审核';
+  return key || '-';
+}
+
+function resourceTypeText(value) {
+  const key = String(value || '').toLowerCase();
+  if (key === 'user') return '人员';
+  if (key === 'base') return '基地';
+  if (key === 'job') return '岗位';
+  if (key === 'application') return '报名';
+  if (key === 'cooperation') return '合作';
+  if (key === 'attendance') return '签到';
+  if (key === 'salary') return '工资';
+  if (key === 'payment') return '发放';
+  return key || '-';
+}
+
 Page({
   data: {
     loading: true,
+    logsLoading: false,
     role: 'worker',
     roleText: '',
     userInfo: null,
     profile: null,
+    canViewLogs: false,
+    operationLogs: [],
     activeNav: 'me',
   },
 
   onLoad() {
     if (!this.ensureAdmin()) return;
-    this.loadProfile();
+    this.loadAll();
   },
 
   onShow() {
     if (!this.ensureAdmin()) return;
-    this.loadProfile();
+    this.loadAll();
   },
 
   onPullDownRefresh() {
-    this.loadProfile().finally(() => wx.stopPullDownRefresh());
+    this.loadAll().finally(() => wx.stopPullDownRefresh());
   },
 
   ensureAdmin() {
@@ -58,9 +105,17 @@ Page({
       role,
       roleText: roleLabel(role),
       userInfo,
+      canViewLogs: role === 'super_admin',
     });
 
     return true;
+  },
+
+  async loadAll() {
+    await this.loadProfile();
+    if (this.data.canViewLogs) {
+      await this.loadOperationLogs();
+    }
   },
 
   async loadProfile() {
@@ -85,6 +140,34 @@ Page({
     }
   },
 
+  async loadOperationLogs() {
+    if (!this.data.canViewLogs) return;
+
+    this.setData({ logsLoading: true });
+    try {
+      const res = await app.request({
+        url: '/operation-log/list?page=1&pageSize=20',
+        method: 'GET',
+      });
+
+      const list = normalizeArray(res).map((item) => ({
+        id: item.id,
+        operationTypeText: operationTypeText(item.operationType),
+        resourceTypeText: resourceTypeText(item.resourceType),
+        resourceId: item.resourceId || '-',
+        description: item.description || '-',
+        userId: item.userId || '-',
+        createdAtText: formatDateTime(item.createdAt),
+      }));
+
+      this.setData({ operationLogs: list });
+    } catch (err) {
+      wx.showToast({ title: err.message || '加载操作日志失败', icon: 'none' });
+    } finally {
+      this.setData({ logsLoading: false });
+    }
+  },
+
   logout() {
     wx.showModal({
       title: '退出登录',
@@ -98,6 +181,10 @@ Page({
         wx.reLaunch({ url: '/pages/login/login' });
       },
     });
+  },
+
+  refreshAll() {
+    this.loadAll();
   },
 
   switchAdminNav(e) {

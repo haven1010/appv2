@@ -5,18 +5,23 @@
  */
 import { Injectable, NotFoundException, Logger, ConflictException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, Repository, In } from 'typeorm';
 import { BaseInfo, AuditStatus } from './entities/base-info.entity';
 import { RecruitmentJob, PayType, JobStatus } from './entities/recruitment-job.entity';
 import { CreateBaseDto } from './dto/create-base.dto';
 import { CreateJobDto } from './dto/create-job.dto';
 import { JobApplicationService } from './services/job-application.service';
 import { BaseCooperationService } from './services/base-cooperation.service';
-import { ApplicationStatus } from './entities/job-application.entity';
-import { CooperationStatus } from './entities/base-cooperation.entity';
+import { ApplicationStatus, JobApplication } from './entities/job-application.entity';
+import { BaseCooperation, CooperationStatus } from './entities/base-cooperation.entity';
+import { BaseRating } from './entities/base-rating.entity';
 import { OperationLogService, OperationLogContext } from '../common/services/operation-log.service';
 import { OperationType, ResourceType } from '../common/entities/operation-log.entity';
 import { SysUser, UserRole } from '../user/entities/sys-user.entity';
+import { DailySignup } from '../attendance/entities/daily-signup.entity';
+import { OfflineAttendanceEvent } from '../attendance/entities/offline-attendance-event.entity';
+import { LaborSalary } from '../salary/entities/labor-salary.entity';
+import { SalaryPayment } from '../salary/entities/salary-payment.entity';
 
 @Injectable()
 /**
@@ -433,7 +438,7 @@ export class BaseService {
   /**
    * 瓒呯骇绠＄悊鍛樺垹闄ゅ熀鍦帮紙杞垹闄わ級銆?   * 鍚屾椂灏嗚鍩哄湴浠嶅浜庡惎鐢ㄧ姸鎬佺殑宀椾綅鎵归噺涓嬬嚎锛岄伩鍏嶅悗缁户缁嫑宸ャ€?   */
   async remove(id: number, operatorId: number, context?: OperationLogContext): Promise<{ msg: string }> {
-    const { beforeSnapshot, affectedJobs } = await this.dataSource.transaction(async (manager) => {
+    const purgeResult = await this.dataSource.transaction(async (manager) => {
       const base = await manager.findOne(BaseInfo, {
         where: { id },
         lock: { mode: 'pessimistic_write' },
@@ -442,34 +447,94 @@ export class BaseService {
       if (!base) {
         throw new NotFoundException('Base not found');
       }
-      if (base.isDeleted) {
-        throw new ConflictException('璇ュ熀鍦板凡鍒犻櫎');
-      }
 
-      const previous = {
+      const beforeSnapshot = {
         baseName: base.baseName,
         ownerId: base.ownerId,
         auditStatus: base.auditStatus,
         isDeleted: base.isDeleted,
       };
 
-      base.isDeleted = true;
-      await manager.save(BaseInfo, base);
-
-      const jobsResult = await manager
+      // 触发器约束：field_manager 不能出现 assigned_base_id 为空。
+      // 删除基地前先将绑定该基地的现场管理员降级为 worker，再清空基地绑定，避免触发 SQLSTATE 45000。
+      await manager
         .createQueryBuilder()
-        .update(RecruitmentJob)
-        .set({
-          isActive: false,
-          status: JobStatus.OFFLINE,
+        .update(SysUser)
+        .set({ roleKey: UserRole.WORKER, assignedBaseId: null })
+        .where('assigned_base_id = :baseId AND role_key = :fieldRole', {
+          baseId: id,
+          fieldRole: UserRole.FIELD_MANAGER,
         })
-        .where('base_id = :baseId', { baseId: id })
-        .andWhere('is_active = :isActive', { isActive: true })
         .execute();
 
+      await manager
+        .createQueryBuilder()
+        .update(SysUser)
+        .set({ assignedBaseId: null })
+        .where('assigned_base_id = :baseId AND (role_key IS NULL OR role_key <> :fieldRole)', {
+          baseId: id,
+          fieldRole: UserRole.FIELD_MANAGER,
+        })
+        .execute();
+
+      const jobs = await manager.find(RecruitmentJob, {
+        where: { baseId: id },
+        select: ['id'],
+      });
+      const jobIds = jobs.map((item) => Number(item.id)).filter((value) => Number.isFinite(value));
+
+      const signups = await manager.find(DailySignup, {
+        where: { baseId: id },
+        select: ['id'],
+      });
+      const signupIds = signups.map((item) => Number(item.id)).filter((value) => Number.isFinite(value));
+
+      if (signupIds.length) {
+        await manager
+          .createQueryBuilder()
+          .update(OfflineAttendanceEvent)
+          .set({ appliedSignupId: null })
+          .where('applied_signup_id IN (:...signupIds)', { signupIds })
+          .execute();
+      }
+
+      let salaryDeleted = 0;
+      let paymentDeleted = 0;
+      if (signupIds.length) {
+        const salaries = await manager.find(LaborSalary, {
+          where: { signupId: In(signupIds) },
+          select: ['id'],
+        });
+        const salaryIds = salaries.map((item) => Number(item.id)).filter((value) => Number.isFinite(value));
+        if (salaryIds.length) {
+          const paymentResult = await manager.delete(SalaryPayment, { salaryId: In(salaryIds) });
+          paymentDeleted = paymentResult.affected || 0;
+        }
+        const salaryResult = await manager.delete(LaborSalary, { signupId: In(signupIds) });
+        salaryDeleted = salaryResult.affected || 0;
+      }
+
+      const offlineResult = await manager.delete(OfflineAttendanceEvent, { baseId: id });
+      const signupResult = await manager.delete(DailySignup, { baseId: id });
+      const applicationResult = await manager.delete(JobApplication, { baseId: id });
+      const cooperationResult = await manager.delete(BaseCooperation, { baseId: id });
+      const ratingResult = await manager.delete(BaseRating, { baseId: id });
+      const jobResult = await manager.delete(RecruitmentJob, { baseId: id });
+      await manager.delete(BaseInfo, { id });
+
       return {
-        beforeSnapshot: previous,
-        affectedJobs: jobsResult.affected || 0,
+        beforeSnapshot,
+        counts: {
+          jobs: jobResult.affected || 0,
+          applications: applicationResult.affected || 0,
+          cooperations: cooperationResult.affected || 0,
+          ratings: ratingResult.affected || 0,
+          signups: signupResult.affected || 0,
+          salaries: salaryDeleted,
+          payments: paymentDeleted,
+          offlineEvents: offlineResult.affected || 0,
+          relatedJobIds: jobIds.length,
+        },
       };
     });
 
@@ -479,15 +544,15 @@ export class BaseService {
       resourceId: id,
       userId: operatorId,
       request: context?.request,
-      description: `鍒犻櫎鍩哄湴: baseId=${id}, 鍚屾涓嬬嚎宀椾綅=${affectedJobs}`,
-      beforeData: beforeSnapshot,
+      description: `Hard delete base: baseId=${id}`,
+      beforeData: purgeResult.beforeSnapshot,
       afterData: {
-        isDeleted: true,
-        deactivatedJobs: affectedJobs,
+        hardDeleted: true,
+        counts: purgeResult.counts,
       },
     });
 
-    return { msg: '鍩哄湴鍒犻櫎鎴愬姛' };
+    return { msg: '基地已彻底删除' };
   }
 
   // ========== 鎷涜仒宀椾綅鐩稿叧鏂规硶 ==========
@@ -955,7 +1020,28 @@ export class BaseService {
     return this.jobApplicationService.getApplicationsByUser(userId);
   }
 
-  async getApplicationsByBase(baseId: number, status?: number) {
+  async getApplicationsByBase(baseId: number, status?: number, viewerId?: number, viewerRole?: string) {
+    const base = await this.baseRepo.findOne({ where: { id: baseId, isDeleted: false } });
+    if (!base) {
+      throw new NotFoundException('Base not found');
+    }
+
+    const role = String(viewerRole || '');
+    const isSuperAdmin = [UserRole.SUPER_ADMIN, UserRole.REGION_ADMIN].includes(role as UserRole);
+    const isManager = [UserRole.BASE_MANAGER, UserRole.FIELD_MANAGER].includes(role as UserRole);
+    const isBoss = role === UserRole.BOSS;
+
+    if (isBoss) {
+      if (!viewerId || Number(base.ownerId) !== Number(viewerId)) {
+        throw new ConflictException('无权限查看该基地报名记录');
+      }
+      if (Number(base.auditStatus) !== Number(AuditStatus.APPROVED)) {
+        return [];
+      }
+    } else if (!isSuperAdmin && !isManager) {
+      throw new ConflictException('无权限查看基地报名记录');
+    }
+
     return this.jobApplicationService.getApplicationsByBase(baseId, status as ApplicationStatus);
   }
 

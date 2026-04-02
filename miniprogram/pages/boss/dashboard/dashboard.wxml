@@ -67,14 +67,23 @@
 
       <view class="field">
         <text class="label">工作环境图片（最多 3 张）</text>
-        <view class="env-list">
+        <view wx:if="{{!envImages.length}}" class="upload-box {{uploadingEnv ? 'upload-box-disabled' : ''}}" bindtap="chooseEnvImages">
+          <text class="upload-text">{{uploadingEnv ? '上传中...' : '📷 点击上传工作环境照片'}}</text>
+        </view>
+        <view wx:else class="env-list">
           <block wx:for="{{envImages}}" wx:key="*this" wx:for-item="img" wx:for-index="idx">
             <view class="env-item">
               <image class="env-preview" src="{{img}}" mode="aspectFill" binderror="onEnvPreviewError" data-index="{{idx}}"></image>
               <text class="remove-env" data-index="{{idx}}" bindtap="removeEnvImage">✕</text>
             </view>
           </block>
-          <view wx:if="{{envImages.length < 3}}" class="env-add {{uploadingEnv ? 'env-add-disabled' : ''}}" bindtap="chooseEnvImages">{{uploadingEnv ? '上传中' : '+ 添加'}}</view>
+          <view
+            wx:if="{{envImages.length < 3}}"
+            class="env-add-mini {{uploadingEnv ? 'env-add-disabled' : ''}}"
+            bindtap="chooseEnvImages"
+          >
+            <text class="env-add-mini-text">{{uploadingEnv ? '上传中' : '+ 添加'}}</text>
+          </view>
         </view>
       </view>
 

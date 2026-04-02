@@ -275,16 +275,22 @@ export class BaseController {
     return this.baseService.getJobApplications(jobId);
   }
 
-  @ApiOperation({ summary: '获取基地申请列表（管理员）' })
+  @ApiOperation({ summary: '获取基地申请列表（管理员/老板）' })
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.SUPER_ADMIN, UserRole.REGION_ADMIN, UserRole.BASE_MANAGER, UserRole.FIELD_MANAGER)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.REGION_ADMIN, UserRole.BASE_MANAGER, UserRole.FIELD_MANAGER, UserRole.BOSS)
   @Get(':id/applications')
   async getBaseApplications(
     @Param('id', ParseIntPipe) baseId: number,
     @Query('status') status?: string,
+    @Request() req?,
   ) {
-    return this.baseService.getApplicationsByBase(baseId, status !== undefined ? Number(status) : undefined);
+    return this.baseService.getApplicationsByBase(
+      baseId,
+      status !== undefined ? Number(status) : undefined,
+      Number(req?.user?.id || 0),
+      req?.user?.role || req?.user?.roleKey,
+    );
   }
 
   @ApiOperation({ summary: '审核岗位申请' })

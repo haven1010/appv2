@@ -13,11 +13,18 @@
 
     <block wx:else>
       <view class="section-card">
-        <view class="section-title">账户信息</view>
+        <view class="section-title">账户信息（可修改）</view>
 
         <view class="info-row">
           <text class="info-label">姓名</text>
-          <text class="info-value">{{profile.name}}</text>
+          <input
+            class="info-input"
+            maxlength="20"
+            placeholder="请输入姓名"
+            value="{{accountForm.name}}"
+            data-field="name"
+            bindinput="onAccountFieldInput"
+          />
         </view>
         <view class="info-row">
           <text class="info-label">UID</text>
@@ -25,7 +32,15 @@
         </view>
         <view class="info-row">
           <text class="info-label">手机号</text>
-          <text class="info-value">{{profile.phoneMasked}}</text>
+          <input
+            class="info-input"
+            type="number"
+            maxlength="11"
+            placeholder="请输入手机号"
+            value="{{accountForm.phone}}"
+            data-field="phone"
+            bindinput="onAccountFieldInput"
+          />
         </view>
         <view class="info-row">
           <text class="info-label">身份证</text>
@@ -35,10 +50,19 @@
           <text class="info-label">角色</text>
           <text class="info-value">{{roleText}}</text>
         </view>
+
+        <view class="section-actions">
+          <button class="section-btn" loading="{{accountSaving}}" disabled="{{accountSaving}}" bindtap="saveAccountInfo">
+            {{accountSaving ? '保存中...' : '保存账户信息'}}
+          </button>
+        </view>
       </view>
 
       <view class="section-card">
-        <view class="section-title">最近基地入驻信息</view>
+        <view class="section-title-row">
+          <view class="section-title">最近基地入驻信息</view>
+          <text class="readonly-tag">只读</text>
+        </view>
 
         <block wx:if="{{latestBase}}">
           <view class="info-row">
@@ -52,6 +76,10 @@
           <view class="info-row">
             <text class="info-label">基地地址</text>
             <text class="info-value multiline">{{latestBase.address}}</text>
+          </view>
+          <view class="info-row">
+            <text class="info-label">用工人数</text>
+            <text class="info-value">{{latestBase.workerCount}}</text>
           </view>
         </block>
 

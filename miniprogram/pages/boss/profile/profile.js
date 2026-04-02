@@ -78,12 +78,78 @@ function formatAuditStatus(status) {
   return '待审核';
 }
 
+function normalizeArray(value) {
+  if (Array.isArray(value)) return value;
+  if (Array.isArray(value && value.list)) return value.list;
+  return [];
+}
+
+function extractErrorMessage(err, fallback = '保存失败，请稍后重试') {
+  const candidates = [
+    err && err.message,
+    err && err.errMsg,
+    err && err.response && err.response.message,
+    err && err.response && err.response.msg,
+  ];
+
+  for (let i = 0; i < candidates.length; i += 1) {
+    const text = trimText(candidates[i]);
+    if (text) return text;
+  }
+  return fallback;
+}
+
+function workerKey(item) {
+  const id = Number(item && (item.userId || (item.user && item.user.id)) || 0);
+  if (id) return `id:${id}`;
+
+  const phone = normalizePhone(item && ((item.user && item.user.phone) || item.workerPhone));
+  if (phone) return `phone:${phone}`;
+
+  const name = trimText(item && ((item.user && item.user.name) || item.workerName));
+  if (name) return `name:${name}`;
+
+  return '';
+}
+
+function countDistinctWorkers(items) {
+  const list = normalizeArray(items);
+  const uniqueKeys = {};
+  let fallbackCount = 0;
+
+  list.forEach((item) => {
+    const key = workerKey(item || {});
+    if (!key) {
+      fallbackCount += 1;
+      return;
+    }
+    uniqueKeys[key] = true;
+  });
+
+  return Object.keys(uniqueKeys).length + fallbackCount;
+}
+
+function isSignupAndCheckinStatus(value) {
+  const num = Number(value);
+  if (num === 0 || num === 1) return true;
+
+  const text = trimText(value).toLowerCase();
+  if (!text) return false;
+  return ['signed_up', 'checked_in', 'pending', 'approved'].includes(text);
+}
+
 Page({
   data: {
     loading: true,
     roleText: '企业老板',
     userInfo: null,
     profile: null,
+    accountForm: {
+      name: '',
+      phone: '',
+    },
+    profileRawPhone: '',
+    accountSaving: false,
     latestBase: null,
   },
 
@@ -175,13 +241,31 @@ Page({
           emergencyContact: trimText(mergedUser.emergencyContact) || '-',
           emergencyPhone: maskPhone(mergedUser.emergencyPhone),
         },
-        latestBase: latestBase
-          ? {
-              baseName: trimText(latestBase.baseName) || '-',
-              address: trimText(latestBase.address) || '-',
-              auditStatusText: formatAuditStatus(latestBase.auditStatus),
-            }
-          : null,
+        accountForm: {
+          name: trimText(mergedUser.name),
+          phone: normalizePhone(mergedUser.phone || mergedUser.mobile),
+        },
+        profileRawPhone: normalizePhone(mergedUser.phone || mergedUser.mobile),
+      });
+
+      if (!latestBase) {
+        this.setData({ latestBase: null, loading: false });
+        return;
+      }
+
+      const appliedWorkers = await app.request({
+        url: `/base/${latestBase.id}/applications`,
+        method: 'GET',
+      }).catch(() => []);
+      const workingRows = normalizeArray(appliedWorkers).filter((item) => isSignupAndCheckinStatus(item && item.status));
+
+      this.setData({
+        latestBase: {
+          baseName: trimText(latestBase.baseName) || '-',
+          address: trimText(latestBase.address) || '-',
+          auditStatusText: formatAuditStatus(latestBase.auditStatus),
+          workerCount: String(countDistinctWorkers(workingRows)),
+        },
         loading: false,
       });
     } catch (error) {
@@ -190,6 +274,81 @@ Page({
         title: error?.message || '加载失败，请稍后重试',
         icon: 'none',
       });
+    }
+  },
+
+  onAccountFieldInput(e) {
+    const field = e.currentTarget.dataset.field;
+    if (!field) return;
+
+    const raw = e.detail.value || '';
+    const value = field === 'phone' ? normalizePhone(raw) : raw;
+    this.setData({
+      accountForm: Object.assign({}, this.data.accountForm, {
+        [field]: value,
+      }),
+    });
+  },
+
+  async saveAccountInfo() {
+    if (this.data.accountSaving) return;
+
+    const nextName = trimText(this.data.accountForm && this.data.accountForm.name);
+    const nextPhone = normalizePhone(this.data.accountForm && this.data.accountForm.phone);
+    const currentName = trimText(this.data.profile && this.data.profile.name);
+    const currentPhone = normalizePhone(this.data.profileRawPhone);
+
+    if (!nextName) {
+      wx.showToast({ title: '姓名不能为空', icon: 'none' });
+      return;
+    }
+    if (nextPhone.length !== 11) {
+      wx.showToast({ title: '请输入11位手机号', icon: 'none' });
+      return;
+    }
+
+    const payload = {};
+    if (nextName !== currentName) payload.name = nextName;
+    if (nextPhone && nextPhone !== currentPhone) payload.phone = nextPhone;
+
+    if (!Object.keys(payload).length) {
+      wx.showToast({ title: '信息未修改', icon: 'none' });
+      return;
+    }
+
+    this.setData({ accountSaving: true });
+    try {
+      const updated = await app.request({
+        url: '/user/profile',
+        method: 'PATCH',
+        data: payload,
+      });
+
+      const mergedCurrent = Object.assign({}, this.data.userInfo || {}, updated || {}, payload);
+      wx.setStorageSync('userInfo', mergedCurrent);
+      app.globalData.userInfo = mergedCurrent;
+
+      this.setData({
+        userInfo: mergedCurrent,
+        profile: Object.assign({}, this.data.profile || {}, {
+          name: trimText(mergedCurrent.name) || nextName,
+          phoneMasked: maskPhone(mergedCurrent.phone || nextPhone),
+        }),
+        accountForm: {
+          name: trimText(mergedCurrent.name) || nextName,
+          phone: normalizePhone(mergedCurrent.phone || nextPhone),
+        },
+        profileRawPhone: normalizePhone(mergedCurrent.phone || nextPhone),
+        accountSaving: false,
+      });
+
+      wx.showToast({
+        title: Number(updated && updated.infoAuditStatus) === 0 ? '已保存，待审核' : '保存成功',
+        icon: 'success',
+      });
+    } catch (err) {
+      this.setData({ accountSaving: false });
+      wx.showToast({ title: extractErrorMessage(err), icon: 'none' });
     }
   },
 

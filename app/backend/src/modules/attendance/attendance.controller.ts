@@ -66,7 +66,7 @@ export class AttendanceController {
   @ApiOperation({ summary: '现场扫码签到 (管理员/领队扫工人)' })
   @ApiResponse({ status: 201, description: '签到成功' })
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.SUPER_ADMIN, UserRole.REGION_ADMIN, UserRole.BASE_MANAGER, UserRole.FIELD_MANAGER)
+  @Roles(UserRole.BASE_MANAGER, UserRole.FIELD_MANAGER)
   async checkIn(@Body() checkInDto: CheckInDto, @Req() req) {
     return this.attendanceService.checkIn(checkInDto.qrContent, checkInDto.baseId, { request: req, userId: req.user.id });
   }

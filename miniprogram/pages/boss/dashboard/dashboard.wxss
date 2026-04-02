@@ -128,6 +128,10 @@
   overflow: hidden;
 }
 
+.upload-box-disabled {
+  opacity: 0.65;
+}
+
 .upload-preview {
   width: 100%;
   height: 100%;
@@ -146,15 +150,16 @@
 }
 
 .env-item,
-.env-add {
+.env-add-mini {
   width: 150rpx;
   height: 150rpx;
-  border-radius: 16rpx;
+  border-radius: 20rpx;
   position: relative;
 }
 
 .env-item {
-  border: 2rpx solid rgba(123, 95, 58, 0.4);
+  border: 3rpx solid rgba(138, 106, 64, 0.28);
+  background: #f8efdd;
   overflow: hidden;
 }
 
@@ -178,15 +183,19 @@
   justify-content: center;
 }
 
-.env-add {
-  border: 2rpx dashed rgba(123, 95, 58, 0.5);
+.env-add-mini {
+  border: 3rpx dashed rgba(138, 106, 64, 0.6);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #5b7f42;
-  background: #e5efd0;
-  font-size: 44rpx;
+  color: #6f5e49;
+  background: #f8efdd;
+  font-size: 28rpx;
   font-weight: 700;
+}
+
+.env-add-mini-text {
+  line-height: 1;
 }
 
 .env-add-disabled {

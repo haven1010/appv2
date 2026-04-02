@@ -47,6 +47,26 @@ function cooperationText(status) {
   return '待审核';
 }
 
+function baseAuditText(status) {
+  if (status === 1) return '已入驻';
+  if (status === 2) return '已驳回';
+  return '申请中';
+}
+
+function salaryText(status) {
+  if (status === 2) return '已发放';
+  if (status === 1) return '已确认';
+  if (status === 0) return '待确认';
+  return '未知';
+}
+
+function salaryChip(status) {
+  if (status === 2) return 'success';
+  if (status === 1) return 'info';
+  if (status === 0) return 'pending';
+  return 'danger';
+}
+
 Page({
   data: {
     loading: true,
@@ -58,15 +78,27 @@ Page({
 
     currentYear: new Date().getFullYear(),
     baseList: [],
-    baseIndex: 0,
     selectedBaseId: '',
     selectedBase: null,
+    detailLoading: false,
 
     yearAppliedBases: [],
     yearSettledBases: [],
 
     workerFlows: [],
     cooperationFlows: [],
+    salaryRows: [],
+    salarySummary: {
+      totalRecords: 0,
+      totalWorkers: 0,
+      paidCount: 0,
+      pendingCount: 0,
+      totalAmount: '0.00',
+    },
+
+    cardBaseInfoExpanded: true,
+    cardWorkersExpanded: false,
+    cardSalaryExpanded: false,
   },
 
   onLoad() {
@@ -131,29 +163,50 @@ Page({
         id: String(item.id),
         baseName: item.baseName || item.name || `基地#${item.id}`,
         auditStatus: Number(item.auditStatus),
+        auditText: baseAuditText(Number(item.auditStatus)),
+        auditChipType: chipType(Number(item.auditStatus)),
         createdAt: item.createdAt,
+        createdAtText: formatDateTime(item.createdAt),
         createdYear: item.createdAt ? new Date(item.createdAt).getFullYear() : currentYear,
       }));
 
       const yearAppliedBases = baseList.filter((item) => item.createdYear === currentYear && item.auditStatus !== 1);
       const yearSettledBases = baseList.filter((item) => item.createdYear === currentYear && item.auditStatus === 1);
 
-      let baseIndex = this.data.baseIndex || 0;
-      if (baseIndex >= baseList.length) baseIndex = 0;
-      const selected = baseList[baseIndex] || null;
+      const previousSelectedId = String(this.data.selectedBaseId || '');
+      const selected = previousSelectedId
+        ? (baseList.find((item) => item.id === previousSelectedId) || null)
+        : null;
 
       this.setData({
         baseList,
-        baseIndex,
         selectedBaseId: selected ? selected.id : '',
         yearAppliedBases,
         yearSettledBases,
       });
 
       if (selected) {
-        await this.loadBaseDetail(selected.id);
+        this.setData({ detailLoading: true });
+        try {
+          await this.loadBaseDetail(selected.id);
+        } finally {
+          this.setData({ detailLoading: false });
+        }
       } else {
-        this.setData({ selectedBase: null, workerFlows: [], cooperationFlows: [] });
+        this.setData({
+          selectedBase: null,
+          detailLoading: false,
+          workerFlows: [],
+          cooperationFlows: [],
+          salaryRows: [],
+          salarySummary: {
+            totalRecords: 0,
+            totalWorkers: 0,
+            paidCount: 0,
+            pendingCount: 0,
+            totalAmount: '0.00',
+          },
+        });
       }
     } catch (err) {
       wx.showToast({ title: err.message || '加载基地数据失败', icon: 'none' });
@@ -163,10 +216,11 @@ Page({
   },
 
   async loadBaseDetail(baseId) {
-    const [baseRes, appsRes, coopRes] = await Promise.all([
+    const [baseRes, appsRes, coopRes, salaryRes] = await Promise.all([
       app.request({ url: `/base/${baseId}`, method: 'GET' }).catch(() => null),
       app.request({ url: `/base/${baseId}/applications`, method: 'GET' }).catch(() => []),
       app.request({ url: `/base/${baseId}/cooperations`, method: 'GET' }).catch(() => []),
+      app.request({ url: `/salary/list?baseId=${encodeURIComponent(baseId)}&page=1&pageSize=200`, method: 'GET' }).catch(() => ({ list: [] })),
     ]);
 
     const workerFlows = normalizeArray(appsRes).map((item, idx) => {
@@ -198,23 +252,96 @@ Page({
       };
     });
 
+    const salaryList = normalizeArray(salaryRes);
+    const workerKeySet = {};
+    let totalAmount = 0;
+    let paidCount = 0;
+    let pendingCount = 0;
+
+    const salaryRows = salaryList.map((item, idx) => {
+      const status = Number(item.status);
+      const workerUid = item.workerUid || '';
+      const workerName = item.workerName || '-';
+      const amount = Number(item.totalAmount || item.amount || 0);
+
+      const uniqKey = String(workerUid || workerName || `worker-${idx}`);
+      workerKeySet[uniqKey] = true;
+
+      totalAmount += Number.isFinite(amount) ? amount : 0;
+      if (status === 2) paidCount += 1;
+      else pendingCount += 1;
+
+      return {
+        key: `salary-${item.id || idx}`,
+        workerName,
+        workerUid: workerUid || '-',
+        amountText: Number.isFinite(amount) ? amount.toFixed(2) : '0.00',
+        statusText: salaryText(status),
+        statusChipType: salaryChip(status),
+        workDateText: formatDateTime(item.workDate || item.updatedAt || item.createdAt),
+        trace: `工资记录ID: ${item.id || '-'} · 报名ID: ${item.signupId || '-'} · 基地ID: ${item.baseId || '-'}`,
+      };
+    });
+
+    const salarySummary = {
+      totalRecords: salaryRows.length,
+      totalWorkers: Object.keys(workerKeySet).length,
+      paidCount,
+      pendingCount,
+      totalAmount: totalAmount.toFixed(2),
+    };
+
     this.setData({
       selectedBase: baseRes,
       workerFlows,
       cooperationFlows,
+      salaryRows,
+      salarySummary,
+      cardBaseInfoExpanded: true,
+      cardWorkersExpanded: false,
+      cardSalaryExpanded: false,
     });
   },
 
-  onBaseChange(e) {
-    const baseIndex = Number(e.detail.value);
-    const selected = this.data.baseList[baseIndex];
-    if (!selected) return;
+  async onBaseCardTap(e) {
+    const id = String(e.currentTarget.dataset.id || '');
+    if (!id) return;
+    if (id === String(this.data.selectedBaseId || '') && this.data.selectedBase) return;
+    const pickedBase = (this.data.baseList || []).find((item) => String(item.id) === id) || null;
 
     this.setData({
-      baseIndex,
-      selectedBaseId: selected.id,
+      selectedBaseId: id,
+      selectedBase: pickedBase,
+      detailLoading: true,
+      cardBaseInfoExpanded: true,
+      cardWorkersExpanded: false,
+      cardSalaryExpanded: false,
     });
-    this.loadBaseDetail(selected.id);
+
+    try {
+      await this.loadBaseDetail(id);
+    } finally {
+      this.setData({ detailLoading: false });
+    }
+  },
+
+  toggleDetailCard(e) {
+    const key = String(e.currentTarget.dataset.key || '');
+    const keyMap = {
+      baseInfo: 'cardBaseInfoExpanded',
+      workers: 'cardWorkersExpanded',
+      salary: 'cardSalaryExpanded',
+    };
+    const targetField = keyMap[key];
+    if (!targetField) return;
+
+    const next = {
+      cardBaseInfoExpanded: false,
+      cardWorkersExpanded: false,
+      cardSalaryExpanded: false,
+    };
+    next[targetField] = !this.data[targetField];
+    this.setData(next);
   },
 
   async deleteBase(e) {

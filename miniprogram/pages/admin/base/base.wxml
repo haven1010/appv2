@@ -11,85 +11,119 @@
       <text class="chip success">已入驻：{{yearSettledBases.length}}</text>
       <text class="chip info">总基地：{{baseList.length}}</text>
     </view>
-
-    <view class="form-label">切换基地</view>
-    <picker mode="selector" value="{{baseIndex}}" range="{{baseList}}" range-key="baseName" bindchange="onBaseChange">
-      <view class="picker">{{selectedBase.baseName || selectedBase.name || '暂无基地'}}</view>
-    </picker>
   </view>
 
   <view class="section-card">
-    <view class="section-title">今年申请基地</view>
-    <view class="empty-text" wx:if="{{!yearAppliedBases.length}}">暂无今年申请中的基地</view>
-    <view class="list-item" wx:for="{{yearAppliedBases}}" wx:key="id">
-      <view class="item-title">{{item.baseName}}</view>
-      <view class="item-sub">创建时间：{{item.createdAt ? item.createdAt.slice(0, 10) : '-'}}</view>
-    </view>
-  </view>
-
-  <view class="section-card">
-    <view class="section-title">今年已入驻基地</view>
-    <view class="empty-text" wx:if="{{!yearSettledBases.length}}">暂无今年已入驻基地</view>
-    <view class="list-item" wx:for="{{yearSettledBases}}" wx:key="id">
-      <view class="item-title">{{item.baseName}}</view>
-      <view class="item-sub">创建时间：{{item.createdAt ? item.createdAt.slice(0, 10) : '-'}}</view>
-      <view class="actions-row" wx:if="{{canSuperAdmin}}">
-        <button class="btn-danger" data-id="{{item.id}}" bindtap="deleteBase">删除入驻基地</button>
+    <view class="section-title">基地名称卡片</view>
+    <view class="section-sub">先点击基地名称，再查看基地详情、人员信息和工资信息</view>
+    <view class="empty-text" wx:if="{{!baseList.length}}">暂无可查看的基地</view>
+    <view
+      class="base-name-card {{selectedBaseId === item.id ? 'active' : ''}}"
+      wx:for="{{baseList}}"
+      wx:key="id"
+      data-id="{{item.id}}"
+      bindtap="onBaseCardTap"
+    >
+      <view class="base-name-top">
+        <view class="item-title">{{item.baseName}}</view>
+        <text class="chip {{item.auditChipType}}">{{item.auditText}}</text>
+      </view>
+      <view class="base-name-bottom">
+        <view class="item-sub">创建时间：{{item.createdAtText}}</view>
+        <view class="base-name-action">{{selectedBaseId === item.id ? '当前查看' : '点击查看'}}</view>
       </view>
     </view>
   </view>
 
-  <view class="section-card" wx:if="{{selectedBase}}">
-    <view class="section-title">当前基地信息</view>
-    <view class="list-item">
-      <view class="item-title">{{selectedBase.baseName || selectedBase.name}}</view>
-      <view class="item-sub">基地ID：{{selectedBase.id}}</view>
-      <view class="item-sub">审核状态：{{selectedBase.auditStatus === 1 ? '已通过' : selectedBase.auditStatus === 2 ? '已拒绝' : '待审核'}}</view>
-      <view class="item-sub">联系方式：{{selectedBase.contactPhone || '-'}}</view>
-      <view class="item-sub">地址：{{selectedBase.address || '-'}}</view>
-      <view class="item-sub">描述：{{selectedBase.description || '-'}}</view>
-      <view class="actions-row" wx:if="{{canSuperAdmin}}">
-        <button class="btn-danger" data-id="{{selectedBase.id}}" bindtap="deleteBase">删除当前基地</button>
-      </view>
-    </view>
+  <view class="section-card" wx:if="{{!selectedBaseId && baseList.length}}">
+    <view class="empty-text">请先点击上方基地名称卡片</view>
   </view>
 
-  <view class="section-card">
-    <view class="section-title">人员信息全流程追溯</view>
-    <view class="empty-text" wx:if="{{!workerFlows.length}}">暂无人员流程数据</view>
-    <view class="list-item" wx:for="{{workerFlows}}" wx:key="key">
-      <view class="item-title">{{item.name}}（{{item.uid}}）</view>
-      <view class="chip-row">
-        <text class="chip {{item.statusChipType}}">{{item.statusText}}</text>
-        <text class="chip info">岗位：{{item.jobTitle}}</text>
-      </view>
-      <view class="item-sub">{{item.trace}}</view>
-      <view class="item-sub">更新时间：{{item.updatedAtText}}</view>
-    </view>
-  </view>
+  <view class="section-card" wx:if="{{selectedBaseId}}">
+    <view class="section-title">当前基地：{{selectedBase.baseName || selectedBase.name || '-'}}</view>
+    <view class="section-sub">已进入基地信息，点击下方卡片查看对应内容</view>
+    <view class="empty-text" wx:if="{{detailLoading}}">基地详情加载中...</view>
 
-  <view class="section-card">
-    <view class="section-title">基地合作流程</view>
-    <view class="empty-text" wx:if="{{!cooperationFlows.length}}">暂无合作流程数据</view>
-    <view class="list-item" wx:for="{{cooperationFlows}}" wx:key="key">
-      <view class="item-title">申请人：{{item.applicantName}}</view>
-      <view class="chip-row">
-        <text class="chip {{item.statusChipType}}">{{item.statusText}}</text>
+    <block wx:if="{{!detailLoading && selectedBase}}">
+
+      <view class="detail-card">
+        <view class="detail-card-head" data-key="baseInfo" bindtap="toggleDetailCard">
+          <view class="item-title">基地详情信息</view>
+          <view class="detail-card-arrow">{{cardBaseInfoExpanded ? '收起' : '展开'}}</view>
+        </view>
+        <view wx:if="{{cardBaseInfoExpanded}}">
+          <view class="item-sub">基地名称：{{selectedBase.baseName || selectedBase.name || '-'}}</view>
+          <view class="item-sub">基地ID：{{selectedBase.id}}</view>
+          <view class="item-sub">审核状态：{{selectedBase.auditStatus === 1 ? '已通过' : selectedBase.auditStatus === 2 ? '已拒绝' : '待审核'}}</view>
+          <view class="item-sub">联系方式：{{selectedBase.contactPhone || '-'}}</view>
+          <view class="item-sub">区域编码：{{selectedBase.regionCode || '-'}}</view>
+          <view class="item-sub">地址：{{selectedBase.address || '-'}}</view>
+          <view class="item-sub">描述：{{selectedBase.description || '-'}}</view>
+          <view class="actions-row" wx:if="{{canSuperAdmin}}">
+            <button class="btn-danger btn-delete-mini" data-id="{{selectedBase.id}}" catchtap="deleteBase">删除当前基地</button>
+          </view>
+        </view>
       </view>
-      <view class="item-sub">需求：{{item.requirement}}</view>
-      <view class="item-sub" wx:if="{{item.rejectReason}}">驳回原因：{{item.rejectReason}}</view>
-      <view class="item-sub">更新时间：{{item.updatedAtText}}</view>
-    </view>
+
+      <view class="detail-card">
+        <view class="detail-card-head" data-key="workers" bindtap="toggleDetailCard">
+          <view class="item-title">基地人员信息</view>
+          <view class="detail-card-arrow">{{cardWorkersExpanded ? '收起' : '展开'}}</view>
+        </view>
+        <view wx:if="{{cardWorkersExpanded}}">
+          <view class="chip-row">
+            <text class="chip info">人员记录：{{workerFlows.length}}</text>
+          </view>
+          <view class="empty-text" wx:if="{{!workerFlows.length}}">暂无基地人员信息</view>
+          <view class="mini-list-item" wx:for="{{workerFlows}}" wx:key="key">
+            <view class="item-title">{{item.name}}（{{item.uid}}）</view>
+            <view class="chip-row">
+              <text class="chip {{item.statusChipType}}">{{item.statusText}}</text>
+              <text class="chip info">岗位：{{item.jobTitle}}</text>
+            </view>
+            <view class="item-sub">{{item.trace}}</view>
+            <view class="item-sub">更新时间：{{item.updatedAtText}}</view>
+          </view>
+        </view>
+      </view>
+
+      <view class="detail-card">
+        <view class="detail-card-head" data-key="salary" bindtap="toggleDetailCard">
+          <view class="item-title">基地工资信息</view>
+          <view class="detail-card-arrow">{{cardSalaryExpanded ? '收起' : '展开'}}</view>
+        </view>
+        <view wx:if="{{cardSalaryExpanded}}">
+          <view class="chip-row">
+            <text class="chip info">工资记录：{{salarySummary.totalRecords}}</text>
+            <text class="chip info">人数：{{salarySummary.totalWorkers}}</text>
+            <text class="chip success">已发放：{{salarySummary.paidCount}}</text>
+            <text class="chip pending">待处理：{{salarySummary.pendingCount}}</text>
+            <text class="chip success">总金额：{{salarySummary.totalAmount}}</text>
+          </view>
+          <view class="empty-text" wx:if="{{!salaryRows.length}}">暂无工资数据</view>
+          <view class="mini-list-item" wx:for="{{salaryRows}}" wx:key="key">
+            <view class="item-title">{{item.workerName}}（{{item.workerUid}}）</view>
+            <view class="chip-row">
+              <text class="chip {{item.statusChipType}}">{{item.statusText}}</text>
+              <text class="chip success">金额：{{item.amountText}}</text>
+            </view>
+            <view class="item-sub">时间：{{item.workDateText}}</view>
+            <view class="item-sub">{{item.trace}}</view>
+          </view>
+        </view>
+      </view>
+
+    </block>
   </view>
 
   <view class="empty-text" wx:if="{{loading}}">加载中...</view>
 
   <view class="admin-bottom-nav">
-    <view class="admin-bottom-item {{activeNav === 'home' ? 'active' : ''}}" data-target="home" bindtap="switchAdminNav">首页</view>
-    <view class="admin-bottom-item {{activeNav === 'base' ? 'active' : ''}}" wx:if="{{role !== 'field_manager'}}" data-target="base" bindtap="switchAdminNav">基地</view>
-    <view class="admin-bottom-item {{activeNav === 'scan' ? 'active' : ''}}" data-target="scan" bindtap="switchAdminNav">扫码</view>
+    <view class="admin-bottom-item {{activeNav === 'home' ? 'active' : ''}}" data-target="home" bindtap="switchAdminNav">{{role === 'super_admin' || role === 'region_admin' ? '人员管理' : '首页'}}</view>
+    <view class="admin-bottom-item {{activeNav === 'base' ? 'active' : ''}}" wx:if="{{role !== 'field_manager'}}" data-target="base" bindtap="switchAdminNav">{{role === 'super_admin' || role === 'region_admin' ? '基地管理' : '基地'}}</view>
+    <view class="admin-bottom-item {{activeNav === 'scan' ? 'active' : ''}}" wx:if="{{role !== 'super_admin' && role !== 'region_admin'}}" data-target="scan" bindtap="switchAdminNav">扫码</view>
     <view class="admin-bottom-item {{activeNav === 'audit' ? 'active' : ''}}" wx:if="{{role === 'super_admin' || role === 'region_admin'}}" data-target="audit" bindtap="switchAdminNav">审核</view>
-    <view class="admin-bottom-item {{activeNav === 'payroll' ? 'active' : ''}}" wx:if="{{role === 'super_admin' || role === 'region_admin'}}" data-target="payroll" bindtap="switchAdminNav">工资</view>
-    <view class="admin-bottom-item {{activeNav === 'me' ? 'active' : ''}}" data-target="me" bindtap="switchAdminNav">我的</view>
+    <view class="admin-bottom-item {{activeNav === 'payroll' ? 'active' : ''}}" wx:if="{{role === 'super_admin' || role === 'region_admin'}}" data-target="payroll" bindtap="switchAdminNav">工资管理</view>
+    <view class="admin-bottom-item {{activeNav === 'me' ? 'active' : ''}}" data-target="me" bindtap="switchAdminNav">我的信息</view>
   </view>
 </view>

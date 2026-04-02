@@ -11,12 +11,28 @@
   margin-top: 0;
 }
 
+.base-report-card {
+  margin-top: 14rpx;
+  border-color: rgba(106, 153, 78, 0.18);
+  background: rgba(255, 248, 232, 0.96);
+}
+
+.report-summary-row {
+  margin-top: 12rpx;
+}
+
+.auto-note {
+  margin-top: 8rpx;
+  font-size: 22rpx;
+  color: var(--ink-sub);
+}
+
 .collapse-head {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 16rpx;
-  padding: 8rpx 0 10rpx;
+  padding: 6rpx 0 10rpx;
 }
 
 .collapse-main {
@@ -31,33 +47,28 @@
   border-radius: 999rpx;
   font-size: 22rpx;
   font-weight: 700;
-  color: #5f7f74;
-  background: linear-gradient(135deg, #dff0e8 0%, #e8f1f9 56%, #fef8dc 100%);
-  border: 1rpx solid rgba(166, 194, 183, 0.44);
-}
-
-.collapse-tip {
-  margin-top: 8rpx;
-  font-size: 22rpx;
-  color: #7f9189;
+  color: #355528;
+  background: linear-gradient(90deg, #e9c46a 0%, #f4d48f 100%);
+  border: 1rpx solid rgba(106, 153, 78, 0.2);
 }
 
 .table-scroll {
   width: 100%;
-  margin-top: 14rpx;
+  margin-top: 12rpx;
 }
 
 .table-wrap {
   min-width: 1150rpx;
-  border: 1rpx solid rgba(45, 115, 199, 0.2);
+  border: 1rpx solid rgba(106, 153, 78, 0.2);
   border-radius: 14rpx;
   overflow: hidden;
+  background: #fffdf8;
 }
 
 .table-row {
   display: flex;
   align-items: stretch;
-  border-bottom: 1rpx solid rgba(45, 115, 199, 0.12);
+  border-bottom: 1rpx solid rgba(106, 153, 78, 0.12);
 }
 
 .table-row:last-child {
@@ -65,14 +76,14 @@
 }
 
 .table-head {
-  background: rgba(45, 115, 199, 0.12);
+  background: rgba(106, 153, 78, 0.12);
 }
 
 .cell {
   padding: 12rpx 8rpx;
   font-size: 20rpx;
-  color: #17354f;
-  border-right: 1rpx solid rgba(45, 115, 199, 0.1);
+  color: #333333;
+  border-right: 1rpx solid rgba(106, 153, 78, 0.12);
   box-sizing: border-box;
 }
 
@@ -125,8 +136,8 @@
 }
 
 .history-active {
-  border-color: rgba(46, 143, 77, 0.35);
-  box-shadow: 0 0 0 1rpx rgba(46, 143, 77, 0.25) inset;
+  border-color: rgba(106, 153, 78, 0.35);
+  box-shadow: 0 0 0 1rpx rgba(106, 153, 78, 0.22) inset;
 }
 
 @media (max-width: 720rpx) {
