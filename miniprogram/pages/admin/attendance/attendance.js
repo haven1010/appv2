@@ -146,6 +146,16 @@ Page({
       return false;
     }
 
+    if (role === 'field_manager') {
+      wx.showModal({
+        title: '页面调整',
+        content: '现场管理员请在首页完成扫码签到操作。',
+        showCancel: false,
+        success: () => wx.redirectTo({ url: '/pages/admin/home/home' }),
+      });
+      return false;
+    }
+
     const canManageSalary = role === 'base_manager' || isSuperAdminRole(role);
     this.setData({ role, roleText: roleLabel(role), userInfo, canManageSalary });
     return true;
@@ -548,4 +558,3 @@ Page({
     wx.redirectTo({ url });
   },
 });
-

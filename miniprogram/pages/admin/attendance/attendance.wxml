@@ -100,7 +100,7 @@
   <view class="admin-bottom-nav">
     <view class="admin-bottom-item {{activeNav === 'home' ? 'active' : ''}}" data-target="home" bindtap="switchAdminNav">首页</view>
     <view class="admin-bottom-item {{activeNav === 'base' ? 'active' : ''}}" wx:if="{{role !== 'field_manager'}}" data-target="base" bindtap="switchAdminNav">基地</view>
-    <view class="admin-bottom-item {{activeNav === 'scan' ? 'active' : ''}}" data-target="scan" bindtap="switchAdminNav">扫码</view>
+    <view class="admin-bottom-item {{activeNav === 'scan' ? 'active' : ''}}" wx:if="{{role !== 'field_manager'}}" data-target="scan" bindtap="switchAdminNav">扫码</view>
     <view class="admin-bottom-item {{activeNav === 'audit' ? 'active' : ''}}" wx:if="{{role === 'super_admin' || role === 'region_admin'}}" data-target="audit" bindtap="switchAdminNav">审核</view>
     <view class="admin-bottom-item {{activeNav === 'payroll' ? 'active' : ''}}" wx:if="{{role === 'super_admin' || role === 'region_admin'}}" data-target="payroll" bindtap="switchAdminNav">工资</view>
     <view class="admin-bottom-item {{activeNav === 'me' ? 'active' : ''}}" data-target="me" bindtap="switchAdminNav">我的</view>
