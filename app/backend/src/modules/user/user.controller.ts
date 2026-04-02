@@ -23,6 +23,30 @@ export class UserController {
     private readonly ocrService: TencentOcrService,
   ) {}
 
+  private requireIdCardAddress(dto: CreateUserDto): void {
+    const homeAddress = String(dto.homeAddress || '').trim();
+    if (homeAddress.length < 5) {
+      throw new BadRequestException('请填写身份证地址（至少5个字）');
+    }
+    dto.homeAddress = homeAddress;
+  }
+
+  private requireBossBankInfo(dto: CreateUserDto): void {
+    const bankName = String(dto.bankName || '').trim();
+    const bankCardNo = String(dto.bankCardNo || '').replace(/\D/g, '');
+
+    if (!bankName) {
+      throw new BadRequestException('请选择开户银行');
+    }
+
+    if (!/^\d{16,19}$/.test(bankCardNo)) {
+      throw new BadRequestException('银行卡号需为16-19位数字');
+    }
+
+    dto.bankName = bankName;
+    dto.bankCardNo = bankCardNo;
+  }
+
   @Post('register')
   @ApiOperation({ summary: '用户注册/实名录入（手动填写）' })
   async register(@Req() req, @Body() createUserDto: CreateUserDto) {
@@ -30,6 +54,7 @@ export class UserController {
       throw new BadRequestException('公开注册只允许创建 worker 角色');
     }
     createUserDto.roleKey = UserRole.WORKER;
+    this.requireIdCardAddress(createUserDto);
     const user = await this.userService.create(createUserDto, { request: req });
     return {
       id: user.id,
@@ -46,6 +71,8 @@ export class UserController {
       throw new BadRequestException('老板注册接口仅允许 boss 角色');
     }
     createUserDto.roleKey = UserRole.BOSS;
+    this.requireIdCardAddress(createUserDto);
+    this.requireBossBankInfo(createUserDto);
     const user = await this.userService.create(createUserDto, { request: req });
     return {
       id: user.id,
@@ -93,6 +120,7 @@ export class UserController {
       throw new BadRequestException('公开注册只允许创建 worker 角色');
     }
     createUserDto.roleKey = UserRole.WORKER;
+    this.requireIdCardAddress(createUserDto);
     const user = await this.userService.create(createUserDto, { request: req });
     return {
       id: user.id,

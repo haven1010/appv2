@@ -147,6 +147,16 @@
   height: 44rpx;
 }
 
+.picker-field {
+  display: flex;
+  align-items: center;
+  height: 44rpx;
+}
+
+.picker-placeholder {
+  color: #98aec1;
+}
+
 .input-area {
   min-height: 92rpx;
   height: auto;

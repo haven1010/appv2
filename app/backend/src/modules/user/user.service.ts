@@ -110,6 +110,17 @@ export class UserService {
       emergencyPhoneHash = this.securityService.hash(createUserDto.emergencyPhone);
     }
 
+    let bankCardNoHash = null;
+    let normalizedBankCardNo = null;
+    if (createUserDto.bankCardNo) {
+      normalizedBankCardNo = String(createUserDto.bankCardNo).replace(/\D/g, '');
+      bankCardNoHash = this.securityService.hash(normalizedBankCardNo);
+      const existingUserByBankCard = await this.userRepository.findOne({ where: { bankCardNoHash, isDeleted: false } });
+      if (existingUserByBankCard) {
+        throw new ConflictException('银行卡号已被使用');
+      }
+    }
+
     // 4. Create Entity
     // idCard and phone are encrypted via Entity Transformer automatically
     const user = this.userRepository.create({
@@ -119,6 +130,8 @@ export class UserService {
       idCardHash,
       phoneHash,
       emergencyPhoneHash,
+      bankCardNo: normalizedBankCardNo,
+      bankCardNoHash,
       infoAuditStatus: 1, // 首次录入默认通过审核
     });
 
@@ -256,6 +269,22 @@ export class UserService {
 
         if (nextUpdate.emergencyPhone) {
           nextUpdate.emergencyPhoneHash = this.securityService.hash(nextUpdate.emergencyPhone);
+        }
+
+        if (Object.prototype.hasOwnProperty.call(nextUpdate, 'bankCardNo')) {
+          const rawBankCardNo = String(nextUpdate.bankCardNo || '').replace(/\D/g, '');
+          if (rawBankCardNo) {
+            const bankCardNoHash = this.securityService.hash(rawBankCardNo);
+            const existingUser = await userRepository.findOne({ where: { bankCardNoHash, isDeleted: false } });
+            if (existingUser && existingUser.id !== userId) {
+              throw new ConflictException('银行卡号已被使用');
+            }
+            nextUpdate.bankCardNo = rawBankCardNo;
+            nextUpdate.bankCardNoHash = bankCardNoHash;
+          } else {
+            nextUpdate.bankCardNo = null;
+            nextUpdate.bankCardNoHash = null;
+          }
         }
 
         if (nextUpdate.phone || nextUpdate.emergencyContact || nextUpdate.emergencyPhone) {

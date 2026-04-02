@@ -2,6 +2,16 @@
  * Register page for worker and boss accounts.
  */
 const app = getApp();
+const BOSS_BANK_OPTIONS = [
+  { label: '请选择开户银行', value: '' },
+  { label: '中国工商银行', value: '中国工商银行' },
+  { label: '中国农业银行', value: '中国农业银行' },
+  { label: '中国银行', value: '中国银行' },
+  { label: '中国建设银行', value: '中国建设银行' },
+  { label: '交通银行', value: '交通银行' },
+  { label: '招商银行', value: '招商银行' },
+  { label: '中国邮政储蓄银行', value: '中国邮政储蓄银行' },
+];
 
 function normalizeRegisterRole(role) {
   return role === 'boss' ? 'boss' : 'worker';
@@ -15,8 +25,8 @@ function cleanPhone(value) {
   return String(value || '').replace(/\D/g, '').slice(0, 11);
 }
 
-function cleanBankCardNo(value) {
-  return String(value || '').replace(/\D/g, '').slice(0, 30);
+function cleanBankCardNo(value, maxLength = 30) {
+  return String(value || '').replace(/\D/g, '').slice(0, maxLength);
 }
 
 function cleanIdCard(value) {
@@ -73,6 +83,8 @@ function formatBaseUrlForDisplay(value) {
 Page({
   data: {
     registerRole: 'worker',
+    bossBankOptions: BOSS_BANK_OPTIONS,
+    bossBankIndex: 0,
     name: '',
     idCard: '',
     phone: '',
@@ -138,8 +150,22 @@ Page({
     this.setData({ bankName: e.detail.value, error: '' });
   },
 
+  onBossBankChange(e) {
+    const bossBankIndex = Number(e.detail.value || 0);
+    const selected = this.data.bossBankOptions[bossBankIndex] || this.data.bossBankOptions[0];
+    this.setData({
+      bossBankIndex,
+      bankName: selected.value || '',
+      error: '',
+    });
+  },
+
   onInputBankCardNo(e) {
-    this.setData({ bankCardNo: cleanBankCardNo(e.detail.value), error: '' });
+    const maxLength = this.data.registerRole === 'boss' ? 19 : 30;
+    this.setData({
+      bankCardNo: cleanBankCardNo(e.detail.value, maxLength),
+      error: '',
+    });
   },
 
   onInputEmergencyContact(e) {
@@ -231,12 +257,24 @@ Page({
       return;
     }
 
-    if (registerRole === 'worker') {
-      if (!homeAddress || homeAddress.length < 5) {
-        this.setData({ error: '请填写详细家庭地址（至少5个字）' });
+    if (!homeAddress || homeAddress.length < 5) {
+      this.setData({ error: '请填写身份证地址（至少5个字）' });
+      return;
+    }
+
+    if (registerRole === 'boss') {
+      if (!bankName) {
+        this.setData({ error: '请选择开户银行' });
         return;
       }
 
+      if (!/^\d{16,19}$/.test(bankCardNo)) {
+        this.setData({ error: '老板银行卡号需为16-19位数字' });
+        return;
+      }
+    }
+
+    if (registerRole === 'worker') {
       if (!bankName) {
         this.setData({ error: '请输入开户银行' });
         return;
@@ -273,12 +311,17 @@ Page({
         idCard,
         phone,
         roleKey: registerRole,
+        homeAddress,
         emergencyContact: emergencyContact || undefined,
         emergencyPhone: emergencyPhone || undefined,
       };
 
       if (registerRole === 'worker') {
-        payload.homeAddress = homeAddress;
+        payload.bankName = bankName;
+        payload.bankCardNo = bankCardNo;
+      }
+
+      if (registerRole === 'boss') {
         payload.bankName = bankName;
         payload.bankCardNo = bankCardNo;
       }

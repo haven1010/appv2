@@ -26,7 +26,7 @@ export class UpdateUserDto {
   @IsString()
   emergencyPhone?: string;
 
-  @ApiProperty({ example: '山东省烟台市福山区演示村 12 号', description: '家庭地址', required: false })
+  @ApiProperty({ example: '山东省烟台市福山区演示村 12 号', description: '身份证地址（证件住址）', required: false })
   @IsOptional()
   @IsString()
   homeAddress?: string;
