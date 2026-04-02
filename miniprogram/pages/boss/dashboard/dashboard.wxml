@@ -3,7 +3,10 @@
 
   <view class="container">
     <view class="hero-card">
-      <text class="hero-title">🏢 企业入驻审核</text>
+      <view class="hero-head">
+        <text class="hero-title">🏢 企业入驻审核</text>
+        <button class="hero-logout-btn" bindtap="logout">退出登录</button>
+      </view>
       <text class="hero-subtitle">老板账号仅可提交企业资料与联系人信息，审核通过后由超级管理员进入后续配置。</text>
     </view>
 

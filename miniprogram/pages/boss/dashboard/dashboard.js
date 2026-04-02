@@ -109,8 +109,14 @@ Page({
   },
 
   async onLoad() {
+    const token = wx.getStorageSync('token');
     const userInfo = wx.getStorageSync('userInfo') || {};
     const role = resolveRole(userInfo);
+
+    if (!token) {
+      wx.reLaunch({ url: '/pages/login/login' });
+      return;
+    }
 
     if (role !== 'boss') {
       wx.showModal({
@@ -135,7 +141,29 @@ Page({
   },
 
   onShow() {
+    const token = wx.getStorageSync('token');
+    const userInfo = wx.getStorageSync('userInfo') || {};
+    if (!token || resolveRole(userInfo) !== 'boss') {
+      wx.reLaunch({ url: '/pages/login/login' });
+      return;
+    }
     this.sanitizeTransientImages();
+  },
+
+  logout() {
+    wx.showModal({
+      title: '退出登录',
+      content: '确定要退出当前老板账号吗？',
+      success: (res) => {
+        if (!res.confirm) return;
+        wx.removeStorageSync('token');
+        wx.removeStorageSync('userInfo');
+        wx.removeStorageSync('bossBaseDraft');
+        app.globalData.token = null;
+        app.globalData.userInfo = null;
+        wx.reLaunch({ url: '/pages/login/login' });
+      },
+    });
   },
 
   async loadProfileFallback() {

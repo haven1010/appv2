@@ -44,11 +44,36 @@
   padding: 24rpx 22rpx;
 }
 
+.hero-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+}
+
 .hero-title {
   display: block;
   color: #473421;
   font-size: 36rpx;
   font-weight: 800;
+}
+
+.hero-logout-btn {
+  margin: 0;
+  min-width: 176rpx;
+  height: 64rpx;
+  line-height: 64rpx;
+  padding: 0 20rpx;
+  border-radius: 999rpx;
+  border: 2rpx solid rgba(124, 88, 56, 0.36);
+  background: rgba(255, 245, 232, 0.95);
+  color: #6f4d30;
+  font-size: 25rpx;
+  font-weight: 700;
+}
+
+.hero-logout-btn::after {
+  border: none;
 }
 
 .hero-subtitle {
