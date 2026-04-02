@@ -26,7 +26,7 @@ export class UpdateUserDto {
   @IsString()
   emergencyPhone?: string;
 
-  @ApiProperty({ example: '山东省烟台市福山区演示村 12 号', description: '家庭地址', required: false })
+  @ApiProperty({ example: '山东省烟台市福山区演示村 12 号', description: '身份证地址（证件住址）', required: false })
   @IsOptional()
   @IsString()
   homeAddress?: string;
@@ -50,4 +50,13 @@ export class UpdateUserDto {
   @IsOptional()
   @IsString()
   bankCardNo?: string;
+
+  @ApiProperty({
+    example: '1743595320151.8f4a2bc7c34d9011.a3f7d41be745dc6854e779d89e4d8a3bf7e6f9f0bd2b6ec8d8a8dc7f9fbfd210',
+    description: '银行卡变更挑战令牌（需要二次确认时必传）',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  bankCardChallengeToken?: string;
 }

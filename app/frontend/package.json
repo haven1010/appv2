@@ -22,6 +22,7 @@
     "tailwind-merge": "^3.4.0"
   },
   "devDependencies": {
+    "@rollup/rollup-darwin-arm64": "^4.60.1",
     "@types/node": "^22.14.0",
     "@vitejs/plugin-react": "^5.0.0",
     "orval": "^7.13.2",

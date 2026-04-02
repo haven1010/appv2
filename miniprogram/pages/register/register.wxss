@@ -26,6 +26,46 @@
   margin-bottom: 30rpx;
 }
 
+.mode-switch {
+  display: flex;
+  gap: 10rpx;
+  padding: 8rpx;
+  border-radius: 999rpx;
+  border: 2rpx solid #d5e5f2;
+  background: #f7fbff;
+  margin-bottom: 14rpx;
+}
+
+.mode-pill {
+  flex: 1;
+  height: 66rpx;
+  border-radius: 999rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24rpx;
+  color: #6f8aa3;
+  font-weight: 700;
+  background: #eef5fb;
+}
+
+.mode-pill.active {
+  color: #ffffff;
+  background: linear-gradient(135deg, #2e8f4d, #2d73c7);
+  box-shadow: 0 6rpx 14rpx rgba(45, 115, 199, 0.22);
+}
+
+.mode-tip {
+  margin-bottom: 18rpx;
+  border-radius: 14rpx;
+  border: 1rpx solid #d7e7f5;
+  background: #f2f8ff;
+  padding: 14rpx 16rpx;
+  color: #54738f;
+  font-size: 23rpx;
+  line-height: 1.5;
+}
+
 .steps {
   display: flex;
   align-items: center;
@@ -145,6 +185,16 @@
   font-size: 28rpx;
   color: #163456;
   height: 44rpx;
+}
+
+.picker-field {
+  display: flex;
+  align-items: center;
+  height: 44rpx;
+}
+
+.picker-placeholder {
+  color: #98aec1;
 }
 
 .input-area {

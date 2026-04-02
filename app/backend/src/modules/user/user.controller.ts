@@ -8,6 +8,10 @@ import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { RegisterByOcrDto } from './dto/register-by-ocr.dto';
+import { CreateProxyRegistrationDto } from './dto/create-proxy-registration.dto';
+import { ReviewProxyRegistrationDto } from './dto/review-proxy-registration.dto';
+import { TakeoverProxyAccountDto } from './dto/takeover-proxy-account.dto';
+import { RequestBankCardChangeChallengeDto } from './dto/request-bank-card-change-challenge.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { TencentOcrService } from '../common/services/tencent-ocr.service';
@@ -23,6 +27,30 @@ export class UserController {
     private readonly ocrService: TencentOcrService,
   ) {}
 
+  private requireIdCardAddress(dto: CreateUserDto): void {
+    const homeAddress = String(dto.homeAddress || '').trim();
+    if (homeAddress.length < 5) {
+      throw new BadRequestException('请填写身份证地址（至少5个字）');
+    }
+    dto.homeAddress = homeAddress;
+  }
+
+  private requireBossBankInfo(dto: CreateUserDto): void {
+    const bankName = String(dto.bankName || '').trim();
+    const bankCardNo = String(dto.bankCardNo || '').replace(/\D/g, '');
+
+    if (!bankName) {
+      throw new BadRequestException('请选择开户银行');
+    }
+
+    if (!/^\d{16,19}$/.test(bankCardNo)) {
+      throw new BadRequestException('银行卡号需为16-19位数字');
+    }
+
+    dto.bankName = bankName;
+    dto.bankCardNo = bankCardNo;
+  }
+
   @Post('register')
   @ApiOperation({ summary: '用户注册/实名录入（手动填写）' })
   async register(@Req() req, @Body() createUserDto: CreateUserDto) {
@@ -30,6 +58,7 @@ export class UserController {
       throw new BadRequestException('公开注册只允许创建 worker 角色');
     }
     createUserDto.roleKey = UserRole.WORKER;
+    this.requireIdCardAddress(createUserDto);
     const user = await this.userService.create(createUserDto, { request: req });
     return {
       id: user.id,
@@ -46,6 +75,8 @@ export class UserController {
       throw new BadRequestException('老板注册接口仅允许 boss 角色');
     }
     createUserDto.roleKey = UserRole.BOSS;
+    this.requireIdCardAddress(createUserDto);
+    this.requireBossBankInfo(createUserDto);
     const user = await this.userService.create(createUserDto, { request: req });
     return {
       id: user.id,
@@ -93,6 +124,7 @@ export class UserController {
       throw new BadRequestException('公开注册只允许创建 worker 角色');
     }
     createUserDto.roleKey = UserRole.WORKER;
+    this.requireIdCardAddress(createUserDto);
     const user = await this.userService.create(createUserDto, { request: req });
     return {
       id: user.id,
@@ -100,6 +132,22 @@ export class UserController {
       name: user.name,
       msg: '注册成功',
     };
+  }
+
+  @Post('register/proxy')
+  @ApiOperation({ summary: '家人代注册（工人账号 + 代注册审核单）' })
+  async registerByProxy(@Req() req, @Body() dto: CreateProxyRegistrationDto) {
+    return this.userService.createProxyRegistration(dto, { request: req });
+  }
+
+  @Patch('proxy-registration/:id/resubmit')
+  @ApiOperation({ summary: '驳回后修订并重新提交代注册单' })
+  async resubmitProxyRegistration(
+    @Req() req,
+    @Param('id', ParseIntPipe) caseId: number,
+    @Body() dto: CreateProxyRegistrationDto,
+  ) {
+    return this.userService.resubmitProxyRegistration(caseId, dto, req);
   }
 
   @Post('admin')
@@ -178,6 +226,14 @@ export class UserController {
     return this.userService.update(req.user.id, updateDto, { request: req, userId: req.user.id });
   }
 
+  @Post('profile/bank-card/challenge')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: '请求银行卡变更二次确认挑战令牌' })
+  async requestBankCardChangeChallenge(@Req() req, @Body() dto: RequestBankCardChangeChallengeDto) {
+    return this.userService.requestBankCardChangeChallenge(req.user.id, dto.bankCardNo);
+  }
+
   @Patch(':id/audit')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.SUPER_ADMIN)
@@ -190,6 +246,50 @@ export class UserController {
     @Body('reason') reason?: string,
   ) {
     return this.userService.auditInfo(userId, status, reason, req.user.id, req);
+  }
+
+  @Get('proxy-registration/list')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.BASE_MANAGER)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: '获取代注册审核单列表' })
+  async getProxyRegistrationList(
+    @Query('status') status?: string,
+    @Query('keyword') keyword?: string,
+    @Query('page') page?: string,
+    @Query('pageSize') pageSize?: string,
+  ) {
+    return this.userService.getProxyRegistrationList({
+      status: status as any,
+      keyword: keyword || undefined,
+      page: page ? Number(page) : 1,
+      pageSize: pageSize ? Number(pageSize) : 20,
+    });
+  }
+
+  @Patch('proxy-registration/:id/review')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.BASE_MANAGER)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: '审核代注册单（通过/拒绝/撤销）' })
+  async reviewProxyRegistration(
+    @Req() req,
+    @Param('id', ParseIntPipe) caseId: number,
+    @Body() dto: ReviewProxyRegistrationDto,
+  ) {
+    return this.userService.reviewProxyRegistration(caseId, dto.status, dto.reason, req.user.id, req);
+  }
+
+  @Post('proxy-registration/:id/takeover')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: '工人本人接管代注册账号' })
+  async takeoverProxyAccount(
+    @Req() req,
+    @Param('id', ParseIntPipe) caseId: number,
+    @Body() dto: TakeoverProxyAccountDto,
+  ) {
+    return this.userService.takeoverProxyAccount(caseId, req.user.id, dto.phone, dto.idCardLast6, req);
   }
 
   @Delete(':id')

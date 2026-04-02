@@ -70,6 +70,30 @@
         <text>{{error}}</text>
       </view>
 
+      <view class="api-toggle" bindtap="toggleApiConfig">
+        <text class="api-toggle-label">网络设置</text>
+        <text class="api-toggle-value">{{currentBaseUrlDisplay}}</text>
+      </view>
+
+      <view class="api-panel" wx:if="{{showApiConfig}}">
+        <view class="api-title">后端接口地址</view>
+        <input
+          class="api-input"
+          type="text"
+          placeholder="http://192.168.1.100:3001/api"
+          placeholder-class="placeholder"
+          value="{{apiBaseUrlInput}}"
+          bindinput="onInputApiBaseUrl"
+        />
+
+        <view class="api-presets">
+          <view class="api-preset" data-url="{{devtoolsBaseUrl}}" bindtap="useApiPreset">开发者工具地址</view>
+          <view class="api-preset" data-url="{{lanBaseUrl}}" bindtap="useApiPreset">局域网默认地址</view>
+        </view>
+
+        <button class="api-save-btn" bindtap="saveApiBaseUrl">保存接口地址</button>
+      </view>
+
       <button
         class="login-btn {{btnPressed ? 'btn-pressed' : ''}}"
         bindtap="handleLogin"
@@ -85,6 +109,11 @@
       <view class="footer-links">
         <text class="register-text">还没有账号？</text>
         <text class="register-link" bindtap="goToRegister">立即注册</text>
+      </view>
+
+      <view class="proxy-entry">
+        <text class="proxy-entry-label">帮家人代办入职？</text>
+        <text class="proxy-entry-link" bindtap="goToProxyRegister">进入家人代注册</text>
       </view>
     </view>
   </view>

@@ -26,6 +26,11 @@ export enum UserRole {
   WORKER = 'worker',
 }
 
+export enum RegisterMode {
+  SELF = 'self',
+  PROXY = 'proxy',
+}
+
 export const VALID_REGISTER_ROLES: UserRole[] = [
   UserRole.SUPER_ADMIN,
   UserRole.BOSS,
@@ -177,6 +182,34 @@ export class SysUser {
     comment: '0:Pending, 1:Approved, 2:Rejected',
   })
   infoAuditStatus: number;
+
+  @ApiProperty({ description: '注册模式', enum: RegisterMode, example: RegisterMode.SELF })
+  @Column({
+    name: 'register_mode',
+    type: 'enum',
+    enum: RegisterMode,
+    default: RegisterMode.SELF,
+    comment: 'self:本人注册, proxy:家人代注册',
+  })
+  registerMode: RegisterMode;
+
+  @ApiProperty({ description: '是否完成本人接管', example: true })
+  @Column({
+    name: 'account_owner_verified',
+    type: 'tinyint',
+    default: 1,
+    comment: '1:已完成本人接管, 0:未完成',
+  })
+  accountOwnerVerified: boolean;
+
+  @ApiProperty({ description: '登录限制原因', required: false, nullable: true })
+  @Column({
+    name: 'login_lock_reason',
+    length: 255,
+    nullable: true,
+    comment: '登录限制原因（审核拒绝或撤销）',
+  })
+  loginLockReason: string | null;
 
   @Column({ default: false, name: 'is_deleted' })
   isDeleted: boolean;

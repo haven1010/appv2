@@ -98,7 +98,7 @@
       hover-class="apply-btn-press"
       hover-stay-time="100"
       bindtap="handleApply"
-      disabled="{{!canApply}}"
-    >{{canApply ? '立即报名' : '岗位已关闭'}}</button>
+      disabled="{{!canApply || applying}}"
+    >{{applying ? '报名提交中...' : (canApply ? '立即报名' : '岗位已关闭')}}</button>
   </view>
 </view>

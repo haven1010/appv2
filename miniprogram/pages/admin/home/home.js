@@ -90,6 +90,76 @@ function auditText(status) {
   return 'pending';
 }
 
+function fieldAppStatusText(status) {
+  if (status === 1) return '已录用';
+  if (status === 2) return '已拒绝';
+  if (status === 3) return '已取消';
+  return '待处理';
+}
+
+function fieldAppStatusChip(status) {
+  if (status === 1) return 'success';
+  if (status === 2) return 'danger';
+  if (status === 0) return 'pending';
+  return 'info';
+}
+
+function parseBirthFromIdCard(idCard) {
+  const text = String(idCard || '').trim().toUpperCase();
+  if (!/^\d{17}[\dX]$/.test(text) && !/^\d{15}$/.test(text)) return null;
+
+  if (text.length === 18) {
+    const year = Number(text.slice(6, 10));
+    const month = Number(text.slice(10, 12));
+    const day = Number(text.slice(12, 14));
+    if (!year || !month || !day) return null;
+    return { year, month, day };
+  }
+
+  const yy = Number(text.slice(6, 8));
+  const month = Number(text.slice(8, 10));
+  const day = Number(text.slice(10, 12));
+  if (!month || !day) return null;
+  return { year: 1900 + yy, month, day };
+}
+
+function inferGenderText(rawGender, idCard) {
+  const normalized = String(rawGender || '').trim().toLowerCase();
+  if (['male', 'm', 'man', 'boy', '男'].includes(normalized)) return '男';
+  if (['female', 'f', 'woman', 'girl', '女'].includes(normalized)) return '女';
+
+  const text = String(idCard || '').trim().toUpperCase();
+  if (/^\d{17}[\dX]$/.test(text)) {
+    const code = Number(text.charAt(16));
+    if (!Number.isNaN(code)) return code % 2 === 1 ? '男' : '女';
+  }
+  if (/^\d{15}$/.test(text)) {
+    const code = Number(text.charAt(14));
+    if (!Number.isNaN(code)) return code % 2 === 1 ? '男' : '女';
+  }
+  return '-';
+}
+
+function inferAgeText(rawAge, idCard) {
+  const numericAge = Number(rawAge);
+  if (Number.isFinite(numericAge) && numericAge > 0) {
+    return String(Math.floor(numericAge));
+  }
+
+  const birth = parseBirthFromIdCard(idCard);
+  if (!birth) return '-';
+
+  const now = new Date();
+  let age = now.getFullYear() - birth.year;
+  const month = now.getMonth() + 1;
+  const day = now.getDate();
+  if (month < birth.month || (month === birth.month && day < birth.day)) {
+    age -= 1;
+  }
+  if (!Number.isFinite(age) || age < 0 || age > 120) return '-';
+  return String(age);
+}
+
 Page({
   data: {
     loading: true,
@@ -101,6 +171,17 @@ Page({
     fieldDate: todayString(),
     fieldBaseId: '',
     fieldBaseName: '',
+    fieldBaseCards: [],
+    fieldSelectedBaseId: '',
+    fieldSelectedBase: null,
+    fieldApplicantRows: [],
+    fieldApplicantSummary: {
+      total: 0,
+      pending: 0,
+      approved: 0,
+      rejected: 0,
+      cancelled: 0,
+    },
     fieldCheckedRows: [],
     fieldPendingRows: [],
     fieldFirstVisitRows: [],
@@ -204,7 +285,7 @@ Page({
     }
   },
 
-  async loadFieldHome() {
+  async loadFieldHomeLegacy() {
     const baseId = await this.resolveAssignedBaseId();
     if (!baseId) {
       this.setData({
@@ -614,6 +695,200 @@ Page({
     } catch (err) {
       wx.showToast({ title: err.message || '删除失败', icon: 'none' });
     }
+  },
+
+  async loadFieldHome() {
+    const baseId = await this.resolveAssignedBaseId();
+    if (!baseId) {
+      this.setData({
+        fieldError: 'Current account is not bound to a base.',
+        fieldBaseId: '',
+        fieldBaseName: '',
+        fieldBaseCards: [],
+        fieldSelectedBaseId: '',
+        fieldSelectedBase: null,
+        fieldApplicantRows: [],
+        fieldApplicantSummary: {
+          total: 0,
+          pending: 0,
+          approved: 0,
+          rejected: 0,
+          cancelled: 0,
+        },
+        fieldCheckedRows: [],
+        fieldPendingRows: [],
+        fieldFirstVisitRows: [],
+      });
+      return;
+    }
+
+    const baseRes = await app.request({ url: `/base/${baseId}`, method: 'GET' }).catch(() => null);
+    const card = {
+      id: String(baseRes?.id || baseId),
+      baseName: baseRes?.baseName || baseRes?.name || `Base #${baseId}`,
+      auditStatus: Number(baseRes?.auditStatus),
+      auditText: Number(baseRes?.auditStatus) === 1 ? '已入驻' : (Number(baseRes?.auditStatus) === 2 ? '已驳回' : '待审核'),
+      auditChipType: Number(baseRes?.auditStatus) === 1 ? 'success' : (Number(baseRes?.auditStatus) === 2 ? 'danger' : 'pending'),
+      contactPhone: baseRes?.contactPhone || '-',
+      regionCode: baseRes?.regionCode || '-',
+      address: baseRes?.address || '-',
+    };
+
+    const previousSelected = String(this.data.fieldSelectedBaseId || '');
+    const selectedBaseId = previousSelected && previousSelected === card.id ? previousSelected : card.id;
+
+    this.setData({
+      fieldError: '',
+      fieldBaseId: card.id,
+      fieldBaseName: card.baseName,
+      fieldBaseCards: [card],
+      fieldSelectedBaseId: selectedBaseId,
+      fieldCheckinResult: '',
+    });
+
+    await this.loadFieldBaseDetail(selectedBaseId);
+  },
+
+  async loadFieldBaseDetail(baseId) {
+    const selectedBaseId = String(baseId || '').trim();
+    if (!selectedBaseId) return;
+
+    const date = this.data.fieldDate || todayString();
+    const [baseRes, appsRes, recordsRes] = await Promise.all([
+      app.request({ url: `/base/${selectedBaseId}`, method: 'GET' }).catch(() => null),
+      app.request({ url: `/base/${selectedBaseId}/applications`, method: 'GET' }).catch(() => []),
+      app.request({ url: `/attendance/records?baseId=${selectedBaseId}&date=${date}`, method: 'GET' }).catch(() => []),
+    ]);
+
+    const selectedBase = {
+      id: String(baseRes?.id || selectedBaseId),
+      baseName: baseRes?.baseName || baseRes?.name || `Base #${selectedBaseId}`,
+      auditText: Number(baseRes?.auditStatus) === 1 ? '已入驻' : (Number(baseRes?.auditStatus) === 2 ? '已驳回' : '待审核'),
+      contactPhone: baseRes?.contactPhone || '-',
+      regionCode: baseRes?.regionCode || '-',
+      address: baseRes?.address || '-',
+      description: baseRes?.description || '-',
+      createdAtText: formatDateTime(baseRes?.createdAt),
+      updatedAtText: formatDateTime(baseRes?.updatedAt),
+    };
+
+    const apps = normalizeArray(appsRes);
+    const summary = {
+      total: apps.length,
+      pending: 0,
+      approved: 0,
+      rejected: 0,
+      cancelled: 0,
+    };
+
+    const applicantRows = apps.map((item, idx) => {
+      const user = item.user || {};
+      const idCard = user.idCard || '';
+      const status = Number(item.status);
+      if (status === 0) summary.pending += 1;
+      if (status === 1) summary.approved += 1;
+      if (status === 2) summary.rejected += 1;
+      if (status === 3) summary.cancelled += 1;
+
+      return {
+        key: `field-app-${item.id || idx}`,
+        id: Number(item.id || 0),
+        name: user.name || item.workerName || '-',
+        uid: user.uid || '-',
+        phone: user.phone || '-',
+        genderText: inferGenderText(user.gender || user.sex, idCard),
+        ageText: inferAgeText(user.age, idCard),
+        statusText: fieldAppStatusText(status),
+        statusChipType: fieldAppStatusChip(status),
+        jobTitle: item.job?.jobTitle || item.jobTitle || '-',
+        applyTimeText: formatDateTime(item.createdAt),
+      };
+    });
+
+    const approvedApps = apps.filter((item) => Number(item.status) === 1);
+    const approvedByUser = {};
+    for (let i = 0; i < approvedApps.length; i += 1) {
+      const row = approvedApps[i] || {};
+      const userId = String(row.userId || row.user?.id || '');
+      if (userId) approvedByUser[userId] = row;
+    }
+
+    const records = normalizeArray(recordsRes);
+    const checkedRows = [];
+    const checkedByUser = {};
+    const firstVisitRows = [];
+
+    for (let i = 0; i < records.length; i += 1) {
+      const row = records[i] || {};
+      const status = Number(row.status);
+      const user = row.user || {};
+      const userId = String(row.userId || user.id || '');
+      const uid = user.uid || row.workerUid || '';
+      const name = user.name || row.workerName || 'Unknown Worker';
+      const packed = {
+        key: `record-${row.id || i}`,
+        userId,
+        uid,
+        name,
+        trace: `UID: ${uid || '-'} | signupRecord: ${row.id || '-'} | status: ${attendanceText(status)}`,
+        checkinTime: formatDateTime(row.checkinTime || row.createdAt),
+      };
+
+      if (status === 1) {
+        checkedRows.push(packed);
+        if (userId) checkedByUser[userId] = true;
+      }
+
+      if (status !== 1 || (userId && !approvedByUser[userId])) {
+        firstVisitRows.push(Object.assign({}, packed, {
+          trace: `${packed.trace} | type: first_visit_or_offline_checkin`,
+        }));
+      }
+    }
+
+    const pendingRows = approvedApps
+      .filter((item) => {
+        const userId = String(item.userId || item.user?.id || '');
+        return userId && !checkedByUser[userId];
+      })
+      .map((item, index) => {
+        const user = item.user || {};
+        const uid = user.uid || '';
+        const name = user.name || item.workerName || 'Pending Worker';
+        return {
+          key: `pending-${item.id || index}`,
+          uid,
+          name,
+          trace: `UID: ${uid || '-'} | signupId: ${item.id || '-'} | approved_waiting_checkin`,
+          checkinTime: '-',
+        };
+      });
+
+    this.setData({
+      fieldBaseId: selectedBase.id,
+      fieldBaseName: selectedBase.baseName,
+      fieldSelectedBaseId: selectedBase.id,
+      fieldSelectedBase: selectedBase,
+      fieldApplicantRows: applicantRows,
+      fieldApplicantSummary: summary,
+      fieldCheckedRows: checkedRows,
+      fieldPendingRows: pendingRows,
+      fieldFirstVisitRows: firstVisitRows,
+      fieldError: '',
+    });
+  },
+
+  async onFieldBaseCardTap(e) {
+    const baseId = String(e.currentTarget.dataset.id || '').trim();
+    if (!baseId) return;
+    if (baseId === String(this.data.fieldSelectedBaseId || '') && this.data.fieldSelectedBase) return;
+    await this.loadFieldBaseDetail(baseId);
+  },
+
+  refreshFieldAttendance() {
+    const baseId = String(this.data.fieldSelectedBaseId || '').trim();
+    if (!baseId) return;
+    this.loadFieldBaseDetail(baseId);
   },
 
   goBaseCenter() {

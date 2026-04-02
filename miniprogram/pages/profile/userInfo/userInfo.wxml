@@ -37,6 +37,60 @@
 
         <view class="divider"></view>
 
+        <view class="proxy-takeover-card" wx:if="{{profile.needProxyTakeover}}">
+          <view class="proxy-takeover-title">代注册账号接管</view>
+          <view class="proxy-takeover-sub">请本人完成接管，后续将使用新手机号登录。</view>
+          <view class="proxy-takeover-status">当前状态：{{profile.loginLockReason || '待本人接管'}}</view>
+
+          <view class="field-group">
+            <text class="field-label">审核单ID</text>
+            <input
+              class="field-input {{proxyTakeoverErrors.caseId ? 'invalid' : ''}}"
+              type="number"
+              value="{{proxyTakeoverForm.caseId}}"
+              placeholder="请输入代注册审核单ID"
+              data-field="caseId"
+              bindinput="onProxyTakeoverInput"
+            />
+            <text wx:if="{{proxyTakeoverErrors.caseId}}" class="error">{{proxyTakeoverErrors.caseId}}</text>
+          </view>
+
+          <view class="field-group">
+            <text class="field-label">接管后手机号</text>
+            <input
+              class="field-input {{proxyTakeoverErrors.phone ? 'invalid' : ''}}"
+              type="text"
+              maxlength="13"
+              value="{{proxyTakeoverForm.phone}}"
+              placeholder="请输入11位手机号"
+              data-field="phone"
+              bindinput="onProxyTakeoverInput"
+            />
+            <text wx:if="{{proxyTakeoverErrors.phone}}" class="error">{{proxyTakeoverErrors.phone}}</text>
+          </view>
+
+          <view class="field-group">
+            <text class="field-label">身份证后6位</text>
+            <input
+              class="field-input {{proxyTakeoverErrors.idCardLast6 ? 'invalid' : ''}}"
+              type="text"
+              maxlength="6"
+              value="{{proxyTakeoverForm.idCardLast6}}"
+              placeholder="请输入身份证后6位"
+              data-field="idCardLast6"
+              bindinput="onProxyTakeoverInput"
+            />
+            <text wx:if="{{proxyTakeoverErrors.idCardLast6}}" class="error">{{proxyTakeoverErrors.idCardLast6}}</text>
+          </view>
+
+          <button
+            class="takeover-btn"
+            loading="{{proxyTakeoverSubmitting}}"
+            disabled="{{proxyTakeoverSubmitting}}"
+            bindtap="handleProxyTakeover"
+          >{{proxyTakeoverSubmitting ? '接管中...' : '立即接管账号'}}</button>
+        </view>
+
         <view class="field-group">
           <text class="field-label">姓名</text>
           <input

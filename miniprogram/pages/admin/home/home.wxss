@@ -11,3 +11,23 @@
   flex: 1;
   min-width: 0;
 }
+
+.base-name-card {
+  margin-top: 12rpx;
+  background: #fffdf8;
+  border: 2rpx solid rgba(106, 153, 78, 0.14);
+  border-radius: 22rpx;
+  padding: 16rpx;
+}
+
+.base-name-card.active {
+  border-color: rgba(106, 153, 78, 0.35);
+  box-shadow: 0 8rpx 18rpx rgba(106, 153, 78, 0.14);
+}
+
+.base-name-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12rpx;
+}

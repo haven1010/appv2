@@ -56,6 +56,16 @@ function normalizePhone(value) {
   return String(value || '').replace(/\s/g, '').replace(/\D/g, '').slice(0, 11);
 }
 
+function normalizeCaseId(value) {
+  return String(value || '').replace(/\D/g, '').slice(0, 18);
+}
+
+function normalizeIdCardLast6(value) {
+  const raw = String(value || '').trim().toUpperCase().replace(/\s+/g, '');
+  if (raw.length <= 6) return raw;
+  return raw.slice(-6);
+}
+
 function formatPhone(value) {
   const clean = normalizePhone(value);
   if (clean.length > 3 && clean.length <= 7) {
@@ -142,6 +152,17 @@ Page({
     focusField: '',
     saving: false,
     auditStatusText: '-',
+    proxyTakeoverForm: {
+      caseId: '',
+      phone: '',
+      idCardLast6: '',
+    },
+    proxyTakeoverErrors: {
+      caseId: '',
+      phone: '',
+      idCardLast6: '',
+    },
+    proxyTakeoverSubmitting: false,
   },
 
   onLoad() {
@@ -219,6 +240,7 @@ Page({
           departmentText,
           joinDateText,
           avatarUrl,
+          needProxyTakeover: res.registerMode === 'proxy' && !Number(res.accountOwnerVerified),
           phoneMasked: maskPhone(res.phone),
           emergencyPhoneMasked: maskPhone(res.emergencyPhone),
           idCardMasked: maskIdCard(res.idCard),
@@ -238,6 +260,16 @@ Page({
           emergencyPhone: '',
         },
         auditStatusText,
+        proxyTakeoverForm: {
+          caseId: this.data.proxyTakeoverForm.caseId || '',
+          phone: formatPhone(res.phone || ''),
+          idCardLast6: '',
+        },
+        proxyTakeoverErrors: {
+          caseId: '',
+          phone: '',
+          idCardLast6: '',
+        },
       });
       syncUserInfoCache(res);
     } catch (err) {
@@ -401,6 +433,79 @@ Page({
       wx.showToast({ title: err.message || '保存失败，请稍后重试', icon: 'none' });
     } finally {
       this.setData({ saving: false });
+    }
+  },
+
+  onProxyTakeoverInput(e) {
+    const field = e.currentTarget.dataset.field;
+    if (!field) return;
+
+    let value = e.detail.value;
+    if (field === 'caseId') value = normalizeCaseId(value);
+    if (field === 'phone') value = formatPhone(value);
+    if (field === 'idCardLast6') value = normalizeIdCardLast6(value);
+
+    this.setData({
+      [`proxyTakeoverForm.${field}`]: value,
+      [`proxyTakeoverErrors.${field}`]: '',
+    });
+  },
+
+  async handleProxyTakeover() {
+    if (this.data.proxyTakeoverSubmitting) return;
+    const profile = this.data.profile || {};
+
+    if (!profile.needProxyTakeover) {
+      wx.showToast({ title: '当前账号无需接管', icon: 'none' });
+      return;
+    }
+
+    const caseIdText = normalizeCaseId(this.data.proxyTakeoverForm.caseId);
+    const nextPhone = normalizePhone(this.data.proxyTakeoverForm.phone);
+    const idCardLast6 = normalizeIdCardLast6(this.data.proxyTakeoverForm.idCardLast6);
+
+    const errors = {
+      caseId: caseIdText ? '' : '请输入审核单ID',
+      phone: PHONE_REGEX.test(nextPhone) ? '' : '请输入正确的11位手机号',
+      idCardLast6: idCardLast6.length === 6 ? '' : '请输入身份证后6位',
+    };
+
+    this.setData({
+      proxyTakeoverForm: {
+        caseId: caseIdText,
+        phone: formatPhone(nextPhone),
+        idCardLast6,
+      },
+      proxyTakeoverErrors: errors,
+    });
+
+    if (errors.caseId || errors.phone || errors.idCardLast6) {
+      wx.showToast({ title: '请完善接管信息', icon: 'none' });
+      return;
+    }
+
+    this.setData({ proxyTakeoverSubmitting: true });
+    try {
+      await app.request({
+        url: `/user/proxy-registration/${caseIdText}/takeover`,
+        method: 'POST',
+        data: {
+          phone: nextPhone,
+          idCardLast6,
+        },
+      });
+
+      wx.showModal({
+        title: '接管成功',
+        content: '账号已完成接管，请使用新手机号重新登录。',
+        showCancel: false,
+      });
+
+      await this.loadData();
+    } catch (err) {
+      wx.showToast({ title: err.message || '接管失败，请稍后重试', icon: 'none' });
+    } finally {
+      this.setData({ proxyTakeoverSubmitting: false });
     }
   },
 });

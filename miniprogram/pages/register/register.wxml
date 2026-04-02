@@ -10,8 +10,17 @@
   </view>
 
   <view class="card register-card">
-    <view class="card-title">{{registerRole === 'boss' ? '创建老板账号' : '创建采摘工账号'}}</view>
-    <view class="card-subtitle">{{registerRole === 'boss' ? '请填写真实信息，用于企业入驻与资料审核' : '请填写真实信息，用于报名、工资结算与发放'}}</view>
+    <view class="card-title">{{registerRole === 'boss' ? '创建老板账号' : (registerMode === 'proxy' ? '家人代注册采摘工账号' : '创建采摘工账号')}}</view>
+    <view class="card-subtitle">{{registerRole === 'boss' ? '请填写真实信息，用于企业入驻与资料审核' : (registerMode === 'proxy' ? '请填写工人信息与代办授权信息，提交后进入审核流程' : '请填写真实信息，用于报名、工资结算与发放')}}</view>
+
+    <view class="mode-switch" wx:if="{{registerRole === 'worker'}}">
+      <view class="mode-pill {{registerMode === 'self' ? 'active' : ''}}" data-mode="self" bindtap="onSwitchRegisterMode">本人注册</view>
+      <view class="mode-pill {{registerMode === 'proxy' ? 'active' : ''}}" data-mode="proxy" bindtap="onSwitchRegisterMode">家人代注册</view>
+    </view>
+
+    <view class="mode-tip" wx:if="{{registerRole === 'worker' && registerMode === 'proxy'}}">
+      代注册提交后需管理员审核，审核通过后工人本人登录接管账号。
+    </view>
 
     <view class="steps">
       <view class="step active">
@@ -19,9 +28,9 @@
         <text class="step-label">基本信息</text>
       </view>
       <view class="step-line"></view>
-      <view class="step {{emergencyContact || emergencyPhone ? 'active' : ''}}">
+      <view class="step {{registerMode === 'proxy' ? (proxyName || proxyPhone || relationToWorker ? 'active' : '') : (emergencyContact || emergencyPhone ? 'active' : '')}}">
         <view class="step-dot">2</view>
-        <text class="step-label">紧急联系人</text>
+        <text class="step-label">{{registerMode === 'proxy' ? '代办信息' : '紧急联系人'}}</text>
       </view>
     </view>
 
@@ -83,23 +92,23 @@
         </view>
       </view>
 
-      <block wx:if="{{registerRole === 'worker'}}">
-        <view class="form-item">
-          <view class="input-wrapper input-wrapper-multiline">
-            <text class="input-icon">住址</text>
-            <textarea
-              class="input-field input-area"
-              placeholder="家庭详细地址（用于工资表）"
-              placeholder-class="placeholder"
-              value="{{homeAddress}}"
-              bindinput="onInputHomeAddress"
-              maxlength="120"
-              auto-height
-            />
-            <text class="required-star">*</text>
-          </view>
+      <view class="form-item">
+        <view class="input-wrapper input-wrapper-multiline">
+          <text class="input-icon">住址</text>
+          <textarea
+            class="input-field input-area"
+            placeholder="身份证地址（与证件一致，至少5个字）"
+            placeholder-class="placeholder"
+            value="{{homeAddress}}"
+            bindinput="onInputHomeAddress"
+            maxlength="120"
+            auto-height
+          />
+          <text class="required-star">*</text>
         </view>
+      </view>
 
+      <block wx:if="{{registerRole === 'worker'}}">
         <view class="form-item">
           <view class="input-wrapper">
             <text class="input-icon">银行</text>
@@ -131,6 +140,106 @@
           </view>
         </view>
       </block>
+
+      <block wx:if="{{registerRole === 'boss'}}">
+        <view class="form-item">
+          <view class="input-wrapper">
+            <text class="input-icon">银行</text>
+            <picker mode="selector" range="{{bossBankOptions}}" range-key="label" value="{{bossBankIndex}}" bindchange="onBossBankChange">
+              <view class="input-field picker-field {{bossBankIndex === 0 ? 'picker-placeholder' : ''}}">
+                {{bossBankOptions[bossBankIndex].label}}
+              </view>
+            </picker>
+            <text class="required-star">*</text>
+          </view>
+        </view>
+
+        <view class="form-item">
+          <view class="input-wrapper">
+            <text class="input-icon">卡号</text>
+            <input
+              class="input-field"
+              type="number"
+              placeholder="16-19位银行卡号"
+              placeholder-class="placeholder"
+              value="{{bankCardNo}}"
+              bindinput="onInputBankCardNo"
+              maxlength="19"
+            />
+            <text class="required-star">*</text>
+          </view>
+          <view class="input-hint">
+            <text class="hint-text">老板账号银行卡号需填写16-19位数字</text>
+          </view>
+        </view>
+      </block>
+    </view>
+
+    <view class="form-section" wx:if="{{registerRole === 'worker' && registerMode === 'proxy'}}">
+      <view class="section-label">
+        <text>代办人信息</text>
+      </view>
+
+      <view class="form-item">
+        <view class="input-wrapper">
+          <text class="input-icon">代办</text>
+          <input
+            class="input-field"
+            type="text"
+            placeholder="代办人姓名"
+            placeholder-class="placeholder"
+            value="{{proxyName}}"
+            bindinput="onInputProxyName"
+          />
+          <text class="required-star">*</text>
+        </view>
+      </view>
+
+      <view class="form-item">
+        <view class="input-wrapper">
+          <text class="input-icon">电话</text>
+          <input
+            class="input-field"
+            type="number"
+            placeholder="代办人11位手机号"
+            placeholder-class="placeholder"
+            value="{{proxyPhone}}"
+            bindinput="onInputProxyPhone"
+            maxlength="11"
+          />
+          <text class="required-star">*</text>
+        </view>
+      </view>
+
+      <view class="form-item">
+        <view class="input-wrapper">
+          <text class="input-icon">关系</text>
+          <input
+            class="input-field"
+            type="text"
+            placeholder="与工人关系，如：子女/配偶/父母"
+            placeholder-class="placeholder"
+            value="{{relationToWorker}}"
+            bindinput="onInputRelationToWorker"
+          />
+          <text class="required-star">*</text>
+        </view>
+      </view>
+
+      <view class="form-item">
+        <view class="input-wrapper input-wrapper-multiline">
+          <text class="input-icon">声明</text>
+          <textarea
+            class="input-field input-area"
+            placeholder="授权声明（选填），如：已获本人授权办理入职"
+            placeholder-class="placeholder"
+            value="{{consentStatement}}"
+            bindinput="onInputConsentStatement"
+            maxlength="120"
+            auto-height
+          />
+        </view>
+      </view>
     </view>
 
     <view class="form-section">
@@ -203,7 +312,7 @@
       bindtap="handleRegister"
       loading="{{loading}}"
       disabled="{{loading}}"
-    >{{loading ? '注册中...' : '立即注册'}}</button>
+    >{{loading ? '提交中...' : (registerRole === 'boss' ? '创建老板账号' : (registerMode === 'proxy' ? '提交代注册' : '立即注册'))}}</button>
 
     <view class="footer-links">
       <text class="login-text">已有账号？</text>

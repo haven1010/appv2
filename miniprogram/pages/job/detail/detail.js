@@ -1,5 +1,13 @@
 const app = getApp();
 
+function isDuplicateApplyError(error) {
+  if (!error) return false;
+  const message = String(error?.message || '');
+  return (
+    error.statusCode === 400 || error.statusCode === 409
+  ) && /已申请|重复|请勿重复|already|duplicate/i.test(message);
+}
+
 function isOpenStatus(status) {
   return status === 1 || status === '1' || status === 'recruiting' || status === 'open';
 }
@@ -108,6 +116,7 @@ Page({
     jobInfo: null,
     canApply: false,
     loading: true,
+    applying: false,
   },
 
   onLoad(options = {}) {
@@ -206,6 +215,11 @@ Page({
   },
 
   async handleApply() {
+    if (this.data.applying) {
+      wx.showToast({ title: '报名提交中，请稍候', icon: 'none' });
+      return;
+    }
+
     if (!this.data.canApply) {
       wx.showToast({ title: '该岗位暂不可申请', icon: 'none' });
       return;
@@ -234,6 +248,7 @@ Page({
       content: '确定要申请这个岗位吗？',
       success: async (res) => {
         if (!res.confirm) return;
+        this.setData({ applying: true });
 
         try {
           await app.request({
@@ -248,7 +263,12 @@ Page({
           wx.showToast({ title: '申请成功', icon: 'success' });
           setTimeout(() => wx.navigateBack(), 800);
         } catch (error) {
-          wx.showToast({ title: error?.message || '申请失败', icon: 'none' });
+          const message = isDuplicateApplyError(error)
+            ? '您已申请过该岗位，请勿重复申请'
+            : (error?.message || '申请失败');
+          wx.showToast({ title: message, icon: 'none' });
+        } finally {
+          this.setData({ applying: false });
         }
       },
     });

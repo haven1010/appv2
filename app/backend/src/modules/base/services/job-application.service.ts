@@ -3,7 +3,7 @@
  * Responsibility: Implements the Job Application application service for the Base module, including business rules, side effects, and persistence coordination.
  * Notes: Keep comments focused on intent, invariants, side effects, and cross-module contracts.
  */
-import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ConflictException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, In, Repository } from 'typeorm';
 import { JobApplication, ApplicationStatus } from '../entities/job-application.entity';
@@ -29,7 +29,7 @@ export class JobApplicationService {
 
   private rethrowDuplicatePendingApplication(error: any): never {
     if (error?.code === 'ER_DUP_ENTRY') {
-      throw new BadRequestException('您已申请过该岗位，请勿重复申请');
+      throw new ConflictException('您已申请过该岗位，请勿重复申请');
     }
     throw error;
   }
@@ -94,12 +94,51 @@ export class JobApplicationService {
       throw new BadRequestException('岗位已停止招聘');
     }
 
-    // 检查是否已申请
-    const existing = await this.applicationRepo.findOne({
-      // 【修复】判重必须带上 baseId，避免出现跨基地误判（例如前端/数据问题导致 jobId 冲突或错传）
-      where: { userId, jobId, baseId: effectiveBaseId, status: ApplicationStatus.PENDING },
+    const saved = await this.dataSource.transaction(async (manager) => {
+      // Serialize same-user apply requests to prevent race duplicates even if DB unique key is missing.
+      const lockedUser = await manager.findOne(SysUser, {
+        where: { id: userId, isDeleted: false },
+        lock: { mode: 'pessimistic_write' },
+      });
+
+      if (!lockedUser) {
+        throw new NotFoundException('用户不存在');
+      }
+
+      const lockedExisting = await manager.findOne(JobApplication, {
+        where: {
+          userId,
+          jobId,
+          baseId: effectiveBaseId,
+          status: ApplicationStatus.PENDING,
+        },
+        lock: { mode: 'pessimistic_write' },
+      });
+
+      if (lockedExisting) {
+        this.logger.warn(
+          `[重复申请拦截] userId=${userId}, baseId=${effectiveBaseId}, jobId=${jobId}, existingApplicationId=${lockedExisting.id}`,
+        );
+        throw new ConflictException('您已申请过该岗位，请勿重复申请');
+      }
+
+      const applicationRepo = manager.getRepository(JobApplication);
+      const application = applicationRepo.create({
+        userId,
+        jobId,
+        baseId: effectiveBaseId,
+        status: ApplicationStatus.PENDING,
+        note,
+      });
+
+      try {
+        return await applicationRepo.save(application);
+      } catch (error) {
+        this.rethrowDuplicatePendingApplication(error);
+      }
     });
 
+<<<<<<< HEAD
     if (existing) {
       this.logger.warn(
         `[重复申请拦截] userId=${userId}, baseId=${effectiveBaseId}, jobId=${jobId}, existingApplicationId=${existing.id}`,
@@ -125,6 +164,8 @@ export class JobApplicationService {
       this.logger.warn(`[刷新报名统计失败] jobId=${saved.jobId}, reason=${error?.message || error}`);
       return null;
     });
+=======
+>>>>>>> 7db65abbab193ceea17c656d1c49b00cb723f13f
     await this.operationLogService.logWithContext({
       operationType: OperationType.CREATE,
       resourceType: ResourceType.JOB,
