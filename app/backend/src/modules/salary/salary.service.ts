@@ -3,7 +3,7 @@
  * Responsibility: Implements the Salary application service for the Salary module, including business rules, side effects, and persistence coordination.
  * Notes: Keep comments focused on intent, invariants, side effects, and cross-module contracts.
  */
-import { Injectable, BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
+import { Injectable, BadRequestException, ForbiddenException, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { LaborSalary, SalaryStatus } from './entities/labor-salary.entity';
@@ -48,6 +48,31 @@ export class SalaryService {
         return Number(job.unitPrice || 0);
       default:
         throw new BadRequestException(`未知计薪类型: ${job.payType}`);
+    }
+  }
+
+  private async assertWorkerSessionAllowed(userId: number): Promise<void> {
+    const worker = await this.userRepo.findOne({
+      where: {
+        id: userId,
+        isDeleted: false,
+      },
+    });
+
+    if (!worker) {
+      throw new UnauthorizedException('账号不存在或已停用');
+    }
+
+    if (worker.roleKey !== UserRole.WORKER) {
+      throw new ForbiddenException('仅采摘工可访问该接口');
+    }
+
+    if (worker.loginLockReason) {
+      throw new UnauthorizedException(worker.loginLockReason);
+    }
+
+    if (worker.infoAuditStatus !== 1) {
+      throw new ForbiddenException('账号信息待审核或已驳回，暂不可访问工资接口');
     }
   }
 
@@ -275,6 +300,8 @@ export class SalaryService {
    * 采摘工端获取个人统计，包括已做工天数和待确认/待发放金额。
    */
   async getWorkerStats(userId: number) {
+    await this.assertWorkerSessionAllowed(userId);
+
     const workDays = await this.signupRepo.count({
       where: { userId, status: SignupStatus.CHECKED_IN },
     });
@@ -312,6 +339,8 @@ export class SalaryService {
    * 采摘工端获取待确认和待发放工资列表，用于支付前核对。
    */
   async getWorkerPendingList(userId: number) {
+    await this.assertWorkerSessionAllowed(userId);
+
     const list = await this.salaryRepo
       .createQueryBuilder('salary')
       .leftJoinAndSelect('salary.signup', 'signup')
@@ -342,6 +371,8 @@ export class SalaryService {
   }
 
   async getWorkerPaidList(userId: number, limit = 20) {
+    await this.assertWorkerSessionAllowed(userId);
+
     const safeLimit = Math.min(Math.max(Number(limit) || 20, 1), 100);
     const list = await this.paymentRepo
       .createQueryBuilder('payment')
@@ -379,6 +410,8 @@ export class SalaryService {
    * 允许工人确认工资无误，并将状态从 `PENDING` 推进到 `CONFIRMED`。
    */
   async workerConfirmSalary(salaryId: number, userId: number, context?: OperationLogContext) {
+    await this.assertWorkerSessionAllowed(userId);
+
     const { saved, beforeStatus } = await this.dataSource.transaction(async (manager) => {
       const salary = await manager.findOne(LaborSalary, {
         where: { id: salaryId },
