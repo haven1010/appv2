@@ -17,6 +17,11 @@ function normalizeRegisterRole(role) {
   return role === 'boss' ? 'boss' : 'worker';
 }
 
+function normalizeRegisterMode(mode, role) {
+  if (role !== 'worker') return 'self';
+  return mode === 'proxy' ? 'proxy' : 'self';
+}
+
 function normalizeText(value) {
   return String(value || '').trim();
 }
@@ -60,6 +65,10 @@ function toErrorMessage(err) {
   if (!err) return '注册失败，请稍后重试';
   const raw = extractRawError(err);
 
+  if (/代注册|审核|接管|代理|家人/i.test(raw)) {
+    return raw;
+  }
+
   if (err.statusCode === 409 || /Conflict|already\s+exists|已被注册|已被使用/i.test(raw)) {
     return '手机号、身份证号或银行卡已被使用，请检查后重试';
   }
@@ -85,6 +94,7 @@ Page({
     registerRole: 'worker',
     bossBankOptions: BOSS_BANK_OPTIONS,
     bossBankIndex: 0,
+    registerMode: 'self',
     name: '',
     idCard: '',
     phone: '',
@@ -93,6 +103,10 @@ Page({
     bankCardNo: '',
     emergencyContact: '',
     emergencyPhone: '',
+    proxyName: '',
+    proxyPhone: '',
+    relationToWorker: '',
+    consentStatement: '',
 
     loading: false,
     error: '',
@@ -109,8 +123,10 @@ Page({
   },
 
   onLoad(options) {
+    const registerRole = normalizeRegisterRole(options?.role);
     this.setData({
-      registerRole: normalizeRegisterRole(options?.role),
+      registerRole,
+      registerMode: normalizeRegisterMode(options?.mode, registerRole),
     });
     this.refreshApiConfig();
   },
@@ -176,6 +192,22 @@ Page({
     this.setData({ emergencyPhone: cleanPhone(e.detail.value), error: '' });
   },
 
+  onInputProxyName(e) {
+    this.setData({ proxyName: e.detail.value, error: '' });
+  },
+
+  onInputProxyPhone(e) {
+    this.setData({ proxyPhone: cleanPhone(e.detail.value), error: '' });
+  },
+
+  onInputRelationToWorker(e) {
+    this.setData({ relationToWorker: e.detail.value, error: '' });
+  },
+
+  onInputConsentStatement(e) {
+    this.setData({ consentStatement: e.detail.value, error: '' });
+  },
+
   onNameFocus() {
     this.setData({ nameFocus: true });
   },
@@ -198,6 +230,17 @@ Page({
 
   onPhoneBlur() {
     this.setData({ phoneFocus: false });
+  },
+
+  onSwitchRegisterMode(e) {
+    const role = normalizeRegisterRole(this.data.registerRole);
+    if (role !== 'worker') return;
+    const mode = normalizeRegisterMode(e.currentTarget.dataset.mode, role);
+    if (mode === this.data.registerMode) return;
+    this.setData({
+      registerMode: mode,
+      error: '',
+    });
   },
 
   toggleApiConfig() {
@@ -233,6 +276,7 @@ Page({
 
   async handleRegister() {
     const registerRole = normalizeRegisterRole(this.data.registerRole);
+    const registerMode = normalizeRegisterMode(this.data.registerMode, registerRole);
     const name = normalizeText(this.data.name);
     const idCard = cleanIdCard(this.data.idCard);
     const phone = cleanPhone(this.data.phone);
@@ -241,6 +285,10 @@ Page({
     const bankCardNo = cleanBankCardNo(this.data.bankCardNo);
     const emergencyContact = normalizeText(this.data.emergencyContact);
     const emergencyPhone = cleanPhone(this.data.emergencyPhone);
+    const proxyName = normalizeText(this.data.proxyName);
+    const proxyPhone = cleanPhone(this.data.proxyPhone);
+    const relationToWorker = normalizeText(this.data.relationToWorker);
+    const consentStatement = normalizeText(this.data.consentStatement);
 
     if (!name) {
       this.setData({ error: '请输入真实姓名' });
@@ -284,6 +332,23 @@ Page({
         this.setData({ error: '请输入正确的银行卡号' });
         return;
       }
+
+      if (registerMode === 'proxy') {
+        if (!proxyName) {
+          this.setData({ error: '请填写代办人姓名' });
+          return;
+        }
+
+        if (proxyPhone.length !== 11) {
+          this.setData({ error: '请填写代办人11位手机号' });
+          return;
+        }
+
+        if (!relationToWorker) {
+          this.setData({ error: '请填写代办人与工人的关系' });
+          return;
+        }
+      }
     }
 
     if (emergencyPhone && emergencyPhone.length !== 11) {
@@ -300,11 +365,50 @@ Page({
       bankCardNo,
       emergencyContact,
       emergencyPhone,
+      proxyName,
+      proxyPhone,
+      relationToWorker,
+      consentStatement,
       loading: true,
       error: '',
     });
 
     try {
+      if (registerRole === 'worker' && registerMode === 'proxy') {
+        const proxyPayload = {
+          workerName: name,
+          workerIdCard: idCard,
+          workerPhone: phone,
+          workerHomeAddress: homeAddress,
+          workerBankName: bankName,
+          workerBankCardNo: bankCardNo,
+          workerEmergencyContact: emergencyContact || undefined,
+          workerEmergencyPhone: emergencyPhone || undefined,
+          proxyName,
+          proxyPhone,
+          relationToWorker,
+          consentType: 'family_confirm',
+          consentStatement: consentStatement || '代办人已获得工人授权并确认提交。',
+        };
+
+        const result = await app.request({
+          url: '/user/register/proxy',
+          method: 'POST',
+          data: proxyPayload,
+        });
+
+        this.setData({ loading: false });
+        wx.showModal({
+          title: '代注册已提交',
+          content: `已生成审核单（ID: ${result?.caseId || '-'}）。管理员审核通过后，工人本人可登录并完成账号接管。`,
+          showCancel: false,
+          success: () => {
+            wx.navigateBack();
+          },
+        });
+        return;
+      }
+
       const url = registerRole === 'boss' ? '/user/register/boss' : '/user/register';
       const payload = {
         name,

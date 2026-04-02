@@ -46,9 +46,19 @@ function extractRawError(err) {
 function toErrorMessage(err) {
   if (!err) return '登录失败，请稍后重试';
   const raw = extractRawError(err);
+  const serverMessage = Array.isArray(err?.response?.message)
+    ? err.response.message.join(' / ')
+    : (err?.response?.message || err?.response?.msg || '');
 
-  if (err.statusCode === 401 || /Unauthorized/i.test(raw)) {
+  if (err.statusCode === 401) {
+    if (serverMessage && !/Unauthorized/i.test(serverMessage)) {
+      return serverMessage;
+    }
     return '登录失败：手机号未注册，或身份证后6位不匹配。';
+  }
+
+  if (/Unauthorized/i.test(raw) && serverMessage && !/Unauthorized/i.test(serverMessage)) {
+    return serverMessage;
   }
 
   if (/ERR_ADDRESS_UNREACHABLE|request:fail|Network request failed/i.test(raw)) {
@@ -321,6 +331,12 @@ Page({
     const role = normalizeLoginRole(this.data.loginRole);
     wx.navigateTo({
       url: `/pages/register/register?role=${role}`,
+    });
+  },
+
+  goToProxyRegister() {
+    wx.navigateTo({
+      url: '/pages/register/register?role=worker&mode=proxy',
     });
   },
 });

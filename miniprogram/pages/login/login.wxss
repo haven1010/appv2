@@ -267,6 +267,27 @@
   font-weight: 800;
 }
 
+.proxy-entry {
+  margin-top: 16rpx;
+  border-top: 1rpx dashed rgba(131, 107, 73, 0.28);
+  padding-top: 16rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8rpx;
+}
+
+.proxy-entry-label {
+  font-size: 24rpx;
+  color: #8a755d;
+}
+
+.proxy-entry-link {
+  font-size: 27rpx;
+  color: #3f7e65;
+  font-weight: 800;
+}
+
 .page-enter {
   animation: pageFadeIn 0.3s ease both;
 }

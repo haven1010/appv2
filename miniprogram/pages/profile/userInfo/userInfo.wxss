@@ -121,6 +121,49 @@
   background: rgba(106, 153, 78, 0.2);
 }
 
+.proxy-takeover-card {
+  margin: 6rpx 0 20rpx;
+  padding: 18rpx;
+  border-radius: 18rpx;
+  border: 2rpx solid rgba(94, 135, 74, 0.3);
+  background: linear-gradient(145deg, rgba(233, 246, 224, 0.9) 0%, rgba(236, 244, 255, 0.92) 100%);
+}
+
+.proxy-takeover-title {
+  font-size: 30rpx;
+  font-weight: 800;
+  color: #365d2a;
+}
+
+.proxy-takeover-sub {
+  margin-top: 8rpx;
+  font-size: 24rpx;
+  color: #58724d;
+  line-height: 1.5;
+}
+
+.proxy-takeover-status {
+  margin-top: 8rpx;
+  font-size: 23rpx;
+  color: #4f6f86;
+}
+
+.takeover-btn {
+  margin-top: 16rpx;
+  border-radius: 34rpx;
+  height: 82rpx;
+  line-height: 82rpx;
+  background: linear-gradient(90deg, #5f9445 0%, #3f86c2 100%);
+  color: #fff;
+  font-size: 30rpx;
+  font-weight: 800;
+  border: none;
+}
+
+.takeover-btn::after {
+  border: none;
+}
+
 .field-group {
   padding: 4rpx 0;
 }

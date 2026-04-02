@@ -27,6 +27,18 @@ function normalizeArray(res) {
   return [];
 }
 
+function proxyStatusText(status) {
+  if (status === 'approved') return '已通过';
+  if (status === 'rejected') return '已驳回';
+  if (status === 'revoked') return '已撤销';
+  if (status === 'takeover_done') return '已接管';
+  return '待审核';
+}
+
+function proxyRiskText(level) {
+  return level === 'high' ? '高风险' : '低风险';
+}
+
 Page({
   data: {
     loading: true,
@@ -37,6 +49,7 @@ Page({
 
     pendingBaseList: [],
     pendingUserList: [],
+    pendingProxyCaseList: [],
 
     userKeyword: '',
     allUserList: [],
@@ -96,9 +109,10 @@ Page({
   async loadAuditData() {
     this.setData({ loading: true });
     try {
-      const [baseRes, pendingUserRes] = await Promise.all([
+      const [baseRes, pendingUserRes, pendingProxyCaseRes] = await Promise.all([
         app.request({ url: '/base?showAll=true', method: 'GET' }).catch(() => []),
         app.request({ url: '/user/list?status=0&page=1&pageSize=100', method: 'GET' }).catch(() => ({ list: [] })),
+        app.request({ url: '/user/proxy-registration/list?status=pending_review&page=1&pageSize=100', method: 'GET' }).catch(() => ({ list: [] })),
       ]);
 
       const pendingBaseList = normalizeArray(baseRes)
@@ -124,7 +138,25 @@ Page({
           createdAtText: formatDateTime(item.createdAt),
         }));
 
-      this.setData({ pendingBaseList, pendingUserList });
+      const pendingProxyCaseList = normalizeArray(pendingProxyCaseRes).map((item) => ({
+        id: item.id,
+        status: item.status || 'pending_review',
+        statusText: proxyStatusText(item.status),
+        riskLevel: item.riskLevel || 'low',
+        riskText: proxyRiskText(item.riskLevel),
+        relationToWorker: item.relationToWorker || '-',
+        proxyName: item.proxyName || '-',
+        proxyPhone: item.proxyPhone || '-',
+        consentType: item.consentType || '-',
+        consentStatement: item.consentStatement || '-',
+        rejectReason: item.rejectReason || '',
+        reviewedAtText: formatDateTime(item.reviewedAt),
+        createdAtText: formatDateTime(item.createdAt),
+        workerName: item?.worker?.name || '-',
+        workerUid: item?.worker?.uid || '-',
+      }));
+
+      this.setData({ pendingBaseList, pendingUserList, pendingProxyCaseList });
       await this.loadAllUsers();
     } catch (err) {
       wx.showToast({ title: err.message || '加载审核数据失败', icon: 'none' });
@@ -238,6 +270,45 @@ Page({
       this.loadAuditData();
     } catch (err) {
       wx.showToast({ title: err.message || '删除失败', icon: 'none' });
+    }
+  },
+
+  async reviewProxyCase(e) {
+    const id = Number(e.currentTarget.dataset.id);
+    const status = String(e.currentTarget.dataset.status || '');
+    if (!id || !['approved', 'rejected', 'revoked'].includes(status)) return;
+
+    let reason = '';
+    if (status !== 'approved') {
+      const modalRes = await new Promise((resolve) => {
+        wx.showModal({
+          title: status === 'rejected' ? '驳回原因' : '撤销原因',
+          editable: true,
+          placeholderText: status === 'rejected' ? '请输入驳回原因（必填）' : '请输入撤销原因（选填）',
+          success: resolve,
+        });
+      });
+      if (!modalRes.confirm) return;
+      reason = String(modalRes.content || '').trim();
+      if (status === 'rejected' && !reason) {
+        wx.showToast({ title: '驳回时必须填写原因', icon: 'none' });
+        return;
+      }
+    }
+
+    try {
+      await app.request({
+        url: `/user/proxy-registration/${id}/review`,
+        method: 'PATCH',
+        data: {
+          status,
+          reason: reason || undefined,
+        },
+      });
+      wx.showToast({ title: status === 'approved' ? '已通过' : (status === 'rejected' ? '已驳回' : '已撤销'), icon: 'success' });
+      this.loadAuditData();
+    } catch (err) {
+      wx.showToast({ title: err.message || '代注册审核失败', icon: 'none' });
     }
   },
 

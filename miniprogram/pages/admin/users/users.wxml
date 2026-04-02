@@ -41,6 +41,28 @@
   </view>
 
   <view class="section-card">
+    <view class="section-title">家人代注册审核</view>
+    <view class="section-sub">待审核代注册单：{{pendingProxyCaseList.length}}</view>
+
+    <view class="empty-text" wx:if="{{!pendingProxyCaseList.length}}">暂无待审核代注册单</view>
+    <view class="list-item" wx:for="{{pendingProxyCaseList}}" wx:key="id">
+      <view class="item-title">工人：{{item.workerName}}（{{item.workerUid}}）</view>
+      <view class="item-sub">代办人：{{item.proxyName}} · {{item.proxyPhone}}</view>
+      <view class="item-sub">关系：{{item.relationToWorker}} · 授权：{{item.consentType}}</view>
+      <view class="item-sub">提交时间：{{item.createdAtText}}</view>
+      <view class="chip-row">
+        <view class="chip pending">状态：{{item.statusText}}</view>
+        <view class="chip {{item.riskLevel === 'high' ? 'danger' : 'success'}}">风险：{{item.riskText}}</view>
+      </view>
+      <view class="item-sub" wx:if="{{item.consentStatement && item.consentStatement !== '-'}}">授权说明：{{item.consentStatement}}</view>
+      <view class="actions-row">
+        <button class="btn-secondary" data-id="{{item.id}}" data-status="approved" bindtap="reviewProxyCase">审核通过</button>
+        <button class="btn-danger" data-id="{{item.id}}" data-status="rejected" bindtap="reviewProxyCase">审核驳回</button>
+      </view>
+    </view>
+  </view>
+
+  <view class="section-card">
     <view class="section-title">人员列表（可删除）</view>
     <view class="form-label">关键词</view>
     <input class="input" value="{{userKeyword}}" bindinput="onUserKeywordInput" placeholder="姓名 / UID" />
