@@ -326,7 +326,7 @@ DROP TABLE IF EXISTS `operation_log`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `operation_log` (
   `id` bigint NOT NULL AUTO_INCREMENT,
-  `operationType` enum('create','update','delete','audit','login','checkin','payment') NOT NULL COMMENT '操作类型',
+  `operationType` enum('create','update','delete','audit','login','checkin','payment','export') NOT NULL COMMENT '操作类型',
   `resourceType` enum('user','base','job','signup','salary','offline_event') NOT NULL COMMENT '资源类型',
   `resource_id` bigint NOT NULL COMMENT '资源ID',
   `user_id` bigint NOT NULL COMMENT '操作用户ID',

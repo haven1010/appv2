@@ -14,6 +14,7 @@ export enum OperationType {
   LOGIN = 'login',
   CHECKIN = 'checkin',
   PAYMENT = 'payment',
+  EXPORT = 'export',
 }
 
 export enum ResourceType {

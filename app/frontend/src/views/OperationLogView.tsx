@@ -95,6 +95,12 @@ const OP_TYPE_MAP: Record<
     badgeClass: 'bg-orange-500/10 text-orange-300 ring-1 ring-orange-500/20',
     accentClass: 'text-orange-300',
   },
+  export: {
+    label: '导出',
+    icon: ScrollText,
+    badgeClass: 'bg-violet-500/10 text-violet-300 ring-1 ring-violet-500/20',
+    accentClass: 'text-violet-300',
+  },
 };
 
 const RESOURCE_TYPE_MAP: Record<string, string> = {
