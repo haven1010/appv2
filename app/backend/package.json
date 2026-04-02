@@ -14,6 +14,8 @@
     "db:backup:list": "node scripts/db-backup.js --list",
     "db:restore": "node scripts/db-restore.js",
     "db:restore:drill": "node scripts/db-restore-drill.js",
+    "login:baseline": "node scripts/ensure-test-login-baseline.js",
+    "login:baseline:check": "node scripts/ensure-test-login-baseline.js --check",
     "test:concurrency": "node scripts/concurrency-regression.js",
     "seed:users": "node scripts/seed-users.js",
     "simulate:full-flow": "node scripts/full-flow-30-workers.js",
