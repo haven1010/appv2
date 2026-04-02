@@ -75,7 +75,7 @@
             <text class="chip info">人员记录：{{workerFlows.length}}</text>
           </view>
           <view class="actions-row">
-            <button class="btn-secondary" catchtap="onTapEndWorkAll" disabled="{{!workerFlows.length}}">全部结束务工</button>
+            <button class="btn-ghost btn-endwork-outline" catchtap="onTapEndWorkAll" disabled="{{!workerFlows.length}}">全部结束务工</button>
           </view>
           <view class="empty-text" wx:if="{{!workerFlows.length}}">暂无基地人员信息</view>
           <view class="mini-list-item" wx:for="{{workerFlows}}" wx:key="key">
@@ -91,7 +91,7 @@
             <view class="item-sub">更新时间：{{item.updatedAtText}}</view>
             <view class="actions-row">
               <button
-                class="btn-danger btn-end-work-mini"
+                class="btn-ghost btn-end-work-mini btn-endwork-outline"
                 data-user-id="{{item.userId}}"
                 data-name="{{item.name}}"
                 catchtap="onTapEndWork"
@@ -157,7 +157,7 @@
 
       <view class="actions-row">
         <button class="btn-ghost" catchtap="closeEndWorkDialog" disabled="{{endWorkSubmitting}}">取消</button>
-        <button class="btn-primary" catchtap="confirmEndWork" loading="{{endWorkSubmitting}}" disabled="{{endWorkSubmitting}}">确认结束</button>
+        <button class="btn-ghost btn-endwork-outline" catchtap="confirmEndWork" loading="{{endWorkSubmitting}}" disabled="{{endWorkSubmitting}}">确认结束</button>
       </view>
     </view>
   </view>

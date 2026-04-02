@@ -152,6 +152,22 @@
   justify-content: center;
 }
 
+.btn-endwork-outline {
+  color: #6e522f !important;
+  background: rgba(244, 212, 143, 0.28) !important;
+  border: 2rpx solid rgba(140, 112, 72, 0.34) !important;
+}
+
+.btn-endwork-outline::after {
+  border: none !important;
+}
+
+.btn-endwork-outline[disabled] {
+  color: #9c8a70 !important;
+  background: rgba(244, 212, 143, 0.14) !important;
+  border-color: rgba(140, 112, 72, 0.2) !important;
+}
+
 .dialog-mask {
   position: fixed;
   inset: 0;
