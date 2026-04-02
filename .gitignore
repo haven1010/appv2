@@ -56,6 +56,12 @@ Thumbs.db
 **/*.pdf
 **/*.out
 **/*.toc
+**/*.fdb_latexmk
+**/*.fls
+**/*.xdv
+**/*.synctex
+**/*.synctex.gz
+**/*.synctex(busy)
 
 # Backend specific
 app/backend/dist/
