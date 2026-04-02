@@ -1,7 +1,7 @@
 <view class="page-admin">
   <view class="hero-card">
-    <view class="hero-title">扫码操作（辅助）</view>
-    <view class="hero-sub">{{roleText}} · 全场景扫码签到与实时同步</view>
+    <view class="hero-title">{{canManageSalary ? '签到与工资单' : '扫码操作（辅助）'}}</view>
+    <view class="hero-sub">{{canManageSalary ? roleText + ' · 现场签到、工资单生成与提交确认' : roleText + ' · 全场景扫码签到与实时同步'}}</view>
 
     <view class="form-label">日期</view>
     <picker mode="date" value="{{selectedDate}}" bindchange="onDateChange">
@@ -62,7 +62,8 @@
   </view>
 
   <view class="section-card" wx:if="{{canManageSalary}}">
-    <view class="section-title">当日工资统计</view>
+    <view class="section-title">工资单生成</view>
+    <view class="section-sub">基地管理员生成工资单并核对金额后，等待采摘工在收入页确认</view>
     <view class="chip-row">
       <text class="chip info">工资记录：{{salarySummary.totalRecords}}</text>
       <text class="chip pending">待确认：{{salarySummary.pendingCount}}</text>
@@ -71,8 +72,20 @@
       <text class="chip success">总金额：{{salarySummary.totalAmount}}</text>
     </view>
     <view class="actions-row">
-      <button class="btn-primary" bindtap="generateSalaryDrafts" loading="{{salaryDraftLoading}}" disabled="{{salaryDraftLoading}}">生成当日工资草稿</button>
-      <button class="btn-ghost" bindtap="refreshSalarySummary">刷新工资统计</button>
+      <button class="btn-primary" bindtap="generateSalaryDrafts" loading="{{salaryDraftLoading}}" disabled="{{salaryDraftLoading}}">批量生成当日工资单</button>
+      <button class="btn-ghost" bindtap="refreshSalarySummary">刷新工资单</button>
+    </view>
+
+    <view class="empty-text" wx:if="{{!salaryRecords.length && !salaryDraftLoading}}">当前日期暂无工资单，请先为已签到人员生成工资单</view>
+    <view class="list-item" wx:for="{{salaryRecords}}" wx:key="id">
+      <view class="item-title">{{item.workerName}}（{{item.workerUid}}）</view>
+      <view class="item-sub">{{item.baseName}} · {{item.jobTitle}} · {{item.workDate}}</view>
+      <view class="chip-row">
+        <text class="chip {{item.statusChipType}}">{{item.statusText}}</text>
+        <text class="chip success">金额：¥{{item.amountText}}</text>
+        <text class="chip info">{{item.volumeText}}</text>
+      </view>
+      <view class="item-sub">工资单 #{{item.id}} · 生成时间：{{item.createdAtText}}</view>
     </view>
   </view>
 
@@ -106,4 +119,3 @@
     <view class="admin-bottom-item {{activeNav === 'me' ? 'active' : ''}}" data-target="me" bindtap="switchAdminNav">我的信息</view>
   </view>
 </view>
-

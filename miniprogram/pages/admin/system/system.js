@@ -1,24 +1,12 @@
 /**
  * Layer: Mini Program Page
- * Responsibility: Super-admin payroll center for auto-generating, grouping-by-base, exporting, and archiving salary reports.
+ * Responsibility: Lets super admins review payroll reports that bosses have submitted after settlement.
  */
 const app = getApp();
 const { resolveRole, isSuperAdminRole, roleLabel } = require('../../../utils/role');
 
-const HISTORY_KEY = 'admin_payroll_report_history_v1';
-const MAX_AUTO_DRAFT_DAYS = 62;
-
 function todayString() {
   const d = new Date();
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${y}-${m}-${day}`;
-}
-
-function yesterdayString() {
-  const d = new Date();
-  d.setDate(d.getDate() - 1);
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, '0');
   const day = String(d.getDate()).padStart(2, '0');
@@ -35,46 +23,7 @@ function monthStartString() {
 function normalizeArray(res) {
   if (Array.isArray(res)) return res;
   if (Array.isArray(res?.list)) return res.list;
-  if (Array.isArray(res?.records)) return res.records;
   return [];
-}
-
-function safeNumber(value, fallback = 0) {
-  const num = Number(value);
-  return Number.isFinite(num) ? num : fallback;
-}
-
-function inferGender(idCard) {
-  const id = String(idCard || '').trim();
-  if (id.length !== 18) return '未知';
-  const code = Number(id.charAt(16));
-  if (!Number.isFinite(code)) return '未知';
-  return code % 2 === 0 ? '女' : '男';
-}
-
-function calcAgeFromIdCard(idCard) {
-  const text = String(idCard || '').trim();
-  if (!/^\d{17}[\dX]$/i.test(text)) return '';
-  const birth = text.slice(6, 14);
-  const year = Number(birth.slice(0, 4));
-  const month = Number(birth.slice(4, 6));
-  const day = Number(birth.slice(6, 8));
-  if (!year || !month || !day) return '';
-  const now = new Date();
-  let age = now.getFullYear() - year;
-  const nowMonth = now.getMonth() + 1;
-  const nowDay = now.getDate();
-  if (nowMonth < month || (nowMonth === month && nowDay < day)) {
-    age -= 1;
-  }
-  if (!Number.isFinite(age) || age < 0 || age > 120) return '';
-  return String(age);
-}
-
-function poorHouseholdText(value) {
-  if (value === true || value === 1 || value === '1') return '是';
-  if (value === false || value === 0 || value === '0') return '否';
-  return '未知';
 }
 
 function formatTime(value) {
@@ -93,93 +42,17 @@ function formatTime(value) {
   return `${y}-${m}-${d} ${hh}:${mm}:${ss}`;
 }
 
-function buildFilterSummary(baseLabel, dateFrom, dateTo, keyword) {
-  const rangeText = `${dateFrom || '-'} ~ ${dateTo || '-'}`;
-  const keywordText = keyword ? ` · 关键字: ${keyword}` : '';
-  return `${baseLabel || '全部基地'} · ${rangeText}${keywordText}`;
+function formatAmount(value) {
+  const num = Number(value || 0);
+  return Number.isFinite(num) ? num.toFixed(2) : '0.00';
 }
 
-function parseDurationFromWorkHours(workHours) {
-  const text = String(workHours || '').trim();
-  if (!text) return 8;
-
-  const match = text.match(/(\d{1,2}):(\d{1,2})\s*[-~]\s*(\d{1,2}):(\d{1,2})/);
-  if (!match) return 8;
-
-  const startHour = safeNumber(match[1], 0);
-  const startMinute = safeNumber(match[2], 0);
-  const endHour = safeNumber(match[3], 0);
-  const endMinute = safeNumber(match[4], 0);
-
-  let start = startHour * 60 + startMinute;
-  let end = endHour * 60 + endMinute;
-  if (end < start) end += 24 * 60;
-
-  const duration = (end - start) / 60;
-  if (!Number.isFinite(duration) || duration <= 0) return 8;
-  return Math.max(0.5, Math.round(duration * 10) / 10);
+function buildPeriodText(dateFrom, dateTo) {
+  return `${dateFrom || '-'} ~ ${dateTo || '-'}`;
 }
 
-function parseDate(dateText) {
-  if (!dateText) return null;
-  const d = new Date(`${dateText}T00:00:00`);
-  return Number.isNaN(d.getTime()) ? null : d;
-}
-
-function buildDateList(dateFrom, dateTo, maxDays = MAX_AUTO_DRAFT_DAYS) {
-  const start = parseDate(dateFrom);
-  const end = parseDate(dateTo);
-  if (!start || !end || start > end) return [];
-
-  const list = [];
-  const cursor = new Date(start);
-  while (cursor <= end) {
-    const y = cursor.getFullYear();
-    const m = String(cursor.getMonth() + 1).padStart(2, '0');
-    const d = String(cursor.getDate()).padStart(2, '0');
-    list.push(`${y}-${m}-${d}`);
-    if (list.length > maxDays) return [];
-    cursor.setDate(cursor.getDate() + 1);
-  }
-  return list;
-}
-
-function cloneBaseReportList(list) {
-  return (Array.isArray(list) ? list : []).map((base) => ({
-    key: base.key,
-    baseId: String(base.baseId || ''),
-    baseName: base.baseName || '-',
-    totalWorkers: safeNumber(base.totalWorkers, 0),
-    totalIncome: safeNumber(base.totalIncome, 0),
-    expanded: !!base.expanded,
-    rows: (Array.isArray(base.rows) ? base.rows : []).map((row, index) => ({
-      serial: safeNumber(row.serial, index + 1),
-      name: row.name || '-',
-      gender: row.gender || '未知',
-      idCard: row.idCard || '-',
-      age: row.age || '',
-      address: row.address || '-',
-      poorHousehold: row.poorHousehold || '未知',
-      phone: row.phone || '-',
-      workLocation: row.workLocation || '-',
-      workType: row.workType || '-',
-      workStartTime: row.workStartTime || '',
-      workEndTime: row.workEndTime || '',
-      remark: row.remark || '',
-      totalIncome: safeNumber(row.totalIncome, 0),
-      signature: row.signature || '',
-    })),
-  }));
-}
-
-function createEmptyAutoSummary(note = '') {
-  return {
-    enabled: false,
-    created: 0,
-    skipped: 0,
-    failed: 0,
-    note,
-  };
+function buildFilterSummary(baseName, bossName, dateFrom, dateTo) {
+  return `${baseName || '全部基地'} · ${bossName || '未知老板'} · ${buildPeriodText(dateFrom, dateTo)}`;
 }
 
 Page({
@@ -198,18 +71,19 @@ Page({
     dateTo: todayString(),
     keyword: '',
 
+    reportList: [],
+    selectedReportId: '',
+    selectedReportFileName: '',
+
     hasReport: false,
+    reportExpanded: false,
     reportFilterText: '',
     reportGeneratedAtText: '',
 
-    baseReportList: [],
-    totalBases: 0,
+    rows: [],
     totalWorkers: 0,
-    totalIncome: 0,
-    autoDraftSummary: createEmptyAutoSummary(),
-
-    historyList: [],
-    selectedHistoryId: '',
+    salaryRecordCount: 0,
+    totalIncome: '0.00',
   },
 
   onLoad() {
@@ -258,10 +132,7 @@ Page({
     this.setData({ loading: true });
     try {
       await this.loadBaseOptions();
-      this.loadHistory();
-      if (!this.data.hasReport) {
-        await this.loadPayrollReport({ autoExpand: false });
-      }
+      await this.loadSubmittedReports({ autoSelect: true, showEmptyToast: false });
     } catch (err) {
       wx.showToast({ title: err.message || '初始化工资中心失败', icon: 'none' });
     } finally {
@@ -283,339 +154,144 @@ Page({
     this.setData({ baseOptions: options, baseIndex });
   },
 
-  getCurrentFilter() {
-    return {
-      baseValue: this.data.baseOptions[this.data.baseIndex]?.value || '',
-      baseLabel: this.data.baseOptions[this.data.baseIndex]?.label || '全部基地',
-      dateFrom: this.data.dateFrom,
-      dateTo: this.data.dateTo,
-      keyword: String(this.data.keyword || '').trim(),
-    };
-  },
-
-  buildSalaryUrl(filter) {
-    const current = filter || this.getCurrentFilter();
+  buildSubmittedReportListUrl() {
     const params = [];
+    const baseId = this.data.baseOptions[this.data.baseIndex]?.value || '';
+    const dateFrom = this.data.dateFrom;
+    const dateTo = this.data.dateTo;
+    const keyword = String(this.data.keyword || '').trim();
 
-    if (current.baseValue) params.push(`baseId=${encodeURIComponent(current.baseValue)}`);
-    if (current.dateFrom) params.push(`dateFrom=${encodeURIComponent(current.dateFrom)}`);
-    if (current.dateTo) params.push(`dateTo=${encodeURIComponent(current.dateTo)}`);
-    if (current.keyword) params.push(`keyword=${encodeURIComponent(current.keyword)}`);
+    if (baseId) params.push(`baseId=${encodeURIComponent(baseId)}`);
+    if (dateFrom) params.push(`dateFrom=${encodeURIComponent(dateFrom)}`);
+    if (dateTo) params.push(`dateTo=${encodeURIComponent(dateTo)}`);
+    if (keyword) params.push(`keyword=${encodeURIComponent(keyword)}`);
 
     const query = params.join('&');
-    return query ? `/salary/list?${query}` : '/salary/list';
+    return query ? `/salary/reports/submitted?${query}` : '/salary/reports/submitted';
   },
 
-  buildBaseReports(list, options = {}) {
-    const { autoExpand = false } = options;
-    const grouped = {};
+  async loadSubmittedReports(options = {}) {
+    const { autoSelect = true, showEmptyToast = true } = options;
 
-    for (let i = 0; i < list.length; i += 1) {
-      const row = list[i] || {};
-      const baseId = String(row.baseId || 'unknown');
-      const baseName = row.baseName || `基地#${baseId}`;
-      const workerName = row.workerName || '-';
-      const workerUid = row.workerUid || `unknown-${i}`;
-      const idCard = row.workerIdCard || '';
-      const workerKey = `${workerUid}__${idCard || workerName}`;
-
-      if (!grouped[baseId]) {
-        grouped[baseId] = {
-          baseId,
-          baseName,
-          workerMap: {},
-        };
-      }
-
-      if (!grouped[baseId].workerMap[workerKey]) {
-        grouped[baseId].workerMap[workerKey] = {
-          name: workerName,
-          gender: row.workerGender === 'male' ? '男' : row.workerGender === 'female' ? '女' : inferGender(idCard),
-          idCard: idCard || '-',
-          age: calcAgeFromIdCard(idCard),
-          address: row.workerAddress || row.address || '-',
-          poorHousehold: poorHouseholdText(row.isPoorHousehold ?? row.isPoor),
-          phone: row.workerPhone || '-',
-          workLocation: baseName,
-          workTypeSet: {},
-          workStartTime: row.workerWorkStartTime || '',
-          workEndTime: row.workerWorkEndTime || '',
-          remark: '',
-          totalIncome: 0,
-          signature: '',
-        };
-      }
-
-      if (row.jobTitle) {
-        grouped[baseId].workerMap[workerKey].workTypeSet[row.jobTitle] = true;
-      }
-
-      const incomingStart = String(row.workerWorkStartTime || '').trim();
-      const incomingEnd = String(row.workerWorkEndTime || '').trim();
-      if (incomingStart) {
-        const currentStart = String(grouped[baseId].workerMap[workerKey].workStartTime || '').trim();
-        const incomingStartTs = new Date(incomingStart.replace(' ', 'T')).getTime();
-        const currentStartTs = currentStart ? new Date(currentStart.replace(' ', 'T')).getTime() : NaN;
-        if (!currentStart || (Number.isFinite(incomingStartTs) && (!Number.isFinite(currentStartTs) || incomingStartTs < currentStartTs))) {
-          grouped[baseId].workerMap[workerKey].workStartTime = incomingStart;
-        }
-      }
-      if (incomingEnd) {
-        const currentEnd = String(grouped[baseId].workerMap[workerKey].workEndTime || '').trim();
-        const incomingEndTs = new Date(incomingEnd.replace(' ', 'T')).getTime();
-        const currentEndTs = currentEnd ? new Date(currentEnd.replace(' ', 'T')).getTime() : NaN;
-        if (!currentEnd || (Number.isFinite(incomingEndTs) && (!Number.isFinite(currentEndTs) || incomingEndTs > currentEndTs))) {
-          grouped[baseId].workerMap[workerKey].workEndTime = incomingEnd;
-        }
-      }
-
-      grouped[baseId].workerMap[workerKey].totalIncome += safeNumber(row.totalAmount || row.amount, 0);
-    }
-
-    const baseReportList = Object.keys(grouped)
-      .map((baseId) => {
-        const base = grouped[baseId];
-        const rows = Object.keys(base.workerMap)
-          .map((key) => ({
-            name: base.workerMap[key].name,
-            gender: base.workerMap[key].gender,
-            idCard: base.workerMap[key].idCard,
-            age: base.workerMap[key].age,
-            address: base.workerMap[key].address,
-            poorHousehold: base.workerMap[key].poorHousehold,
-            phone: base.workerMap[key].phone,
-            workLocation: base.workerMap[key].workLocation,
-            workType: Object.keys(base.workerMap[key].workTypeSet || {}).join(' / ') || '-',
-            workStartTime: formatTime(base.workerMap[key].workStartTime),
-            workEndTime: formatTime(base.workerMap[key].workEndTime),
-            remark: base.workerMap[key].remark || '',
-            totalIncome: Number(base.workerMap[key].totalIncome.toFixed(2)),
-            signature: base.workerMap[key].signature,
-          }))
-          .sort((a, b) => b.totalIncome - a.totalIncome)
-          .map((item, index) => ({
-            serial: index + 1,
-            name: item.name,
-            gender: item.gender,
-            idCard: item.idCard,
-            age: item.age,
-            address: item.address,
-            poorHousehold: item.poorHousehold,
-            phone: item.phone,
-            workLocation: item.workLocation,
-            workType: item.workType,
-            workStartTime: item.workStartTime,
-            workEndTime: item.workEndTime,
-            remark: item.remark,
-            totalIncome: item.totalIncome,
-            signature: item.signature,
-          }));
-
-        const totalIncome = Number(rows.reduce((sum, item) => sum + safeNumber(item.totalIncome, 0), 0).toFixed(2));
-
-        return {
-          key: `base-${baseId}`,
-          baseId,
-          baseName: base.baseName,
-          rows,
-          totalWorkers: rows.length,
-          totalIncome,
-          expanded: false,
-        };
-      })
-      .sort((a, b) => String(a.baseName || '').localeCompare(String(b.baseName || '')));
-
-    if (autoExpand && baseReportList.length) {
-      baseReportList[0].expanded = true;
-    }
-
-    const totalWorkers = baseReportList.reduce((sum, item) => sum + safeNumber(item.totalWorkers, 0), 0);
-    const totalIncome = Number(
-      baseReportList.reduce((sum, item) => sum + safeNumber(item.totalIncome, 0), 0).toFixed(2),
-    );
-
-    return {
-      baseReportList,
-      totalBases: baseReportList.length,
-      totalWorkers,
-      totalIncome,
-    };
-  },
-
-  getTargetBaseIds(filter) {
-    if (filter.baseValue) return [String(filter.baseValue)];
-    return this.data.baseOptions
-      .filter((item) => item.value)
-      .map((item) => String(item.value));
-  },
-
-  isSkippableDraftError(err) {
-    const message = String(err?.message || '').toLowerCase();
-    return /not checked in|not_checked_in|already|confirmed|paid|cannot|exists|not found/.test(message);
-  },
-
-  async buildSalaryPayload(record, jobCache) {
-    const jobId = safeNumber(record?.jobId, 0);
-    if (!jobId) return {};
-
-    if (!jobCache[jobId]) {
-      jobCache[jobId] = await app.request({
-        url: `/base/jobs/${jobId}`,
-        method: 'GET',
-      }).catch(() => null);
-    }
-
-    const job = jobCache[jobId];
-    if (!job) return {};
-
-    const payType = safeNumber(job.payType, 0);
-    const payload = {};
-
-    if (payType === 2) {
-      payload.duration = parseDurationFromWorkHours(job.workHours);
-    } else if (payType === 3) {
-      payload.count = Math.max(1, safeNumber(job.targetCount, 1));
-    }
-
-    return payload;
-  },
-
-  async autoGenerateSalaryDrafts(filter) {
-    const endOfAuto = filter.dateTo && filter.dateTo < todayString() ? filter.dateTo : yesterdayString();
-    if (!filter.dateFrom || !filter.dateTo || filter.dateFrom > filter.dateTo) {
-      return createEmptyAutoSummary();
-    }
-    if (filter.dateFrom > endOfAuto) {
-      return createEmptyAutoSummary();
-    }
-
-    const dateList = buildDateList(filter.dateFrom, endOfAuto, MAX_AUTO_DRAFT_DAYS);
-    if (!dateList.length) {
-      return createEmptyAutoSummary(`自动补齐仅支持 ${MAX_AUTO_DRAFT_DAYS} 天内的工期区间`);
-    }
-
-    const baseIds = this.getTargetBaseIds(filter);
-    if (!baseIds.length) {
-      return createEmptyAutoSummary();
-    }
-
-    const result = {
-      enabled: true,
-      created: 0,
-      skipped: 0,
-      failed: 0,
-      note: '',
-    };
-
-    const jobCache = {};
-
-    for (let i = 0; i < baseIds.length; i += 1) {
-      const baseId = baseIds[i];
-      const listRes = await app.request({
-        url: `/salary/list?baseId=${encodeURIComponent(baseId)}&dateFrom=${encodeURIComponent(filter.dateFrom)}&dateTo=${encodeURIComponent(endOfAuto)}`,
-        method: 'GET',
-      }).catch(() => ({ list: [] }));
-
-      const existingSet = new Set(
-        normalizeArray(listRes)
-          .map((item) => safeNumber(item.signupId, 0))
-          .filter((id) => id > 0),
-      );
-
-      for (let j = 0; j < dateList.length; j += 1) {
-        const workDate = dateList[j];
-        const recordsRes = await app.request({
-          url: `/attendance/records?baseId=${encodeURIComponent(baseId)}&date=${encodeURIComponent(workDate)}`,
-          method: 'GET',
-        }).catch(() => ({ records: [] }));
-
-        const records = normalizeArray(recordsRes);
-        for (let k = 0; k < records.length; k += 1) {
-          const record = records[k] || {};
-          const status = safeNumber(record.status, -1);
-          const signupId = safeNumber(record.id || record.signupId, 0);
-
-          if (status !== 1 || !signupId) {
-            continue;
-          }
-          if (existingSet.has(signupId)) {
-            result.skipped += 1;
-            continue;
-          }
-
-          const payload = await this.buildSalaryPayload(record, jobCache);
-          try {
-            await app.request({
-              url: `/salary/calculate/${signupId}`,
-              method: 'POST',
-              data: payload,
-            });
-            existingSet.add(signupId);
-            result.created += 1;
-          } catch (err) {
-            if (this.isSkippableDraftError(err)) {
-              result.skipped += 1;
-            } else {
-              result.failed += 1;
-            }
-          }
-        }
-      }
-    }
-
-    return result;
-  },
-
-  async loadPayrollReport(options = {}) {
-    const { autoExpand = false } = options;
-    const filter = this.getCurrentFilter();
-
-    if (filter.dateFrom && filter.dateTo && filter.dateFrom > filter.dateTo) {
+    if (this.data.dateFrom && this.data.dateTo && this.data.dateFrom > this.data.dateTo) {
       wx.showToast({ title: '开始日期不能晚于结束日期', icon: 'none' });
       return;
     }
 
     this.setData({ reportLoading: true });
-    wx.showLoading({ title: '生成中...', mask: true });
     try {
-      const autoDraftSummary = await this.autoGenerateSalaryDrafts(filter);
-      const salaryRes = await app.request({ url: this.buildSalaryUrl(filter), method: 'GET' }).catch(() => ({ list: [] }));
-      const list = normalizeArray(salaryRes);
+      const reportRes = await app.request({
+        url: this.buildSubmittedReportListUrl(),
+        method: 'GET',
+      }).catch(() => []);
 
-      const report = this.buildBaseReports(list, { autoExpand });
+      const reportList = normalizeArray(reportRes).map((item) => ({
+        id: String(item.id),
+        baseId: String(item.baseId || ''),
+        baseName: item.baseName || '-',
+        bossName: item.bossName || '-',
+        fileName: item.fileName || '-',
+        dateFrom: item.dateFrom || '',
+        dateTo: item.dateTo || '',
+        createdAt: item.createdAt,
+        createdAtText: formatTime(item.createdAt),
+        totalIncomeText: formatAmount(item.totalIncome),
+        totalIncome: formatAmount(item.totalIncome),
+        workerCount: Number(item.workerCount || 0),
+        salaryRecordCount: Number(item.salaryRecordCount || 0),
+        periodText: buildPeriodText(item.dateFrom, item.dateTo),
+      }));
+
+      const currentSelectedId = String(this.data.selectedReportId || '');
+      const selectedStillExists = reportList.some((item) => item.id === currentSelectedId);
+      const nextSelectedId = selectedStillExists
+        ? currentSelectedId
+        : autoSelect && reportList.length
+          ? reportList[0].id
+          : '';
+
       this.setData({
-        baseReportList: report.baseReportList,
-        totalBases: report.totalBases,
-        totalWorkers: report.totalWorkers,
-        totalIncome: report.totalIncome,
-        autoDraftSummary,
-        selectedHistoryId: '',
-        hasReport: true,
-        reportFilterText: buildFilterSummary(filter.baseLabel, filter.dateFrom, filter.dateTo, filter.keyword),
-        reportGeneratedAtText: formatTime(new Date().toISOString()),
+        reportList,
+        selectedReportId: nextSelectedId,
       });
 
-      if (!report.baseReportList.length) {
-        wx.showToast({ title: '当前筛选暂无工资数据', icon: 'none' });
+      if (!reportList.length) {
+        this.setData({
+          selectedReportId: '',
+          selectedReportFileName: '',
+          rows: [],
+          totalWorkers: 0,
+          salaryRecordCount: 0,
+          totalIncome: '0.00',
+          hasReport: false,
+          reportExpanded: false,
+          reportFilterText: '',
+          reportGeneratedAtText: '',
+        });
+        if (showEmptyToast) {
+          wx.showToast({ title: '当前筛选暂无已提交工资表', icon: 'none' });
+        }
+        return;
+      }
+
+      if (nextSelectedId) {
+        await this.loadSubmittedReportDetail(nextSelectedId, { keepLoading: true });
       }
     } catch (err) {
-      wx.showToast({ title: err.message || '加载工资表失败', icon: 'none' });
+      wx.showToast({ title: err.message || '加载工资表列表失败', icon: 'none' });
     } finally {
-      wx.hideLoading();
       this.setData({ reportLoading: false });
     }
   },
 
-  toggleBaseReport(e) {
-    const baseId = String(e.currentTarget.dataset.baseId || '');
-    if (!baseId) return;
+  async loadSubmittedReportDetail(reportId, options = {}) {
+    const { keepLoading = false } = options;
 
-    const list = cloneBaseReportList(this.data.baseReportList);
-    const index = list.findIndex((item) => String(item.baseId) === baseId);
-    if (index < 0) return;
+    if (!keepLoading) {
+      this.setData({ reportLoading: true });
+    }
 
-    list[index].expanded = !list[index].expanded;
-    this.setData({ baseReportList: list });
+    try {
+      const detail = await app.request({
+        url: `/salary/reports/${encodeURIComponent(reportId)}`,
+        method: 'GET',
+      });
+
+      const rows = normalizeArray(detail.rows).map((item) => ({
+        serial: Number(item.serial || 0),
+        name: item.name || '-',
+        gender: item.gender || '-',
+        idCard: item.idCard || '-',
+        address: item.address || '-',
+        poorHousehold: item.poorHousehold || 'unknown',
+        totalIncome: formatAmount(item.totalIncome),
+        signature: item.signature || '',
+      }));
+
+      this.setData({
+        selectedReportId: String(detail.id),
+        selectedReportFileName: detail.fileName || '',
+        rows,
+        totalWorkers: Number(detail.workerCount || detail.summary?.workerCount || rows.length || 0),
+        salaryRecordCount: Number(detail.salaryRecordCount || detail.summary?.salaryRecordCount || 0),
+        totalIncome: formatAmount(detail.totalIncome || detail.summary?.totalIncome || 0),
+        hasReport: true,
+        reportExpanded: rows.length > 0,
+        reportFilterText: buildFilterSummary(detail.baseName, detail.bossName, detail.dateFrom, detail.dateTo),
+        reportGeneratedAtText: formatTime(detail.createdAt),
+      });
+    } catch (err) {
+      wx.showToast({ title: err.message || '加载工资表明细失败', icon: 'none' });
+    } finally {
+      if (!keepLoading) {
+        this.setData({ reportLoading: false });
+      }
+    }
+  },
+
+  toggleReport() {
+    if (!this.data.hasReport) return;
+    this.setData({ reportExpanded: !this.data.reportExpanded });
   },
 
   onBaseChange(e) {
@@ -635,7 +311,7 @@ Page({
   },
 
   searchReport() {
-    this.loadPayrollReport({ autoExpand: true });
+    this.loadSubmittedReports({ autoSelect: true, showEmptyToast: true });
   },
 
   resetReport() {
@@ -644,214 +320,48 @@ Page({
       dateFrom: monthStartString(),
       dateTo: todayString(),
       keyword: '',
-      selectedHistoryId: '',
-      baseReportList: [],
-      totalBases: 0,
+      reportList: [],
+      selectedReportId: '',
+      selectedReportFileName: '',
+      rows: [],
       totalWorkers: 0,
-      totalIncome: 0,
-      autoDraftSummary: createEmptyAutoSummary(),
+      salaryRecordCount: 0,
+      totalIncome: '0.00',
       hasReport: false,
+      reportExpanded: false,
       reportFilterText: '',
       reportGeneratedAtText: '',
     });
   },
 
+  selectSubmittedReport(e) {
+    const reportId = String(e.currentTarget.dataset.id || '');
+    if (!reportId || reportId === this.data.selectedReportId) return;
+    this.loadSubmittedReportDetail(reportId);
+  },
+
   async exportReport() {
-    const baseReportList = this.data.baseReportList || [];
-    if (!baseReportList.length) {
-      wx.showToast({ title: '暂无可导出的工资表', icon: 'none' });
+    if (!this.data.selectedReportId) {
+      wx.showToast({ title: '请先选择工资表', icon: 'none' });
       return;
     }
-
-    const listUrl = this.buildSalaryUrl(this.getCurrentFilter());
-    const exportUrl = listUrl
-      .replace('/salary/list?', '/salary/export/report?')
-      .replace('/salary/list', '/salary/export/report');
 
     wx.showLoading({ title: '导出中...', mask: true });
     try {
       const res = await app.exportXlsx({
-        url: exportUrl,
+        url: `/salary/reports/${encodeURIComponent(this.data.selectedReportId)}/export`,
         method: 'GET',
-        fileName: `薪资报表-${todayString()}.xlsx`,
+        fileName: this.data.selectedReportFileName || `salary-report-${todayString()}.xlsx`,
       });
       wx.showToast({ title: '导出成功', icon: 'success' });
       if (res?.filePath) {
-        console.log('[export] salary xlsx file =', res.filePath);
+        console.log('[export] submitted salary report xlsx file =', res.filePath);
       }
     } catch (err) {
       wx.showToast({ title: err.message || '导出失败', icon: 'none' });
     } finally {
       wx.hideLoading();
     }
-  },
-
-  archiveReport() {
-    const baseReportList = this.data.baseReportList || [];
-    if (!baseReportList.length) {
-      wx.showToast({ title: '暂无数据可存档', icon: 'none' });
-      return;
-    }
-
-    const filter = this.getCurrentFilter();
-    const history = wx.getStorageSync(HISTORY_KEY) || [];
-    const snapshot = {
-      id: `report-${Date.now()}`,
-      version: 2,
-      createdAt: new Date().toISOString(),
-      filter: {
-        baseLabel: filter.baseLabel,
-        baseValue: filter.baseValue,
-        dateFrom: filter.dateFrom,
-        dateTo: filter.dateTo,
-        keyword: filter.keyword,
-      },
-      summary: {
-        totalBases: this.data.totalBases,
-        totalWorkers: this.data.totalWorkers,
-        totalIncome: this.data.totalIncome,
-        autoCreated: this.data.autoDraftSummary?.created || 0,
-      },
-      baseReportList: cloneBaseReportList(baseReportList),
-    };
-
-    const next = [snapshot].concat(Array.isArray(history) ? history : []).slice(0, 20);
-    wx.setStorageSync(HISTORY_KEY, next);
-    this.loadHistory();
-    wx.showToast({ title: '已存档', icon: 'success' });
-  },
-
-  normalizeHistorySnapshot(item) {
-    if (!item || typeof item !== 'object') return null;
-
-    if (Array.isArray(item.baseReportList)) {
-      const baseReportList = cloneBaseReportList(item.baseReportList).map((base) => ({
-        ...base,
-        expanded: false,
-      }));
-      const totalBases = safeNumber(item.summary?.totalBases, baseReportList.length);
-      const totalWorkers = safeNumber(
-        item.summary?.totalWorkers,
-        baseReportList.reduce((sum, base) => sum + safeNumber(base.totalWorkers, 0), 0),
-      );
-      const totalIncome = safeNumber(
-        item.summary?.totalIncome,
-        baseReportList.reduce((sum, base) => sum + safeNumber(base.totalIncome, 0), 0),
-      );
-      return {
-        baseReportList,
-        totalBases,
-        totalWorkers,
-        totalIncome,
-      };
-    }
-
-    const legacyRows = Array.isArray(item.rows) ? item.rows : [];
-    if (!legacyRows.length) {
-      return {
-        baseReportList: [],
-        totalBases: 0,
-        totalWorkers: 0,
-        totalIncome: 0,
-      };
-    }
-
-    const rows = legacyRows.map((row, index) => ({
-      serial: safeNumber(row.serial, index + 1),
-      name: row.name || '-',
-      gender: row.gender || '未知',
-      idCard: row.idCard || '-',
-      age: row.age || '',
-      address: row.address || '-',
-      poorHousehold: row.poorHousehold || '未知',
-      phone: row.phone || '-',
-      workLocation: row.workLocation || '-',
-      workType: row.workType || '-',
-      workStartTime: row.workStartTime || '',
-      workEndTime: row.workEndTime || '',
-      remark: row.remark || '',
-      totalIncome: safeNumber(row.totalIncome, 0),
-      signature: row.signature || '',
-    }));
-
-    const totalIncome = Number(rows.reduce((sum, row) => sum + safeNumber(row.totalIncome, 0), 0).toFixed(2));
-    const baseName = item.filter?.baseLabel || '历史工资表';
-
-    return {
-      baseReportList: [
-        {
-          key: 'legacy-base',
-          baseId: 'legacy',
-          baseName,
-          totalWorkers: rows.length,
-          totalIncome,
-          expanded: false,
-          rows,
-        },
-      ],
-      totalBases: 1,
-      totalWorkers: rows.length,
-      totalIncome,
-    };
-  },
-
-  loadHistory() {
-    const history = wx.getStorageSync(HISTORY_KEY) || [];
-    const list = (Array.isArray(history) ? history : []).map((item) => {
-      const normalized = this.normalizeHistorySnapshot(item);
-      return {
-        id: item.id,
-        createdAtText: formatTime(item.createdAt),
-        label: buildFilterSummary(
-          item.filter?.baseLabel || '全部基地',
-          item.filter?.dateFrom || '-',
-          item.filter?.dateTo || '-',
-          item.filter?.keyword || '',
-        ),
-        totalBases: normalized?.totalBases || 0,
-        totalWorkers: normalized?.totalWorkers || 0,
-        totalIncome: normalized?.totalIncome || 0,
-      };
-    });
-    this.setData({ historyList: list });
-  },
-
-  applyHistory(e) {
-    const id = e.currentTarget.dataset.id;
-    const history = wx.getStorageSync(HISTORY_KEY) || [];
-    const item = (Array.isArray(history) ? history : []).find((x) => x.id === id);
-    if (!item) return;
-
-    const normalized = this.normalizeHistorySnapshot(item);
-    const baseValue = String(item.filter?.baseValue || '');
-    const baseIndex = this.data.baseOptions.findIndex((x) => String(x.value) === baseValue);
-
-    this.setData({
-      baseIndex: baseIndex >= 0 ? baseIndex : 0,
-      dateFrom: item.filter?.dateFrom || monthStartString(),
-      dateTo: item.filter?.dateTo || todayString(),
-      keyword: item.filter?.keyword || '',
-      baseReportList: normalized?.baseReportList || [],
-      totalBases: normalized?.totalBases || 0,
-      totalWorkers: normalized?.totalWorkers || 0,
-      totalIncome: normalized?.totalIncome || 0,
-      autoDraftSummary: createEmptyAutoSummary(),
-      selectedHistoryId: id,
-      hasReport: true,
-      reportFilterText: buildFilterSummary(
-        item.filter?.baseLabel || '全部基地',
-        item.filter?.dateFrom || '-',
-        item.filter?.dateTo || '-',
-        item.filter?.keyword || '',
-      ),
-      reportGeneratedAtText: formatTime(item.createdAt),
-    });
-  },
-
-  clearHistory() {
-    wx.removeStorageSync(HISTORY_KEY);
-    this.setData({ historyList: [], selectedHistoryId: '' });
-    wx.showToast({ title: '历史已清空', icon: 'none' });
   },
 
   switchAdminNav(e) {

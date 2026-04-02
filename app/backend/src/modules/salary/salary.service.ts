@@ -9,7 +9,6 @@ import { DataSource, Repository } from 'typeorm';
 import { LaborSalary, SalaryStatus } from './entities/labor-salary.entity';
 import { SalaryPayment, PaymentStatus } from './entities/salary-payment.entity';
 import { DailySignup, SignupStatus } from '../attendance/entities/daily-signup.entity';
-import { BaseInfo } from '../base/entities/base-info.entity';
 import { JobApplication } from '../base/entities/job-application.entity';
 import { SalaryCalculatorFactory } from './services/salary-calculator.strategy';
 import { PayType } from '../base/entities/recruitment-job.entity';
@@ -17,6 +16,7 @@ import { UserRole, isSuperAdmin } from '../user/entities/sys-user.entity';
 import { SysUser } from '../user/entities/sys-user.entity';
 import { OperationLogService, OperationLogContext } from '../common/services/operation-log.service';
 import { OperationType, ResourceType } from '../common/entities/operation-log.entity';
+import { BaseScopeService } from '../base/services/base-scope.service';
 
 @Injectable()
 /**
@@ -31,10 +31,9 @@ export class SalaryService {
     private paymentRepo: Repository<SalaryPayment>,
     @InjectRepository(DailySignup)
     private signupRepo: Repository<DailySignup>,
-    @InjectRepository(BaseInfo)
-    private baseRepo: Repository<BaseInfo>,
     @InjectRepository(SysUser)
     private userRepo: Repository<SysUser>,
+    private baseScopeService: BaseScopeService,
     private operationLogService: OperationLogService,
     private dataSource: DataSource,
   ) {}
@@ -82,6 +81,17 @@ export class SalaryService {
    * 该方法会覆盖同一报名记录已有的草稿，以保证重复计算结果可收敛。
    */
   async calculateAndDraft(signupId: number, input: { duration?: number; count?: number }, adminId: number, context?: OperationLogContext) {
+    const operator = await this.userRepo.findOne({
+      where: { id: adminId, isDeleted: false },
+      select: ['id', 'roleKey'],
+    });
+    if (!operator) {
+      throw new NotFoundException('Operator user not found');
+    }
+    if (!isSuperAdmin(operator.roleKey) && operator.roleKey !== UserRole.BASE_MANAGER) {
+      throw new ForbiddenException('仅基地管理员可生成工资单');
+    }
+
     const { saved, isCreate, beforeSnapshot } = await this.dataSource.transaction(async (manager) => {
       const signup = await manager.findOne(DailySignup, {
         where: { id: signupId },
@@ -90,6 +100,13 @@ export class SalaryService {
       });
       if (!signup) throw new BadRequestException('Signup record not found');
       if (signup.status !== SignupStatus.CHECKED_IN) throw new BadRequestException('Worker has not checked in');
+
+      if (!isSuperAdmin(operator.roleKey)) {
+        await this.baseScopeService.assertCanSuperviseBase(
+          { id: adminId, roleKey: operator.roleKey },
+          Number(signup.baseId),
+        );
+      }
 
       const job = signup.job;
       const unitPriceSnapshot = this.resolveUnitPriceSnapshot(job);
@@ -152,7 +169,7 @@ export class SalaryService {
   /**
    * 获取工资记录列表。
    * 角色差异:
-   * 1. 基地管理员只能查看自己基地。
+   * 1. 老板/基地管理员只能查看自己名下基地。
    * 2. 现场管理员只能查看分配基地。
    * 3. 其余角色按显式筛选条件查询。
    */
@@ -173,18 +190,11 @@ export class SalaryService {
       .leftJoinAndSelect('signup.job', 'job')
       .orderBy('salary.createdAt', 'DESC');
 
-    if (role === UserRole.BASE_MANAGER || role === UserRole.BOSS) {
-      const ownedBases = await this.baseRepo.find({ where: { ownerId: user.id }, select: ['id'] });
-      const baseIds = ownedBases.map((b) => b.id);
+    if ([UserRole.BOSS, UserRole.BASE_MANAGER, UserRole.FIELD_MANAGER].includes(role as UserRole)) {
+      const scopedBaseIds = await this.baseScopeService.getSupervisedBaseIds(user);
+      const baseIds = (scopedBaseIds || []).filter((item) => !baseId || Number(item) === Number(baseId));
       if (baseIds.length === 0) return { list: [], total: 0 };
       qb.andWhere('signup.baseId IN (:...baseIds)', { baseIds });
-    } else if (role === UserRole.FIELD_MANAGER) {
-      const fm = await this.userRepo.findOne({ where: { id: user.id } });
-      if (fm?.assignedBaseId) {
-        qb.andWhere('signup.baseId = :assignedBaseId', { assignedBaseId: fm.assignedBaseId });
-      } else {
-        return { list: [], total: 0 };
-      }
     } else if (baseId) {
       qb.andWhere('signup.baseId = :baseId', { baseId });
     }
@@ -325,20 +335,13 @@ export class SalaryService {
       .createQueryBuilder('salary')
       .leftJoin('salary.signup', 'signup');
 
-    if (role === UserRole.BASE_MANAGER || role === UserRole.BOSS) {
-      const ownedBases = await this.baseRepo.find({ where: { ownerId: user.id }, select: ['id'] });
-      const baseIds = ownedBases.map((b) => b.id);
+    if ([UserRole.BOSS, UserRole.BASE_MANAGER, UserRole.FIELD_MANAGER].includes(role as UserRole)) {
+      const scopedBaseIds = await this.baseScopeService.getSupervisedBaseIds(user);
+      const baseIds = (scopedBaseIds || []).filter((item) => !baseId || Number(item) === Number(baseId));
       if (baseIds.length === 0) {
         return { totalPaid: 0, totalPending: 0, paidCount: 0, pendingCount: 0 };
       }
       qb.andWhere('signup.baseId IN (:...baseIds)', { baseIds });
-    } else if (role === UserRole.FIELD_MANAGER) {
-      const fm = await this.userRepo.findOne({ where: { id: user.id } });
-      if (fm?.assignedBaseId) {
-        qb.andWhere('signup.baseId = :assignedBaseId', { assignedBaseId: fm.assignedBaseId });
-      } else {
-        return { totalPaid: 0, totalPending: 0, paidCount: 0, pendingCount: 0 };
-      }
     } else if (baseId) {
       qb.andWhere('signup.baseId = :baseId', { baseId });
     }

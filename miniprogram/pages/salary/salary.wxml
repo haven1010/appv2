@@ -25,7 +25,10 @@
     </view>
 
     <view class="section-head card-in delay-1">
-      <text class="section-title">待确认工资</text>
+      <view class="section-copy">
+        <text class="section-title">工资确认</text>
+        <text class="section-note">基地管理员生成工资单后，待确认和已确认记录都会显示在这里</text>
+      </view>
       <text class="section-count">{{pendingList.length}}</text>
     </view>
 
@@ -36,8 +39,8 @@
 
     <view wx:elif="{{pendingList.length === 0}}" class="empty-card ds-card card-in delay-1">
       <text class="empty-icon">💼</text>
-      <text class="state-title">暂无待确认工资</text>
-      <text class="state-desc">完成工作后自动记录</text>
+      <text class="state-title">暂无工资单</text>
+      <text class="state-desc">完成工作并由基地管理员生成工资单后，会显示在这里</text>
       <button class="go-job-btn" bindtap="goFindJobs">去找工作</button>
     </view>
 

@@ -1,7 +1,7 @@
 <view class="page-admin">
   <view class="hero-card">
-    <view class="hero-title">工资表归档中心（超管）</view>
-    <view class="hero-sub">工期结束后自动补齐工资草稿，并按基地卡片存档查看</view>
+    <view class="hero-title">工资表中心（超管接收）</view>
+    <view class="hero-sub">老板完成工资结算后，会把工资表提交到这里，超级管理员可按基地和周期复核并导出快照</view>
   </view>
 
   <view class="section-card">
@@ -29,118 +29,100 @@
       </view>
 
       <view>
-        <view class="form-label">人员关键字</view>
-        <input class="input" value="{{keyword}}" bindinput="onKeywordInput" placeholder="姓名 / UID" />
+        <view class="form-label">关键字</view>
+        <input class="input" value="{{keyword}}" bindinput="onKeywordInput" placeholder="老板姓名 / 工资表文件名" />
       </view>
     </view>
 
     <view class="actions-row">
-      <button class="btn-primary" bindtap="searchReport" loading="{{reportLoading}}">生成工资表</button>
+      <button class="btn-primary" bindtap="searchReport" loading="{{reportLoading}}">查询已提交工资表</button>
       <button class="btn-ghost" bindtap="resetReport">重置筛选</button>
     </view>
   </view>
 
-  <view class="section-card" wx:if="{{hasReport}}">
-    <view class="section-title">工资表结果（按基地）</view>
-    <view class="section-sub">{{reportFilterText}}</view>
-    <view class="section-sub" wx:if="{{reportGeneratedAtText}}">生成时间：{{reportGeneratedAtText}}</view>
+  <view class="section-card">
+    <view class="section-title">老板已提交工资表</view>
+    <view class="section-sub">点击某一条工资表后，可展开查看工人汇总明细</view>
 
-    <view class="chip-row report-summary-row">
-      <text class="chip info">基地：{{totalBases}}</text>
-      <text class="chip info">人数：{{totalWorkers}}</text>
-      <text class="chip success">总收入：{{totalIncome}}</text>
-      <text class="chip success" wx:if="{{autoDraftSummary.enabled}}">自动补齐：{{autoDraftSummary.created}}</text>
-      <text class="chip pending" wx:if="{{autoDraftSummary.enabled}}">跳过：{{autoDraftSummary.skipped}}</text>
-      <text class="chip danger" wx:if="{{autoDraftSummary.enabled && autoDraftSummary.failed}}">失败：{{autoDraftSummary.failed}}</text>
-    </view>
-    <view class="auto-note" wx:if="{{autoDraftSummary.note}}">{{autoDraftSummary.note}}</view>
+    <view class="empty-text" wx:if="{{!reportList.length && !reportLoading}}">当前筛选暂无已提交工资表</view>
 
-    <view class="empty-text" wx:if="{{!baseReportList.length && !reportLoading}}">当前筛选暂无工资数据</view>
-
-    <view class="list-item base-report-card" wx:for="{{baseReportList}}" wx:key="key">
-      <view class="collapse-head" data-base-id="{{item.baseId}}" bindtap="toggleBaseReport">
-        <view class="collapse-main">
-          <view class="item-title">{{item.baseName}}</view>
-          <view class="item-sub">人数：{{item.totalWorkers}} · 总收入：{{item.totalIncome}}</view>
+    <view wx:for="{{reportList}}" wx:key="id" wx:if="{{reportList.length}}">
+      <view class="list-item {{selectedReportId === item.id ? 'history-active' : ''}}" data-id="{{item.id}}" bindtap="selectSubmittedReport">
+        <view class="item-title">{{item.baseName}} · {{item.bossName}}</view>
+        <view class="item-sub">{{item.periodText}}</view>
+        <view class="item-sub">{{item.fileName}}</view>
+        <view class="item-sub">提交时间：{{item.createdAtText}}</view>
+        <view class="chip-row">
+          <text class="chip info">工人 {{item.workerCount}}</text>
+          <text class="chip info">工资单 {{item.salaryRecordCount}}</text>
+          <text class="chip success">总金额 ¥{{item.totalIncomeText}}</text>
         </view>
-        <view class="collapse-tag">{{item.expanded ? '收起' : '展开'}}</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="section-card" wx:if="{{hasReport}}">
+    <view class="collapse-head" bindtap="toggleReport">
+      <view class="collapse-main">
+        <view class="section-title">工资表明细</view>
+        <view class="section-sub">{{reportFilterText}}</view>
+        <view class="section-sub" wx:if="{{reportGeneratedAtText}}">提交时间：{{reportGeneratedAtText}}</view>
+      </view>
+      <view class="collapse-tag">{{reportExpanded ? '收起' : '展开'}}</view>
+    </view>
+
+    <view class="collapse-tip" wx:if="{{!reportExpanded}}">点击展开查看工资表明细</view>
+
+    <view wx:if="{{reportExpanded}}">
+      <view class="chip-row">
+        <text class="chip info">工人 {{totalWorkers}}</text>
+        <text class="chip info">工资单 {{salaryRecordCount}}</text>
+        <text class="chip success">务工总收入 ¥{{totalIncome}}</text>
       </view>
 
-      <scroll-view class="table-scroll" scroll-x wx:if="{{item.expanded && item.rows.length}}">
+      <view class="actions-row report-actions">
+        <button class="btn-secondary" bindtap="exportReport">导出当前工资表</button>
+      </view>
+
+      <view class="empty-text" wx:if="{{!rows.length && !reportLoading}}">当前工资表暂无明细</view>
+
+      <scroll-view class="table-scroll" scroll-x wx:if="{{rows.length}}">
         <view class="table-wrap">
           <view class="table-row table-head">
             <text class="cell serial">序号</text>
             <text class="cell name">姓名</text>
             <text class="cell gender">性别</text>
             <text class="cell idcard">身份证号</text>
-            <text class="cell age">年龄</text>
             <text class="cell addr">家庭住址</text>
             <text class="cell poor">是否贫困户</text>
-            <text class="cell phone">联系电话</text>
-            <text class="cell location">务工地点</text>
-            <text class="cell worktype">从事工种</text>
-            <text class="cell start">务工开始时间</text>
-            <text class="cell end">务工结束时间</text>
-            <text class="cell remark">备注</text>
+            <text class="cell amount">务工总收入</text>
+            <text class="cell sign">领款签字</text>
           </view>
 
-          <view class="table-row" wx:for="{{item.rows}}" wx:key="serial" wx:for-item="row">
-            <text class="cell serial">{{row.serial}}</text>
-            <text class="cell name">{{row.name}}</text>
-            <text class="cell gender">{{row.gender}}</text>
-            <text class="cell idcard">{{row.idCard}}</text>
-            <text class="cell age">{{row.age}}</text>
-            <text class="cell addr">{{row.address}}</text>
-            <text class="cell poor">{{row.poorHousehold}}</text>
-            <text class="cell phone">{{row.phone}}</text>
-            <text class="cell location">{{row.workLocation}}</text>
-            <text class="cell worktype">{{row.workType}}</text>
-            <text class="cell start">{{row.workStartTime}}</text>
-            <text class="cell end">{{row.workEndTime}}</text>
-            <text class="cell remark">{{row.remark || ' '}}</text>
+          <view class="table-row" wx:for="{{rows}}" wx:key="serial">
+            <text class="cell serial">{{item.serial}}</text>
+            <text class="cell name">{{item.name}}</text>
+            <text class="cell gender">{{item.gender}}</text>
+            <text class="cell idcard">{{item.idCard}}</text>
+            <text class="cell addr">{{item.address}}</text>
+            <text class="cell poor">{{item.poorHousehold}}</text>
+            <text class="cell amount">{{item.totalIncome}}</text>
+            <text class="cell sign">{{item.signature || ' '}}</text>
           </view>
         </view>
       </scroll-view>
-
-      <view class="empty-text" wx:if="{{item.expanded && !item.rows.length}}">该基地暂无工资记录</view>
-    </view>
-
-    <view class="actions-row report-actions">
-      <button class="btn-secondary" bindtap="exportReport" disabled="{{!baseReportList.length}}">导出 XLSX</button>
-      <button class="btn-ghost" bindtap="archiveReport" disabled="{{!baseReportList.length}}">存档当前报表</button>
-    </view>
-  </view>
-
-  <view class="section-card">
-    <view class="section-title">历史存档</view>
-    <view class="actions-row">
-      <button class="btn-danger" bindtap="clearHistory" wx:if="{{historyList.length}}">清空历史</button>
-    </view>
-
-    <view class="empty-text" wx:if="{{!historyList.length}}">暂无历史存档</view>
-
-    <view
-      class="list-item {{selectedHistoryId === item.id ? 'history-active' : ''}}"
-      wx:for="{{historyList}}"
-      wx:key="id"
-      data-id="{{item.id}}"
-      bindtap="applyHistory"
-    >
-      <view class="item-title">{{item.label}}</view>
-      <view class="item-sub">存档时间：{{item.createdAtText}}</view>
-      <view class="item-sub">基地：{{item.totalBases}} · 人数：{{item.totalWorkers}} · 总收入：{{item.totalIncome}}</view>
     </view>
   </view>
 
   <view class="empty-text" wx:if="{{loading}}">加载中...</view>
-  <view class="empty-text" wx:if="{{reportLoading}}">工资表生成中...</view>
+  <view class="empty-text" wx:if="{{reportLoading}}">工资表加载中...</view>
 
   <view class="admin-bottom-nav">
-    <view class="admin-bottom-item {{activeNav === 'home' ? 'active' : ''}}" data-target="home" bindtap="switchAdminNav">{{role === 'super_admin' || role === 'region_admin' ? '人员管理' : '首页'}}</view>
-    <view class="admin-bottom-item {{activeNav === 'base' ? 'active' : ''}}" wx:if="{{role !== 'field_manager'}}" data-target="base" bindtap="switchAdminNav">{{role === 'super_admin' || role === 'region_admin' ? '基地管理' : '基地'}}</view>
-    <view class="admin-bottom-item {{activeNav === 'scan' ? 'active' : ''}}" wx:if="{{role !== 'super_admin' && role !== 'region_admin'}}" data-target="scan" bindtap="switchAdminNav">扫码</view>
+    <view class="admin-bottom-item {{activeNav === 'home' ? 'active' : ''}}" data-target="home" bindtap="switchAdminNav">首页</view>
+    <view class="admin-bottom-item {{activeNav === 'base' ? 'active' : ''}}" wx:if="{{role !== 'field_manager'}}" data-target="base" bindtap="switchAdminNav">基地</view>
+    <view class="admin-bottom-item {{activeNav === 'scan' ? 'active' : ''}}" data-target="scan" bindtap="switchAdminNav">扫码</view>
     <view class="admin-bottom-item {{activeNav === 'audit' ? 'active' : ''}}" wx:if="{{role === 'super_admin' || role === 'region_admin'}}" data-target="audit" bindtap="switchAdminNav">审核</view>
-    <view class="admin-bottom-item {{activeNav === 'payroll' ? 'active' : ''}}" wx:if="{{role === 'super_admin' || role === 'region_admin'}}" data-target="payroll" bindtap="switchAdminNav">工资管理</view>
-    <view class="admin-bottom-item {{activeNav === 'me' ? 'active' : ''}}" data-target="me" bindtap="switchAdminNav">我的信息</view>
+    <view class="admin-bottom-item {{activeNav === 'payroll' ? 'active' : ''}}" wx:if="{{role === 'super_admin' || role === 'region_admin'}}" data-target="payroll" bindtap="switchAdminNav">工资</view>
+    <view class="admin-bottom-item {{activeNav === 'me' ? 'active' : ''}}" data-target="me" bindtap="switchAdminNav">我的</view>
   </view>
 </view>

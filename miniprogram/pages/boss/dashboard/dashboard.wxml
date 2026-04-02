@@ -7,7 +7,7 @@
         <text class="hero-title">🏢 企业入驻审核</text>
         <button class="hero-logout-btn" bindtap="logout">退出登录</button>
       </view>
-      <text class="hero-subtitle">老板账号仅可提交企业资料与联系人信息，审核通过后由超级管理员进入后续配置。</text>
+      <text class="hero-subtitle">老板账号可提交企业资料，并查看、结算名下基地的已确认工资，生成工资表给超级管理员。</text>
     </view>
 
     <view class="form-card">
@@ -115,6 +115,73 @@
     <view wx:if="{{auditSubmitted}}" class="status-card">
       <text class="status-title">审核状态：{{auditStatusText}}</text>
       <text class="status-desc">资料已进入超级管理员审核队列，审核通过后会分配管理角色进入运营流程。</text>
+    </view>
+
+    <view class="form-card">
+      <view class="section-title">工资结算</view>
+      <view class="salary-readonly-tip">老板端只读查看每位采摘工的工资单明细，不修改工资金额；工人确认后，老板负责结算并生成工资表给超级管理员。</view>
+
+      <view class="field">
+        <text class="label">查看基地</text>
+        <picker mode="selector" range="{{payrollBases}}" range-key="baseName" value="{{payrollBaseIndex}}" bindchange="onPayrollBaseChange">
+          <view class="picker-box">{{payrollBases.length ? payrollBases[payrollBaseIndex].baseName : '暂无可查看基地'}}</view>
+        </picker>
+      </view>
+
+      <view class="date-grid">
+        <view class="field field-half">
+          <text class="label">开始日期</text>
+          <picker mode="date" value="{{payrollDateFrom}}" bindchange="onPayrollDateFromChange">
+            <view class="picker-box">{{payrollDateFrom}}</view>
+          </picker>
+        </view>
+
+        <view class="field field-half">
+          <text class="label">结束日期</text>
+          <picker mode="date" value="{{payrollDateTo}}" bindchange="onPayrollDateToChange">
+            <view class="picker-box">{{payrollDateTo}}</view>
+          </picker>
+        </view>
+      </view>
+
+      <view class="summary-chip-row">
+        <text class="summary-chip">工资单 {{payrollSummary.totalRecords}}</text>
+        <text class="summary-chip pending">待工人确认 {{payrollSummary.pendingCount}}</text>
+        <text class="summary-chip info">待老板结算 {{payrollSummary.confirmedCount}}</text>
+        <text class="summary-chip success">已结算 {{payrollSummary.paidCount}}</text>
+        <text class="summary-chip success">总金额 ¥{{payrollSummary.totalAmount}}</text>
+      </view>
+
+      <view class="payroll-action-row">
+        <button class="payroll-primary-btn" bindtap="settleConfirmedPayrolls" loading="{{payrollSettling}}" disabled="{{payrollSettling || payrollLoading || payrollSummary.confirmedCount === 0}}">批量结算已确认工资</button>
+        <button class="secondary-action-btn" bindtap="submitPayrollReportToSuperAdmin" loading="{{payrollExporting}}" disabled="{{payrollExporting || payrollSummary.paidCount === 0}}">生成并提交工资表给超级管理员</button>
+      </view>
+
+      <button class="secondary-action-btn" bindtap="refreshPayrollBoard" loading="{{payrollLoading}}" disabled="{{payrollLoading}}">刷新工资情况</button>
+      <view wx:if="{{payrollReportGeneratedAtText}}" class="payroll-generated-tip">最近一次提交时间：{{payrollReportGeneratedAtText}}{{payrollReportFileName ? (' · ' + payrollReportFileName) : ''}}</view>
+
+      <view wx:if="{{!payrollBases.length}}" class="readonly-hint">当前名下暂无可查看基地。</view>
+      <view wx:elif="{{payrollLoading}}" class="readonly-hint">工资情况加载中...</view>
+      <view wx:elif="{{!payrollRows.length}}" class="readonly-hint">当前筛选暂无工资单。</view>
+
+      <view wx:else class="payroll-list">
+        <view class="payroll-item" wx:for="{{payrollRows}}" wx:key="id">
+          <view class="payroll-top">
+            <view class="payroll-main">
+              <text class="payroll-name">{{item.workerName}}（{{item.workerUid}}）</text>
+              <text class="payroll-meta">{{item.baseName}} · {{item.jobTitle}} · {{item.workDate}}</text>
+            </view>
+            <text class="payroll-amount">¥{{item.amountText}}</text>
+          </view>
+
+          <view class="payroll-chip-row">
+            <text class="payroll-chip {{item.statusClass}}">{{item.statusText}}</text>
+            <text class="payroll-chip info">{{item.volumeText}}</text>
+          </view>
+
+          <text class="payroll-detail">工资单 #{{item.id}} · 生成时间 {{item.createdAtText}}</text>
+        </view>
+      </view>
     </view>
   </view>
 </view>

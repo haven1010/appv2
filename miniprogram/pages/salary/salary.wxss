@@ -89,6 +89,12 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 16rpx;
+}
+
+.section-copy {
+  flex: 1;
+  min-width: 0;
 }
 
 .section-title {
@@ -96,6 +102,14 @@
   line-height: 1.35;
   color: #333333;
   font-weight: 800;
+}
+
+.section-note {
+  display: block;
+  margin-top: 6rpx;
+  font-size: 24rpx;
+  line-height: 1.45;
+  color: #8d8d8d;
 }
 
 .section-count {

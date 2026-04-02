@@ -34,6 +34,10 @@ function safeNumber(value, fallback = 0) {
   return Number.isFinite(num) ? num : fallback;
 }
 
+function formatAmountText(value) {
+  return safeNumber(value, 0).toFixed(2);
+}
+
 function toCsvCell(value) {
   const text = String(value == null ? '' : value);
   if (/[",\n]/.test(text)) {
@@ -79,6 +83,26 @@ function statusText(status) {
   return 'not_checked_in';
 }
 
+function salaryStatusText(status) {
+  if (status === 2) return '老板已结算';
+  if (status === 1) return '工人已确认，待老板结算';
+  return '待工人确认';
+}
+
+function salaryStatusChip(status) {
+  if (status === 2) return 'success';
+  if (status === 1) return 'info';
+  return 'pending';
+}
+
+function salaryVolumeText(item) {
+  const pieceCount = safeNumber(item?.pieceCount, 0);
+  const workDuration = safeNumber(item?.workDuration, 0);
+  if (pieceCount > 0) return `计件 ${pieceCount}`;
+  if (workDuration > 0) return `工时 ${workDuration}h`;
+  return '固定日薪';
+}
+
 Page({
   data: {
     loading: true,
@@ -110,6 +134,7 @@ Page({
       paidCount: 0,
       totalAmount: 0,
     },
+    salaryRecords: [],
   },
 
   onLoad() {
@@ -191,7 +216,7 @@ Page({
         }
       }
     } else if (role === 'base_manager') {
-      const list = await app.request({ url: `/base?ownerId=${userInfo.id}`, method: 'GET' }).catch(() => []);
+      const list = await app.request({ url: '/base/managed', method: 'GET' }).catch(() => []);
       bases = normalizeArray(list).map((item) => ({
         id: String(item.id),
         baseName: item.baseName || item.name || `閸╁搫婀?${item.id}`,
@@ -285,6 +310,7 @@ Page({
           paidCount: 0,
           totalAmount: 0,
         },
+        salaryRecords: [],
       });
       return;
     }
@@ -310,6 +336,23 @@ Page({
       if (status === 2) paidCount += 1;
     }
 
+    const salaryRecords = rows.map((row) => {
+      const status = safeNumber(row.status, 0);
+      return {
+        id: row.id,
+        workerName: row.workerName || '-',
+        workerUid: row.workerUid || '-',
+        baseName: row.baseName || '-',
+        jobTitle: row.jobTitle || '-',
+        workDate: row.workDate || date,
+        amountText: formatAmountText(row.totalAmount),
+        statusText: salaryStatusText(status),
+        statusChipType: salaryStatusChip(status),
+        volumeText: salaryVolumeText(row),
+        createdAtText: formatDateTime(row.createdAt),
+      };
+    });
+
     this.setData({
       salarySummary: {
         totalRecords: rows.length,
@@ -318,6 +361,7 @@ Page({
         paidCount,
         totalAmount: Number(totalAmount.toFixed(2)),
       },
+      salaryRecords,
     });
   },
 

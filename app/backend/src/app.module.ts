@@ -21,6 +21,7 @@ import { DailySignup } from './modules/attendance/entities/daily-signup.entity';
 import { OfflineAttendanceEvent } from './modules/attendance/entities/offline-attendance-event.entity';
 import { LaborSalary } from './modules/salary/entities/labor-salary.entity';
 import { SalaryPayment } from './modules/salary/entities/salary-payment.entity';
+import { SalaryReportSubmission } from './modules/salary/entities/salary-report-submission.entity';
 import { OperationLog } from './modules/common/entities/operation-log.entity';
 
 // 所有模块
@@ -97,6 +98,7 @@ import { CommonModule } from './modules/common/common.module';
             OfflineAttendanceEvent,
             LaborSalary,
             SalaryPayment,
+            SalaryReportSubmission,
             OperationLog,
           ],
           synchronize,

@@ -7,8 +7,88 @@ const CATEGORY_OPTIONS = [
   { label: '其他', value: 3 },
 ];
 
+function todayString() {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+function monthStartString() {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  return `${y}-${m}-01`;
+}
+
 function trimText(value) {
   return String(value || '').trim();
+}
+
+function safeNumber(value, fallback = 0) {
+  const num = Number(value);
+  return Number.isFinite(num) ? num : fallback;
+}
+
+function formatAmount(value) {
+  return safeNumber(value, 0).toFixed(2);
+}
+
+function normalizeArray(res) {
+  if (Array.isArray(res)) return res;
+  if (Array.isArray(res?.list)) return res.list;
+  return [];
+}
+
+function payrollStatusText(status) {
+  if (status === 2) return '已结算';
+  if (status === 1) return '待老板结算';
+  return '待工人确认';
+}
+
+function payrollStatusClass(status) {
+  if (status === 2) return 'paid';
+  if (status === 1) return 'confirmed';
+  return 'pending';
+}
+
+function payrollVolumeText(item) {
+  const pieceCount = safeNumber(item?.pieceCount, 0);
+  const workDuration = safeNumber(item?.workDuration, 0);
+  if (pieceCount > 0) return `计件 ${pieceCount}`;
+  if (workDuration > 0) return `工时 ${workDuration}h`;
+  return '固定日薪';
+}
+
+function emptyPayrollSummary() {
+  return {
+    totalRecords: 0,
+    pendingCount: 0,
+    confirmedCount: 0,
+    paidCount: 0,
+    totalAmount: '0.00',
+  };
+}
+
+function buildPayrollRangeText(dateFrom, dateTo) {
+  if (dateFrom && dateTo) return `${dateFrom}_${dateTo}`;
+  return todayString();
+}
+
+function formatDateTimeText(value) {
+  if (!value) return '-';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return String(value).replace('T', ' ').slice(0, 19);
+  }
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  const hh = String(date.getHours()).padStart(2, '0');
+  const mm = String(date.getMinutes()).padStart(2, '0');
+  const ss = String(date.getSeconds()).padStart(2, '0');
+  return `${y}-${m}-${d} ${hh}:${mm}:${ss}`;
 }
 
 function normalizePhone(value) {
@@ -106,6 +186,19 @@ Page({
     auditSubmitted: false,
     auditStatusText: '待审核',
     error: '',
+
+    payrollLoading: false,
+    payrollSettling: false,
+    payrollExporting: false,
+    payrollBases: [],
+    payrollBaseIndex: 0,
+    payrollBaseId: '',
+    payrollDateFrom: monthStartString(),
+    payrollDateTo: todayString(),
+    payrollRows: [],
+    payrollSummary: emptyPayrollSummary(),
+    payrollReportGeneratedAtText: '',
+    payrollReportFileName: '',
   },
 
   async onLoad() {
@@ -132,6 +225,7 @@ Page({
 
     await this.loadProfileFallback();
     this.sanitizeTransientImages();
+    await this.loadBossPayrollBoard();
   },
 
   onShow() {
@@ -140,6 +234,7 @@ Page({
       tabBar.setData({ selected: 2 });
     }
     this.sanitizeTransientImages();
+    this.loadBossPayrollBoard();
   },
 
   async loadProfileFallback() {
@@ -161,6 +256,283 @@ Page({
       originalOwnerPhone: ownerPhone,
       ownerIdCardMasked,
     });
+  },
+
+  async loadBossPayrollBoard() {
+    const currentUser = wx.getStorageSync('userInfo') || app.getCurrentUser() || {};
+    const ownerId = Number(currentUser.id || currentUser.userId || 0);
+    const dateFrom = this.data.payrollDateFrom || monthStartString();
+    const dateTo = this.data.payrollDateTo || todayString();
+
+    if (dateFrom && dateTo && dateFrom > dateTo) {
+      wx.showToast({
+        title: '开始日期不能晚于结束日期',
+        icon: 'none',
+      });
+      return;
+    }
+
+    if (!ownerId) {
+      this.setData({
+        payrollBases: [],
+        payrollBaseIndex: 0,
+        payrollBaseId: '',
+        payrollRows: [],
+        payrollSummary: emptyPayrollSummary(),
+      });
+      return;
+    }
+
+    this.setData({ payrollLoading: true });
+    try {
+      const baseRes = await app.request({
+        url: `/base?ownerId=${ownerId}&showAll=1`,
+        method: 'GET',
+      }).catch(() => []);
+
+      const payrollBases = normalizeArray(baseRes).map((item) => ({
+        id: String(item.id),
+        baseName: item.baseName || item.name || `基地#${item.id}`,
+      }));
+
+      let payrollBaseIndex = Number(this.data.payrollBaseIndex || 0);
+      if (payrollBaseIndex >= payrollBases.length) payrollBaseIndex = 0;
+      const selectedBase = payrollBases[payrollBaseIndex] || null;
+
+      if (!selectedBase) {
+        this.setData({
+          payrollBases,
+          payrollBaseIndex,
+          payrollBaseId: '',
+          payrollRows: [],
+          payrollSummary: emptyPayrollSummary(),
+          payrollReportGeneratedAtText: '',
+          payrollReportFileName: '',
+        });
+        return;
+      }
+
+      const salaryRes = await app.request({
+        url: `/salary/list?baseId=${encodeURIComponent(selectedBase.id)}&dateFrom=${encodeURIComponent(dateFrom)}&dateTo=${encodeURIComponent(dateTo)}`,
+        method: 'GET',
+      }).catch(() => ({ list: [] }));
+
+      const reportRes = await app.request({
+        url: `/salary/reports/submitted?baseId=${encodeURIComponent(selectedBase.id)}&dateFrom=${encodeURIComponent(dateFrom)}&dateTo=${encodeURIComponent(dateTo)}`,
+        method: 'GET',
+      }).catch(() => []);
+
+      let pendingCount = 0;
+      let confirmedCount = 0;
+      let paidCount = 0;
+      let totalAmount = 0;
+
+      const payrollRows = normalizeArray(salaryRes).map((item) => {
+        const status = safeNumber(item.status, 0);
+        const amount = safeNumber(item.totalAmount, 0);
+        totalAmount += amount;
+        if (status === 0) pendingCount += 1;
+        if (status === 1) confirmedCount += 1;
+        if (status === 2) paidCount += 1;
+
+        return {
+          id: item.id,
+          status,
+          canSettle: status === 1,
+          workerName: item.workerName || '-',
+          workerUid: item.workerUid || '-',
+          baseName: item.baseName || selectedBase.baseName || '-',
+          jobTitle: item.jobTitle || '-',
+          workDate: item.workDate || '-',
+          amountText: formatAmount(amount),
+          statusText: payrollStatusText(status),
+          statusClass: payrollStatusClass(status),
+          volumeText: payrollVolumeText(item),
+          createdAtText: item.createdAt ? String(item.createdAt).replace('T', ' ').slice(0, 19) : '-',
+        };
+      });
+
+      const latestReport = normalizeArray(reportRes)[0] || null;
+
+      this.setData({
+        payrollBases,
+        payrollBaseIndex,
+        payrollBaseId: selectedBase.id,
+        payrollRows,
+        payrollSummary: {
+          totalRecords: payrollRows.length,
+          pendingCount,
+          confirmedCount,
+          paidCount,
+          totalAmount: formatAmount(totalAmount),
+        },
+        payrollReportGeneratedAtText: latestReport ? formatDateTimeText(latestReport.createdAt) : '',
+        payrollReportFileName: latestReport?.fileName || '',
+      });
+    } catch (err) {
+      wx.showToast({
+        title: extractErrorMessage(err, '加载工资情况失败'),
+        icon: 'none',
+      });
+    } finally {
+      this.setData({ payrollLoading: false });
+    }
+  },
+
+  onPayrollBaseChange(e) {
+    this.setData({
+      payrollBaseIndex: Number(e.detail.value || 0),
+    });
+    this.loadBossPayrollBoard();
+  },
+
+  onPayrollDateFromChange(e) {
+    this.setData({
+      payrollDateFrom: e.detail.value,
+    });
+    this.loadBossPayrollBoard();
+  },
+
+  onPayrollDateToChange(e) {
+    this.setData({
+      payrollDateTo: e.detail.value,
+    });
+    this.loadBossPayrollBoard();
+  },
+
+  async pickSettlementMethod() {
+    return new Promise((resolve) => {
+      wx.showActionSheet({
+        itemList: ['银行卡转账', '现金发放'],
+        success: (res) => resolve(res.tapIndex === 1 ? 'cash' : 'transfer'),
+        fail: () => resolve(''),
+      });
+    });
+  },
+
+  async settleConfirmedPayrolls() {
+    const rows = (this.data.payrollRows || []).filter((item) => item && item.canSettle);
+    if (!rows.length) {
+      wx.showToast({
+        title: '当前没有待老板结算的工资单',
+        icon: 'none',
+      });
+      return;
+    }
+
+    const paymentMethod = await this.pickSettlementMethod();
+    if (!paymentMethod) return;
+
+    const paymentMethodText = paymentMethod === 'cash' ? '现金发放' : '银行卡转账';
+    wx.showModal({
+      title: '批量结算工资',
+      content: `将使用${paymentMethodText}结算 ${rows.length} 笔工人已确认工资，是否继续？`,
+      success: async (res) => {
+        if (!res.confirm) return;
+
+        this.setData({ payrollSettling: true });
+        wx.showLoading({
+          title: '结算中...',
+          mask: true,
+        });
+
+        let successCount = 0;
+        let failedCount = 0;
+        const failedNames = [];
+
+        try {
+          for (let i = 0; i < rows.length; i += 1) {
+            const row = rows[i] || {};
+            try {
+              await app.request({
+                url: `/salary/${row.id}/settle`,
+                method: 'POST',
+                data: { paymentMethod },
+              });
+              successCount += 1;
+            } catch (_) {
+              failedCount += 1;
+              if (failedNames.length < 5) {
+                failedNames.push(row.workerName || `salary-${row.id}`);
+              }
+            }
+          }
+
+          await this.loadBossPayrollBoard();
+
+          const failedHint = failedNames.length ? `\n失败示例：${failedNames.join('、')}` : '';
+          wx.showModal({
+            title: '工资结算完成',
+            content: `成功 ${successCount} 笔，失败 ${failedCount} 笔。${failedHint}`,
+            showCancel: false,
+          });
+        } finally {
+          wx.hideLoading();
+          this.setData({ payrollSettling: false });
+        }
+      },
+    });
+  },
+
+  async submitPayrollReportToSuperAdmin() {
+    if (Number(this.data.payrollSummary.paidCount || 0) <= 0) {
+      wx.showToast({
+        title: '请先结算工资，再生成工资表',
+        icon: 'none',
+      });
+      return;
+    }
+
+    const selectedBase = this.data.payrollBases[this.data.payrollBaseIndex] || null;
+    if (!selectedBase?.id) {
+      wx.showToast({
+        title: '请选择需要提交的基地',
+        icon: 'none',
+      });
+      return;
+    }
+
+    const rangeText = buildPayrollRangeText(this.data.payrollDateFrom, this.data.payrollDateTo);
+    this.setData({ payrollExporting: true });
+    wx.showLoading({
+      title: '提交工资表...',
+      mask: true,
+    });
+
+    try {
+      const res = await app.request({
+        url: '/salary/reports/submit',
+        method: 'POST',
+        data: {
+          baseId: Number(selectedBase.id),
+          dateFrom: this.data.payrollDateFrom,
+          dateTo: this.data.payrollDateTo,
+        },
+      });
+
+      this.setData({
+        payrollReportGeneratedAtText: formatDateTimeText(res?.createdAt || new Date()),
+        payrollReportFileName: res?.fileName || `salary-report-${rangeText}.xlsx`,
+      });
+      await this.loadBossPayrollBoard();
+      wx.showModal({
+        title: '工资表已提交',
+        content: `已向超级管理员提交工资表 ${res?.fileName || `salary-report-${rangeText}.xlsx`}，覆盖 ${safeNumber(res?.workerCount, 0)} 名工人、${safeNumber(res?.salaryRecordCount, 0)} 笔已结算工资。`,
+        showCancel: false,
+      });
+    } catch (err) {
+      wx.showToast({
+        title: extractErrorMessage(err, '提交工资表失败'),
+        icon: 'none',
+      });
+    } finally {
+      wx.hideLoading();
+      this.setData({ payrollExporting: false });
+    }
+  },
+
+  refreshPayrollBoard() {
+    this.loadBossPayrollBoard();
   },
 
   sanitizeTransientImages() {
