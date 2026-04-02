@@ -19,6 +19,7 @@
     "test:concurrency": "node scripts/concurrency-regression.js",
     "seed:users": "node scripts/seed-users.js",
     "seed:proxy-test-data": "node scripts/generate-proxy-registration-test-data.js",
+    "test:security-regression": "node scripts/security-regression.js",
     "simulate:full-flow": "node scripts/full-flow-30-workers.js",
     "hardening:prelaunch": "node scripts/prelaunch-data-hardening.js"
   },
