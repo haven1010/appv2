@@ -6,11 +6,22 @@
 // pages/field/home/home.js
 const app = getApp();
 
+function normalizeArray(res) {
+  if (Array.isArray(res)) return res;
+  if (Array.isArray(res?.list)) return res.list;
+  if (Array.isArray(res?.records)) return res.records;
+  if (Array.isArray(res?.bases)) return res.bases;
+  return [];
+}
+
 Page({
   data: {
     userInfo: null,
     baseInfo: null,
     baseId: null,
+    baseName: '',
+    managedBases: [],
+    baseIndex: 0,
     stats: { checkedIn: 0, pending: 0, absent: 0, rate: '0%' },
     recentRecords: [],
     loading: true,
@@ -59,31 +70,15 @@ Page({
     this.setData({ loading: true, error: '' });
 
     try {
-      // 1. 获取用户 profile 获取 assignedBaseId
-      let baseId = null;
-      const userInfo = this.data.userInfo;
-      if (userInfo && userInfo.assignedBaseId) {
-        baseId = userInfo.assignedBaseId;
-      } else {
-        try {
-          const profile = await app.request({ url: '/user/profile', method: 'GET' });
-          if (profile && profile.assignedBaseId) {
-            baseId = profile.assignedBaseId;
-          }
-        } catch (e) {
-          console.warn('获取 profile 失败:', e);
-        }
-      }
+      const baseId = await this.resolveActiveBase();
 
       if (!baseId) {
         this.setData({
           loading: false,
-          error: '未绑定基地，请联系管理员分配基地或在Web后台绑定',
+          error: '未分配可监督基地，请联系超级管理员分配',
         });
         return;
       }
-
-      this.setData({ baseId });
 
       // 2. 并行加载基地信息和考勤数据
       var results = await Promise.all([
@@ -107,6 +102,7 @@ Page({
 
       this.setData({
         baseInfo: baseInfo || null,
+        baseName: (baseInfo && (baseInfo.baseName || baseInfo.name)) || this.data.baseName || `基地 #${baseId}`,
         stats: {
           checkedIn,
           pending: pending > 0 ? pending : 0,
@@ -124,6 +120,57 @@ Page({
         error: '加载数据失败: ' + (err.message || '未知错误'),
       });
     }
+  },
+
+  async resolveActiveBase() {
+    const userInfo = this.data.userInfo || app.globalData.userInfo || wx.getStorageSync('userInfo') || {};
+    let bases = normalizeArray(await app.request({ url: '/base/managed', method: 'GET' }).catch(() => []))
+      .map((item) => ({
+        id: Number(item.id),
+        baseName: item.baseName || item.name || `基地 #${item.id}`,
+      }));
+
+    if (!bases.length && userInfo.assignedBaseId) {
+      bases = [{ id: Number(userInfo.assignedBaseId), baseName: `基地 #${userInfo.assignedBaseId}` }];
+    }
+
+    if (!bases.length) {
+      this.setData({
+        managedBases: [],
+        baseIndex: 0,
+        baseId: null,
+        baseName: '',
+      });
+      return null;
+    }
+
+    const preferredId = Number(wx.getStorageSync('fieldActiveBaseId') || userInfo.assignedBaseId || 0);
+    let index = preferredId ? bases.findIndex((item) => Number(item.id) === preferredId) : 0;
+    if (index < 0) index = 0;
+
+    const selected = bases[index] || bases[0];
+    wx.setStorageSync('fieldActiveBaseId', Number(selected.id));
+    this.setData({
+      managedBases: bases,
+      baseIndex: index,
+      baseId: Number(selected.id),
+      baseName: selected.baseName,
+    });
+    return Number(selected.id);
+  },
+
+  onBaseChange(e) {
+    const index = Number(e.detail.value);
+    const picked = this.data.managedBases[index];
+    if (!picked) return;
+
+    wx.setStorageSync('fieldActiveBaseId', Number(picked.id));
+    this.setData({
+      baseIndex: index,
+      baseId: Number(picked.id),
+      baseName: picked.baseName,
+    });
+    this.loadData();
   },
 
   goScan() {

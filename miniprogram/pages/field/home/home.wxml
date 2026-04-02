@@ -25,7 +25,10 @@
       <view class="base-card-header">
         <view class="base-badge">管理基地</view>
       </view>
-      <view class="base-name">{{baseInfo.name || '基地 #' + baseId}}</view>
+      <picker mode="selector" value="{{baseIndex}}" range="{{managedBases}}" range-key="baseName" bindchange="onBaseChange">
+        <view class="base-switch">{{managedBases.length > 1 ? '切换基地：' : '当前基地：'}}{{baseName || baseInfo.baseName || baseInfo.name || '基地 #' + baseId}}</view>
+      </picker>
+      <view class="base-name">{{baseInfo.baseName || baseInfo.name || '基地 #' + baseId}}</view>
       <view class="base-detail-row">
         <text class="base-detail-label">地址</text>
         <text class="base-detail-val">{{baseInfo.address || '-'}}</text>

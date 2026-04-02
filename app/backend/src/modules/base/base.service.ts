@@ -5,18 +5,22 @@
  */
 import { Injectable, NotFoundException, Logger, ConflictException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, In, Repository } from 'typeorm';
 import { BaseInfo, AuditStatus } from './entities/base-info.entity';
-import { RecruitmentJob, PayType, JobStatus } from './entities/recruitment-job.entity';
+import { RecruitmentJob, PayType, JobStatus, JobAuditStatus } from './entities/recruitment-job.entity';
 import { CreateBaseDto } from './dto/create-base.dto';
 import { CreateJobDto } from './dto/create-job.dto';
+import { SetBaseSupervisorsDto } from './dto/set-base-supervisors.dto';
+import { ReviewJobDto } from './dto/review-job.dto';
 import { JobApplicationService } from './services/job-application.service';
 import { BaseCooperationService } from './services/base-cooperation.service';
 import { ApplicationStatus } from './entities/job-application.entity';
 import { CooperationStatus } from './entities/base-cooperation.entity';
 import { OperationLogService, OperationLogContext } from '../common/services/operation-log.service';
 import { OperationType, ResourceType } from '../common/entities/operation-log.entity';
-import { SysUser, UserRole } from '../user/entities/sys-user.entity';
+import { SysUser, UserRole, isSuperAdmin } from '../user/entities/sys-user.entity';
+import { BaseSupervisorAssignment } from './entities/base-supervisor-assignment.entity';
+import { BaseScopeService } from './services/base-scope.service';
 
 @Injectable()
 /**
@@ -31,8 +35,11 @@ export class BaseService {
     private jobRepo: Repository<RecruitmentJob>,
     @InjectRepository(SysUser)
     private userRepo: Repository<SysUser>,
+    @InjectRepository(BaseSupervisorAssignment)
+    private assignmentRepo: Repository<BaseSupervisorAssignment>,
     private jobApplicationService: JobApplicationService,
     private baseCooperationService: BaseCooperationService,
+    private baseScopeService: BaseScopeService,
     private operationLogService: OperationLogService,
     private dataSource: DataSource,
   ) { }
@@ -110,8 +117,8 @@ export class BaseService {
     if (!owner) {
       throw new NotFoundException('鍩哄湴璐熻矗浜轰笉瀛樺湪');
     }
-    if (![UserRole.BASE_MANAGER, UserRole.BOSS].includes(owner.roleKey)) {
-      throw new BadRequestException('鍙湁 base_manager 鎴?boss 鍙互鎻愪氦浼佷笟淇℃伅');
+    if (owner.roleKey !== UserRole.BOSS) {
+      throw new BadRequestException('只有老板可以提交基地入驻申请');
     }
 
     // 2. Check duplicated name including soft-deleted records
@@ -241,8 +248,8 @@ export class BaseService {
       if (!newOwner) {
         throw new NotFoundException('New owner not found');
       }
-      if (newOwner.roleKey !== UserRole.BASE_MANAGER) {
-        throw new BadRequestException('鏂拌礋璐ｄ汉蹇呴』鏄?base_manager');
+      if (newOwner.roleKey !== UserRole.BOSS) {
+        throw new BadRequestException('基地归属只能转给老板账号');
       }
 
       const previousOwnerId = base.ownerId;
@@ -291,7 +298,31 @@ export class BaseService {
       qb.andWhere('base.category = :category', { category: query.category });
     }
     if (query.ownerId) {
-      qb.andWhere('base.ownerId = :ownerId', { ownerId: query.ownerId });
+      const targetUser = await this.userRepo.findOne({
+        where: { id: Number(query.ownerId), isDeleted: false },
+        select: ['id', 'roleKey'],
+      });
+      if (!targetUser) {
+        return [];
+      }
+
+      if (targetUser.roleKey === UserRole.BOSS) {
+        qb.andWhere('base.ownerId = :ownerId', { ownerId: targetUser.id });
+      } else if ([UserRole.BASE_MANAGER, UserRole.FIELD_MANAGER].includes(targetUser.roleKey)) {
+        const managedBaseIds = await this.baseScopeService.getSupervisedBaseIds({
+          id: targetUser.id,
+          roleKey: targetUser.roleKey,
+        });
+        if (managedBaseIds === null) {
+          // super-admin branch is impossible here, but keep behavior stable.
+        } else if (managedBaseIds.length === 0) {
+          return [];
+        } else {
+          qb.andWhere('base.id IN (:...baseIds)', { baseIds: managedBaseIds });
+        }
+      } else {
+        return [];
+      }
     }
 
     if (!query.showAll) {
@@ -323,6 +354,189 @@ export class BaseService {
     return base;
   }
 
+  async getManagedBases(user: { id: number; role?: string; roleKey?: UserRole }): Promise<BaseInfo[]> {
+    return this.baseScopeService.getManagedBases(user);
+  }
+
+  async getSupervisors(baseId: number, user: { id: number; role?: string; roleKey?: UserRole }) {
+    const role = user.role ?? user.roleKey;
+    if (isSuperAdmin(role)) {
+      await this.baseScopeService.assertCanSuperviseBase(user, baseId);
+    } else if (role === UserRole.BOSS) {
+      await this.baseScopeService.assertCanOwnBase(user, baseId);
+    } else {
+      await this.baseScopeService.assertCanSuperviseBase(user, baseId);
+    }
+
+    const [base, assignments] = await Promise.all([
+      this.baseRepo.findOne({
+        where: { id: baseId, isDeleted: false },
+        relations: ['owner'],
+      }),
+      this.assignmentRepo.find({
+        where: { baseId },
+        relations: ['user'],
+        order: { createdAt: 'ASC' },
+      }),
+    ]);
+
+    if (!base) {
+      throw new NotFoundException('Base not found');
+    }
+
+    const toUserPayload = (assignment: BaseSupervisorAssignment) => ({
+      id: assignment.userId,
+      name: assignment.user?.name || '',
+      uid: assignment.user?.uid || '',
+      roleKey: assignment.roleKey,
+      assignedAt: assignment.createdAt,
+    });
+
+    return {
+      baseId: base.id,
+      baseName: base.baseName,
+      owner: base.owner
+        ? {
+            id: base.owner.id,
+            name: base.owner.name,
+            uid: base.owner.uid,
+          }
+        : null,
+      baseManagers: assignments
+        .filter((item) => item.roleKey === UserRole.BASE_MANAGER)
+        .map(toUserPayload),
+      fieldManagers: assignments
+        .filter((item) => item.roleKey === UserRole.FIELD_MANAGER)
+        .map(toUserPayload),
+    };
+  }
+
+  async setSupervisors(
+    baseId: number,
+    dto: SetBaseSupervisorsDto,
+    operatorId: number,
+    context?: OperationLogContext,
+  ) {
+    const baseManagerIds = Array.from(
+      new Set((dto.baseManagerIds || []).map((item) => Number(item)).filter((item) => Number.isInteger(item) && item > 0)),
+    );
+    const fieldManagerIds = Array.from(
+      new Set((dto.fieldManagerIds || []).map((item) => Number(item)).filter((item) => Number.isInteger(item) && item > 0)),
+    );
+    const allUserIds = Array.from(new Set([...baseManagerIds, ...fieldManagerIds]));
+
+    const { base, beforeAssignments, savedAssignments } = await this.dataSource.transaction(async (manager) => {
+      const lockedBase = await manager.findOne(BaseInfo, {
+        where: { id: baseId, isDeleted: false },
+        lock: { mode: 'pessimistic_write' },
+      });
+      if (!lockedBase) {
+        throw new NotFoundException('Base not found');
+      }
+
+      const users = allUserIds.length > 0
+        ? await manager.find(SysUser, {
+            where: { id: In(allUserIds), isDeleted: false },
+            select: ['id', 'name', 'uid', 'roleKey'],
+          })
+        : [];
+
+      if (users.length !== allUserIds.length) {
+        throw new BadRequestException('存在无效的监督人账号');
+      }
+
+      for (const user of users) {
+        if (baseManagerIds.includes(user.id) && user.roleKey !== UserRole.BASE_MANAGER) {
+          throw new BadRequestException(`用户 ${user.name} 不是基地管理员`);
+        }
+        if (fieldManagerIds.includes(user.id) && user.roleKey !== UserRole.FIELD_MANAGER) {
+          throw new BadRequestException(`用户 ${user.name} 不是现场管理员`);
+        }
+      }
+
+      const previous = await manager.find(BaseSupervisorAssignment, {
+        where: { baseId },
+        relations: ['user'],
+        lock: { mode: 'pessimistic_write' },
+      });
+
+      await manager.delete(BaseSupervisorAssignment, { baseId });
+
+      const rows = [
+        ...baseManagerIds.map((userId) => manager.create(BaseSupervisorAssignment, {
+          baseId,
+          userId,
+          roleKey: UserRole.BASE_MANAGER,
+          assignedBy: operatorId,
+        })),
+        ...fieldManagerIds.map((userId) => manager.create(BaseSupervisorAssignment, {
+          baseId,
+          userId,
+          roleKey: UserRole.FIELD_MANAGER,
+          assignedBy: operatorId,
+        })),
+      ];
+
+      const nextAssignments = rows.length > 0
+        ? await manager.save(BaseSupervisorAssignment, rows)
+        : [];
+
+      const affectedFieldManagers = Array.from(new Set([
+        ...fieldManagerIds,
+        ...previous
+          .filter((item) => item.roleKey === UserRole.FIELD_MANAGER)
+          .map((item) => Number(item.userId)),
+      ]));
+
+      for (const userId of affectedFieldManagers) {
+        const remainingAssignments = await manager.find(BaseSupervisorAssignment, {
+          where: {
+            userId,
+            roleKey: UserRole.FIELD_MANAGER,
+          },
+          order: { createdAt: 'ASC', id: 'ASC' },
+        });
+        const nextPrimaryBaseId = remainingAssignments.length > 0
+          ? Number(remainingAssignments[0].baseId)
+          : null;
+        await manager.update(SysUser, { id: userId }, { assignedBaseId: nextPrimaryBaseId as any });
+      }
+
+      return {
+        base: lockedBase,
+        beforeAssignments: previous,
+        savedAssignments: nextAssignments,
+      };
+    });
+
+    await this.operationLogService.logWithContext({
+      operationType: OperationType.UPDATE,
+      resourceType: ResourceType.BASE,
+      resourceId: baseId,
+      userId: operatorId,
+      request: context?.request,
+      description: `更新基地监督分配: baseId=${baseId}`,
+      beforeData: {
+        baseManagers: beforeAssignments
+          .filter((item) => item.roleKey === UserRole.BASE_MANAGER)
+          .map((item) => item.userId),
+        fieldManagers: beforeAssignments
+          .filter((item) => item.roleKey === UserRole.FIELD_MANAGER)
+          .map((item) => item.userId),
+      },
+      afterData: {
+        baseManagers: savedAssignments
+          .filter((item) => item.roleKey === UserRole.BASE_MANAGER)
+          .map((item) => item.userId),
+        fieldManagers: savedAssignments
+          .filter((item) => item.roleKey === UserRole.FIELD_MANAGER)
+          .map((item) => item.userId),
+      },
+    });
+
+    return this.getSupervisors(base.id, { id: operatorId, roleKey: UserRole.SUPER_ADMIN });
+  }
+
   /**
    * 鏇存柊鍩哄湴鍩虹淇℃伅锛堝湴鍧€銆佹墽鐓с€佺幆澧冩弿杩扮瓑锛夈€?   * 涓氬姟绾︽潫:
    * 1. 瓒呯/鍖哄煙绠＄悊鍛樺彲鏇存柊浠绘剰鍩哄湴锛?   * 2. 鑰佹澘鎴栧熀鍦扮鐞嗗憳浠呭彲鏇存柊鑷繁鍚嶄笅鍩哄湴锛?   * 3. 闈炵鐞嗗憳鏇存柊鍚庡皢鍥炲埌寰呭鏍哥姸鎬併€?   */
@@ -339,11 +553,16 @@ export class BaseService {
       throw new NotFoundException('Operator user not found');
     }
 
-    const isAdmin = [UserRole.SUPER_ADMIN, UserRole.REGION_ADMIN].includes(operator.roleKey);
-    const isOwnerRole = [UserRole.BOSS, UserRole.BASE_MANAGER].includes(operator.roleKey);
+    const isAdmin = isSuperAdmin(operator.roleKey);
     if (!isAdmin) {
-      if (!isOwnerRole || base.ownerId !== userId) {
-        throw new ConflictException('鏃犳潈闄愭洿鏂拌鍩哄湴');
+      if (operator.roleKey === UserRole.BOSS) {
+        if (base.ownerId !== userId) {
+          throw new ConflictException('无权更新该基地');
+        }
+      } else if (operator.roleKey === UserRole.BASE_MANAGER) {
+        await this.baseScopeService.assertCanSuperviseBase({ id: userId, roleKey: operator.roleKey }, id);
+      } else {
+        throw new ConflictException('无权更新该基地');
       }
     }
 
@@ -573,24 +792,38 @@ export class BaseService {
       throw new ConflictException('Base is not approved, cannot publish recruitment');
     }
 
-    if (base.ownerId !== userId) {
+    const operator = await this.userRepo.findOne({ where: { id: userId, isDeleted: false } });
+    if (!operator) {
+      throw new NotFoundException('Operator not found');
+    }
+
+    const isAdmin = isSuperAdmin(operator.roleKey);
+    const isBossOwner = operator.roleKey === UserRole.BOSS && Number(base.ownerId) === Number(userId);
+    const isBaseManager = operator.roleKey === UserRole.BASE_MANAGER;
+
+    if (!isAdmin && !isBossOwner && !isBaseManager) {
+      throw new ConflictException('当前角色无权发布岗位');
+    }
+
+    if (isBaseManager) {
+      await this.baseScopeService.assertCanSuperviseBase({ id: userId, roleKey: operator.roleKey }, baseId);
+    }
+
+    if (operator.roleKey === UserRole.BOSS && !isBossOwner) {
       this.logger.warn(`[鍙戝竷鎷涜仒] 璀﹀憡: 鐢ㄦ埛 ${userId} 涓嶆槸鍩哄湴鎵€鏈夎€?${base.ownerId}`);
       throw new ConflictException('Only base owner can publish recruitment');
     }
 
-    const operator = await this.userRepo.findOne({ where: { id: userId, isDeleted: false } });
-    if (!operator || operator.roleKey !== UserRole.BASE_MANAGER) {
-      throw new ConflictException('Only base manager can publish recruitment');
-    }
-
     this.validateSalaryFields(createJobDto);
     this.validateJobRanges(createJobDto);
+    const requiresAudit = operator.roleKey === UserRole.BOSS;
 
     const jobData: any = {
       ...createJobDto,
       baseId,
-      isActive: true,
-      status: JobStatus.RECRUITING,
+      isActive: !requiresAudit,
+      status: requiresAudit ? JobStatus.OFFLINE : JobStatus.RECRUITING,
+      auditStatus: requiresAudit ? JobAuditStatus.PENDING : JobAuditStatus.APPROVED,
       applicantCount: 0,
       viewCount: 0,
     };
@@ -623,6 +856,7 @@ export class BaseService {
           baseId: savedJob.baseId,
           jobTitle: savedJob.jobTitle,
           status: savedJob.status,
+          auditStatus: savedJob.auditStatus,
           payType: savedJob.payType,
           validUntil: savedJob.validUntil,
         },
@@ -709,10 +943,17 @@ export class BaseService {
    * 鑾峰彇鏌愬熀鍦扮殑宀椾綅鍒楄〃锛屽苟鏀寔鎸夌姸鎬佸拰鎷涜仒鏈夋晥鎬ц繃婊ゃ€?   */
   async getJobsByBase(baseId: number, query: any = {}): Promise<RecruitmentJob[]> {
     this.logger.log(`[鏌ヨ鍩哄湴宀椾綅] baseId=${baseId}, query=${JSON.stringify(query)}`);
+    const showAll = query.showAll === true || query.showAll === 'true' || query.showAll === '1';
 
     const qb = this.jobRepo.createQueryBuilder('job')
-      .where('job.baseId = :baseId', { baseId })
-      .andWhere('job.isActive = :isActive', { isActive: true });
+      .where('job.baseId = :baseId', { baseId });
+
+    if (!showAll) {
+      qb.andWhere('job.isActive = :isActive', { isActive: true })
+        .andWhere('job.auditStatus = :auditStatus', { auditStatus: JobAuditStatus.APPROVED });
+    } else if (query.auditStatus !== undefined) {
+      qb.andWhere('job.auditStatus = :auditStatus', { auditStatus: Number(query.auditStatus) });
+    }
 
     if (query.status !== undefined) {
       qb.andWhere('job.status = :status', { status: query.status });
@@ -754,7 +995,7 @@ export class BaseService {
       throw new NotFoundException(`Job ID=${jobId} not found`);
     }
 
-    if (job.isActive) {
+    if (job.isActive && job.auditStatus === JobAuditStatus.APPROVED) {
       await this.jobRepo.increment({ id: job.id }, 'viewCount', 1);
       job.viewCount += 1;
     }
@@ -781,20 +1022,29 @@ export class BaseService {
       if (!base) {
         throw new NotFoundException('Base not found');
       }
-      if (base.ownerId !== userId) {
-        throw new ConflictException('Only base owner can update job status');
+      const operator = await manager.findOne(SysUser, { where: { id: userId, isDeleted: false } });
+      if (!operator) {
+        throw new NotFoundException('Operator not found');
       }
 
-      const operator = await manager.findOne(SysUser, { where: { id: userId, isDeleted: false } });
-      if (!operator || operator.roleKey !== UserRole.BASE_MANAGER) {
-        throw new ConflictException('Only base manager can update job status');
+      const canManageAsAdmin = isSuperAdmin(operator.roleKey);
+      const canManageAsOwner = operator.roleKey === UserRole.BOSS && Number(base.ownerId) === Number(userId);
+      const canManageAsSupervisor = operator.roleKey === UserRole.BASE_MANAGER
+        && (await this.baseScopeService.getSupervisedBaseIds({ id: userId, roleKey: operator.roleKey }))?.includes(Number(base.id));
+
+      if (!canManageAsAdmin && !canManageAsOwner && !canManageAsSupervisor) {
+        throw new ConflictException('无权更新岗位状态');
+      }
+
+      if (job.auditStatus !== JobAuditStatus.APPROVED && status !== JobStatus.OFFLINE) {
+        throw new BadRequestException('岗位未审核通过，不能切换为招聘状态');
       }
 
       const previousStatus = job.status;
       const previousActive = job.isActive;
 
       job.status = status;
-      job.isActive = ![JobStatus.OFFLINE, JobStatus.FULL].includes(status);
+      job.isActive = job.auditStatus === JobAuditStatus.APPROVED && ![JobStatus.OFFLINE, JobStatus.FULL].includes(status);
 
       const next = await manager.save(RecruitmentJob, job);
       return {
@@ -839,13 +1089,22 @@ export class BaseService {
       if (!base) {
         throw new NotFoundException('Base not found');
       }
-      if (base.ownerId !== userId) {
-        throw new ConflictException('Only base owner can renew recruitment');
+      const operator = await manager.findOne(SysUser, { where: { id: userId, isDeleted: false } });
+      if (!operator) {
+        throw new NotFoundException('Operator not found');
       }
 
-      const operator = await manager.findOne(SysUser, { where: { id: userId, isDeleted: false } });
-      if (!operator || operator.roleKey !== UserRole.BASE_MANAGER) {
-        throw new ConflictException('Only base manager can renew recruitment');
+      const canManageAsAdmin = isSuperAdmin(operator.roleKey);
+      const canManageAsOwner = operator.roleKey === UserRole.BOSS && Number(base.ownerId) === Number(userId);
+      const canManageAsSupervisor = operator.roleKey === UserRole.BASE_MANAGER
+        && (await this.baseScopeService.getSupervisedBaseIds({ id: userId, roleKey: operator.roleKey }))?.includes(Number(base.id));
+
+      if (!canManageAsAdmin && !canManageAsOwner && !canManageAsSupervisor) {
+        throw new ConflictException('无权续期该岗位');
+      }
+
+      if (job.auditStatus !== JobAuditStatus.APPROVED) {
+        throw new BadRequestException('岗位未审核通过，无法续期');
       }
 
       const newValidUntil = new Date(job.validUntil);
@@ -1010,7 +1269,12 @@ export class BaseService {
     return this.jobApplicationService.create(userId, jobId, baseId, note, context);
   }
 
-  async getJobApplications(jobId: number) {
+  async getJobApplications(jobId: number, currentUser: { id: number; role?: string; roleKey?: UserRole }) {
+    const job = await this.jobRepo.findOne({ where: { id: jobId } });
+    if (!job) {
+      throw new NotFoundException('Job not found');
+    }
+    await this.baseScopeService.assertCanSuperviseBase(currentUser, job.baseId);
     return this.jobApplicationService.getApplicationsByJob(jobId);
   }
 
@@ -1019,70 +1283,100 @@ export class BaseService {
     return this.jobApplicationService.getApplicationsByUser(userId);
   }
 
-  private async assertBaseViewerPermission(baseId: number, viewerId?: number, viewerRole?: string): Promise<BaseInfo> {
-    const base = await this.baseRepo.findOne({ where: { id: baseId, isDeleted: false } });
-    if (!base) {
-      throw new NotFoundException('Base not found');
-    }
-
-    const role = String(viewerRole || '');
-    const isSuperAdmin = [UserRole.SUPER_ADMIN, UserRole.REGION_ADMIN].includes(role as UserRole);
-    const isBoss = role === UserRole.BOSS;
-    const isBaseManager = role === UserRole.BASE_MANAGER;
-    const isFieldManager = role === UserRole.FIELD_MANAGER;
-
-    if (isBoss) {
-      if (!viewerId || Number(base.ownerId) !== Number(viewerId)) {
-        throw new ConflictException('无权限查看该基地报名记录');
-      }
-      if (Number(base.auditStatus) !== Number(AuditStatus.APPROVED)) {
-        throw new ConflictException('基地尚未通过审核，暂不可查看人员记录');
-      }
-      return base;
-    }
-
-    if (isBaseManager) {
-      if (!viewerId || Number(base.ownerId) !== Number(viewerId)) {
-        throw new ConflictException('无权限查看该基地报名记录');
-      }
-      return base;
-    }
-
-    if (isFieldManager) {
-      if (!viewerId) {
-        throw new ConflictException('无权限查看基地报名记录');
-      }
-      const fm = await this.userRepo.findOne({ where: { id: Number(viewerId), isDeleted: false } });
-      if (!fm || Number(fm.assignedBaseId || 0) !== Number(baseId)) {
-        throw new ConflictException('无权限查看该基地报名记录');
-      }
-      return base;
-    }
-
-    if (!isSuperAdmin) {
-      throw new ConflictException('无权限查看基地报名记录');
-    }
-    return base;
-  }
-
-  async getApplicationsByBase(baseId: number, status?: number, viewerId?: number, viewerRole?: string) {
-    await this.assertBaseViewerPermission(baseId, viewerId, viewerRole);
-
+  async getApplicationsByBase(baseId: number, currentUser: { id: number; role?: string; roleKey?: UserRole }, status?: number) {
+    await this.baseScopeService.assertCanSuperviseBase(currentUser, baseId);
     return this.jobApplicationService.getApplicationsByBase(baseId, status as ApplicationStatus);
   }
 
-  async endWorkerWork(baseId: number, userId: number, endWorkTime: string, viewerId?: number, viewerRole?: string, context?: OperationLogContext) {
-    await this.assertBaseViewerPermission(baseId, viewerId, viewerRole);
-    return this.jobApplicationService.markWorkerEndWork(baseId, userId, endWorkTime, Number(viewerId || 0), context);
+  async endWorkerWork(
+    baseId: number,
+    userId: number,
+    endWorkTime: string,
+    currentUser: { id: number; role?: string; roleKey?: UserRole },
+    context?: OperationLogContext,
+  ) {
+    await this.baseScopeService.assertCanSuperviseBase(currentUser, baseId);
+    return this.jobApplicationService.markWorkerEndWork(baseId, userId, endWorkTime, Number(currentUser.id || 0), context);
   }
 
-  async endAllWorkersWork(baseId: number, endWorkTime: string, viewerId?: number, viewerRole?: string, context?: OperationLogContext) {
-    await this.assertBaseViewerPermission(baseId, viewerId, viewerRole);
-    return this.jobApplicationService.markAllWorkersEndWork(baseId, endWorkTime, Number(viewerId || 0), context);
+  async endAllWorkersWork(
+    baseId: number,
+    endWorkTime: string,
+    currentUser: { id: number; role?: string; roleKey?: UserRole },
+    context?: OperationLogContext,
+  ) {
+    await this.baseScopeService.assertCanSuperviseBase(currentUser, baseId);
+    return this.jobApplicationService.markAllWorkersEndWork(baseId, endWorkTime, Number(currentUser.id || 0), context);
   }
 
-  async reviewApplication(applicationId: number, status: number, reviewedBy: number, rejectReason?: string, context?: OperationLogContext) {
-    return this.jobApplicationService.review(applicationId, status as ApplicationStatus, reviewedBy, rejectReason, context);
+  async reviewApplication(
+    applicationId: number,
+    status: number,
+    reviewer: { id: number; role?: string; roleKey?: UserRole },
+    rejectReason?: string,
+    context?: OperationLogContext,
+  ) {
+    return this.jobApplicationService.review(applicationId, status as ApplicationStatus, reviewer, rejectReason, context);
+  }
+
+  async reviewJob(
+    jobId: number,
+    dto: ReviewJobDto,
+    reviewer: { id: number; role?: string; roleKey?: UserRole },
+    context?: OperationLogContext,
+  ): Promise<RecruitmentJob> {
+    const normalizedStatus = Number(dto.status);
+    if (![JobAuditStatus.APPROVED, JobAuditStatus.REJECTED].includes(normalizedStatus)) {
+      throw new BadRequestException('岗位审核状态只能是通过或驳回');
+    }
+
+    const { saved, beforeSnapshot } = await this.dataSource.transaction(async (manager) => {
+      const job = await manager.findOne(RecruitmentJob, {
+        where: { id: jobId },
+        lock: { mode: 'pessimistic_write' },
+      });
+      if (!job) {
+        throw new NotFoundException('Recruitment job not found');
+      }
+
+      await this.baseScopeService.assertCanSuperviseBase(reviewer, job.baseId);
+
+      const previous = {
+        auditStatus: job.auditStatus,
+        status: job.status,
+        isActive: job.isActive,
+      };
+
+      job.auditStatus = normalizedStatus as JobAuditStatus;
+      if (normalizedStatus === JobAuditStatus.APPROVED) {
+        job.status = JobStatus.RECRUITING;
+        job.isActive = true;
+      } else {
+        job.status = JobStatus.OFFLINE;
+        job.isActive = false;
+      }
+
+      const next = await manager.save(RecruitmentJob, job);
+      return { saved: next, beforeSnapshot: previous };
+    });
+
+    await this.operationLogService.logWithContext({
+      operationType: OperationType.AUDIT,
+      resourceType: ResourceType.JOB,
+      resourceId: saved.id,
+      userId: reviewer.id,
+      request: context?.request,
+      description: `审核岗位: jobId=${saved.id}, auditStatus=${saved.auditStatus}`,
+      beforeData: beforeSnapshot,
+      afterData: {
+        auditStatus: saved.auditStatus,
+        status: saved.status,
+        isActive: saved.isActive,
+        reason: dto.reason || null,
+      },
+    });
+
+    return saved;
   }
 
   async createCooperation(applicantId: number, baseId: number, requirement: string, context?: OperationLogContext) {

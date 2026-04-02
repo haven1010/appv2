@@ -299,13 +299,6 @@ async function main() {
   );
 
   await ensureNoRows(
-    `SELECT id, uid
-     FROM sys_user
-     WHERE role_key = 'field_manager' AND assigned_base_id IS NULL`,
-    'field_manager without assigned_base_id',
-  );
-
-  await ensureNoRows(
     `SELECT id, uid, role_key, assigned_base_id
      FROM sys_user
      WHERE role_key <> 'field_manager' AND assigned_base_id IS NOT NULL`,
@@ -512,9 +505,6 @@ async function main() {
        BEFORE INSERT ON sys_user
        FOR EACH ROW
        BEGIN
-         IF NEW.role_key = 'field_manager' AND NEW.assigned_base_id IS NULL THEN
-           SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'field_manager must have assigned_base_id';
-         END IF;
          IF NEW.role_key <> 'field_manager' AND NEW.assigned_base_id IS NOT NULL THEN
            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'only field_manager can set assigned_base_id';
          END IF;
@@ -527,9 +517,6 @@ async function main() {
        BEFORE UPDATE ON sys_user
        FOR EACH ROW
        BEGIN
-         IF NEW.role_key = 'field_manager' AND NEW.assigned_base_id IS NULL THEN
-           SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'field_manager must have assigned_base_id';
-         END IF;
          IF NEW.role_key <> 'field_manager' AND NEW.assigned_base_id IS NOT NULL THEN
            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'only field_manager can set assigned_base_id';
          END IF;

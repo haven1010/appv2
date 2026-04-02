@@ -4,10 +4,19 @@
  */
 const app = getApp();
 
+function normalizeArray(res) {
+  if (Array.isArray(res)) return res;
+  if (Array.isArray(res?.list)) return res.list;
+  if (Array.isArray(res?.bases)) return res.bases;
+  return [];
+}
+
 Page({
   data: {
     baseId: null,
     baseName: '',
+    managedBases: [],
+    baseIndex: 0,
     scanResult: null, // { success, name, message, time }
     scanning: false,
     manualInput: '',
@@ -27,22 +36,40 @@ Page({
   },
 
   async resolveBaseId() {
-    const userInfo = app.globalData.userInfo || wx.getStorageSync('userInfo');
-    if (userInfo && userInfo.assignedBaseId) {
-      this.setData({ baseId: userInfo.assignedBaseId });
-      this.loadBaseName(userInfo.assignedBaseId);
+    const userInfo = app.globalData.userInfo || wx.getStorageSync('userInfo') || {};
+    let bases = normalizeArray(await app.request({ url: '/base/managed', method: 'GET' }).catch(() => []))
+      .map((item) => ({
+        id: Number(item.id),
+        baseName: item.baseName || item.name || `基地 #${item.id}`,
+      }));
+
+    if (!bases.length && userInfo.assignedBaseId) {
+      bases = [{ id: Number(userInfo.assignedBaseId), baseName: `基地 #${userInfo.assignedBaseId}` }];
+    }
+
+    if (!bases.length) {
+      this.setData({
+        managedBases: [],
+        baseIndex: 0,
+        baseId: null,
+        baseName: '',
+      });
       return;
     }
 
-    try {
-      const profile = await app.request({ url: '/user/profile', method: 'GET' });
-      if (profile && profile.assignedBaseId) {
-        this.setData({ baseId: profile.assignedBaseId });
-        this.loadBaseName(profile.assignedBaseId);
-      }
-    } catch (err) {
-      console.warn('获取基地 ID 失败:', err);
-    }
+    const preferredId = Number(wx.getStorageSync('fieldActiveBaseId') || userInfo.assignedBaseId || 0);
+    let index = preferredId ? bases.findIndex((item) => Number(item.id) === preferredId) : 0;
+    if (index < 0) index = 0;
+
+    const selected = bases[index] || bases[0];
+    wx.setStorageSync('fieldActiveBaseId', Number(selected.id));
+    this.setData({
+      managedBases: bases,
+      baseIndex: index,
+      baseId: Number(selected.id),
+      baseName: selected.baseName,
+    });
+    this.loadBaseName(selected.id);
   },
 
   async loadBaseName(baseId) {
@@ -173,5 +200,20 @@ Page({
 
   clearResult() {
     this.setData({ scanResult: null });
+  },
+
+  onBaseChange(e) {
+    const index = Number(e.detail.value);
+    const picked = this.data.managedBases[index];
+    if (!picked) return;
+
+    wx.setStorageSync('fieldActiveBaseId', Number(picked.id));
+    this.setData({
+      baseIndex: index,
+      baseId: Number(picked.id),
+      baseName: picked.baseName,
+      scanResult: null,
+    });
+    this.loadBaseName(picked.id);
   },
 });

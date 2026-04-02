@@ -7,11 +7,12 @@ import { Injectable, NotFoundException, BadRequestException, ConflictException, 
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, In, Repository } from 'typeorm';
 import { JobApplication, ApplicationStatus } from '../entities/job-application.entity';
-import { RecruitmentJob } from '../entities/recruitment-job.entity';
-import { SysUser } from '../../user/entities/sys-user.entity';
+import { RecruitmentJob, JobAuditStatus } from '../entities/recruitment-job.entity';
+import { SysUser, UserRole } from '../../user/entities/sys-user.entity';
 import { DailySignup, SignupStatus } from '../../attendance/entities/daily-signup.entity';
 import { OperationLogService, OperationLogContext } from '../../common/services/operation-log.service';
 import { OperationType, ResourceType } from '../../common/entities/operation-log.entity';
+import { BaseScopeService } from './base-scope.service';
 
 @Injectable()
 export class JobApplicationService {
@@ -24,6 +25,7 @@ export class JobApplicationService {
     private jobRepo: Repository<RecruitmentJob>,
     @InjectRepository(SysUser)
     private userRepo: Repository<SysUser>,
+    private baseScopeService: BaseScopeService,
     private operationLogService: OperationLogService,
     private dataSource: DataSource,
   ) {}
@@ -115,6 +117,9 @@ export class JobApplicationService {
     if (!job.isActive) {
       throw new BadRequestException('岗位已停止招聘');
     }
+    if (Number(job.auditStatus) !== Number(JobAuditStatus.APPROVED)) {
+      throw new BadRequestException('岗位审核通过后才能报名');
+    }
 
     const saved = await this.dataSource.transaction(async (manager) => {
       // Serialize same-user apply requests to prevent race duplicates even if DB unique key is missing.
@@ -183,7 +188,7 @@ export class JobApplicationService {
   async review(
     applicationId: number,
     status: ApplicationStatus,
-    reviewedBy: number,
+    reviewer: { id: number; role?: string; roleKey?: UserRole },
     rejectReason?: string,
     context?: OperationLogContext,
   ): Promise<JobApplication> {
@@ -199,9 +204,11 @@ export class JobApplicationService {
         throw new BadRequestException('该申请已被处理，请刷新后重试');
       }
 
+      await this.baseScopeService.assertCanSuperviseBase(reviewer, application.baseId);
+
       const previousStatus = application.status;
       application.status = status;
-      application.reviewedBy = reviewedBy;
+      application.reviewedBy = reviewer.id;
       application.reviewedAt = new Date();
       if (status === ApplicationStatus.REJECTED && rejectReason) {
         application.rejectReason = rejectReason;
@@ -218,7 +225,7 @@ export class JobApplicationService {
       operationType: OperationType.AUDIT,
       resourceType: ResourceType.JOB,
       resourceId: saved.jobId,
-      userId: reviewedBy,
+      userId: reviewer.id,
       request: context?.request,
       description: `审核岗位申请: applicationId=${saved.id}, ${beforeStatus} -> ${saved.status}`,
       beforeData: {

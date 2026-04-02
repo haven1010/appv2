@@ -27,6 +27,12 @@ export enum JobStatus {
   EXPIRED = 3     // 已过期
 }
 
+export enum JobAuditStatus {
+  PENDING = 0,
+  APPROVED = 1,
+  REJECTED = 2,
+}
+
 @Entity('recruitment_job')
 export class RecruitmentJob {
   @PrimaryGeneratedColumn({ type: 'bigint' })
@@ -224,6 +230,15 @@ export class RecruitmentJob {
     comment: '状态：0-已下架，1-招聘中，2-已招满，3-已过期'
   })
   status: JobStatus;
+
+  @Index()
+  @Column({
+    name: 'audit_status',
+    type: 'tinyint',
+    default: JobAuditStatus.PENDING,
+    comment: '审核状态：0-待审核，1-已通过，2-已驳回',
+  })
+  auditStatus: JobAuditStatus;
 
   // ========== 统计信息 ==========
   @Column({

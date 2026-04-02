@@ -13,12 +13,14 @@ import { SysUser } from '../user/entities/sys-user.entity';
 import { RecruitmentJob } from '../base/entities/recruitment-job.entity';
 import { BaseInfo } from '../base/entities/base-info.entity';
 import { QrCodeModule } from '../qrcode/qrcode.module';
+import { BaseModule } from '../base/base.module';
 
 @Module({
     imports: [
         // 注册实体 Repository
         TypeOrmModule.forFeature([DailySignup, OfflineAttendanceEvent, SysUser, RecruitmentJob, BaseInfo]),
         QrCodeModule,
+        BaseModule,
     ],
     controllers: [AttendanceController],
     providers: [AttendanceService],

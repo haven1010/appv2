@@ -11,10 +11,12 @@ import { SysUser } from '../user/entities/sys-user.entity';
 import { BaseInfo } from '../base/entities/base-info.entity';
 import { DailySignup } from '../attendance/entities/daily-signup.entity';
 import { LaborSalary } from '../salary/entities/labor-salary.entity';
+import { BaseModule } from '../base/base.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([SysUser, BaseInfo, DailySignup, LaborSalary]),
+    BaseModule,
   ],
   controllers: [DashboardController],
   providers: [DashboardService],

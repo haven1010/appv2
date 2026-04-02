@@ -79,6 +79,11 @@
         <view class="picker">{{fieldDate}}</view>
       </picker>
 
+      <view class="form-label">当前基地</view>
+      <picker mode="selector" value="{{fieldBaseIndex}}" range="{{fieldBases}}" range-key="baseName" bindchange="onFieldBaseChange">
+        <view class="picker">{{fieldBaseName || '未绑定基地'}}</view>
+      </picker>
+
       <view class="chip-row">
         <text class="chip success">已签到：{{fieldCheckedRows.length}}</text>
         <text class="chip pending">未签到：{{fieldPendingRows.length}}</text>
@@ -110,7 +115,7 @@
   <block wx:elif="{{role === 'base_manager'}}">
     <view class="section-card">
       <view class="section-title">基地人员总览（首页）</view>
-      <view class="section-sub">按基地查看人员、签到状态和工资状态</view>
+      <view class="section-sub">按基地查看人员、签到状态和工资状态，并进入工资单审核</view>
 
       <view class="form-label">选择基地</view>
       <picker mode="selector" value="{{managedBaseIndex}}" range="{{managedBases}}" range-key="baseName" bindchange="onManagedBaseChange">
@@ -125,6 +130,7 @@
       </view>
 
       <view class="actions-row">
+        <button class="btn-primary" bindtap="goScanCenter">工资单审核</button>
         <button class="btn-ghost" bindtap="refreshManagedRows">实时同步</button>
       </view>
     </view>

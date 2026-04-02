@@ -70,15 +70,15 @@ export class UserService {
   /**
    * 校验角色与基地绑定关系。
    * 约束:
-   * 1. `field_manager` 必须绑定存在的基地。
+   * 1. `field_manager` 如设置主基地，则必须绑定存在的基地。
    * 2. 非 `field_manager` 不允许携带 `assignedBaseId`。
    */
   private async validateAssignedBase(roleKey: UserRole, assignedBaseId?: number, manager?: EntityManager): Promise<void> {
     const baseRepository = manager ? manager.getRepository(BaseInfo) : this.baseRepository;
 
     if (roleKey === UserRole.FIELD_MANAGER) {
-      if (!assignedBaseId) {
-        throw new BadRequestException('field_manager 必须绑定 assignedBaseId');
+      if (assignedBaseId == null) {
+        return;
       }
 
       const base = await baseRepository.findOne({ where: { id: assignedBaseId } });

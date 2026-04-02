@@ -6,15 +6,16 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { SysUser, UserRole, isSuperAdmin } from '../user/entities/sys-user.entity';
+import { SysUser, UserRole } from '../user/entities/sys-user.entity';
 import { BaseInfo, BaseCategory, AuditStatus } from '../base/entities/base-info.entity';
 import { DailySignup, SignupStatus } from '../attendance/entities/daily-signup.entity';
 import { LaborSalary, SalaryStatus } from '../salary/entities/labor-salary.entity';
+import { BaseScopeService } from '../base/services/base-scope.service';
 
 interface ReqUser {
   id: number;
   role?: string;
-  roleKey?: string;
+  roleKey?: UserRole;
 }
 
 @Injectable()
@@ -32,6 +33,7 @@ export class DashboardService {
     private signupRepo: Repository<DailySignup>,
     @InjectRepository(LaborSalary)
     private salaryRepo: Repository<LaborSalary>,
+    private baseScopeService: BaseScopeService,
   ) {}
 
   private getTodayDateString(): string {
@@ -46,23 +48,7 @@ export class DashboardService {
    * 返回 `null` 表示全局可见，返回空数组表示当前角色没有任何可见基地。
    */
   private async getScopedBaseIds(user: ReqUser): Promise<number[] | null> {
-    const role = user.role ?? user.roleKey;
-
-    if (isSuperAdmin(role)) {
-      return null; // 不限制
-    }
-
-    if (role === UserRole.BASE_MANAGER) {
-      const ownedBases = await this.baseRepo.find({ where: { ownerId: user.id }, select: ['id'] });
-      return ownedBases.map((b) => b.id);
-    }
-
-    if (role === UserRole.FIELD_MANAGER) {
-      const fm = await this.userRepo.findOne({ where: { id: user.id } });
-      return fm?.assignedBaseId ? [fm.assignedBaseId] : [];
-    }
-
-    return [];
+    return this.baseScopeService.getSupervisedBaseIds(user);
   }
 
   /**

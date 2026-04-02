@@ -22,6 +22,8 @@ import {
 import { BaseService } from './base.service';
 import { CreateBaseDto } from './dto/create-base.dto';
 import { CreateJobDto } from './dto/create-job.dto';
+import { SetBaseSupervisorsDto } from './dto/set-base-supervisors.dto';
+import { ReviewJobDto } from './dto/review-job.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -43,7 +45,7 @@ export class BaseController {
   @ApiOperation({ summary: '创建基地' })
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.BOSS, UserRole.BASE_MANAGER)
+  @Roles(UserRole.BOSS)
   @Post()
   async create(
     @Body() createBaseDto: CreateBaseDto,
@@ -56,6 +58,15 @@ export class BaseController {
   @Get()
   async findAll(@Query() query: any) {
     return this.baseService.findAll(query);
+  }
+
+  @ApiOperation({ summary: '获取当前用户可管理的基地列表' })
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.REGION_ADMIN, UserRole.BOSS, UserRole.BASE_MANAGER, UserRole.FIELD_MANAGER)
+  @Get('managed')
+  async findManaged(@Request() req) {
+    return this.baseService.getManagedBases(req.user);
   }
 
   @ApiOperation({ summary: '上传基地资质图片（营业执照/环境图）' })
@@ -186,10 +197,35 @@ export class BaseController {
     return this.baseService.transferOwner(id, ownerId, req.user.id, { request: req, userId: req.user.id });
   }
 
+  @ApiOperation({ summary: '查看基地监督人分配' })
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.REGION_ADMIN, UserRole.BOSS, UserRole.BASE_MANAGER, UserRole.FIELD_MANAGER)
+  @Get(':id/supervisors')
+  async getSupervisors(
+    @Param('id', ParseIntPipe) id: number,
+    @Request() req,
+  ) {
+    return this.baseService.getSupervisors(id, req.user);
+  }
+
+  @ApiOperation({ summary: '分配基地管理员和现场管理员（超级管理员）' })
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN)
+  @Patch(':id/supervisors')
+  async setSupervisors(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: SetBaseSupervisorsDto,
+    @Request() req,
+  ) {
+    return this.baseService.setSupervisors(id, dto, req.user.id, { request: req, userId: req.user.id });
+  }
+
   @ApiOperation({ summary: '发布招聘岗位' })
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.BASE_MANAGER)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.REGION_ADMIN, UserRole.BOSS, UserRole.BASE_MANAGER)
   @Post(':id/jobs')
   async createJob(
     @Param('id', ParseIntPipe) baseId: number,
@@ -219,7 +255,7 @@ export class BaseController {
   @ApiOperation({ summary: '更新招聘岗位状态' })
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.BASE_MANAGER)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.REGION_ADMIN, UserRole.BOSS, UserRole.BASE_MANAGER)
   @Patch('jobs/:jobId/status')
   async updateJobStatus(
     @Param('jobId', ParseIntPipe) jobId: number,
@@ -232,13 +268,26 @@ export class BaseController {
   @ApiOperation({ summary: '续期招聘岗位' })
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.BASE_MANAGER)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.REGION_ADMIN, UserRole.BOSS, UserRole.BASE_MANAGER)
   @Patch('jobs/:jobId/renew')
   async renewJob(
     @Param('jobId', ParseIntPipe) jobId: number,
     @Request() req,
   ) {
     return this.baseService.renewJob(jobId, req.user.id, { request: req, userId: req.user.id });
+  }
+
+  @ApiOperation({ summary: '审核老板提交的招聘岗位' })
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.REGION_ADMIN, UserRole.BASE_MANAGER)
+  @Patch('jobs/:jobId/review')
+  async reviewJob(
+    @Param('jobId', ParseIntPipe) jobId: number,
+    @Body() dto: ReviewJobDto,
+    @Request() req,
+  ) {
+    return this.baseService.reviewJob(jobId, dto, req.user, { request: req, userId: req.user.id });
   }
 
   @ApiOperation({ summary: '获取基地统计信息' })
@@ -271,8 +320,8 @@ export class BaseController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.SUPER_ADMIN, UserRole.REGION_ADMIN, UserRole.BASE_MANAGER, UserRole.FIELD_MANAGER)
   @Get('jobs/:jobId/applications')
-  async getJobApplications(@Param('jobId', ParseIntPipe) jobId: number) {
-    return this.baseService.getJobApplications(jobId);
+  async getJobApplications(@Param('jobId', ParseIntPipe) jobId: number, @Request() req) {
+    return this.baseService.getJobApplications(jobId, req.user);
   }
 
   @ApiOperation({ summary: '获取基地申请列表（管理员/老板）' })
@@ -282,15 +331,10 @@ export class BaseController {
   @Get(':id/applications')
   async getBaseApplications(
     @Param('id', ParseIntPipe) baseId: number,
+    @Request() req,
     @Query('status') status?: string,
-    @Request() req?,
   ) {
-    return this.baseService.getApplicationsByBase(
-      baseId,
-      status !== undefined ? Number(status) : undefined,
-      Number(req?.user?.id || 0),
-      req?.user?.role || req?.user?.roleKey,
-    );
+    return this.baseService.getApplicationsByBase(baseId, req.user, status !== undefined ? Number(status) : undefined);
   }
 
   @ApiOperation({ summary: '结束单个人员务工（基地管理员端）' })
@@ -304,14 +348,7 @@ export class BaseController {
     @Body('endWorkTime') endWorkTime: string,
     @Request() req,
   ) {
-    return this.baseService.endWorkerWork(
-      baseId,
-      userId,
-      endWorkTime,
-      Number(req?.user?.id || 0),
-      req?.user?.role || req?.user?.roleKey,
-      { request: req, userId: req.user.id },
-    );
+    return this.baseService.endWorkerWork(baseId, userId, endWorkTime, req.user, { request: req, userId: req.user.id });
   }
 
   @ApiOperation({ summary: '批量结束基地人员务工（基地管理员端）' })
@@ -324,13 +361,7 @@ export class BaseController {
     @Body('endWorkTime') endWorkTime: string,
     @Request() req,
   ) {
-    return this.baseService.endAllWorkersWork(
-      baseId,
-      endWorkTime,
-      Number(req?.user?.id || 0),
-      req?.user?.role || req?.user?.roleKey,
-      { request: req, userId: req.user.id },
-    );
+    return this.baseService.endAllWorkersWork(baseId, endWorkTime, req.user, { request: req, userId: req.user.id });
   }
 
   @ApiOperation({ summary: '审核岗位申请' })
@@ -344,7 +375,7 @@ export class BaseController {
     @Body('rejectReason') rejectReason: string,
     @Request() req,
   ) {
-    return this.baseService.reviewApplication(applicationId, status, req.user.id, rejectReason, { request: req, userId: req.user.id });
+    return this.baseService.reviewApplication(applicationId, status, req.user, rejectReason, { request: req, userId: req.user.id });
   }
 
   @ApiOperation({ summary: '提交基地合作申请（区管/超管）' })

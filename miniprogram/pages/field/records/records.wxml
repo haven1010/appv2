@@ -3,6 +3,9 @@
   <!-- 头部 -->
   <view class="records-header">
     <text class="records-title">考勤记录</text>
+    <picker mode="selector" value="{{baseIndex}}" range="{{managedBases}}" range-key="baseName" bindchange="onBaseChange" wx:if="{{managedBases.length}}">
+      <view class="records-picker">{{managedBases.length > 1 ? '切换基地：' : '当前基地：'}}{{baseName || '未绑定基地'}}</view>
+    </picker>
     <text class="records-base" wx:if="{{baseName}}">{{baseName}}</text>
   </view>
 

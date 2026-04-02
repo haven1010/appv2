@@ -2,6 +2,9 @@
 <view class="page">
   <view class="scan-header">
     <text class="scan-title">扫码签到</text>
+    <picker mode="selector" value="{{baseIndex}}" range="{{managedBases}}" range-key="baseName" bindchange="onBaseChange" wx:if="{{managedBases.length}}">
+      <view class="scan-picker">{{managedBases.length > 1 ? '切换基地：' : '当前基地：'}}{{baseName || '未绑定基地'}}</view>
+    </picker>
     <text class="scan-base" wx:if="{{baseName}}">当前基地：{{baseName}}</text>
     <text class="scan-base warn" wx:elif="{{!baseId}}">未绑定基地</text>
   </view>

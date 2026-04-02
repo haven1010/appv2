@@ -26,6 +26,16 @@
   margin-top: 8rpx;
 }
 
+.records-picker {
+  display: inline-block;
+  margin-top: 10rpx;
+  font-size: 22rpx;
+  color: #1f7e42;
+  background: rgba(46, 143, 77, 0.1);
+  padding: 8rpx 16rpx;
+  border-radius: 10rpx;
+}
+
 .date-switcher {
   display: flex;
   align-items: center;

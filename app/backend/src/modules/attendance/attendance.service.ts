@@ -14,7 +14,7 @@ import {
 } from './entities/offline-attendance-event.entity';
 import { SecurityService } from '../common/services/security.service';
 import { SysUser, UserRole, isSuperAdmin } from '../user/entities/sys-user.entity';
-import { RecruitmentJob } from '../base/entities/recruitment-job.entity';
+import { RecruitmentJob, JobAuditStatus } from '../base/entities/recruitment-job.entity';
 import { BaseInfo } from '../base/entities/base-info.entity';
 import { SmsService } from '../common/services/sms.service';
 import { QrCodeService } from '../qrcode/qrcode.service';
@@ -22,6 +22,7 @@ import { OperationLogService, OperationLogContext } from '../common/services/ope
 import { OperationType, ResourceType } from '../common/entities/operation-log.entity';
 import { CreateOfflineAttendanceEventDto } from './dto/create-offline-attendance-event.dto';
 import { ReviewOfflineAttendanceEventDto } from './dto/review-offline-attendance-event.dto';
+import { BaseScopeService } from '../base/services/base-scope.service';
 
 @Injectable()
 /**
@@ -45,6 +46,7 @@ export class AttendanceService {
     private securityService: SecurityService,
     private smsService: SmsService,
     private qrcodeService: QrCodeService,
+    private baseScopeService: BaseScopeService,
     private operationLogService: OperationLogService,
     private dataSource: DataSource,
   ) { }
@@ -96,24 +98,7 @@ export class AttendanceService {
   }
 
   private async getScopedBaseIds(user: { id: number; role?: string; roleKey?: UserRole }): Promise<number[] | null> {
-    const role = this.resolveRole(user);
-    if (!role) return [];
-
-    if (isSuperAdmin(role)) {
-      return null;
-    }
-
-    if (role === UserRole.BASE_MANAGER) {
-      const ownedBases = await this.baseRepo.find({ where: { ownerId: user.id }, select: ['id'] });
-      return ownedBases.map((item) => Number(item.id));
-    }
-
-    if (role === UserRole.FIELD_MANAGER) {
-      const operator = await this.userRepo.findOne({ where: { id: user.id } });
-      return operator?.assignedBaseId ? [Number(operator.assignedBaseId)] : [];
-    }
-
-    return [];
+    return this.baseScopeService.getSupervisedBaseIds(user);
   }
 
   private async assertCanSubmitOfflineForBase(user: { id: number; role?: string; roleKey?: UserRole }, baseId: number) {
@@ -409,6 +394,23 @@ export class AttendanceService {
    * 副作用: 更新签到状态与签到时间，并写入操作日志。
    */
   async checkIn(qrContent: string, baseId: number, context?: OperationLogContext): Promise<DailySignup> {
+    if (context?.userId) {
+      const operator = await this.userRepo.findOne({
+        where: { id: context.userId, isDeleted: false },
+        select: ['id', 'roleKey'],
+      });
+      if (!operator) {
+        throw new NotFoundException('签到操作人不存在');
+      }
+
+      if (!isSuperAdmin(operator.roleKey)) {
+        await this.baseScopeService.assertCanSuperviseBase(
+          { id: operator.id, roleKey: operator.roleKey },
+          Number(baseId),
+        );
+      }
+    }
+
     // 1. 解密
     let decrypted: string;
     try {
@@ -913,6 +915,9 @@ export class AttendanceService {
       if (!job.isActive) {
         throw new BadRequestException('该岗位已停止招聘');
       }
+      if (Number(job.auditStatus) !== Number(JobAuditStatus.APPROVED)) {
+        throw new BadRequestException('该岗位尚未审核通过，暂不可报名');
+      }
 
       const existing = await signupRepo.findOne({
         where: {
@@ -1158,24 +1163,13 @@ export class AttendanceService {
       .where('signup.workDate = :date', { date });
 
     // 基地管理员只能查看自己管理的基地
-    if (role === UserRole.BASE_MANAGER) {
-      const ownedBases = await this.baseRepo.find({
-        where: { ownerId: user.id },
-        select: ['id'],
-      });
-      const baseIds = ownedBases.map(b => b.id);
+    if ([UserRole.BOSS, UserRole.BASE_MANAGER, UserRole.FIELD_MANAGER].includes(role as UserRole)) {
+      const scopedBaseIds = await this.getScopedBaseIds(user);
+      const baseIds = (scopedBaseIds || []).filter((item) => !baseId || Number(item) === Number(baseId));
       if (baseIds.length === 0) {
         return { records: [], total: 0 };
       }
       qb.andWhere('signup.baseId IN (:...baseIds)', { baseIds });
-    } else if (role === UserRole.FIELD_MANAGER) {
-      // 现场管理员只看关联基地
-      const fm = await this.userRepo.findOne({ where: { id: user.id } });
-      if (fm?.assignedBaseId) {
-        qb.andWhere('signup.baseId = :assignedBaseId', { assignedBaseId: fm.assignedBaseId });
-      } else {
-        return { records: [], total: 0 };
-      }
     } else if (baseId) {
       qb.andWhere('signup.baseId = :baseId', { baseId });
     }
@@ -1228,23 +1222,13 @@ export class AttendanceService {
       .where('signup.workDate = :date', { date });
 
     // 基地管理员只能统计自己管理的基地
-    if (role === UserRole.BASE_MANAGER) {
-      const ownedBases = await this.baseRepo.find({
-        where: { ownerId: user.id },
-        select: ['id'],
-      });
-      const baseIds = ownedBases.map(b => b.id);
+    if ([UserRole.BOSS, UserRole.BASE_MANAGER, UserRole.FIELD_MANAGER].includes(role as UserRole)) {
+      const scopedBaseIds = await this.getScopedBaseIds(user);
+      const baseIds = scopedBaseIds || [];
       if (baseIds.length === 0) {
         return { checkedIn: 0, absent: 0, signedUp: 0, total: 0, attendanceRate: 0, date };
       }
       qb.andWhere('signup.baseId IN (:...baseIds)', { baseIds });
-    } else if (role === UserRole.FIELD_MANAGER) {
-      const fm = await this.userRepo.findOne({ where: { id: user.id } });
-      if (fm?.assignedBaseId) {
-        qb.andWhere('signup.baseId = :assignedBaseId', { assignedBaseId: fm.assignedBaseId });
-      } else {
-        return { checkedIn: 0, absent: 0, signedUp: 0, total: 0, attendanceRate: 0, date };
-      }
     }
 
     const allRecords = await qb.getMany();
@@ -1279,15 +1263,13 @@ export class AttendanceService {
     let baseQb = this.baseRepo.createQueryBuilder('base');
 
     // 基地管理员只能看到自己管理的基地
-    if (role === UserRole.BASE_MANAGER) {
-      baseQb.where('base.ownerId = :ownerId', { ownerId: user.id });
-    } else if (role === UserRole.FIELD_MANAGER) {
-      const fm = await this.userRepo.findOne({ where: { id: user.id } });
-      if (fm?.assignedBaseId) {
-        baseQb.where('base.id = :assignedBaseId', { assignedBaseId: fm.assignedBaseId });
-      } else {
+    if ([UserRole.BOSS, UserRole.BASE_MANAGER, UserRole.FIELD_MANAGER].includes(role as UserRole)) {
+      const scopedBaseIds = await this.getScopedBaseIds(user);
+      const baseIds = scopedBaseIds || [];
+      if (baseIds.length === 0) {
         return { bases: [], date };
       }
+      baseQb.where('base.id IN (:...baseIds)', { baseIds });
     }
 
     const bases = await baseQb.getMany();

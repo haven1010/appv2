@@ -169,6 +169,8 @@ Page({
     activeNav: 'home',
 
     fieldDate: todayString(),
+    fieldBases: [],
+    fieldBaseIndex: 0,
     fieldBaseId: '',
     fieldBaseName: '',
     fieldBaseCards: [],
@@ -252,21 +254,82 @@ Page({
     return true;
   },
 
-  async resolveAssignedBaseId() {
+  async fetchManagedBases() {
+    const role = this.data.role;
     const userInfo = this.data.userInfo || app.getCurrentUser() || {};
-    if (userInfo.assignedBaseId) {
-      return String(userInfo.assignedBaseId);
+
+    if (role === 'base_manager' || role === 'field_manager') {
+      const managed = await app.request({ url: '/base/managed', method: 'GET' }).catch(() => []);
+      const managedBases = normalizeArray(managed).map((item) => ({
+        id: String(item.id),
+        baseName: item.baseName || item.name || `基地 #${item.id}`,
+      }));
+      if (managedBases.length) {
+        return managedBases;
+      }
     }
 
-    const profile = await app.request({ url: '/user/profile', method: 'GET' }).catch(() => null);
-    if (profile && profile.assignedBaseId) {
-      const merged = Object.assign({}, userInfo, { assignedBaseId: profile.assignedBaseId });
-      wx.setStorageSync('userInfo', merged);
-      app.globalData.userInfo = merged;
-      this.setData({ userInfo: merged });
-      return String(profile.assignedBaseId);
+    if (role === 'base_manager') {
+      const fallback = await app.request({ url: `/base?ownerId=${userInfo.id}`, method: 'GET' }).catch(() => []);
+      return normalizeArray(fallback).map((item) => ({
+        id: String(item.id),
+        baseName: item.baseName || item.name || `基地 #${item.id}`,
+      }));
     }
-    return '';
+
+    if (role === 'field_manager') {
+      if (userInfo.assignedBaseId) {
+        return [{ id: String(userInfo.assignedBaseId), baseName: `基地 #${userInfo.assignedBaseId}` }];
+      }
+
+      const profile = await app.request({ url: '/user/profile', method: 'GET' }).catch(() => null);
+      if (profile?.assignedBaseId) {
+        const merged = Object.assign({}, userInfo, { assignedBaseId: profile.assignedBaseId });
+        wx.setStorageSync('userInfo', merged);
+        app.globalData.userInfo = merged;
+        this.setData({ userInfo: merged });
+        return [{ id: String(profile.assignedBaseId), baseName: `基地 #${profile.assignedBaseId}` }];
+      }
+    }
+
+    return [];
+  },
+
+  async resolveAssignedBaseId() {
+    const userInfo = this.data.userInfo || app.getCurrentUser() || {};
+    const bases = await this.fetchManagedBases();
+    if (!bases.length) {
+      this.setData({
+        fieldBases: [],
+        fieldBaseIndex: 0,
+        fieldBaseId: '',
+        fieldBaseName: '',
+      });
+      return '';
+    }
+
+    const preferredIds = [
+      this.data.fieldBaseId,
+      wx.getStorageSync('adminFieldBaseId'),
+      userInfo.assignedBaseId ? String(userInfo.assignedBaseId) : '',
+    ].filter(Boolean);
+
+    let index = 0;
+    const preferredId = preferredIds[0];
+    if (preferredId) {
+      const foundIndex = bases.findIndex((item) => item.id === String(preferredId));
+      if (foundIndex >= 0) index = foundIndex;
+    }
+
+    const selected = bases[index] || bases[0];
+    wx.setStorageSync('adminFieldBaseId', selected.id);
+    this.setData({
+      fieldBases: bases,
+      fieldBaseIndex: index,
+      fieldBaseId: selected.id,
+      fieldBaseName: selected.baseName,
+    });
+    return selected.id;
   },
 
   async loadRoleHome() {
@@ -469,16 +532,7 @@ Page({
     }
   },
   async loadBaseManagerHome() {
-    const userInfo = this.data.userInfo || {};
-    const list = await app.request({
-      url: `/base?ownerId=${userInfo.id}`,
-      method: 'GET',
-    }).catch(() => []);
-
-    const bases = normalizeArray(list).map((item) => ({
-      id: String(item.id),
-      baseName: item.baseName || item.name || `基地 #${item.id}`,
-    }));
+    const bases = await this.fetchManagedBases();
 
     if (!bases.length) {
       this.setData({
@@ -587,6 +641,20 @@ Page({
     });
 
     this.loadManagedBaseRows(picked.id, picked.baseName);
+  },
+
+  onFieldBaseChange(e) {
+    const index = Number(e.detail.value);
+    const picked = this.data.fieldBases[index];
+    if (!picked) return;
+
+    wx.setStorageSync('adminFieldBaseId', picked.id);
+    this.setData({
+      fieldBaseIndex: index,
+      fieldBaseId: picked.id,
+      fieldBaseName: picked.baseName,
+    });
+    this.loadFieldHome();
   },
 
   toggleManagedWorker(e) {

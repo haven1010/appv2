@@ -16,6 +16,7 @@ import { BaseInfo } from './modules/base/entities/base-info.entity';
 import { RecruitmentJob } from './modules/base/entities/recruitment-job.entity';
 import { JobApplication } from './modules/base/entities/job-application.entity';
 import { BaseCooperation } from './modules/base/entities/base-cooperation.entity';
+import { BaseSupervisorAssignment } from './modules/base/entities/base-supervisor-assignment.entity';
 import { DailySignup } from './modules/attendance/entities/daily-signup.entity';
 import { OfflineAttendanceEvent } from './modules/attendance/entities/offline-attendance-event.entity';
 import { LaborSalary } from './modules/salary/entities/labor-salary.entity';
@@ -91,6 +92,7 @@ import { CommonModule } from './modules/common/common.module';
             RecruitmentJob,
             JobApplication,
             BaseCooperation,
+            BaseSupervisorAssignment,
             DailySignup,
             OfflineAttendanceEvent,
             LaborSalary,

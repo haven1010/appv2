@@ -104,6 +104,16 @@
   margin-bottom: 14rpx;
 }
 
+.base-switch {
+  display: inline-block;
+  background: rgba(46, 143, 77, 0.1);
+  color: #1f7e42;
+  font-size: 22rpx;
+  padding: 8rpx 16rpx;
+  border-radius: 10rpx;
+  margin-bottom: 14rpx;
+}
+
 .base-badge {
   display: inline-block;
   background: rgba(45, 115, 199, 0.12);
