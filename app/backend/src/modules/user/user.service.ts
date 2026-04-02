@@ -26,6 +26,8 @@ import * as crypto from 'crypto';
  * 该服务同时承担数据库唯一键异常到业务错误的翻译职责。
  */
 export class UserService {
+  private readonly bankCardChallengeTtlMs = 10 * 60 * 1000;
+
   constructor(
     @InjectRepository(SysUser)
     private userRepository: Repository<SysUser>,
@@ -121,6 +123,59 @@ export class UserService {
       },
       order: { updatedAt: 'DESC' },
     });
+  }
+
+  private signBankCardChallengePayload(payload: string): string {
+    const secret = process.env.BANK_CARD_CHALLENGE_SECRET || process.env.JWT_SECRET || 'defaultSecretKey';
+    return crypto.createHmac('sha256', secret).update(payload).digest('hex');
+  }
+
+  private buildBankCardChallengeToken(userId: number, targetBankCardNoHash: string): { token: string; expiresAt: string } {
+    const expiresAtTs = Date.now() + this.bankCardChallengeTtlMs;
+    const nonce = crypto.randomBytes(8).toString('hex');
+    const payload = `${userId}:${targetBankCardNoHash}:${expiresAtTs}:${nonce}`;
+    const signature = this.signBankCardChallengePayload(payload);
+
+    return {
+      token: `${expiresAtTs}.${nonce}.${signature}`,
+      expiresAt: new Date(expiresAtTs).toISOString(),
+    };
+  }
+
+  private verifyBankCardChallengeToken(token: string, userId: number, targetBankCardNoHash: string): boolean {
+    try {
+      if (!token) {
+        return false;
+      }
+
+      const [expiresAtRaw, nonce, signature] = String(token).split('.');
+      if (!expiresAtRaw || !nonce || !signature) {
+        return false;
+      }
+
+      const expiresAtTs = Number(expiresAtRaw);
+      if (!Number.isFinite(expiresAtTs) || Date.now() > expiresAtTs) {
+        return false;
+      }
+
+      const payload = `${userId}:${targetBankCardNoHash}:${expiresAtTs}:${nonce}`;
+      const expectedSignature = this.signBankCardChallengePayload(payload);
+      if (expectedSignature.length !== signature.length) {
+        return false;
+      }
+
+      return crypto.timingSafeEqual(
+        Buffer.from(expectedSignature, 'utf8'),
+        Buffer.from(signature, 'utf8'),
+      );
+    } catch (_) {
+      return false;
+    }
+  }
+
+  private maskBankCardNo(normalizedBankCardNo: string): string {
+    const tail4 = String(normalizedBankCardNo || '').slice(-4);
+    return `**** **** **** ${tail4 || '****'}`;
   }
 
   /**
@@ -557,6 +612,46 @@ export class UserService {
     return this.userRepository.findOne({ where: { uid } });
   }
 
+  async requestBankCardChangeChallenge(userId: number, bankCardNo: string) {
+    const user = await this.userRepository.findOne({
+      where: {
+        id: userId,
+        isDeleted: false,
+      },
+    });
+    if (!user) {
+      throw new NotFoundException('用户不存在');
+    }
+
+    const normalizedBankCardNo = this.normalizeBankCardNo(bankCardNo);
+    if (!normalizedBankCardNo || normalizedBankCardNo.length < 12) {
+      throw new BadRequestException('请输入正确的银行卡号');
+    }
+
+    const nextBankCardNoHash = this.securityService.hash(normalizedBankCardNo);
+    const needsChallenge =
+      user.infoAuditStatus === 1 &&
+      Boolean(user.bankCardNoHash) &&
+      user.bankCardNoHash !== nextBankCardNoHash;
+
+    if (!needsChallenge) {
+      return {
+        required: false,
+        challengeToken: null,
+        expiresAt: null,
+        maskedBankCardNo: this.maskBankCardNo(normalizedBankCardNo),
+      };
+    }
+
+    const challenge = this.buildBankCardChallengeToken(userId, nextBankCardNoHash);
+    return {
+      required: true,
+      challengeToken: challenge.token,
+      expiresAt: challenge.expiresAt,
+      maskedBankCardNo: this.maskBankCardNo(normalizedBankCardNo),
+    };
+  }
+
   /**
    * 更新用户资料，并在必要时重算 hash 与回退审核状态。
    * 当更新涉及手机号或紧急联系人时，服务会强制重新进入待审核。
@@ -574,6 +669,8 @@ export class UserService {
         }
 
         const nextUpdate = { ...updateDto };
+        const bankCardChallengeToken = String(nextUpdate.bankCardChallengeToken || '').trim();
+        delete nextUpdate.bankCardChallengeToken;
         const before = {
           roleKey: user.roleKey,
           assignedBaseId: user.assignedBaseId,
@@ -606,6 +703,14 @@ export class UserService {
           const rawBankCardNo = this.normalizeBankCardNo(nextUpdate.bankCardNo);
           if (rawBankCardNo) {
             const bankCardNoHash = this.securityService.hash(rawBankCardNo);
+            const requiresChallenge =
+              user.infoAuditStatus === 1 &&
+              Boolean(user.bankCardNoHash) &&
+              user.bankCardNoHash !== bankCardNoHash;
+            if (requiresChallenge && !this.verifyBankCardChallengeToken(bankCardChallengeToken, userId, bankCardNoHash)) {
+              throw new BadRequestException('银行卡修改需二次确认，请先调用挑战接口');
+            }
+
             const existingUser = await userRepository.findOne({ where: { bankCardNoHash, isDeleted: false } });
             if (existingUser && existingUser.id !== userId) {
               const isWorkerSharedCard = user.roleKey === UserRole.WORKER && existingUser.roleKey === UserRole.WORKER;

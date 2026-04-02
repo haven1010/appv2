@@ -11,6 +11,7 @@ import { RegisterByOcrDto } from './dto/register-by-ocr.dto';
 import { CreateProxyRegistrationDto } from './dto/create-proxy-registration.dto';
 import { ReviewProxyRegistrationDto } from './dto/review-proxy-registration.dto';
 import { TakeoverProxyAccountDto } from './dto/takeover-proxy-account.dto';
+import { RequestBankCardChangeChallengeDto } from './dto/request-bank-card-change-challenge.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { TencentOcrService } from '../common/services/tencent-ocr.service';
@@ -223,6 +224,14 @@ export class UserController {
   @ApiOperation({ summary: '更新个人信息（需要重新审核）' })
   async updateProfile(@Req() req, @Body() updateDto: UpdateUserDto) {
     return this.userService.update(req.user.id, updateDto, { request: req, userId: req.user.id });
+  }
+
+  @Post('profile/bank-card/challenge')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: '请求银行卡变更二次确认挑战令牌' })
+  async requestBankCardChangeChallenge(@Req() req, @Body() dto: RequestBankCardChangeChallengeDto) {
+    return this.userService.requestBankCardChangeChallenge(req.user.id, dto.bankCardNo);
   }
 
   @Patch(':id/audit')

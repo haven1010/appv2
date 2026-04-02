@@ -296,12 +296,44 @@ Page({
     this.setData({ saving: true });
 
     try {
+      let bankCardChallengeToken = '';
+      const challengeResult = await app.request({
+        url: '/user/profile/bank-card/challenge',
+        method: 'POST',
+        data: { bankCardNo },
+      });
+
+      if (challengeResult?.required) {
+        const maskedCard = challengeResult?.maskedBankCardNo || maskBankCard(bankCardNo);
+        const confirmRes = await new Promise((resolve) => {
+          wx.showModal({
+            title: '银行卡变更确认',
+            content: `检测到你正在修改工资卡（${maskedCard}），确认后将进入人工复核。`,
+            confirmText: '确认修改',
+            cancelText: '取消',
+            success: (res) => resolve(res),
+            fail: () => resolve({ confirm: false }),
+          });
+        });
+
+        if (!confirmRes.confirm) {
+          this.setData({ saving: false });
+          return;
+        }
+
+        bankCardChallengeToken = String(challengeResult?.challengeToken || '');
+        if (!bankCardChallengeToken) {
+          throw new Error('二次确认令牌获取失败，请稍后重试');
+        }
+      }
+
       const profile = await app.request({
         url: '/user/profile',
         method: 'PATCH',
         data: {
           bankName,
           bankCardNo,
+          bankCardChallengeToken: bankCardChallengeToken || undefined,
         },
       });
 
