@@ -20,6 +20,25 @@ function cleanIdCardLast6(value) {
   return normalized.slice(-6);
 }
 
+function normalizeBaseUrl(value) {
+  let url = String(value || '').trim();
+  if (!url) return '';
+  if (!/^https?:\/\//i.test(url)) {
+    url = `http://${url}`;
+  }
+  if (!/\/api(?:\/)?$/i.test(url)) {
+    url = `${url.replace(/\/+$/, '')}/api`;
+  }
+  return url.replace(/\/+$/, '');
+}
+
+function formatBaseUrlForDisplay(value) {
+  const text = String(value || '').trim();
+  if (!text) return '未设置';
+  if (text.length <= 40) return text;
+  return `${text.slice(0, 18)}...${text.slice(-14)}`;
+}
+
 function normalizeLoginRole(role) {
   return role === 'boss' ? 'boss' : 'worker';
 }
@@ -64,7 +83,7 @@ function toErrorMessage(err) {
   if (/ERR_ADDRESS_UNREACHABLE|request:fail|Network request failed/i.test(raw)) {
     const urlMatch = raw.match(/\((https?:\/\/[^)]+)\)/i);
     const target = urlMatch ? urlMatch[1] : '当前后端地址';
-    return `无法连接后端：${target}。请确认接口地址和网络连通。`;
+    return `无法连接后端：${target}。请确认接口地址和网络连通，可在下方“网络设置”中修改。`;
   }
 
   return raw || '登录失败，请稍后重试';
@@ -93,6 +112,11 @@ Page({
     pageLeaving: false,
     statusBarHeight: 20,
     navBarHeight: 44,
+    showApiConfig: false,
+    apiBaseUrlInput: '',
+    currentBaseUrlDisplay: '未设置',
+    devtoolsBaseUrl: '',
+    lanBaseUrl: '',
   },
 
   onLoad(options) {
@@ -106,7 +130,12 @@ Page({
       loginRole,
     });
 
+    this.refreshApiConfig();
     this.updateCanSubmit(this.data.phone, this.data.idCardLast6);
+  },
+
+  onShow() {
+    this.refreshApiConfig();
   },
 
   getStatusBarHeight() {
@@ -194,6 +223,49 @@ Page({
         // Ignore vibration failure.
       }
     }
+  },
+
+  refreshApiConfig() {
+    const current = app.globalData.baseUrl || wx.getStorageSync('apiBaseUrl') || '';
+    const envUrls = app.globalData.envBaseUrls || {};
+    this.setData({
+      apiBaseUrlInput: current,
+      currentBaseUrlDisplay: formatBaseUrlForDisplay(current),
+      devtoolsBaseUrl: envUrls.devtools || '',
+      lanBaseUrl: envUrls.lan || '',
+    });
+  },
+
+  toggleApiConfig() {
+    this.setData({ showApiConfig: !this.data.showApiConfig });
+  },
+
+  onInputApiBaseUrl(e) {
+    this.setData({ apiBaseUrlInput: e.detail.value || '' });
+  },
+
+  useApiPreset(e) {
+    const url = e.currentTarget.dataset.url || '';
+    if (!url) return;
+    this.setData({ apiBaseUrlInput: url });
+  },
+
+  saveApiBaseUrl() {
+    const normalized = normalizeBaseUrl(this.data.apiBaseUrlInput);
+    if (!normalized || !/^https?:\/\//i.test(normalized)) {
+      wx.showToast({ title: '请输入正确的接口地址', icon: 'none' });
+      return;
+    }
+
+    app.setApiBaseUrl(normalized);
+    this.setData({
+      apiBaseUrlInput: normalized,
+      currentBaseUrlDisplay: formatBaseUrlForDisplay(normalized),
+      showApiConfig: false,
+      error: '',
+    });
+
+    wx.showToast({ title: '接口地址已更新', icon: 'none' });
   },
 
   async handleLogin() {
@@ -340,4 +412,3 @@ Page({
     });
   },
 });
-
