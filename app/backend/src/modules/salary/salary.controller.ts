@@ -26,10 +26,10 @@ export class SalaryController {
 
   private inferGender(idCard: string): string {
     const id = String(idCard || '').trim();
-    if (id.length !== 18) return 'unknown';
+    if (id.length !== 18) return '未知';
     const marker = Number(id.charAt(16));
-    if (!Number.isFinite(marker)) return 'unknown';
-    return marker % 2 === 0 ? 'female' : 'male';
+    if (!Number.isFinite(marker)) return '未知';
+    return marker % 2 === 0 ? '女' : '男';
   }
 
   @Get('list')
@@ -173,10 +173,10 @@ export class SalaryController {
           address: row.workerAddress || row.address || '-',
           poorHousehold:
             row.isPoorHousehold === true || row.isPoor === true
-              ? 'yes'
+              ? '是'
               : row.isPoorHousehold === false || row.isPoor === false
-                ? 'no'
-                : 'unknown',
+                ? '否'
+                : '未知',
           totalIncome: 0,
         };
       }
@@ -216,12 +216,12 @@ export class SalaryController {
     const range = dateFrom && dateTo ? `${dateFrom}_${dateTo}` : new Date().toISOString().slice(0, 10);
 
     return {
-      fileName: `salary-report-${range}.xlsx`,
+      fileName: `薪资报表-${range}.xlsx`,
       rowCount: excelRows.length,
       fileBase64: buildXlsxBase64([
         {
-          name: 'salary_report',
-          columns: ['Serial', 'Name', 'Gender', 'IDCard', 'Address', 'PoorHousehold', 'TotalIncome', 'Signature'],
+          name: '薪资报表',
+          columns: ['序号', '姓名', '性别', '身份证号', '地址', '是否脱贫户', '总收入', '签字'],
           rows: excelRows,
         },
       ]),

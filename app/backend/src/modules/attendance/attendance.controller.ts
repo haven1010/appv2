@@ -36,6 +36,21 @@ export class AttendanceController {
     return String(value).replace('T', ' ').slice(0, 19);
   }
 
+  private formatSignupStatus(status: number): string {
+    switch (Number(status)) {
+      case 0:
+        return '已报名';
+      case 1:
+        return '已签到';
+      case 2:
+        return '缺勤';
+      case 3:
+        return '已取消';
+      default:
+        return '未知状态';
+    }
+  }
+
   @Post('signup')
   @ApiOperation({ summary: '工人报名岗位 (创建待签到记录)' })
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -215,27 +230,27 @@ export class AttendanceController {
       item.workerUid || '-',
       item.workerPhone || '-',
       item.workerIdCard || '-',
-      Number(item.status || 0),
+      this.formatSignupStatus(item.status),
       this.formatDateTime(item.checkinTime || item.createdAt),
     ]));
 
     return {
-      fileName: `attendance-records-${date}.xlsx`,
+      fileName: `考勤明细-${date}.xlsx`,
       rowCount: rows.length,
       fileBase64: buildXlsxBase64([
         {
-          name: 'records',
+          name: '考勤明细',
           columns: [
-            'SignupID',
-            'WorkDate',
-            'BaseName',
-            'JobTitle',
-            'WorkerName',
-            'WorkerUID',
-            'WorkerPhone',
-            'WorkerIdCard',
-            'StatusCode',
-            'CheckinTime',
+            '报名记录ID',
+            '工作日期',
+            '基地名称',
+            '岗位名称',
+            '工人姓名',
+            '工人UID',
+            '工人手机号',
+            '工人身份证号',
+            '状态',
+            '签到时间',
           ],
           rows,
         },
@@ -259,12 +274,12 @@ export class AttendanceController {
     ]));
 
     return {
-      fileName: `attendance-base-stats-${date}.xlsx`,
+      fileName: `基地考勤统计-${date}.xlsx`,
       rowCount: rows.length,
       fileBase64: buildXlsxBase64([
         {
-          name: 'base_stats',
-          columns: ['BaseName', 'Present', 'Total', 'AttendanceRate(%)'],
+          name: '基地考勤统计',
+          columns: ['基地名称', '已签到人数', '报名总人数', '出勤率(%)'],
           rows,
         },
       ]),
