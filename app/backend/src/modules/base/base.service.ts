@@ -5,23 +5,18 @@
  */
 import { Injectable, NotFoundException, Logger, ConflictException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository, In } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { BaseInfo, AuditStatus } from './entities/base-info.entity';
 import { RecruitmentJob, PayType, JobStatus } from './entities/recruitment-job.entity';
 import { CreateBaseDto } from './dto/create-base.dto';
 import { CreateJobDto } from './dto/create-job.dto';
 import { JobApplicationService } from './services/job-application.service';
 import { BaseCooperationService } from './services/base-cooperation.service';
-import { ApplicationStatus, JobApplication } from './entities/job-application.entity';
-import { BaseCooperation, CooperationStatus } from './entities/base-cooperation.entity';
-import { BaseRating } from './entities/base-rating.entity';
+import { ApplicationStatus } from './entities/job-application.entity';
+import { CooperationStatus } from './entities/base-cooperation.entity';
 import { OperationLogService, OperationLogContext } from '../common/services/operation-log.service';
 import { OperationType, ResourceType } from '../common/entities/operation-log.entity';
 import { SysUser, UserRole } from '../user/entities/sys-user.entity';
-import { DailySignup } from '../attendance/entities/daily-signup.entity';
-import { OfflineAttendanceEvent } from '../attendance/entities/offline-attendance-event.entity';
-import { LaborSalary } from '../salary/entities/labor-salary.entity';
-import { SalaryPayment } from '../salary/entities/salary-payment.entity';
 
 @Injectable()
 /**
@@ -438,105 +433,108 @@ export class BaseService {
   /**
    * 瓒呯骇绠＄悊鍛樺垹闄ゅ熀鍦帮紙杞垹闄わ級銆?   * 鍚屾椂灏嗚鍩哄湴浠嶅浜庡惎鐢ㄧ姸鎬佺殑宀椾綅鎵归噺涓嬬嚎锛岄伩鍏嶅悗缁户缁嫑宸ャ€?   */
   async remove(id: number, operatorId: number, context?: OperationLogContext): Promise<{ msg: string }> {
-    const purgeResult = await this.dataSource.transaction(async (manager) => {
-      const base = await manager.findOne(BaseInfo, {
-        where: { id },
-        lock: { mode: 'pessimistic_write' },
-      });
-
-      if (!base) {
-        throw new NotFoundException('Base not found');
-      }
-
-      const beforeSnapshot = {
-        baseName: base.baseName,
-        ownerId: base.ownerId,
-        auditStatus: base.auditStatus,
-        isDeleted: base.isDeleted,
+    let purgeResult: {
+      beforeSnapshot: {
+        baseName: string;
+        ownerId: number;
+        auditStatus: number;
+        isDeleted: boolean;
       };
+      counts: {
+        jobsDeactivated: number;
+        usersUnbound: number;
+        fieldManagersDowngraded: number;
+      };
+      alreadyDeleted: boolean;
+    };
 
-      // 触发器约束：field_manager 不能出现 assigned_base_id 为空。
-      // 删除基地前先将绑定该基地的现场管理员降级为 worker，再清空基地绑定，避免触发 SQLSTATE 45000。
-      await manager
-        .createQueryBuilder()
-        .update(SysUser)
-        .set({ roleKey: UserRole.WORKER, assignedBaseId: null })
-        .where('assigned_base_id = :baseId AND role_key = :fieldRole', {
-          baseId: id,
-          fieldRole: UserRole.FIELD_MANAGER,
-        })
-        .execute();
-
-      await manager
-        .createQueryBuilder()
-        .update(SysUser)
-        .set({ assignedBaseId: null })
-        .where('assigned_base_id = :baseId AND (role_key IS NULL OR role_key <> :fieldRole)', {
-          baseId: id,
-          fieldRole: UserRole.FIELD_MANAGER,
-        })
-        .execute();
-
-      const jobs = await manager.find(RecruitmentJob, {
-        where: { baseId: id },
-        select: ['id'],
-      });
-      const jobIds = jobs.map((item) => Number(item.id)).filter((value) => Number.isFinite(value));
-
-      const signups = await manager.find(DailySignup, {
-        where: { baseId: id },
-        select: ['id'],
-      });
-      const signupIds = signups.map((item) => Number(item.id)).filter((value) => Number.isFinite(value));
-
-      if (signupIds.length) {
-        await manager
-          .createQueryBuilder()
-          .update(OfflineAttendanceEvent)
-          .set({ appliedSignupId: null })
-          .where('applied_signup_id IN (:...signupIds)', { signupIds })
-          .execute();
-      }
-
-      let salaryDeleted = 0;
-      let paymentDeleted = 0;
-      if (signupIds.length) {
-        const salaries = await manager.find(LaborSalary, {
-          where: { signupId: In(signupIds) },
-          select: ['id'],
+    try {
+      purgeResult = await this.dataSource.transaction(async (manager) => {
+        const base = await manager.findOne(BaseInfo, {
+          where: { id },
+          lock: { mode: 'pessimistic_write' },
         });
-        const salaryIds = salaries.map((item) => Number(item.id)).filter((value) => Number.isFinite(value));
-        if (salaryIds.length) {
-          const paymentResult = await manager.delete(SalaryPayment, { salaryId: In(salaryIds) });
-          paymentDeleted = paymentResult.affected || 0;
+
+        if (!base) {
+          throw new NotFoundException('Base not found');
         }
-        const salaryResult = await manager.delete(LaborSalary, { signupId: In(signupIds) });
-        salaryDeleted = salaryResult.affected || 0;
+
+        const beforeSnapshot = {
+          baseName: base.baseName,
+          ownerId: base.ownerId,
+          auditStatus: base.auditStatus,
+          isDeleted: base.isDeleted,
+        };
+
+        if (base.isDeleted) {
+          return {
+            beforeSnapshot,
+            counts: {
+              jobsDeactivated: 0,
+              usersUnbound: 0,
+              fieldManagersDowngraded: 0,
+            },
+            alreadyDeleted: true,
+          };
+        }
+
+        // 触发器约束：field_manager 不能出现 assigned_base_id 为空。
+        // 删除基地前先将绑定该基地的现场管理员降级为 worker，再清空基地绑定，避免触发 SQLSTATE 45000。
+        const downgradeResult = await manager
+          .createQueryBuilder()
+          .update(SysUser)
+          .set({ roleKey: UserRole.WORKER, assignedBaseId: null })
+          .where('assigned_base_id = :baseId AND role_key = :fieldRole', {
+            baseId: id,
+            fieldRole: UserRole.FIELD_MANAGER,
+          })
+          .execute();
+
+        const unbindResult = await manager
+          .createQueryBuilder()
+          .update(SysUser)
+          .set({ assignedBaseId: null })
+          .where('assigned_base_id = :baseId AND (role_key IS NULL OR role_key <> :fieldRole)', {
+            baseId: id,
+            fieldRole: UserRole.FIELD_MANAGER,
+          })
+          .execute();
+
+        // 不做物理删除，改为归档删除，避免历史关联数据触发外键冲突。
+        const deactivateJobResult = await manager
+          .createQueryBuilder()
+          .update(RecruitmentJob)
+          .set({ isActive: false, status: JobStatus.OFFLINE })
+          .where('base_id = :baseId', { baseId: id })
+          .execute();
+
+        base.isDeleted = true;
+        await manager.save(BaseInfo, base);
+
+        return {
+          beforeSnapshot,
+          counts: {
+            jobsDeactivated: deactivateJobResult.affected || 0,
+            usersUnbound: unbindResult.affected || 0,
+            fieldManagersDowngraded: downgradeResult.affected || 0,
+          },
+          alreadyDeleted: false,
+        };
+      });
+    } catch (error) {
+      const reason = String((error as any)?.sqlMessage || (error as any)?.message || error || '');
+      this.logger.error(`[删除基地] 失败: baseId=${id}, reason=${reason}`);
+      if (
+        /field_manager must have assigned_base_id/i.test(reason)
+        || /only field_manager can set assigned_base_id/i.test(reason)
+      ) {
+        throw new ConflictException('基地管理员绑定状态异常，请先在用户管理中修正该基地关联后再删除');
       }
-
-      const offlineResult = await manager.delete(OfflineAttendanceEvent, { baseId: id });
-      const signupResult = await manager.delete(DailySignup, { baseId: id });
-      const applicationResult = await manager.delete(JobApplication, { baseId: id });
-      const cooperationResult = await manager.delete(BaseCooperation, { baseId: id });
-      const ratingResult = await manager.delete(BaseRating, { baseId: id });
-      const jobResult = await manager.delete(RecruitmentJob, { baseId: id });
-      await manager.delete(BaseInfo, { id });
-
-      return {
-        beforeSnapshot,
-        counts: {
-          jobs: jobResult.affected || 0,
-          applications: applicationResult.affected || 0,
-          cooperations: cooperationResult.affected || 0,
-          ratings: ratingResult.affected || 0,
-          signups: signupResult.affected || 0,
-          salaries: salaryDeleted,
-          payments: paymentDeleted,
-          offlineEvents: offlineResult.affected || 0,
-          relatedJobIds: jobIds.length,
-        },
-      };
-    });
+      if (/base owner must be base_manager or boss/i.test(reason)) {
+        throw new ConflictException('基地负责人角色异常，请先修正负责人角色后再删除基地');
+      }
+      throw error;
+    }
 
     await this.operationLogService.logWithContext({
       operationType: OperationType.DELETE,
@@ -544,15 +542,16 @@ export class BaseService {
       resourceId: id,
       userId: operatorId,
       request: context?.request,
-      description: `Hard delete base: baseId=${id}`,
+      description: `Soft delete base: baseId=${id}`,
       beforeData: purgeResult.beforeSnapshot,
       afterData: {
-        hardDeleted: true,
+        softDeleted: true,
+        alreadyDeleted: purgeResult.alreadyDeleted,
         counts: purgeResult.counts,
       },
     });
 
-    return { msg: '基地已彻底删除' };
+    return { msg: purgeResult.alreadyDeleted ? '基地已处于删除状态' : '基地删除成功' };
   }
 
   // ========== 鎷涜仒宀椾綅鐩稿叧鏂规硶 ==========

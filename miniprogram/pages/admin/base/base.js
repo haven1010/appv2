@@ -507,7 +507,17 @@ Page({
         url: `/base/${id}`,
         method: 'DELETE',
       });
+      const deletingCurrent = String(this.data.selectedBaseId || '') === String(id);
       wx.showToast({ title: '基地删除成功', icon: 'success' });
+      if (deletingCurrent) {
+        this.setData({
+          selectedBaseId: '',
+          selectedBase: null,
+          workerFlows: [],
+          cooperationFlows: [],
+          salaryRows: [],
+        });
+      }
       this.loadData();
     } catch (err) {
       wx.showToast({ title: err.message || '基地删除失败', icon: 'none' });

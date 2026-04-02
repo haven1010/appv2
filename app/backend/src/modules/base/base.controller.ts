@@ -151,7 +151,7 @@ export class BaseController {
   @ApiOperation({ summary: '删除基地（超级管理员）' })
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.SUPER_ADMIN)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.REGION_ADMIN)
   @Delete(':id')
   async remove(
     @Param('id', ParseIntPipe) id: number,

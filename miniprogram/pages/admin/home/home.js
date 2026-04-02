@@ -679,7 +679,7 @@ Page({
     const modalRes = await new Promise((resolve) => {
       wx.showModal({
         title: '删除人员',
-        content: '删除后将彻底清理该人员全部信息，且不影响后续二次注册，是否继续？',
+        content: '删除后该人员将被归档并禁用登录，历史记录保留用于审计，是否继续？',
         success: resolve,
       });
     });
