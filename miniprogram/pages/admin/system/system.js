@@ -319,7 +319,7 @@ Page({
       const res = await app.exportXlsx({
         url: exportUrl,
         method: 'GET',
-        fileName: `salary-report-${todayString()}.xlsx`,
+        fileName: `薪资报表-${todayString()}.xlsx`,
       });
       wx.showToast({ title: '导出成功', icon: 'success' });
       if (res?.filePath) {

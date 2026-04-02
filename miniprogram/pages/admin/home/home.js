@@ -375,7 +375,7 @@ Page({
       const res = await app.exportXlsx({
         url,
         method: 'GET',
-        fileName: `field-attendance-${workDate}.xlsx`,
+        fileName: `考勤明细-${workDate}.xlsx`,
       });
       wx.showToast({ title: 'Export success', icon: 'success' });
       if (res?.filePath) {

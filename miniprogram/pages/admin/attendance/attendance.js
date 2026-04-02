@@ -416,7 +416,7 @@ Page({
       const res = await app.exportXlsx({
         url,
         method: 'GET',
-        fileName: `attendance-records-${this.data.selectedDate || todayString()}.xlsx`,
+        fileName: `考勤明细-${this.data.selectedDate || todayString()}.xlsx`,
       });
       wx.showToast({ title: '导出成功', icon: 'success' });
       if (res?.filePath) {
@@ -444,7 +444,7 @@ Page({
       const res = await app.exportXlsx({
         url,
         method: 'GET',
-        fileName: `attendance-base-stats-${this.data.selectedDate || todayString()}.xlsx`,
+        fileName: `基地考勤统计-${this.data.selectedDate || todayString()}.xlsx`,
       });
       wx.showToast({ title: '导出成功', icon: 'success' });
       if (res?.filePath) {

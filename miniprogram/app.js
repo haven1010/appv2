@@ -296,7 +296,7 @@ App({
   saveBase64File(options = {}) {
     return new Promise((resolve, reject) => {
       const base64Data = String(options.base64 || '').trim();
-      const fallbackName = `export-${Date.now()}.xlsx`;
+      const fallbackName = `导出文件-${Date.now()}.xlsx`;
       let fileName = String(options.fileName || fallbackName).trim() || fallbackName;
       if (!/\.xlsx$/i.test(fileName)) {
         fileName = `${fileName}.xlsx`;
@@ -338,7 +338,7 @@ App({
     });
 
     const fileBase64 = String(payload?.fileBase64 || '').trim();
-    const fileName = payload?.fileName || options.fileName || `export-${Date.now()}.xlsx`;
+    const fileName = payload?.fileName || options.fileName || `导出文件-${Date.now()}.xlsx`;
     if (!fileBase64) {
       throw new Error('Server did not return xlsx content.');
     }
