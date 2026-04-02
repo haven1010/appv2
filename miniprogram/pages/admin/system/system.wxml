@@ -1,7 +1,7 @@
 <view class="page-admin">
   <view class="hero-card">
     <view class="hero-title">工资表中心（超管接收）</view>
-    <view class="hero-sub">老板完成工资结算后，会把工资表提交到这里，超级管理员可按基地和周期复核并导出快照</view>
+    <view class="hero-sub">老板完成工资结算后，系统会自动把工资表同步到这里，超级管理员可按基地和周期复核并导出快照</view>
   </view>
 
   <view class="section-card">
@@ -35,23 +35,23 @@
     </view>
 
     <view class="actions-row">
-      <button class="btn-primary" bindtap="searchReport" loading="{{reportLoading}}">查询已提交工资表</button>
+      <button class="btn-primary" bindtap="searchReport" loading="{{reportLoading}}">查询系统工资表</button>
       <button class="btn-ghost" bindtap="resetReport">重置筛选</button>
     </view>
   </view>
 
   <view class="section-card">
-    <view class="section-title">老板已提交工资表</view>
-    <view class="section-sub">点击某一条工资表后，可展开查看工人汇总明细</view>
+    <view class="section-title">系统自动生成工资表</view>
+    <view class="section-sub">老板结算完成后会自动同步到这里，点击某一条工资表后可展开查看工人汇总明细</view>
 
-    <view class="empty-text" wx:if="{{!reportList.length && !reportLoading}}">当前筛选暂无已提交工资表</view>
+    <view class="empty-text" wx:if="{{!reportList.length && !reportLoading}}">当前筛选暂无系统生成的工资表</view>
 
     <view wx:for="{{reportList}}" wx:key="id" wx:if="{{reportList.length}}">
       <view class="list-item {{selectedReportId === item.id ? 'history-active' : ''}}" data-id="{{item.id}}" bindtap="selectSubmittedReport">
         <view class="item-title">{{item.baseName}} · {{item.bossName}}</view>
         <view class="item-sub">{{item.periodText}}</view>
         <view class="item-sub">{{item.fileName}}</view>
-        <view class="item-sub">提交时间：{{item.createdAtText}}</view>
+        <view class="item-sub">生成时间：{{item.createdAtText}}</view>
         <view class="chip-row">
           <text class="chip info">工人 {{item.workerCount}}</text>
           <text class="chip info">工资单 {{item.salaryRecordCount}}</text>
@@ -66,7 +66,7 @@
       <view class="collapse-main">
         <view class="section-title">工资表明细</view>
         <view class="section-sub">{{reportFilterText}}</view>
-        <view class="section-sub" wx:if="{{reportGeneratedAtText}}">提交时间：{{reportGeneratedAtText}}</view>
+        <view class="section-sub" wx:if="{{reportGeneratedAtText}}">生成时间：{{reportGeneratedAtText}}</view>
       </view>
       <view class="collapse-tag">{{reportExpanded ? '收起' : '展开'}}</view>
     </view>

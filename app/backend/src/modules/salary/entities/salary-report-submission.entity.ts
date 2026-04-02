@@ -1,6 +1,6 @@
 /**
  * Layer: Persistence Entity
- * Responsibility: Stores payroll reports that bosses submit to super admins after settlement.
+ * Responsibility: Stores payroll report snapshots that are auto-generated for super admins after boss settlement.
  * Notes: Keep comments focused on intent, invariants, side effects, and cross-module contracts.
  */
 import {
@@ -37,17 +37,17 @@ export class SalaryReportSubmission {
   @JoinColumn({ name: 'boss_id' })
   boss: SysUser;
 
-  @Column({ name: 'submitted_by', type: 'bigint', comment: '提交人 ID' })
+  @Column({ name: 'submitted_by', type: 'bigint', comment: '触发生成的用户 ID' })
   submittedBy: number;
 
   @ManyToOne(() => SysUser, { onDelete: 'RESTRICT' })
   @JoinColumn({ name: 'submitted_by' })
   submitter: SysUser;
 
-  @Column({ name: 'base_name_snapshot', length: 100, comment: '提交时基地名称快照' })
+  @Column({ name: 'base_name_snapshot', length: 100, comment: '生成时基地名称快照' })
   baseNameSnapshot: string;
 
-  @Column({ name: 'boss_name_snapshot', length: 50, comment: '提交时老板名称快照' })
+  @Column({ name: 'boss_name_snapshot', length: 50, comment: '生成时老板名称快照' })
   bossNameSnapshot: string;
 
   @Column({ name: 'date_from', type: 'date', nullable: true, comment: '工资表开始日期' })

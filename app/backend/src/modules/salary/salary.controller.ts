@@ -161,7 +161,7 @@ export class SalaryController {
   }
 
   @Post('reports/submit')
-  @ApiOperation({ summary: '老板生成工资表并提交给超级管理员' })
+  @ApiOperation({ summary: '结算后同步已结算工资表给超级管理员' })
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.BOSS)
   async submitReport(
@@ -172,7 +172,7 @@ export class SalaryController {
   }
 
   @Get('reports/submitted')
-  @ApiOperation({ summary: '查询已提交的工资表列表' })
+  @ApiOperation({ summary: '查询系统自动生成的工资表列表' })
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.SUPER_ADMIN, UserRole.REGION_ADMIN, UserRole.BOSS)
   async getSubmittedReports(@Query() query: any, @Req() req: any) {
@@ -180,7 +180,7 @@ export class SalaryController {
   }
 
   @Get('reports/:reportId')
-  @ApiOperation({ summary: '查询已提交工资表明细' })
+  @ApiOperation({ summary: '查询系统自动生成的工资表明细' })
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.SUPER_ADMIN, UserRole.REGION_ADMIN, UserRole.BOSS)
   async getSubmittedReportDetail(
@@ -191,7 +191,7 @@ export class SalaryController {
   }
 
   @Get('reports/:reportId/export')
-  @ApiOperation({ summary: '导出已提交工资表 XLSX' })
+  @ApiOperation({ summary: '导出系统自动生成的工资表 XLSX' })
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.SUPER_ADMIN, UserRole.REGION_ADMIN, UserRole.BOSS)
   async exportSubmittedReport(

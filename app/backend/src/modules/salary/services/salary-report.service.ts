@@ -1,6 +1,6 @@
 /**
  * Layer: Backend Service
- * Responsibility: Builds, stores, and exports payroll reports that flow from bosses to super admins.
+ * Responsibility: Builds, stores, and exports payroll reports that the system auto-generates for super admins after settlement.
  * Notes: Keep comments focused on intent, invariants, side effects, and cross-module contracts.
  */
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
@@ -171,6 +171,21 @@ export class SalaryReportService {
       ? `${dateFrom}_${dateTo}`
       : new Date().toISOString().slice(0, 10);
     return `salary-report-${range}.xlsx`;
+  }
+
+  private async findExistingSnapshot(baseId: number, bossId: number, dateFrom: string | null, dateTo: string | null) {
+    return this.reportRepo.findOne({
+      where: {
+        baseId,
+        bossId,
+        dateFrom,
+        dateTo,
+      },
+      order: {
+        updatedAt: 'DESC',
+        id: 'DESC',
+      },
+    });
   }
 
   private buildRowsFromSalaryList(list: any[]): { rows: SalaryReportRow[]; baseRows: SalaryReportBaseSheet[]; summary: SalaryReportSummary; sourceSalaryIds: number[] } {
@@ -478,12 +493,12 @@ export class SalaryReportService {
   ) {
     const role = this.resolveRole(user);
     if (role !== UserRole.BOSS) {
-      throw new ForbiddenException('仅老板可提交工资表给超级管理员');
+      throw new ForbiddenException('仅老板可触发工资表自动同步');
     }
 
     const baseId = this.normalizeNumericQuery(input.baseId);
     if (!baseId) {
-      throw new BadRequestException('请选择需要提交的基地');
+      throw new BadRequestException('请选择需要同步的基地');
     }
 
     const dateFrom = this.normalizeDateText(input.dateFrom);
@@ -530,28 +545,35 @@ export class SalaryReportService {
       sourceSalaryIds: reportData.sourceSalaryIds,
     };
 
-    const saved = await this.reportRepo.save(this.reportRepo.create({
+    const existing = await this.findExistingSnapshot(baseId, user.id, dateFrom, dateTo);
+    const nextReport = existing || this.reportRepo.create({
       baseId,
       bossId: user.id,
       submittedBy: user.id,
-      baseNameSnapshot: payload.filters.baseName,
-      bossNameSnapshot: boss?.name || '老板',
-      dateFrom,
-      dateTo,
-      salaryRecordCount: payload.summary.salaryRecordCount,
-      workerCount: payload.summary.workerCount,
-      totalIncome: payload.summary.totalIncome,
-      fileName,
-      reportPayload: JSON.stringify(payload),
-    }));
+    });
+
+    nextReport.submittedBy = user.id;
+    nextReport.baseNameSnapshot = payload.filters.baseName;
+    nextReport.bossNameSnapshot = boss?.name || '老板';
+    nextReport.dateFrom = dateFrom;
+    nextReport.dateTo = dateTo;
+    nextReport.salaryRecordCount = payload.summary.salaryRecordCount;
+    nextReport.workerCount = payload.summary.workerCount;
+    nextReport.totalIncome = payload.summary.totalIncome;
+    nextReport.fileName = fileName;
+    nextReport.reportPayload = JSON.stringify(payload);
+
+    const saved = await this.reportRepo.save(nextReport);
+    const operationType = existing ? OperationType.UPDATE : OperationType.CREATE;
+    const generatedAt = saved.updatedAt || saved.createdAt;
 
     await this.operationLogService.logWithContext({
-      operationType: OperationType.CREATE,
+      operationType,
       resourceType: ResourceType.SALARY,
       resourceId: saved.id,
       userId: user.id,
       request: context?.request,
-      description: `老板提交工资表给超级管理员: reportId=${saved.id}, baseId=${baseId}, fileName=${fileName}`,
+      description: `${existing ? '更新' : '生成'}工资表并自动同步给超级管理员: reportId=${saved.id}, baseId=${baseId}, fileName=${fileName}`,
       afterData: {
         reportId: saved.id,
         baseId,
@@ -576,7 +598,8 @@ export class SalaryReportService {
       salaryRecordCount: saved.salaryRecordCount,
       workerCount: saved.workerCount,
       totalIncome: Number(saved.totalIncome || 0),
-      createdAt: saved.createdAt,
+      createdAt: generatedAt,
+      updatedAt: generatedAt,
     };
   }
 
@@ -586,12 +609,13 @@ export class SalaryReportService {
   ) {
     const role = this.resolveRole(user);
     if (!isSuperAdmin(role || '') && role !== UserRole.BOSS) {
-      throw new ForbiddenException('无权查看工资表提交记录');
+      throw new ForbiddenException('无权查看工资表同步记录');
     }
 
     const qb = this.reportRepo
       .createQueryBuilder('report')
-      .orderBy('report.createdAt', 'DESC');
+      .orderBy('report.updatedAt', 'DESC')
+      .addOrderBy('report.id', 'DESC');
 
     if (role === UserRole.BOSS) {
       qb.andWhere('report.bossId = :bossId', { bossId: user.id });
@@ -631,7 +655,8 @@ export class SalaryReportService {
       salaryRecordCount: item.salaryRecordCount,
       workerCount: item.workerCount,
       totalIncome: Number(item.totalIncome || 0),
-      createdAt: item.createdAt,
+      createdAt: item.updatedAt || item.createdAt,
+      updatedAt: item.updatedAt || item.createdAt,
     }));
   }
 
@@ -659,7 +684,8 @@ export class SalaryReportService {
       salaryRecordCount: report.salaryRecordCount,
       workerCount: report.workerCount,
       totalIncome: Number(report.totalIncome || 0),
-      createdAt: report.createdAt,
+      createdAt: report.updatedAt || report.createdAt,
+      updatedAt: report.updatedAt || report.createdAt,
       rows: payload.rows,
       summary: payload.summary,
       filters: payload.filters,
@@ -681,7 +707,7 @@ export class SalaryReportService {
       resourceId: detail.id,
       userId: user.id,
       request: context?.request,
-      description: `导出已提交工资表: reportId=${detail.id}, fileName=${detail.fileName}`,
+      description: `导出系统自动生成工资表: reportId=${detail.id}, fileName=${detail.fileName}`,
       beforeData: {
         reportId: detail.id,
         baseId: detail.baseId,

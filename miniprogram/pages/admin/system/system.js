@@ -1,6 +1,6 @@
 /**
  * Layer: Mini Program Page
- * Responsibility: Lets super admins review payroll reports that bosses have submitted after settlement.
+ * Responsibility: Lets super admins review payroll reports that the system auto-generates after settlement.
  */
 const app = getApp();
 const { resolveRole, isSuperAdminRole, roleLabel } = require('../../../utils/role');
@@ -229,7 +229,7 @@ Page({
           reportGeneratedAtText: '',
         });
         if (showEmptyToast) {
-          wx.showToast({ title: '当前筛选暂无已提交工资表', icon: 'none' });
+          wx.showToast({ title: '当前筛选暂无系统生成的工资表', icon: 'none' });
         }
         return;
       }
@@ -238,7 +238,7 @@ Page({
         await this.loadSubmittedReportDetail(nextSelectedId, { keepLoading: true });
       }
     } catch (err) {
-      wx.showToast({ title: err.message || '加载工资表列表失败', icon: 'none' });
+      wx.showToast({ title: err.message || '加载系统工资表失败', icon: 'none' });
     } finally {
       this.setData({ reportLoading: false });
     }

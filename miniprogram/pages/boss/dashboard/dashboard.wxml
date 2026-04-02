@@ -7,7 +7,7 @@
         <text class="hero-title">🏢 企业入驻审核</text>
         <button class="hero-logout-btn" bindtap="logout">退出登录</button>
       </view>
-      <text class="hero-subtitle">老板账号可提交企业资料，并查看、结算名下基地的已确认工资，生成工资表给超级管理员。</text>
+      <text class="hero-subtitle">老板账号可提交企业资料，并查看、结算名下基地的已确认工资；工资结算完成后，系统会自动生成工资表同步给超级管理员。</text>
     </view>
 
     <view class="form-card">
@@ -119,7 +119,7 @@
 
     <view class="form-card">
       <view class="section-title">工资结算</view>
-      <view class="salary-readonly-tip">老板端只读查看每位采摘工的工资单明细，不修改工资金额；工人确认后，老板负责结算并生成工资表给超级管理员。</view>
+      <view class="salary-readonly-tip">老板端只读查看每位采摘工的工资单明细，不修改工资金额；工人确认后，老板负责结算，系统会在结算完成后自动生成工资表给超级管理员。</view>
 
       <view class="field">
         <text class="label">查看基地</text>
@@ -154,11 +154,10 @@
 
       <view class="payroll-action-row">
         <button class="payroll-primary-btn" bindtap="settleConfirmedPayrolls" loading="{{payrollSettling}}" disabled="{{payrollSettling || payrollLoading || payrollSummary.confirmedCount === 0}}">批量结算已确认工资</button>
-        <button class="secondary-action-btn" bindtap="submitPayrollReportToSuperAdmin" loading="{{payrollExporting}}" disabled="{{payrollExporting || payrollSummary.paidCount === 0}}">生成并提交工资表给超级管理员</button>
       </view>
 
       <button class="secondary-action-btn" bindtap="refreshPayrollBoard" loading="{{payrollLoading}}" disabled="{{payrollLoading}}">刷新工资情况</button>
-      <view wx:if="{{payrollReportGeneratedAtText}}" class="payroll-generated-tip">最近一次提交时间：{{payrollReportGeneratedAtText}}{{payrollReportFileName ? (' · ' + payrollReportFileName) : ''}}</view>
+      <view wx:if="{{payrollReportGeneratedAtText}}" class="payroll-generated-tip">最近一次自动生成时间：{{payrollReportGeneratedAtText}}{{payrollReportFileName ? (' · ' + payrollReportFileName) : ''}}</view>
 
       <view wx:if="{{!payrollBases.length}}" class="readonly-hint">当前名下暂无可查看基地。</view>
       <view wx:elif="{{payrollLoading}}" class="readonly-hint">工资情况加载中...</view>

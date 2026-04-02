@@ -189,7 +189,6 @@ Page({
 
     payrollLoading: false,
     payrollSettling: false,
-    payrollExporting: false,
     payrollBases: [],
     payrollBaseIndex: 0,
     payrollBaseId: '',
@@ -439,6 +438,8 @@ Page({
         let successCount = 0;
         let failedCount = 0;
         const failedNames = [];
+        let syncResult = null;
+        let syncFailedMessage = '';
 
         try {
           for (let i = 0; i < rows.length; i += 1) {
@@ -458,12 +459,25 @@ Page({
             }
           }
 
+          if (successCount > 0) {
+            try {
+              syncResult = await this.syncPayrollReportSnapshot({ silent: true });
+            } catch (err) {
+              syncFailedMessage = extractErrorMessage(err, '工资表自动同步失败');
+            }
+          }
+
           await this.loadBossPayrollBoard();
 
           const failedHint = failedNames.length ? `\n失败示例：${failedNames.join('、')}` : '';
+          const syncHint = successCount <= 0
+            ? ''
+            : syncResult
+              ? `\n系统已自动生成工资表：${syncResult.fileName || '-'}`
+              : `\n工资已结算，但工资表自动同步失败${syncFailedMessage ? `：${syncFailedMessage}` : ''}`;
           wx.showModal({
             title: '工资结算完成',
-            content: `成功 ${successCount} 笔，失败 ${failedCount} 笔。${failedHint}`,
+            content: `成功 ${successCount} 笔，失败 ${failedCount} 笔。${failedHint}${syncHint}`,
             showCancel: false,
           });
         } finally {
@@ -474,61 +488,37 @@ Page({
     });
   },
 
-  async submitPayrollReportToSuperAdmin() {
-    if (Number(this.data.payrollSummary.paidCount || 0) <= 0) {
-      wx.showToast({
-        title: '请先结算工资，再生成工资表',
-        icon: 'none',
-      });
-      return;
-    }
-
+  async syncPayrollReportSnapshot(options = {}) {
+    const { silent = false } = options;
     const selectedBase = this.data.payrollBases[this.data.payrollBaseIndex] || null;
     if (!selectedBase?.id) {
-      wx.showToast({
-        title: '请选择需要提交的基地',
-        icon: 'none',
-      });
-      return;
+      return null;
     }
 
     const rangeText = buildPayrollRangeText(this.data.payrollDateFrom, this.data.payrollDateTo);
-    this.setData({ payrollExporting: true });
-    wx.showLoading({
-      title: '提交工资表...',
-      mask: true,
+    const res = await app.request({
+      url: '/salary/reports/submit',
+      method: 'POST',
+      data: {
+        baseId: Number(selectedBase.id),
+        dateFrom: this.data.payrollDateFrom,
+        dateTo: this.data.payrollDateTo,
+      },
     });
 
-    try {
-      const res = await app.request({
-        url: '/salary/reports/submit',
-        method: 'POST',
-        data: {
-          baseId: Number(selectedBase.id),
-          dateFrom: this.data.payrollDateFrom,
-          dateTo: this.data.payrollDateTo,
-        },
-      });
+    this.setData({
+      payrollReportGeneratedAtText: formatDateTimeText(res?.updatedAt || res?.createdAt || new Date()),
+      payrollReportFileName: res?.fileName || `salary-report-${rangeText}.xlsx`,
+    });
 
-      this.setData({
-        payrollReportGeneratedAtText: formatDateTimeText(res?.createdAt || new Date()),
-        payrollReportFileName: res?.fileName || `salary-report-${rangeText}.xlsx`,
-      });
-      await this.loadBossPayrollBoard();
-      wx.showModal({
-        title: '工资表已提交',
-        content: `已向超级管理员提交工资表 ${res?.fileName || `salary-report-${rangeText}.xlsx`}，覆盖 ${safeNumber(res?.workerCount, 0)} 名工人、${safeNumber(res?.salaryRecordCount, 0)} 笔已结算工资。`,
-        showCancel: false,
-      });
-    } catch (err) {
+    if (!silent) {
       wx.showToast({
-        title: extractErrorMessage(err, '提交工资表失败'),
-        icon: 'none',
+        title: '工资表已自动同步',
+        icon: 'success',
       });
-    } finally {
-      wx.hideLoading();
-      this.setData({ payrollExporting: false });
     }
+
+    return res;
   },
 
   refreshPayrollBoard() {
