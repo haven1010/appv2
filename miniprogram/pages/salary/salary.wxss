@@ -234,6 +234,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 16rpx;
 }
 
 .status-chip {
@@ -259,6 +260,14 @@
   background: #dcecc8;
 }
 
+.action-group {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
 .confirm-btn {
   min-width: 180rpx;
   height: 72rpx;
@@ -278,6 +287,120 @@
 
 .confirm-btn-press {
   transform: scale(0.95);
+}
+
+.appeal-btn,
+.appeal-cancel-btn,
+.appeal-submit-btn {
+  min-width: 180rpx;
+  height: 72rpx;
+  line-height: 72rpx;
+  border-radius: 36rpx;
+  font-size: 28rpx;
+  font-weight: 800;
+}
+
+.appeal-btn {
+  background: #fff7e5;
+  color: #8c6239;
+  border: 2rpx solid rgba(244, 162, 97, 0.26);
+}
+
+.appeal-cancel-btn {
+  background: #f3f3ef;
+  color: #6b6b6b;
+}
+
+.appeal-submit-btn {
+  background: linear-gradient(90deg, #f4a261 0%, #e76f51 100%);
+  color: #ffffff;
+}
+
+.appeal-btn::after,
+.appeal-cancel-btn::after,
+.appeal-submit-btn::after {
+  border: none;
+}
+
+.appeal-panel {
+  margin-top: 16rpx;
+  border-radius: 22rpx;
+  background: #fff8ef;
+  border: 2rpx solid rgba(244, 162, 97, 0.16);
+  padding: 16rpx 18rpx;
+}
+
+.appeal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12rpx;
+  flex-wrap: wrap;
+}
+
+.appeal-chip {
+  padding: 6rpx 14rpx;
+  border-radius: 999rpx;
+  font-size: 24rpx;
+  line-height: 1.35;
+  font-weight: 700;
+}
+
+.appeal-chip.appeal-pending {
+  color: #b8651a;
+  background: #fde4bf;
+}
+
+.appeal-chip.appeal-resolved {
+  color: #355528;
+  background: #dcecc8;
+}
+
+.appeal-chip.appeal-rejected {
+  color: #a63f33;
+  background: #f8d5cf;
+}
+
+.appeal-line,
+.appeal-time {
+  display: block;
+  margin-top: 8rpx;
+  font-size: 24rpx;
+  line-height: 1.5;
+  color: #7a6a57;
+}
+
+.appeal-editor {
+  margin-top: 16rpx;
+  padding-top: 16rpx;
+  border-top: 2rpx dashed rgba(106, 153, 78, 0.16);
+}
+
+.appeal-textarea,
+.appeal-input {
+  width: 100%;
+  box-sizing: border-box;
+  border-radius: 20rpx;
+  background: #fffdf9;
+  border: 2rpx solid rgba(106, 153, 78, 0.16);
+  padding: 18rpx;
+  font-size: 28rpx;
+  color: #333333;
+}
+
+.appeal-textarea {
+  min-height: 160rpx;
+}
+
+.appeal-input {
+  margin-top: 14rpx;
+}
+
+.appeal-actions {
+  margin-top: 16rpx;
+  display: flex;
+  gap: 12rpx;
+  justify-content: flex-end;
 }
 
 .page-bottom-gap {
