@@ -103,6 +103,20 @@ function salaryVolumeText(item) {
   return '固定日薪';
 }
 
+function salaryAppealText(status) {
+  if (status === 1) return '工人申诉待处理';
+  if (status === 2) return '申诉已处理，待工人确认';
+  if (status === 3) return '申诉已驳回';
+  return '';
+}
+
+function salaryAppealChip(status) {
+  if (status === 1) return 'danger';
+  if (status === 2) return 'success';
+  if (status === 3) return 'pending';
+  return '';
+}
+
 Page({
   data: {
     loading: true,
@@ -132,9 +146,16 @@ Page({
       pendingCount: 0,
       confirmedCount: 0,
       paidCount: 0,
+      appealedCount: 0,
       totalAmount: 0,
     },
     salaryRecords: [],
+    appealEditorId: null,
+    appealDurationInput: '',
+    appealCountInput: '',
+    appealAmountInput: '',
+    appealReplyInput: '',
+    appealSubmitting: false,
   },
 
   onLoad() {
@@ -308,6 +329,7 @@ Page({
           pendingCount: 0,
           confirmedCount: 0,
           paidCount: 0,
+          appealedCount: 0,
           totalAmount: 0,
         },
         salaryRecords: [],
@@ -324,20 +346,24 @@ Page({
     let pendingCount = 0;
     let confirmedCount = 0;
     let paidCount = 0;
+    let appealedCount = 0;
     let totalAmount = 0;
 
     for (let i = 0; i < rows.length; i += 1) {
       const row = rows[i] || {};
       const status = safeNumber(row.status, -1);
+      const appealStatus = safeNumber(row.workerAppealStatus, 0);
       const amount = safeNumber(row.totalAmount, 0);
       totalAmount += amount;
       if (status === 0) pendingCount += 1;
       if (status === 1) confirmedCount += 1;
       if (status === 2) paidCount += 1;
+      if (appealStatus === 1) appealedCount += 1;
     }
 
     const salaryRecords = rows.map((row) => {
       const status = safeNumber(row.status, 0);
+      const appealStatus = safeNumber(row.workerAppealStatus, 0);
       return {
         id: row.id,
         workerName: row.workerName || '-',
@@ -345,13 +371,29 @@ Page({
         baseName: row.baseName || '-',
         jobTitle: row.jobTitle || '-',
         workDate: row.workDate || date,
+        payType: safeNumber(row.payType, 0),
+        workDuration: safeNumber(row.workDuration, 0),
+        pieceCount: safeNumber(row.pieceCount, 0),
+        totalAmount: safeNumber(row.totalAmount, 0),
         amountText: formatAmountText(row.totalAmount),
         statusText: salaryStatusText(status),
         statusChipType: salaryStatusChip(status),
         volumeText: salaryVolumeText(row),
         createdAtText: formatDateTime(row.createdAt),
+        appealStatus,
+        appealStatusText: salaryAppealText(appealStatus),
+        appealChipType: salaryAppealChip(appealStatus),
+        workerAppealReason: row.workerAppealReason || '',
+        workerExpectedAmountText: row.workerExpectedAmount != null ? formatAmountText(row.workerExpectedAmount) : '',
+        workerAppealedAtText: formatDateTime(row.workerAppealedAt),
+        appealReply: row.appealReply || '',
+        appealHandledAtText: formatDateTime(row.appealHandledAt),
+        canHandleAppeal: status === 0 && appealStatus === 1,
       };
     });
+
+    const activeAppealId = Number(this.data.appealEditorId || 0);
+    const keepAppealEditor = activeAppealId > 0 && salaryRecords.some((item) => Number(item.id) === activeAppealId);
 
     this.setData({
       salarySummary: {
@@ -359,9 +401,15 @@ Page({
         pendingCount,
         confirmedCount,
         paidCount,
+        appealedCount,
         totalAmount: Number(totalAmount.toFixed(2)),
       },
       salaryRecords,
+      appealEditorId: keepAppealEditor ? activeAppealId : null,
+      appealDurationInput: keepAppealEditor ? this.data.appealDurationInput : '',
+      appealCountInput: keepAppealEditor ? this.data.appealCountInput : '',
+      appealAmountInput: keepAppealEditor ? this.data.appealAmountInput : '',
+      appealReplyInput: keepAppealEditor ? this.data.appealReplyInput : '',
     });
   },
 
@@ -382,6 +430,101 @@ Page({
 
   refreshSalarySummary() {
     this.loadSalarySummary(this.data.selectedDate, this.data.selectedBaseId);
+  },
+
+  openAppealEditor(e) {
+    const salaryId = Number(e.currentTarget.dataset.id || 0);
+    if (!salaryId) return;
+    const row = (this.data.salaryRecords || []).find((item) => Number(item.id) === salaryId);
+    if (!row) return;
+
+    this.setData({
+      appealEditorId: salaryId,
+      appealDurationInput: '',
+      appealCountInput: '',
+      appealAmountInput: '',
+      appealReplyInput: row.appealReply || '',
+    });
+  },
+
+  closeAppealEditor() {
+    this.setData({
+      appealEditorId: null,
+      appealDurationInput: '',
+      appealCountInput: '',
+      appealAmountInput: '',
+      appealReplyInput: '',
+    });
+  },
+
+  onAppealFieldInput(e) {
+    const field = e.currentTarget.dataset.field;
+    if (!field) return;
+    this.setData({ [field]: e.detail.value || '' });
+  },
+
+  async submitAppealAdjustment(e) {
+    const salaryId = Number(e.currentTarget.dataset.id || this.data.appealEditorId || 0);
+    if (!salaryId) return;
+
+    const payload = {
+      action: 'adjust',
+      duration: String(this.data.appealDurationInput || '').trim(),
+      count: String(this.data.appealCountInput || '').trim(),
+      totalAmount: String(this.data.appealAmountInput || '').trim(),
+      reply: String(this.data.appealReplyInput || '').trim(),
+    };
+
+    this.setData({ appealSubmitting: true });
+    wx.showLoading({ title: '处理申诉中...', mask: true });
+    try {
+      await app.request({
+        url: `/salary/${salaryId}/appeal`,
+        method: 'PATCH',
+        data: payload,
+      });
+      wx.hideLoading();
+      wx.showToast({ title: '工资单已调整', icon: 'success' });
+      this.closeAppealEditor();
+      await this.loadSalarySummary(this.data.selectedDate, this.data.selectedBaseId);
+    } catch (err) {
+      wx.hideLoading();
+      wx.showToast({ title: err.message || '处理失败', icon: 'none' });
+    } finally {
+      this.setData({ appealSubmitting: false });
+    }
+  },
+
+  async rejectAppeal(e) {
+    const salaryId = Number(e.currentTarget.dataset.id || this.data.appealEditorId || 0);
+    const reply = String(this.data.appealReplyInput || '').trim();
+    if (!salaryId) return;
+    if (!reply) {
+      wx.showToast({ title: '请填写驳回说明', icon: 'none' });
+      return;
+    }
+
+    this.setData({ appealSubmitting: true });
+    wx.showLoading({ title: '驳回申诉中...', mask: true });
+    try {
+      await app.request({
+        url: `/salary/${salaryId}/appeal`,
+        method: 'PATCH',
+        data: {
+          action: 'reject',
+          reply,
+        },
+      });
+      wx.hideLoading();
+      wx.showToast({ title: '申诉已驳回', icon: 'success' });
+      this.closeAppealEditor();
+      await this.loadSalarySummary(this.data.selectedDate, this.data.selectedBaseId);
+    } catch (err) {
+      wx.hideLoading();
+      wx.showToast({ title: err.message || '处理失败', icon: 'none' });
+    } finally {
+      this.setData({ appealSubmitting: false });
+    }
   },
 
   onCheckinInput(e) {
@@ -603,4 +746,3 @@ Page({
     wx.redirectTo({ url });
   },
 });
-

@@ -1,1 +1,15 @@
 @import "../common.wxss";
+
+.appeal-block {
+  margin-top: 12rpx;
+  padding: 14rpx 16rpx;
+  border-radius: 18rpx;
+  background: rgba(244, 162, 97, 0.08);
+  border: 2rpx solid rgba(244, 162, 97, 0.16);
+}
+
+.appeal-editor-card {
+  margin-top: 14rpx;
+  padding-top: 14rpx;
+  border-top: 2rpx dashed rgba(106, 153, 78, 0.16);
+}

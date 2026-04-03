@@ -63,11 +63,12 @@
 
   <view class="section-card" wx:if="{{canManageSalary}}">
     <view class="section-title">工资单生成</view>
-    <view class="section-sub">基地管理员生成工资单并核对金额后，等待采摘工在收入页确认</view>
+    <view class="section-sub">基地管理员生成工资单并核对金额后，等待采摘工确认；如果工人发起申诉，也可以在这里直接处理并修改工资单</view>
     <view class="chip-row">
       <text class="chip info">工资记录：{{salarySummary.totalRecords}}</text>
       <text class="chip pending">待确认：{{salarySummary.pendingCount}}</text>
       <text class="chip info">已确认：{{salarySummary.confirmedCount}}</text>
+      <text class="chip danger">待处理申诉：{{salarySummary.appealedCount}}</text>
       <text class="chip success">已发放：{{salarySummary.paidCount}}</text>
       <text class="chip success">总金额：{{salarySummary.totalAmount}}</text>
     </view>
@@ -82,10 +83,66 @@
       <view class="item-sub">{{item.baseName}} · {{item.jobTitle}} · {{item.workDate}}</view>
       <view class="chip-row">
         <text class="chip {{item.statusChipType}}">{{item.statusText}}</text>
+        <text wx:if="{{item.appealStatusText}}" class="chip {{item.appealChipType}}">{{item.appealStatusText}}</text>
         <text class="chip success">金额：¥{{item.amountText}}</text>
         <text class="chip info">{{item.volumeText}}</text>
       </view>
       <view class="item-sub">工资单 #{{item.id}} · 生成时间：{{item.createdAtText}}</view>
+
+      <view wx:if="{{item.workerAppealReason || item.appealReply}}" class="appeal-block">
+        <view wx:if="{{item.workerAppealReason}}" class="item-sub">工人申诉：{{item.workerAppealReason}}</view>
+        <view wx:if="{{item.workerExpectedAmountText}}" class="item-sub">期望金额：¥{{item.workerExpectedAmountText}}</view>
+        <view wx:if="{{item.workerAppealedAtText && item.workerAppealedAtText !== '-'}}" class="item-sub">申诉时间：{{item.workerAppealedAtText}}</view>
+        <view wx:if="{{item.appealReply}}" class="item-sub">处理说明：{{item.appealReply}}</view>
+        <view wx:if="{{item.appealHandledAtText && item.appealHandledAtText !== '-'}}" class="item-sub">处理时间：{{item.appealHandledAtText}}</view>
+      </view>
+
+      <view wx:if="{{item.canHandleAppeal}}" class="actions-row">
+        <button class="btn-secondary" bindtap="openAppealEditor" data-id="{{item.id}}">处理申诉</button>
+      </view>
+
+      <view wx:if="{{appealEditorId === item.id}}" class="appeal-editor-card">
+        <view class="item-sub">按申诉内容修改工资单。可只改金额，也可同时改工时或计件。</view>
+        <view class="item-sub">当前工资：¥{{item.amountText}} · {{item.volumeText}}</view>
+        <input
+          wx:if="{{item.payType === 2}}"
+          class="input"
+          type="digit"
+          placeholder="调整后工时，例如 8 或 8.5"
+          value="{{appealDurationInput}}"
+          data-field="appealDurationInput"
+          bindinput="onAppealFieldInput"
+        />
+        <input
+          wx:if="{{item.payType === 3}}"
+          class="input"
+          type="number"
+          placeholder="调整后计件数量"
+          value="{{appealCountInput}}"
+          data-field="appealCountInput"
+          bindinput="onAppealFieldInput"
+        />
+        <input
+          class="input"
+          type="digit"
+          placeholder="调整后工资金额"
+          value="{{appealAmountInput}}"
+          data-field="appealAmountInput"
+          bindinput="onAppealFieldInput"
+        />
+        <textarea
+          class="textarea"
+          placeholder="填写处理说明，调整后会展示给工人"
+          value="{{appealReplyInput}}"
+          data-field="appealReplyInput"
+          bindinput="onAppealFieldInput"
+        />
+        <view class="actions-row">
+          <button class="btn-primary" bindtap="submitAppealAdjustment" data-id="{{item.id}}" loading="{{appealSubmitting}}" disabled="{{appealSubmitting}}">修改工资单</button>
+          <button class="btn-danger" bindtap="rejectAppeal" data-id="{{item.id}}" loading="{{appealSubmitting}}" disabled="{{appealSubmitting}}">驳回申诉</button>
+          <button class="btn-ghost" bindtap="closeAppealEditor" disabled="{{appealSubmitting}}">取消</button>
+        </view>
+      </view>
     </view>
   </view>
 
