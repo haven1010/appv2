@@ -84,6 +84,23 @@ export class SalaryController {
     return this.salaryService.workerConfirmSalary(salaryId, req.user.id, { request: req, userId: req.user.id });
   }
 
+  @Post('worker/:salaryId/appeal')
+  @ApiOperation({ summary: '采摘工端：提交工资申诉' })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.WORKER)
+  async workerSubmitAppeal(
+    @Param('salaryId', ParseIntPipe) salaryId: number,
+    @Body() body: { reason?: string; expectedAmount?: number | string | null },
+    @Req() req: any,
+  ) {
+    return this.salaryService.workerSubmitAppeal(
+      salaryId,
+      req.user.id,
+      body,
+      { request: req, userId: req.user.id },
+    );
+  }
+
   @Post('calculate/:signupId')
   @ApiOperation({ summary: '根据签到记录生成/更新工资草稿' })
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -94,6 +111,23 @@ export class SalaryController {
     @Req() req: any,
   ) {
     return this.salaryService.calculateAndDraft(signupId, body, req.user.id, { request: req, userId: req.user.id });
+  }
+
+  @Patch(':salaryId/appeal')
+  @ApiOperation({ summary: '基地管理员处理工资申诉并修改工资单' })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.REGION_ADMIN, UserRole.BASE_MANAGER)
+  async handleAppeal(
+    @Param('salaryId', ParseIntPipe) salaryId: number,
+    @Body() body: { action?: string; duration?: number | string; count?: number | string; totalAmount?: number | string; reply?: string },
+    @Req() req: any,
+  ) {
+    return this.salaryService.managerHandleAppeal(
+      salaryId,
+      body,
+      req.user.id,
+      { request: req, userId: req.user.id },
+    );
   }
 
   @Post(':salaryId/payment')

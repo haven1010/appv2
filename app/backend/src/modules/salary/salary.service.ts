@@ -6,7 +6,7 @@
 import { Injectable, BadRequestException, ForbiddenException, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
-import { LaborSalary, SalaryStatus } from './entities/labor-salary.entity';
+import { LaborSalary, SalaryAppealStatus, SalaryStatus } from './entities/labor-salary.entity';
 import { SalaryPayment, PaymentStatus } from './entities/salary-payment.entity';
 import { DailySignup, SignupStatus } from '../attendance/entities/daily-signup.entity';
 import { JobApplication } from '../base/entities/job-application.entity';
@@ -49,6 +49,18 @@ export class SalaryService {
       default:
         throw new BadRequestException(`未知计薪类型: ${job.payType}`);
     }
+  }
+
+  private extractAppealSnapshot(salary: LaborSalary) {
+    return {
+      workerAppealStatus: salary.workerAppealStatus,
+      workerAppealReason: salary.workerAppealReason || null,
+      workerExpectedAmount: salary.workerExpectedAmount != null ? Number(salary.workerExpectedAmount) : null,
+      workerAppealedAt: salary.workerAppealedAt || null,
+      appealReply: salary.appealReply || null,
+      appealHandledBy: salary.appealHandledBy || null,
+      appealHandledAt: salary.appealHandledAt || null,
+    };
   }
 
   private async assertWorkerSessionAllowed(userId: number): Promise<void> {
@@ -314,6 +326,13 @@ export class SalaryService {
         unitPriceSnapshot: Number(s.unitPriceSnapshot),
         totalAmount: Number(s.totalAmount),
         status: s.status,
+        workerAppealStatus: s.workerAppealStatus,
+        workerAppealReason: s.workerAppealReason || null,
+        workerExpectedAmount: s.workerExpectedAmount != null ? Number(s.workerExpectedAmount) : null,
+        workerAppealedAt: s.workerAppealedAt || null,
+        appealReply: s.appealReply || null,
+        appealHandledBy: s.appealHandledBy || null,
+        appealHandledAt: s.appealHandledAt || null,
         payoutType: s.payoutType,
         createdAt: s.createdAt,
       };
@@ -433,10 +452,18 @@ export class SalaryService {
         workDate: signup?.workDate,
         baseName: signup?.base?.baseName ?? '-',
         jobTitle: signup?.job?.jobTitle ?? '-',
+        payType: signup?.job?.payType ?? null,
         workDuration: Number(s.workDuration),
         pieceCount: s.pieceCount,
+        unitPriceSnapshot: Number(s.unitPriceSnapshot),
         totalAmount: Number(s.totalAmount),
         status: s.status,
+        workerAppealStatus: s.workerAppealStatus,
+        workerAppealReason: s.workerAppealReason || null,
+        workerExpectedAmount: s.workerExpectedAmount != null ? Number(s.workerExpectedAmount) : null,
+        workerAppealedAt: s.workerAppealedAt || null,
+        appealReply: s.appealReply || null,
+        appealHandledAt: s.appealHandledAt || null,
         createdAt: s.createdAt,
       };
     });
@@ -497,6 +524,9 @@ export class SalaryService {
       if (salary.status !== SalaryStatus.PENDING) {
         throw new BadRequestException('该记录已确认或已发放');
       }
+      if (salary.workerAppealStatus === SalaryAppealStatus.PENDING) {
+        throw new BadRequestException('该工资单正在申诉处理中，请等待基地管理员处理');
+      }
 
       const previousStatus = salary.status;
       salary.status = SalaryStatus.CONFIRMED;
@@ -513,6 +543,204 @@ export class SalaryService {
       beforeData: { status: beforeStatus },
       afterData: { status: saved.status },
     });
+    return saved;
+  }
+
+  async workerSubmitAppeal(
+    salaryId: number,
+    userId: number,
+    input: { reason?: string; expectedAmount?: number | string | null },
+    context?: OperationLogContext,
+  ) {
+    await this.assertWorkerSessionAllowed(userId);
+
+    const reason = String(input?.reason || '').trim();
+    if (!reason) {
+      throw new BadRequestException('请填写申诉原因');
+    }
+
+    const rawExpectedAmount = input?.expectedAmount;
+    const expectedAmount = rawExpectedAmount === undefined || rawExpectedAmount === null || String(rawExpectedAmount).trim() === ''
+      ? null
+      : Number(rawExpectedAmount);
+    if (expectedAmount != null && (!Number.isFinite(expectedAmount) || expectedAmount <= 0)) {
+      throw new BadRequestException('期望金额必须大于 0');
+    }
+
+    const { saved, beforeAppeal } = await this.dataSource.transaction(async (manager) => {
+      const salary = await manager.findOne(LaborSalary, {
+        where: { id: salaryId },
+        relations: ['signup'],
+        lock: { mode: 'pessimistic_write' },
+      });
+      if (!salary) {
+        throw new NotFoundException('工资记录不存在');
+      }
+      if ((salary.signup as any)?.userId !== userId) {
+        throw new ForbiddenException('无权申诉此工资单');
+      }
+      if (salary.status !== SalaryStatus.PENDING) {
+        throw new BadRequestException('该工资单已确认或已发放，不能再申诉');
+      }
+      if (salary.workerAppealStatus === SalaryAppealStatus.PENDING) {
+        throw new BadRequestException('该工资单已有待处理申诉');
+      }
+
+      const before = this.extractAppealSnapshot(salary);
+      salary.workerAppealStatus = SalaryAppealStatus.PENDING;
+      salary.workerAppealReason = reason;
+      salary.workerExpectedAmount = expectedAmount;
+      salary.workerAppealedAt = new Date();
+      salary.appealReply = null;
+      salary.appealHandledBy = null;
+      salary.appealHandledAt = null;
+
+      const next = await manager.save(LaborSalary, salary);
+      return { saved: next, beforeAppeal: before };
+    });
+
+    await this.operationLogService.logWithContext({
+      operationType: OperationType.UPDATE,
+      resourceType: ResourceType.SALARY,
+      resourceId: saved.id,
+      userId,
+      request: context?.request,
+      description: `工人提交工资申诉: salaryId=${saved.id}`,
+      beforeData: beforeAppeal,
+      afterData: this.extractAppealSnapshot(saved),
+    });
+
+    return saved;
+  }
+
+  async managerHandleAppeal(
+    salaryId: number,
+    input: { action?: string; duration?: number | string; count?: number | string; totalAmount?: number | string; reply?: string },
+    adminId: number,
+    context?: OperationLogContext,
+  ) {
+    const operator = await this.userRepo.findOne({
+      where: { id: adminId, isDeleted: false },
+      select: ['id', 'roleKey'],
+    });
+    if (!operator) {
+      throw new NotFoundException('Operator user not found');
+    }
+    if (!isSuperAdmin(operator.roleKey) && operator.roleKey !== UserRole.BASE_MANAGER) {
+      throw new ForbiddenException('仅基地管理员可处理工资申诉');
+    }
+
+    const action = String(input?.action || 'adjust').trim().toLowerCase();
+    const reply = String(input?.reply || '').trim();
+    const parsedDuration = input?.duration === undefined || input?.duration === null || String(input.duration).trim() === ''
+      ? undefined
+      : Number(input.duration);
+    const parsedCount = input?.count === undefined || input?.count === null || String(input.count).trim() === ''
+      ? undefined
+      : Number(input.count);
+    const parsedTotalAmount = input?.totalAmount === undefined || input?.totalAmount === null || String(input.totalAmount).trim() === ''
+      ? undefined
+      : Number(input.totalAmount);
+
+    if (parsedDuration !== undefined && (!Number.isFinite(parsedDuration) || parsedDuration < 0)) {
+      throw new BadRequestException('工时必须大于等于 0');
+    }
+    if (parsedCount !== undefined && (!Number.isFinite(parsedCount) || parsedCount < 0)) {
+      throw new BadRequestException('计件数量必须大于等于 0');
+    }
+    if (parsedTotalAmount !== undefined && (!Number.isFinite(parsedTotalAmount) || parsedTotalAmount <= 0)) {
+      throw new BadRequestException('调整后的工资金额必须大于 0');
+    }
+
+    if (action === 'reject' && !reply) {
+      throw new BadRequestException('请填写驳回说明');
+    }
+    if (action !== 'reject' && parsedDuration === undefined && parsedCount === undefined && parsedTotalAmount === undefined) {
+      throw new BadRequestException('请至少调整工时、计件数量或工资金额中的一项');
+    }
+
+    const { saved, beforeSnapshot } = await this.dataSource.transaction(async (manager) => {
+      const salary = await manager.findOne(LaborSalary, {
+        where: { id: salaryId },
+        relations: ['signup', 'signup.job'],
+        lock: { mode: 'pessimistic_write' },
+      });
+      if (!salary) {
+        throw new NotFoundException('工资记录不存在');
+      }
+      if (salary.status !== SalaryStatus.PENDING) {
+        throw new BadRequestException('该工资单已确认或已发放，不能处理申诉');
+      }
+      if (salary.workerAppealStatus !== SalaryAppealStatus.PENDING) {
+        throw new BadRequestException('该工资单当前没有待处理申诉');
+      }
+
+      const signup = salary.signup as any;
+      if (!isSuperAdmin(operator.roleKey)) {
+        await this.baseScopeService.assertCanSuperviseBase(
+          { id: adminId, roleKey: operator.roleKey },
+          Number(signup?.baseId || 0),
+        );
+      }
+
+      const before = {
+        workDuration: Number(salary.workDuration),
+        pieceCount: salary.pieceCount,
+        totalAmount: Number(salary.totalAmount),
+        adminId: salary.adminId,
+        ...this.extractAppealSnapshot(salary),
+      };
+
+      if (action === 'reject') {
+        salary.workerAppealStatus = SalaryAppealStatus.REJECTED;
+        salary.appealReply = reply;
+      } else {
+        const nextDuration = parsedDuration !== undefined ? parsedDuration : Number(salary.workDuration || 0);
+        const nextCount = parsedCount !== undefined ? Math.round(parsedCount) : Number(salary.pieceCount || 0);
+        const nextTotalAmount = parsedTotalAmount !== undefined
+          ? parsedTotalAmount
+          : SalaryCalculatorFactory.getStrategy(signup?.job?.payType).calculate({
+              unitPrice: Number(salary.unitPriceSnapshot || 0),
+              workDuration: nextDuration,
+              pieceCount: nextCount,
+            });
+
+        if (!Number.isFinite(nextTotalAmount) || nextTotalAmount <= 0) {
+          throw new BadRequestException('调整后的工资金额必须大于 0');
+        }
+
+        salary.workDuration = nextDuration;
+        salary.pieceCount = nextCount;
+        salary.totalAmount = nextTotalAmount;
+        salary.adminId = adminId;
+        salary.workerAppealStatus = SalaryAppealStatus.RESOLVED;
+        salary.appealReply = reply || '基地管理员已按申诉调整工资单，请重新确认。';
+      }
+
+      salary.appealHandledBy = adminId;
+      salary.appealHandledAt = new Date();
+
+      const next = await manager.save(LaborSalary, salary);
+      return { saved: next, beforeSnapshot: before };
+    });
+
+    await this.operationLogService.logWithContext({
+      operationType: OperationType.UPDATE,
+      resourceType: ResourceType.SALARY,
+      resourceId: saved.id,
+      userId: adminId,
+      request: context?.request,
+      description: `${action === 'reject' ? '驳回' : '处理并调整'}工资申诉: salaryId=${saved.id}`,
+      beforeData: beforeSnapshot,
+      afterData: {
+        workDuration: Number(saved.workDuration),
+        pieceCount: saved.pieceCount,
+        totalAmount: Number(saved.totalAmount),
+        adminId: saved.adminId,
+        ...this.extractAppealSnapshot(saved),
+      },
+    });
+
     return saved;
   }
 }

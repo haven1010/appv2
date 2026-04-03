@@ -18,6 +18,13 @@ export enum SalaryStatus {
   PAID = 2,
 }
 
+export enum SalaryAppealStatus {
+  NONE = 0,
+  PENDING = 1,
+  RESOLVED = 2,
+  REJECTED = 3,
+}
+
 @Entity('labor_salary')
 export class LaborSalary {
   @PrimaryGeneratedColumn({ type: 'bigint' })
@@ -63,6 +70,39 @@ export class LaborSalary {
 
   @Column({ name: 'worker_sign_url', length: 255, nullable: true })
   workerSignUrl: string;
+
+  @Column({
+    name: 'worker_appeal_status',
+    type: 'tinyint',
+    default: SalaryAppealStatus.NONE,
+    comment: '0:无申诉, 1:待处理, 2:已调整待确认, 3:已驳回',
+  })
+  workerAppealStatus: SalaryAppealStatus;
+
+  @Column({ name: 'worker_appeal_reason', type: 'text', nullable: true, comment: '采摘工申诉原因' })
+  workerAppealReason: string | null;
+
+  @Column({
+    name: 'worker_expected_amount',
+    type: 'decimal',
+    precision: 10,
+    scale: 2,
+    nullable: true,
+    comment: '采摘工申诉期望金额',
+  })
+  workerExpectedAmount: number | null;
+
+  @Column({ name: 'worker_appealed_at', type: 'datetime', nullable: true, comment: '采摘工申诉时间' })
+  workerAppealedAt: Date | null;
+
+  @Column({ name: 'appeal_reply', type: 'text', nullable: true, comment: '基地管理员处理说明' })
+  appealReply: string | null;
+
+  @Column({ name: 'appeal_handled_by', type: 'bigint', nullable: true, comment: '申诉处理人ID' })
+  appealHandledBy: number | null;
+
+  @Column({ name: 'appeal_handled_at', type: 'datetime', nullable: true, comment: '申诉处理时间' })
+  appealHandledAt: Date | null;
 
   @Column({ name: 'admin_id', type: 'bigint' })
   adminId: number;

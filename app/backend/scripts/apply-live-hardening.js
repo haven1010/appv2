@@ -427,6 +427,55 @@ async function main() {
     'ALTER TABLE labor_salary ADD CONSTRAINT FK_labor_salary_admin FOREIGN KEY (admin_id) REFERENCES sys_user(id) ON DELETE RESTRICT',
   );
 
+  if (!(await hasColumn('labor_salary', 'worker_appeal_status'))) {
+    await connection.query(
+      "ALTER TABLE labor_salary ADD COLUMN worker_appeal_status tinyint NOT NULL DEFAULT '0' COMMENT '0:无申诉, 1:待处理, 2:已调整待确认, 3:已驳回' AFTER worker_sign_url",
+    );
+    console.log('Added labor_salary.worker_appeal_status');
+  }
+
+  if (!(await hasColumn('labor_salary', 'worker_appeal_reason'))) {
+    await connection.query(
+      "ALTER TABLE labor_salary ADD COLUMN worker_appeal_reason text NULL COMMENT '采摘工申诉原因' AFTER worker_appeal_status",
+    );
+    console.log('Added labor_salary.worker_appeal_reason');
+  }
+
+  if (!(await hasColumn('labor_salary', 'worker_expected_amount'))) {
+    await connection.query(
+      "ALTER TABLE labor_salary ADD COLUMN worker_expected_amount decimal(10,2) NULL COMMENT '采摘工申诉期望金额' AFTER worker_appeal_reason",
+    );
+    console.log('Added labor_salary.worker_expected_amount');
+  }
+
+  if (!(await hasColumn('labor_salary', 'worker_appealed_at'))) {
+    await connection.query(
+      "ALTER TABLE labor_salary ADD COLUMN worker_appealed_at datetime NULL COMMENT '采摘工申诉时间' AFTER worker_expected_amount",
+    );
+    console.log('Added labor_salary.worker_appealed_at');
+  }
+
+  if (!(await hasColumn('labor_salary', 'appeal_reply'))) {
+    await connection.query(
+      "ALTER TABLE labor_salary ADD COLUMN appeal_reply text NULL COMMENT '基地管理员处理说明' AFTER worker_appealed_at",
+    );
+    console.log('Added labor_salary.appeal_reply');
+  }
+
+  if (!(await hasColumn('labor_salary', 'appeal_handled_by'))) {
+    await connection.query(
+      "ALTER TABLE labor_salary ADD COLUMN appeal_handled_by bigint NULL COMMENT '申诉处理人ID' AFTER appeal_reply",
+    );
+    console.log('Added labor_salary.appeal_handled_by');
+  }
+
+  if (!(await hasColumn('labor_salary', 'appeal_handled_at'))) {
+    await connection.query(
+      "ALTER TABLE labor_salary ADD COLUMN appeal_handled_at datetime NULL COMMENT '申诉处理时间' AFTER appeal_handled_by",
+    );
+    console.log('Added labor_salary.appeal_handled_at');
+  }
+
   await ensureIndex(
     'salary_payment',
     'UQ_salary_payment_salary_id',
