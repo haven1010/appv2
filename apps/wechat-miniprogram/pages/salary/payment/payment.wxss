@@ -1,0 +1,276 @@
+.page {
+  min-height: 100vh;
+  background: #F8FAFC;
+}
+
+.page-body {
+  padding: 16px;
+}
+
+.header-card {
+  padding: 32px 24px;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.header-icon {
+  font-size: 48px;
+  display: block;
+  margin-bottom: 12px;
+}
+
+.header-title {
+  display: block;
+  font-size: 20px;
+  font-weight: 600;
+  color: #64748B;
+  margin-bottom: 16px;
+}
+
+.amount-display {
+  font-size: 48px;
+  font-weight: 700;
+  color: #16A34A;
+  margin-bottom: 16px;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 8px 24px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.status-badge.status-pending {
+  background: #FEF3C7;
+  color: #92400E;
+}
+
+.status-badge.status-processing {
+  background: #DBEAFE;
+  color: #1E40AF;
+}
+
+.status-badge.status-paid {
+  background: #D1FAE5;
+  color: #065F46;
+}
+
+.timeline-card {
+  padding: 24px;
+  margin-bottom: 16px;
+}
+
+.timeline-item {
+  display: flex;
+  align-items: flex-start;
+  position: relative;
+  padding-bottom: 32px;
+}
+
+.timeline-item:last-child {
+  padding-bottom: 0;
+}
+
+.timeline-item:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  left: 15px;
+  top: 32px;
+  bottom: 0;
+  width: 2px;
+  background: #E2E8F0;
+}
+
+.timeline-item.completed:not(:last-child)::after {
+  background: #16A34A;
+}
+
+.timeline-dot {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #E2E8F0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-right: 16px;
+  position: relative;
+  z-index: 1;
+}
+
+.timeline-item.completed .timeline-dot {
+  background: #16A34A;
+}
+
+.timeline-item.active .timeline-dot {
+  background: #3B82F6;
+}
+
+.timeline-icon {
+  color: #FFFFFF;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.timeline-pulse {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: #3B82F6;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(1.1);
+  }
+}
+
+.timeline-content {
+  flex: 1;
+  padding-top: 4px;
+}
+
+.timeline-title {
+  display: block;
+  font-size: 16px;
+  font-weight: 600;
+  color: #0F172A;
+  margin-bottom: 4px;
+}
+
+.timeline-item.completed .timeline-title {
+  color: #16A34A;
+}
+
+.timeline-item.active .timeline-title {
+  color: #3B82F6;
+}
+
+.timeline-time {
+  display: block;
+  font-size: 14px;
+  color: #94A3B8;
+}
+
+.info-card {
+  padding: 20px;
+  margin-bottom: 16px;
+}
+
+.section-title {
+  display: block;
+  font-size: 16px;
+  font-weight: 600;
+  color: #0F172A;
+  margin-bottom: 16px;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.info-row:last-child {
+  margin-bottom: 0;
+}
+
+.info-label {
+  font-size: 14px;
+  color: #64748B;
+}
+
+.info-value {
+  font-size: 14px;
+  color: #0F172A;
+  font-weight: 500;
+}
+
+.tips-card {
+  padding: 20px;
+  margin-bottom: 16px;
+  background: #EFF6FF;
+}
+
+.tips-title {
+  display: block;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1E40AF;
+  margin-bottom: 12px;
+}
+
+.tips-item {
+  display: block;
+  font-size: 14px;
+  color: #1E3A8A;
+  line-height: 1.8;
+  margin-bottom: 4px;
+}
+
+.tips-item:last-child {
+  margin-bottom: 0;
+}
+
+.action-card {
+  margin-bottom: 16px;
+}
+
+.btn-ghost {
+  width: 100%;
+  height: 48px;
+  background: #FFFFFF;
+  color: #64748B;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  font-size: 16px;
+}
+
+.page-bottom-gap {
+  height: 40px;
+}
+
+.ds-card {
+  background: #FFFFFF;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.page-enter {
+  animation: fadeIn 0.3s ease-in;
+}
+
+.card-in {
+  animation: slideUp 0.4s ease-out;
+}
+
+.delay-1 { animation-delay: 0.1s; }
+.delay-2 { animation-delay: 0.2s; }
+.delay-3 { animation-delay: 0.3s; }
+.delay-4 { animation-delay: 0.4s; }
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

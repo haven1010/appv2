@@ -1,0 +1,39 @@
+<view class="page">
+  <view class="page-body {{pageReady ? 'page-enter' : ''}}">
+    <view class="hero-card card-in">
+      <text class="hero-badge">流程中心</text>
+      <text class="hero-title">把求职、培训、维权、政策服务串成一条线</text>
+      <text class="hero-subtitle">按流程一步步进入对应页面，减少用户在不同功能之间来回寻找入口。</text>
+    </view>
+
+    <view class="group-list">
+      <view class="group-card card-in" wx:for="{{processGroups}}" wx:key="id">
+        <view class="group-head">
+          <text class="group-title">{{item.title}}</text>
+          <text class="group-subtitle">{{item.subtitle}}</text>
+        </view>
+
+        <view class="step-list">
+          <view
+            class="step-row"
+            wx:for="{{item.steps}}"
+            wx:key="id"
+            wx:for-item="step"
+            data-url="{{step.url}}"
+            bindtap="goStep"
+          >
+            <view class="step-index">{{index + 1}}</view>
+            <view class="step-content">
+              <text class="step-label">{{step.label}}</text>
+              <text class="step-desc">{{step.desc}}</text>
+            </view>
+            <text class="step-arrow">></text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <button class="back-btn card-in" bindtap="goHome">返回首页</button>
+    <view class="page-bottom-gap"></view>
+  </view>
+</view>

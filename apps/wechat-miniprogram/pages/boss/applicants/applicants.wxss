@@ -1,0 +1,205 @@
+.page {
+  min-height: 100vh;
+  background: #f5efe3;
+}
+
+.page-body {
+  padding: 16px;
+}
+
+.filter-section {
+  background: #FFFFFF;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.filter-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.filter-row:last-child {
+  margin-bottom: 0;
+}
+
+.filter-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #0F172A;
+  min-width: 80px;
+}
+
+.picker-box {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+}
+
+.picker-text {
+  font-size: 14px;
+  color: #0F172A;
+}
+
+.picker-arrow {
+  font-size: 12px;
+  color: #94A3B8;
+}
+
+.loading-state,
+.empty-state {
+  text-align: center;
+  padding: 80px 0;
+}
+
+.loading-text {
+  font-size: 14px;
+  color: #94A3B8;
+}
+
+.empty-icon {
+  display: block;
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.empty-text {
+  display: block;
+  font-size: 14px;
+  color: #94A3B8;
+}
+
+.applicant-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.applicant-card {
+  background: #FFFFFF;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.applicant-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.applicant-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.applicant-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: #0F172A;
+}
+
+.applicant-phone {
+  font-size: 14px;
+  color: #2563EB;
+  text-decoration: underline;
+}
+
+.status-badge {
+  padding: 6px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.status-badge.pending {
+  background: #FEF3C7;
+  color: #92400E;
+}
+
+.status-badge.approved {
+  background: #D1FAE5;
+  color: #065F46;
+}
+
+.status-badge.rejected {
+  background: #FEE2E2;
+  color: #991B1B;
+}
+
+.status-badge.cancelled {
+  background: #F1F5F9;
+  color: #475569;
+}
+
+.applicant-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+
+.meta-item {
+  font-size: 13px;
+  color: #64748B;
+  line-height: 1.6;
+}
+
+.applicant-actions {
+  display: flex;
+  gap: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #F1F5F9;
+}
+
+.action-btn {
+  flex: 1;
+  height: 40px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  border: none;
+}
+
+.action-btn::after {
+  border: none;
+}
+
+.approve-btn {
+  background: linear-gradient(135deg, #10B981, #059669);
+  color: #FFFFFF;
+}
+
+.reject-btn {
+  background: #FFFFFF;
+  color: #EF4444;
+  border: 1px solid #FCA5A5;
+}
+
+.page-bottom-gap {
+  height: 40px;
+}

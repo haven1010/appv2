@@ -1,0 +1,139 @@
+<view class="page worker-home-page">
+  <view class="page-body worker-home-body">
+    <view class="home-hero card-in">
+      <view class="hero-copy">
+        <text class="hero-title">智汇就业</text>
+        <text class="hero-subtitle">苏陕协作就业服务与劳务对接平台</text>
+        <text class="hero-desc">一键找岗、扫码签到、工资确认、政策服务，一站办妥。</text>
+      </view>
+      <view class="hero-badge">
+        <text class="hero-badge-label">今日状态</text>
+        <text class="hero-badge-value">{{user.name || '已登录用户'}}</text>
+      </view>
+    </view>
+
+    <view class="checkin-card card-in delay-1">
+      <view class="checkin-head">
+        <view>
+          <text class="section-kicker">快捷签到</text>
+          <text class="checkin-title">上工前，先出示签到码</text>
+        </view>
+        <text class="checkin-chip">高频入口</text>
+      </view>
+      <text class="checkin-note">扫码签到是本平台的核心亮点，入口固定保留在首页和底部中心按钮。</text>
+      <button class="btn-primary senior-btn" bindtap="goToQrcode">打开签到码</button>
+    </view>
+
+    <view class="todo-card card-in delay-2">
+      <view class="section-head">
+        <text class="section-title">今日待办</text>
+        <text class="section-caption">按顺序完成，不容易漏</text>
+      </view>
+      <view class="todo-grid">
+        <view class="todo-item" bindtap="goToJobList">
+          <text class="todo-step">1</text>
+          <text class="todo-label">找岗位</text>
+          <text class="todo-desc">浏览基地和岗位</text>
+        </view>
+        <view class="todo-item" bindtap="goToMySignups">
+          <text class="todo-step">2</text>
+          <text class="todo-label">看报名</text>
+          <text class="todo-desc">查看进度和状态</text>
+        </view>
+        <view class="todo-item" bindtap="goToQrcode">
+          <text class="todo-step">3</text>
+          <text class="todo-label">去签到</text>
+          <text class="todo-desc">到岗后出示二维码</text>
+        </view>
+        <view class="todo-item" bindtap="goToProfile">
+          <text class="todo-step">4</text>
+          <text class="todo-label">查收入</text>
+          <text class="todo-desc">工资与银行卡都在我的里</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="service-card card-in delay-3">
+      <view class="section-head">
+        <text class="section-title">常用服务</text>
+        <text class="section-caption">大按钮，更适合快速操作</text>
+      </view>
+      <view class="service-list">
+        <view class="service-row" bindtap="goToPolicyConsult">
+          <view class="service-icon icon-blue">政</view>
+          <view class="service-copy">
+            <text class="service-title">政策服务</text>
+            <text class="service-desc">查看补贴、扶持与申请条件</text>
+          </view>
+          <text class="service-arrow">></text>
+        </view>
+        <view class="service-row" bindtap="goToTraining">
+          <view class="service-icon icon-cyan">训</view>
+          <view class="service-copy">
+            <text class="service-title">培训学习</text>
+            <text class="service-desc">提升技能，增加岗位机会</text>
+          </view>
+          <text class="service-arrow">></text>
+        </view>
+        <view class="service-row" bindtap="goToRightsProtection">
+          <view class="service-icon icon-red">维</view>
+          <view class="service-copy">
+            <text class="service-title">维权咨询</text>
+            <text class="service-desc">工资、合同、工伤问题快速求助</text>
+          </view>
+          <text class="service-arrow">></text>
+        </view>
+        <view class="service-row" bindtap="goToWorkerList">
+          <view class="service-icon icon-indigo">智</view>
+          <view class="service-copy">
+            <text class="service-title">智能助手</text>
+            <text class="service-desc">像豆包一样提问，获取岗位和政策建议</text>
+          </view>
+          <text class="service-arrow">></text>
+        </view>
+      </view>
+    </view>
+
+    <view class="job-section card-in delay-4">
+      <view class="section-head">
+        <view>
+          <text class="section-title">推荐岗位</text>
+          <text class="section-caption">优先展示可直接报名的岗位</text>
+        </view>
+        <text class="section-link" bindtap="goToJobList">全部岗位</text>
+      </view>
+
+      <view wx:if="{{loadingBases}}" class="ds-empty compact-empty">
+        <text class="ds-empty-title">正在加载岗位</text>
+        <text class="ds-empty-desc">请稍候一下</text>
+      </view>
+
+      <view wx:elif="{{bases.length}}" class="job-list">
+        <view
+          class="job-card"
+          wx:for="{{bases}}"
+          wx:key="id"
+          data-id="{{item.id}}"
+          bindtap="goToBaseDetail"
+        >
+          <view class="job-card-head">
+            <text class="job-card-title">{{item.name}}</text>
+            <text class="job-card-tag">{{item.categoryText}}</text>
+          </view>
+          <text class="job-card-address">{{item.address}}</text>
+          <view class="job-card-foot">
+            <text class="job-card-salary">{{item.salaryRange || '面议'}}</text>
+            <button class="job-card-btn" size="mini" data-id="{{item.id}}" catchtap="applyForBase">立即报名</button>
+          </view>
+        </view>
+      </view>
+
+      <view wx:else class="ds-empty compact-empty">
+        <text class="ds-empty-title">暂无推荐岗位</text>
+        <text class="ds-empty-desc">稍后再来看看，或去全部岗位里找一找</text>
+      </view>
+    </view>
+
+    <view class="page-bottom-gap"></view>
+  </view>
+</view>

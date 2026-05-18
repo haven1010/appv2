@@ -1,0 +1,369 @@
+.page {
+  min-height: 100vh;
+  padding: 24rpx 24rpx 56rpx;
+  box-sizing: border-box;
+  background: transparent;
+}
+
+.hero-card,
+.section-card,
+.state-panel,
+.accordion-card {
+  border-radius: 28rpx;
+  border: 3rpx solid rgba(140, 112, 72, 0.2);
+  background: var(--warm-card);
+  box-shadow: var(--shadow-card);
+}
+
+.hero-card {
+  padding: 24rpx;
+}
+
+.hero-head {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.hero-title {
+  flex: 1;
+  font-size: 40rpx;
+  line-height: 1.25;
+  color: #473421;
+  font-weight: 800;
+}
+
+.status-tag {
+  flex-shrink: 0;
+  font-size: 22rpx;
+  font-weight: 700;
+  padding: 6rpx 16rpx;
+  border-radius: 999rpx;
+}
+
+.status-tag.approved {
+  color: #4a6b34;
+  background: rgba(240, 246, 226, 0.9);
+}
+
+.status-tag.pending {
+  color: #8e6a2f;
+  background: #f8e5b6;
+}
+
+.status-tag.rejected {
+  color: #8f4b43;
+  background: #f3d9d4;
+}
+
+.hero-subtitle {
+  display: block;
+  margin-top: 10rpx;
+  font-size: 26rpx;
+  line-height: 1.5;
+  color: var(--ink-sub);
+}
+
+.accordion-card {
+  margin-top: 14rpx;
+  overflow: hidden;
+}
+
+.accordion-head {
+  padding: 20rpx 22rpx;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1rpx solid rgba(140, 112, 72, 0.12);
+}
+
+.accordion-title {
+  font-size: 34rpx;
+  font-weight: 800;
+  color: #473421;
+}
+
+.accordion-arrow {
+  font-size: 22rpx;
+  color: #7a664e;
+  font-weight: 700;
+}
+
+.accordion-body {
+  padding: 0 14rpx 14rpx;
+}
+
+.section-card {
+  margin-top: 12rpx;
+  padding: 22rpx;
+}
+
+.section-title {
+  display: block;
+  font-size: 30rpx;
+  line-height: 1.35;
+  color: #473421;
+  font-weight: 800;
+  margin-bottom: 10rpx;
+}
+
+.info-row {
+  padding: 14rpx 0;
+  border-bottom: 1rpx dashed rgba(112, 93, 69, 0.2);
+}
+
+.info-row:last-child {
+  border-bottom: none;
+}
+
+.info-label {
+  display: block;
+  font-size: 24rpx;
+  line-height: 1.35;
+  color: #7d6b56;
+}
+
+.info-value {
+  display: block;
+  margin-top: 6rpx;
+  font-size: 28rpx;
+  line-height: 1.45;
+  color: #3b2f21;
+  word-break: break-all;
+}
+
+.summary-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10rpx;
+}
+
+.summary-chip {
+  font-size: 22rpx;
+  padding: 6rpx 14rpx;
+  border-radius: 999rpx;
+  background: rgba(210, 221, 233, 0.56);
+  color: #4a4f58;
+  font-weight: 700;
+}
+
+.summary-chip.success {
+  background: rgba(223, 238, 203, 0.88);
+  color: #3d6230;
+}
+
+.summary-chip.warn {
+  background: rgba(248, 225, 182, 0.88);
+  color: #7c6031;
+}
+
+.summary-chip.info {
+  background: rgba(222, 232, 249, 0.88);
+  color: #395f8f;
+}
+
+.env-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+}
+
+.env-image {
+  width: calc((100% - 24rpx) / 3);
+  height: 180rpx;
+  border-radius: 16rpx;
+  border: 2rpx solid rgba(112, 93, 69, 0.12);
+  background: #f0e5cd;
+}
+
+.empty-box {
+  border-radius: 18rpx;
+  border: 2rpx dashed rgba(112, 93, 69, 0.22);
+  background: #f9f2e4;
+  padding: 34rpx 20rpx;
+  text-align: center;
+}
+
+.empty-text {
+  font-size: 26rpx;
+  line-height: 1.45;
+  color: #87735d;
+}
+
+.warn-tip {
+  display: block;
+  margin-top: 12rpx;
+  font-size: 24rpx;
+  line-height: 1.4;
+  color: #9a5d3d;
+}
+
+.inner-state {
+  margin-top: 12rpx;
+}
+
+.progress-list,
+.payroll-list {
+  margin-top: 12rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 10rpx;
+}
+
+.progress-card,
+.payroll-card {
+  border-radius: 24rpx;
+  border: 3rpx solid rgba(140, 112, 72, 0.2);
+  background: var(--warm-card);
+  box-shadow: var(--shadow-card);
+  padding: 16rpx;
+}
+
+.progress-head,
+.payroll-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.progress-title,
+.payroll-name {
+  font-size: 30rpx;
+  font-weight: 800;
+  color: #473421;
+}
+
+.progress-status,
+.payroll-status {
+  font-size: 20rpx;
+  border-radius: 999rpx;
+  padding: 4rpx 12rpx;
+  font-weight: 700;
+}
+
+.progress-status.open {
+  color: #4a6b34;
+  background: rgba(240, 246, 226, 0.9);
+}
+
+.progress-status.closed {
+  color: #8e4a2e;
+  background: rgba(248, 225, 214, 0.88);
+}
+
+.progress-meta,
+.payroll-meta {
+  margin-top: 10rpx;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10rpx;
+  font-size: 22rpx;
+  color: #6f5e49;
+}
+
+.progress-date,
+.payroll-date {
+  display: block;
+  margin-top: 8rpx;
+  font-size: 22rpx;
+  color: #7a664e;
+}
+
+.name-list {
+  margin-top: 10rpx;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8rpx;
+}
+
+.name-chip {
+  font-size: 20rpx;
+  color: #5e4b36;
+  background: rgba(238, 226, 204, 0.86);
+  border-radius: 999rpx;
+  padding: 6rpx 12rpx;
+}
+
+.payroll-stats {
+  display: flex;
+  gap: 10rpx;
+}
+
+.payroll-stat {
+  flex: 1;
+  border-radius: 16rpx;
+  border: 2rpx solid rgba(140, 112, 72, 0.2);
+  background: rgba(255, 255, 255, 0.66);
+  padding: 14rpx 10rpx;
+  text-align: center;
+}
+
+.payroll-stat-value {
+  display: block;
+  font-size: 26rpx;
+  font-weight: 800;
+  color: #3f3222;
+}
+
+.payroll-stat-label {
+  display: block;
+  margin-top: 6rpx;
+  font-size: 21rpx;
+  color: #7a664e;
+}
+
+.payroll-status.pending {
+  color: #8e6a2f;
+  background: #f8e5b6;
+}
+
+.payroll-status.confirm {
+  color: #4a6b34;
+  background: rgba(240, 246, 226, 0.9);
+}
+
+.payroll-status.paid {
+  color: #3e5f2d;
+  background: #dbecc6;
+}
+
+.payroll-main {
+  margin-top: 12rpx;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.payroll-total-label {
+  font-size: 24rpx;
+  color: #7a664e;
+}
+
+.payroll-total-value {
+  font-size: 34rpx;
+  color: #4a6b34;
+  font-weight: 800;
+}
+
+.state-panel {
+  margin-top: 16rpx;
+  padding: 52rpx 26rpx;
+  text-align: center;
+}
+
+.state-title {
+  display: block;
+  font-size: 30rpx;
+  line-height: 1.4;
+  color: #4a3823;
+  font-weight: 700;
+}
+
+.state-desc {
+  display: block;
+  margin-top: 8rpx;
+  font-size: 24rpx;
+  line-height: 1.45;
+  color: #7a664e;
+}

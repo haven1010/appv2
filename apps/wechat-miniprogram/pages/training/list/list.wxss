@@ -1,0 +1,158 @@
+.page {
+  min-height: 100vh;
+  background: #f5efe3;
+}
+
+.page-body {
+  padding: 16px;
+}
+
+.header-card {
+  padding: 32px 24px;
+  margin-bottom: 16px;
+  background: linear-gradient(135deg, #06B6D4, #0891B2);
+  border-radius: 16px;
+  text-align: center;
+}
+
+.header-title {
+  display: block;
+  font-size: 28px;
+  font-weight: 700;
+  color: #FFFFFF;
+  margin-bottom: 8px;
+}
+
+.header-subtitle {
+  display: block;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.category-tabs {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+  overflow-x: auto;
+}
+
+.tab-item {
+  flex-shrink: 0;
+  padding: 8px 20px;
+  background: #FFFFFF;
+  border-radius: 20px;
+  font-size: 14px;
+  color: #64748B;
+  font-weight: 500;
+}
+
+.tab-active {
+  background: #06B6D4;
+  color: #FFFFFF;
+  font-weight: 600;
+}
+
+.loading-state,
+.empty-state {
+  text-align: center;
+  padding: 80px 0;
+}
+
+.loading-text,
+.empty-text {
+  font-size: 14px;
+  color: #94A3B8;
+}
+
+.course-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.course-card {
+  background: #FFFFFF;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  animation: slideUp 0.4s ease-out;
+}
+
+.course-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.course-title {
+  flex: 1;
+  font-size: 16px;
+  font-weight: 600;
+  color: #0F172A;
+}
+
+.course-status {
+  flex-shrink: 0;
+  padding: 4px 12px;
+  background: #DBEAFE;
+  color: #1E40AF;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.course-meta {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.course-category,
+.course-duration {
+  font-size: 14px;
+  color: #64748B;
+}
+
+.course-footer {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.btn-enroll {
+  padding: 0 24px;
+  height: 36px;
+  line-height: 36px;
+  background: linear-gradient(135deg, #06B6D4, #0891B2);
+  color: #FFFFFF;
+  border-radius: 18px;
+  font-size: 14px;
+  font-weight: 600;
+  border: none;
+}
+
+.btn-enroll::after {
+  border: none;
+}
+
+.enrolled-text {
+  font-size: 14px;
+  color: #10B981;
+  font-weight: 600;
+}
+
+.page-bottom-gap {
+  height: 40px;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

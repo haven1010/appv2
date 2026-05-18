@@ -1,0 +1,269 @@
+<view class="page page-enter">
+  <view class="hero-card">
+    <view class="hero-head">
+      <text class="hero-title">{{isBossView ? (baseId ? (baseName + ' 岗位发布') : '我的发布岗位') : '岗位广场'}}</text>
+      <text class="hero-badge">{{isBossView ? 'Boss View' : 'Worker View'}}</text>
+    </view>
+
+    <text class="hero-subtitle" wx:if="{{isBossView}}">
+      先完成基地入驻审核，再进入发布表单。发布后的岗位会出现在工人端广场供报名。
+    </text>
+    <text class="hero-subtitle" wx:else>浏览岗位并快速报名。</text>
+
+    <view class="hero-actions" wx:if="{{isBossView && baseId}}">
+      <view class="hero-back pressable" hover-class="pressing" hover-stay-time="80" bindtap="backToBaseSelector">返回基地列表</view>
+    </view>
+
+    <view class="hero-stats">
+      <block wx:if="{{isBossView}}">
+        <view class="hero-stat">
+          <text class="hero-stat-value">{{approvedBaseCount}}</text>
+          <text class="hero-stat-label">可发布基地</text>
+        </view>
+        <view class="hero-stat">
+          <text class="hero-stat-value">{{pendingBaseCount}}</text>
+          <text class="hero-stat-label">待审/未通过</text>
+        </view>
+        <view class="hero-stat">
+          <text class="hero-stat-value">{{baseId ? jobs.length : viewBossBases.length}}</text>
+          <text class="hero-stat-label">{{baseId ? '岗位数量' : '基地数量'}}</text>
+        </view>
+      </block>
+      <block wx:else>
+        <view class="hero-stat">
+          <text class="hero-stat-value">{{jobs.length}}</text>
+          <text class="hero-stat-label">岗位总数</text>
+        </view>
+        <view class="hero-stat">
+          <text class="hero-stat-value">{{openCount}}</text>
+          <text class="hero-stat-label">招聘中</text>
+        </view>
+        <view class="hero-stat">
+          <text class="hero-stat-value">{{closedCount}}</text>
+          <text class="hero-stat-label">已关闭</text>
+        </view>
+      </block>
+    </view>
+  </view>
+
+  <view wx:if="{{loadError}}" class="state-panel error-panel">
+    <text class="state-title">{{loadError}}</text>
+    <button class="lock-btn" bindtap="loadPageData">重新加载</button>
+  </view>
+
+  <view wx:if="{{loading}}" class="state-panel">
+    <text class="state-title">正在加载数据...</text>
+    <text class="state-desc">请稍候</text>
+  </view>
+
+  <block wx:elif="{{isBossView && !baseId}}">
+    <view class="filter-card">
+      <input
+        class="search-input"
+        placeholder="搜索基地名称或地址"
+        value="{{keyword}}"
+        bindinput="onKeywordInput"
+        confirm-type="search"
+      />
+    </view>
+
+    <view wx:if="{{viewBossBases.length === 0}}" class="state-panel">
+      <text class="state-title">暂无可管理基地</text>
+      <text class="state-desc">请先在“企业入驻审核”中提交基地资料。</text>
+    </view>
+
+    <view wx:else class="base-list">
+      <view
+        wx:for="{{viewBossBases}}"
+        wx:key="id"
+        class="base-card pressable"
+        hover-class="pressing"
+        hover-stay-time="100"
+        bindtap="goToBasePublish"
+        data-id="{{item.id}}"
+      >
+        <view class="base-head">
+          <text class="base-name">{{item.baseName}}</text>
+          <text class="base-audit {{item.auditStatus === 1 ? 'ok' : 'warn'}}">{{item.auditText}}</text>
+        </view>
+        <text class="base-address">{{item.address}}</text>
+        <view class="base-stats">
+          <text class="base-chip">岗位 {{item.totalJobs}}</text>
+          <text class="base-chip success">招聘中 {{item.openJobs}}</text>
+          <text class="base-chip">已关闭 {{item.closedJobs}}</text>
+        </view>
+        <view class="base-foot">
+          <text class="base-foot-text">点击进入岗位发布</text>
+          <text class="cell-arrow">></text>
+        </view>
+      </view>
+    </view>
+  </block>
+
+  <block wx:else>
+    <view wx:if="{{lockUI}}" class="state-panel lock-panel">
+      <text class="state-title">基地未审核通过</text>
+      <text class="state-desc">{{lockReason}}</text>
+      <button class="lock-btn" bindtap="goToAuditPage">去企业入驻审核</button>
+    </view>
+
+    <block wx:else>
+      <view class="filter-card">
+        <input
+          class="search-input"
+          placeholder="{{isBossView ? '搜索岗位名称或地址' : '搜索岗位或基地'}}"
+          value="{{keyword}}"
+          bindinput="onKeywordInput"
+          confirm-type="search"
+        />
+        <view class="segment-row">
+          <view class="segment-item pressable {{statusFilter === 'all' ? 'active' : ''}}" data-status="all" bindtap="onStatusChange">全部</view>
+          <view class="segment-item pressable {{statusFilter === 'open' ? 'active' : ''}}" data-status="open" bindtap="onStatusChange">招聘中</view>
+          <view class="segment-item pressable {{statusFilter === 'closed' ? 'active' : ''}}" data-status="closed" bindtap="onStatusChange">已关闭</view>
+        </view>
+      </view>
+
+      <view wx:if="{{isBossView}}" class="form-card">
+        <view class="form-title-row">
+          <text class="form-title">发布岗位</text>
+          <text class="form-subtitle">填写后提交审核</text>
+        </view>
+
+        <view class="field">
+          <text class="label">岗位名称</text>
+          <input class="input" placeholder="例如：果园采摘工" value="{{form.jobTitle}}" data-field="jobTitle" bindinput="onFormInput" />
+        </view>
+
+        <view class="field">
+          <text class="label">工作地址</text>
+          <textarea class="textarea" maxlength="200" placeholder="填写详细工作地址" value="{{form.workAddress}}" data-field="workAddress" bindinput="onFormInput" />
+        </view>
+
+        <view class="field">
+          <text class="label">需要人数</text>
+          <view class="stepper">
+            <view class="step-btn pressable" data-delta="-1" bindtap="onRecruitCountStep">-</view>
+            <text class="step-value">{{form.recruitCount}}</text>
+            <view class="step-btn pressable" data-delta="1" bindtap="onRecruitCountStep">+</view>
+          </view>
+        </view>
+
+        <view class="field">
+          <text class="label">工资模式</text>
+          <view class="segment-row mode-row">
+            <view class="segment-item pressable {{form.salaryMode === 'daily' ? 'active' : ''}}" data-mode="daily" bindtap="onSalaryModeChange">日结</view>
+            <view class="segment-item pressable {{form.salaryMode === 'piece' ? 'active' : ''}}" data-mode="piece" bindtap="onSalaryModeChange">计件</view>
+            <view class="segment-item pressable {{form.salaryMode === 'monthly' ? 'active' : ''}}" data-mode="monthly" bindtap="onSalaryModeChange">按月</view>
+          </view>
+        </view>
+
+        <view class="field">
+          <text class="label">{{amountLabel}}</text>
+          <input class="input" type="digit" placeholder="请输入金额" value="{{form.amount}}" data-field="amount" bindinput="onFormInput" />
+        </view>
+
+        <view class="field two-col">
+          <view class="col">
+            <text class="label">开始日期</text>
+            <picker mode="date" value="{{form.workStartDate}}" data-field="workStartDate" bindchange="onFormDateChange">
+              <view class="picker">{{form.workStartDate}}</view>
+            </picker>
+          </view>
+          <view class="col">
+            <text class="label">结束日期</text>
+            <picker mode="date" value="{{form.workEndDate}}" data-field="workEndDate" bindchange="onFormDateChange">
+              <view class="picker">{{form.workEndDate}}</view>
+            </picker>
+          </view>
+        </view>
+
+        <view class="field">
+          <text class="label">工作时间</text>
+          <input class="input" placeholder="例如：08:00-17:00" value="{{form.workHours}}" data-field="workHours" bindinput="onFormInput" />
+        </view>
+
+        <view class="field">
+          <text class="label">岗位要求</text>
+          <textarea class="textarea" maxlength="400" placeholder="例如：身体健康，能适应户外工作" value="{{form.requirements}}" data-field="requirements" bindinput="onFormInput" />
+        </view>
+
+        <view class="field">
+          <text class="label">岗位描述</text>
+          <textarea class="textarea" maxlength="600" placeholder="描述工作内容、作业方式、注意事项等" value="{{form.workContent}}" data-field="workContent" bindinput="onFormInput" />
+        </view>
+
+        <view class="field">
+          <text class="label">工作环境照片（最多3张）</text>
+          <view class="image-grid">
+            <view wx:for="{{form.workEnvImages}}" wx:key="index" class="image-item">
+              <image class="preview-image" src="{{item}}" mode="aspectFill"></image>
+              <view class="remove-image" data-index="{{index}}" bindtap="removeEnvImage">x</view>
+            </view>
+            <view
+              wx:if="{{form.workEnvImages.length < 3}}"
+              class="image-add pressable"
+              hover-class="pressing"
+              hover-stay-time="70"
+              bindtap="chooseEnvImages"
+            >
+              <text class="image-add-text">{{uploadingImages ? '上传中...' : '+ 添加'}}</text>
+            </view>
+          </view>
+        </view>
+
+        <button
+          class="submit-btn"
+          loading="{{submitting}}"
+          disabled="{{submitting || uploadingImages}}"
+          bindtap="submitPublishJob"
+        >
+          {{submitting ? '提交中...' : '提交审核'}}
+        </button>
+      </view>
+
+      <view class="job-section-card">
+        <text class="job-section-title">{{isBossView ? '我的发布岗位' : '可报名岗位'}}</text>
+
+        <view wx:if="{{viewJobs.length === 0}}" class="state-panel inner-state">
+          <text class="state-title">{{isBossView ? '当前基地暂无岗位信息' : '暂无可报名岗位'}}</text>
+          <text class="state-desc">可调整筛选条件后重试</text>
+        </view>
+
+        <view wx:else class="job-list">
+          <view
+            wx:for="{{viewJobs}}"
+            wx:key="id"
+            class="job-card pressable"
+            bindtap="goToDetail"
+            data-id="{{item.id}}"
+            data-baseid="{{item.baseId}}"
+            hover-class="pressing"
+            hover-stay-time="100"
+          >
+            <view class="job-top">
+              <text class="job-title">{{item.jobTitle}}</text>
+              <text class="job-salary">{{item.salaryText}}</text>
+            </view>
+
+            <view class="job-meta">
+              <text class="meta-tag">{{item.baseName}}</text>
+              <text class="meta-item">{{item.payModeText}}</text>
+              <text class="meta-item">招聘 {{item.recruitCount}} 人</text>
+              <text class="meta-item">已报名 {{item.applicantCount}} 人</text>
+            </view>
+
+            <view class="job-meta">
+              <text class="meta-item">{{item.workDateRange}}</text>
+            </view>
+
+            <view class="job-bottom">
+              <text class="status {{item.statusClass}}">{{item.statusText}}</text>
+              <view wx:if="{{!isBossView}}" class="apply-btn pressable" catchtap="applyJob" data-id="{{item.id}}" data-baseid="{{item.baseId}}">立即报名</view>
+              <text wx:if="{{isBossView}}" class="boss-tip">点击查看详情</text>
+            </view>
+          </view>
+        </view>
+      </view>
+    </block>
+  </block>
+</view>

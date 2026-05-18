@@ -1,0 +1,60 @@
+<view class="page">
+  <view class="page-body page-enter">
+    <view class="header-card ds-card card-in">
+      <text class="header-icon">⚠️</text>
+      <text class="header-title">工资申诉</text>
+      <text class="header-subtitle">如对工资金额、工时或计件有异议，请详细说明</text>
+    </view>
+
+    <view class="info-card ds-card card-in delay-1">
+      <view class="info-row">
+        <text class="info-label">当前工资</text>
+        <text class="info-value">¥{{currentAmount}}</text>
+      </view>
+    </view>
+
+    <view class="form-card ds-card card-in delay-2">
+      <text class="form-label required">申诉原因</text>
+      <textarea
+        class="form-textarea"
+        placeholder="请详细说明有异议的内容，例如：工时少算、计件数量不对、金额计算错误等（至少10个字）"
+        value="{{reason}}"
+        bindinput="onReasonInput"
+        maxlength="500"
+        show-confirm-bar="{{false}}"
+      />
+      <text class="char-count">{{reason.length}}/500</text>
+    </view>
+
+    <view class="form-card ds-card card-in delay-3">
+      <text class="form-label">期望金额（选填）</text>
+      <input
+        class="form-input"
+        type="digit"
+        placeholder="请输入您认为合理的金额"
+        value="{{expectedAmount}}"
+        bindinput="onExpectedAmountInput"
+      />
+      <text class="form-hint">💡 填写期望金额有助于管理员更快处理</text>
+    </view>
+
+    <view class="tips-card ds-card card-in delay-4">
+      <text class="tips-title">📋 申诉须知</text>
+      <text class="tips-item">• 申诉提交后，基地管理员会在1-3个工作日内处理</text>
+      <text class="tips-item">• 请如实填写申诉原因，虚假申诉可能影响信用</text>
+      <text class="tips-item">• 申诉处理结果会通过消息通知您</text>
+    </view>
+
+    <view class="action-card card-in delay-5">
+      <button
+        class="btn-primary"
+        bindtap="onSubmit"
+        loading="{{submitting}}"
+        disabled="{{submitting}}"
+      >提交申诉</button>
+      <button class="btn-ghost" bindtap="goBack">取消</button>
+    </view>
+
+    <view class="page-bottom-gap"></view>
+  </view>
+</view>

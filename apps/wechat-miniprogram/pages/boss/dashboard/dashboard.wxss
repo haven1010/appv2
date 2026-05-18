@@ -1,0 +1,484 @@
+.page {
+  min-height: 100vh;
+  position: relative;
+  background: #f6efdf;
+}
+
+.paper-bg {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, #fbf4e6 0%, #eef3e4 52%, #f6efdf 100%),
+    radial-gradient(circle at 12% 8%, rgba(102, 138, 79, 0.16) 0%, rgba(102, 138, 79, 0) 32%),
+    radial-gradient(circle at 90% 12%, rgba(202, 164, 90, 0.16) 0%, rgba(202, 164, 90, 0) 30%),
+    repeating-linear-gradient(
+      8deg,
+      rgba(255, 255, 255, 0.2) 0rpx,
+      rgba(255, 255, 255, 0.2) 4rpx,
+      rgba(120, 92, 52, 0.04) 4rpx,
+      rgba(120, 92, 52, 0.04) 10rpx
+    );
+}
+
+.container {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  box-sizing: border-box;
+  padding: 28rpx 26rpx calc(170rpx + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+}
+
+.hero-card,
+.form-card,
+.status-card {
+  background: rgba(255, 248, 235, 0.95);
+  border: 4rpx solid rgba(140, 112, 72, 0.32);
+  border-radius: 32rpx 28rpx 30rpx 24rpx;
+  box-shadow: 0 10rpx 20rpx rgba(98, 76, 46, 0.12);
+}
+
+.hero-card {
+  padding: 24rpx 22rpx;
+}
+
+.hero-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+}
+
+.hero-title {
+  display: block;
+  color: #473421;
+  font-size: 36rpx;
+  font-weight: 800;
+}
+
+.hero-logout-btn {
+  margin: 0;
+  min-width: 176rpx;
+  height: 64rpx;
+  line-height: 64rpx;
+  padding: 0 20rpx;
+  border-radius: 999rpx;
+  border: 2rpx solid rgba(124, 88, 56, 0.36);
+  background: rgba(255, 245, 232, 0.95);
+  color: #6f4d30;
+  font-size: 25rpx;
+  font-weight: 700;
+}
+
+.hero-logout-btn::after {
+  border: none;
+}
+
+.hero-subtitle {
+  display: block;
+  margin-top: 8rpx;
+  color: #725f49;
+  font-size: 26rpx;
+  line-height: 1.5;
+}
+
+.form-card {
+  padding: 26rpx 22rpx 30rpx;
+}
+
+.section-title {
+  margin-top: 10rpx;
+  margin-bottom: 12rpx;
+  color: #4a3823;
+  font-size: 30rpx;
+  font-weight: 800;
+}
+
+.field + .field {
+  margin-top: 18rpx;
+}
+
+.label {
+  display: block;
+  margin-bottom: 8rpx;
+  color: #4f3c26;
+  font-size: 28rpx;
+  font-weight: 700;
+}
+
+.input,
+.textarea,
+.picker-box {
+  width: 100%;
+  box-sizing: border-box;
+  border-radius: 18rpx;
+  border: 3rpx solid rgba(145, 114, 72, 0.22);
+  background: #f9f2e3;
+  color: #3f3222;
+  font-size: 30rpx;
+  padding: 18rpx;
+}
+
+.textarea {
+  min-height: 132rpx;
+}
+
+.picker-box {
+  min-height: 84rpx;
+  display: flex;
+  align-items: center;
+}
+
+.readonly-box {
+  width: 100%;
+  box-sizing: border-box;
+  border-radius: 18rpx;
+  border: 3rpx solid rgba(145, 114, 72, 0.18);
+  background: #efe8da;
+  color: #6e5e4a;
+  font-size: 30rpx;
+  padding: 18rpx;
+}
+
+.upload-box {
+  height: 210rpx;
+  border-radius: 20rpx;
+  border: 3rpx dashed rgba(138, 106, 64, 0.6);
+  background: #f8efdd;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.upload-box-disabled {
+  opacity: 0.65;
+}
+
+.upload-preview {
+  width: 100%;
+  height: 100%;
+}
+
+.upload-text {
+  color: #6f5e49;
+  font-size: 28rpx;
+  font-weight: 700;
+}
+
+.env-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+}
+
+.env-item,
+.env-add-mini {
+  width: 150rpx;
+  height: 150rpx;
+  border-radius: 20rpx;
+  position: relative;
+}
+
+.env-item {
+  border: 3rpx solid rgba(138, 106, 64, 0.28);
+  background: #f8efdd;
+  overflow: hidden;
+}
+
+.env-preview {
+  width: 100%;
+  height: 100%;
+}
+
+.remove-env {
+  position: absolute;
+  top: 6rpx;
+  right: 6rpx;
+  width: 34rpx;
+  height: 34rpx;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.45);
+  color: #fff;
+  font-size: 22rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.env-add-mini {
+  border: 3rpx dashed rgba(138, 106, 64, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6f5e49;
+  background: #f8efdd;
+  font-size: 28rpx;
+  font-weight: 700;
+}
+
+.env-add-mini-text {
+  line-height: 1;
+}
+
+.env-add-disabled {
+  opacity: 0.65;
+}
+
+.error-msg {
+  margin-top: 14rpx;
+  border-radius: 14rpx;
+  border: 2rpx solid rgba(198, 120, 91, 0.42);
+  background: rgba(248, 225, 214, 0.86);
+  color: #915942;
+  padding: 12rpx 14rpx;
+  font-size: 26rpx;
+}
+
+.submit-btn {
+  margin-top: 22rpx;
+  height: 94rpx;
+  line-height: 94rpx;
+  border-radius: 999rpx;
+  border: 3rpx solid rgba(78, 115, 58, 0.35);
+  background: linear-gradient(90deg, #6f9951 0%, #4f9286 100%);
+  color: #fff;
+  font-size: 32rpx;
+  font-weight: 800;
+  box-shadow: 0 8rpx 16rpx rgba(63, 101, 76, 0.24);
+}
+
+.submit-btn::after {
+  border: none;
+}
+
+.submit-btn[disabled] {
+  opacity: 0.7;
+}
+
+.status-card {
+  padding: 20rpx 18rpx;
+  border-style: dashed;
+}
+
+.status-title {
+  display: block;
+  color: #3f6f35;
+  font-size: 30rpx;
+  font-weight: 800;
+}
+
+.status-desc {
+  display: block;
+  margin-top: 8rpx;
+  color: #6f5e49;
+  font-size: 26rpx;
+  line-height: 1.5;
+}
+
+.flow-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10rpx;
+  margin-top: 14rpx;
+}
+
+.flow-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 8rpx 16rpx;
+  border-radius: 999rpx;
+  background: rgba(240, 231, 208, 0.92);
+  color: #6f5e49;
+  font-size: 24rpx;
+  font-weight: 700;
+  border: 2rpx solid rgba(145, 114, 72, 0.18);
+}
+
+.salary-readonly-tip {
+  color: #725f49;
+  font-size: 25rpx;
+  line-height: 1.5;
+}
+
+.date-grid {
+  display: flex;
+  gap: 16rpx;
+}
+
+.field-half {
+  flex: 1;
+  min-width: 0;
+}
+
+.summary-chip-row,
+.payroll-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10rpx;
+  margin-top: 14rpx;
+}
+
+.summary-chip,
+.payroll-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 8rpx 16rpx;
+  border-radius: 999rpx;
+  font-size: 24rpx;
+  font-weight: 700;
+  border: 2rpx solid rgba(145, 114, 72, 0.18);
+}
+
+.summary-chip,
+.payroll-chip.info {
+  color: #5f6f7f;
+  background: rgba(230, 239, 246, 0.92);
+}
+
+.summary-chip.pending,
+.payroll-chip.pending {
+  color: #8b6f44;
+  background: rgba(249, 236, 192, 0.92);
+}
+
+.summary-chip.success,
+.payroll-chip.paid {
+  color: #486b3c;
+  background: rgba(223, 239, 214, 0.94);
+}
+
+.payroll-chip.confirmed {
+  color: #86694b;
+  background: rgba(247, 231, 205, 0.94);
+}
+
+.secondary-action-btn {
+  margin-top: 18rpx;
+  height: 82rpx;
+  line-height: 82rpx;
+  border-radius: 999rpx;
+  border: 2rpx solid rgba(124, 88, 56, 0.28);
+  background: rgba(255, 245, 232, 0.95);
+  color: #6f4d30;
+  font-size: 28rpx;
+  font-weight: 700;
+}
+
+.payroll-action-row {
+  display: flex;
+  flex-direction: column;
+  gap: 14rpx;
+  margin-top: 18rpx;
+}
+
+.payroll-primary-btn {
+  height: 86rpx;
+  line-height: 86rpx;
+  border-radius: 999rpx;
+  border: 2rpx solid rgba(78, 115, 58, 0.28);
+  background: linear-gradient(90deg, #6f9951 0%, #4f9286 100%);
+  color: #fff;
+  font-size: 29rpx;
+  font-weight: 800;
+  box-shadow: 0 8rpx 16rpx rgba(63, 101, 76, 0.18);
+}
+
+.payroll-primary-btn::after {
+  border: none;
+}
+
+.secondary-action-btn::after {
+  border: none;
+}
+
+.payroll-generated-tip {
+  margin-top: 12rpx;
+  color: #6f5e49;
+  font-size: 24rpx;
+  line-height: 1.5;
+}
+
+.readonly-hint {
+  margin-top: 18rpx;
+  border-radius: 18rpx;
+  background: rgba(249, 242, 229, 0.92);
+  color: #7a654c;
+  font-size: 26rpx;
+  line-height: 1.5;
+  padding: 18rpx;
+}
+
+.payroll-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+  margin-top: 18rpx;
+}
+
+.payroll-item {
+  border-radius: 22rpx;
+  border: 2rpx solid rgba(145, 114, 72, 0.18);
+  background: rgba(255, 250, 240, 0.95);
+  padding: 18rpx;
+}
+
+.payroll-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18rpx;
+}
+
+.payroll-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.payroll-name {
+  display: block;
+  color: #473421;
+  font-size: 29rpx;
+  font-weight: 800;
+}
+
+.payroll-meta,
+.payroll-detail {
+  display: block;
+  margin-top: 8rpx;
+  color: #7a684f;
+  font-size: 24rpx;
+  line-height: 1.45;
+}
+
+.payroll-amount {
+  color: #c47b34;
+  font-size: 38rpx;
+  font-weight: 900;
+  line-height: 1.15;
+}
+
+.quick-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+  margin-top: 32rpx;
+}
+
+.action-btn {
+  height: 88rpx;
+  line-height: 88rpx;
+  border-radius: 999rpx;
+  border: 2rpx solid rgba(124, 88, 56, 0.28);
+  background: rgba(255, 250, 240, 0.95);
+  color: #6f4d30;
+  font-size: 28rpx;
+  font-weight: 700;
+  box-shadow: 0 4rpx 12rpx rgba(111, 77, 48, 0.08);
+}
+
+.action-btn::after {
+  border: none;
+}

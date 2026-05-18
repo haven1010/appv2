@@ -1,0 +1,172 @@
+<view class="page page-enter">
+  <view wx:if="{{loading}}" class="state-panel">
+    <text class="state-title">正在加载基地信息...</text>
+    <text class="state-desc">请稍候</text>
+  </view>
+
+  <view wx:elif="{{loadError}}" class="state-panel">
+    <text class="state-title">{{loadError}}</text>
+    <text class="state-desc">下拉可重试</text>
+  </view>
+
+  <block wx:elif="{{baseInfo}}">
+    <view class="hero-card">
+      <view class="hero-head">
+        <text class="hero-title">{{baseInfo.baseName || '基地详情'}}</text>
+        <text class="status-tag {{baseInfo.auditStatus === 1 ? 'approved' : baseInfo.auditStatus === 2 ? 'rejected' : 'pending'}}">{{auditText}}</text>
+      </view>
+      <text class="hero-subtitle">{{categoryText}}</text>
+    </view>
+
+    <view class="accordion-card">
+      <view class="accordion-head" data-key="baseInfo" bindtap="toggleSection">
+        <text class="accordion-title">基地信息</text>
+        <text class="accordion-arrow">{{sectionOpen.baseInfo ? '收起' : '展开'}}</text>
+      </view>
+
+      <view wx:if="{{sectionOpen.baseInfo}}" class="accordion-body">
+        <view class="section-card">
+          <view class="info-row">
+            <text class="info-label">详细地址</text>
+            <text class="info-value">{{addressText}}</text>
+          </view>
+          <view class="info-row">
+            <text class="info-label">岗位要求</text>
+            <text class="info-value">{{jobRequirementText}}</text>
+          </view>
+          <view class="info-row">
+            <text class="info-label">环境情况</text>
+            <text class="info-value">{{envSummaryText}}</text>
+          </view>
+        </view>
+
+        <view class="section-card">
+          <text class="section-title">环境图片</text>
+          <view wx:if="{{envImages.length}}" class="env-grid">
+            <image
+              wx:for="{{envImages}}"
+              wx:key="index"
+              class="env-image"
+              src="{{item}}"
+              mode="aspectFill"
+              bindtap="previewImage"
+              binderror="onEnvImageError"
+              data-index="{{index}}"
+              data-src="{{item}}"
+            />
+          </view>
+          <view wx:else class="empty-box">
+            <text class="empty-text">暂无环境图片</text>
+          </view>
+          <text wx:if="{{hasExpiredTempImage}}" class="warn-tip">部分图片地址已失效，请在企业端重新上传后提交。</text>
+        </view>
+      </view>
+    </view>
+
+    <view wx:if="{{isBossView && !showBossPanels}}" class="state-panel">
+      <text class="state-title">基地入驻未审核通过</text>
+      <text class="state-desc">报名进度和工资结算将在审核通过后开放。</text>
+    </view>
+
+    <view wx:if="{{showBossPanels}}" class="accordion-card">
+      <view class="accordion-head" data-key="signupProgress" bindtap="toggleSection">
+        <text class="accordion-title">报名进度</text>
+        <text class="accordion-arrow">{{sectionOpen.signupProgress ? '收起' : '展开'}}</text>
+      </view>
+      <view wx:if="{{sectionOpen.signupProgress}}" class="accordion-body">
+        <view class="section-card">
+          <view class="summary-row">
+            <text class="summary-chip">岗位 {{progressSummary.totalJobs}}</text>
+            <text class="summary-chip success">招聘中 {{progressSummary.openJobs}}</text>
+            <text class="summary-chip warn">已关闭 {{progressSummary.closedJobs}}</text>
+            <text class="summary-chip info">总报名 {{progressSummary.totalApplicants}}</text>
+          </view>
+        </view>
+
+        <view wx:if="{{progressLoading}}" class="state-panel inner-state">
+          <text class="state-title">报名进度加载中...</text>
+        </view>
+        <view wx:elif="{{progressError}}" class="state-panel inner-state">
+          <text class="state-title">{{progressError}}</text>
+        </view>
+        <view wx:elif="{{progressRows.length === 0}}" class="state-panel inner-state">
+          <text class="state-title">暂无报名进度数据</text>
+        </view>
+
+        <view wx:else class="progress-list">
+          <view wx:for="{{progressRows}}" wx:key="id" class="progress-card">
+            <view class="progress-head">
+              <text class="progress-title">{{item.jobTitle}}</text>
+              <text class="progress-status {{item.statusClass}}">{{item.statusText}}</text>
+            </view>
+            <view class="progress-meta">
+              <text>招聘 {{item.recruitCount}} 人</text>
+              <text>已报名 {{item.applicantCount}} 人</text>
+            </view>
+            <text class="progress-date">{{item.workDateRange}}</text>
+            <view wx:if="{{item.applicantNames.length}}" class="name-list">
+              <text wx:for="{{item.applicantNames}}" wx:key="index" class="name-chip">{{item}}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view wx:if="{{showBossPanels}}" class="accordion-card">
+      <view class="accordion-head" data-key="payroll" bindtap="toggleSection">
+        <text class="accordion-title">工资结算</text>
+        <text class="accordion-arrow">{{sectionOpen.payroll ? '收起' : '展开'}}</text>
+      </view>
+
+      <view wx:if="{{sectionOpen.payroll}}" class="accordion-body">
+        <view class="section-card">
+          <view class="payroll-stats">
+            <view class="payroll-stat">
+              <text class="payroll-stat-value">{{payrollSummary.workerCount}}</text>
+              <text class="payroll-stat-label">上岗人数</text>
+            </view>
+            <view class="payroll-stat">
+              <text class="payroll-stat-value">¥{{payrollSummary.totalAmountText}}</text>
+              <text class="payroll-stat-label">累计工资</text>
+            </view>
+            <view class="payroll-stat">
+              <text class="payroll-stat-value">¥{{payrollSummary.pendingAmountText}}</text>
+              <text class="payroll-stat-label">待发放</text>
+            </view>
+          </view>
+        </view>
+
+        <view wx:if="{{payrollLoading}}" class="state-panel inner-state">
+          <text class="state-title">工资数据加载中...</text>
+        </view>
+        <view wx:elif="{{payrollError}}" class="state-panel inner-state">
+          <text class="state-title">{{payrollError}}</text>
+        </view>
+        <view wx:elif="{{payrollRows.length === 0}}" class="state-panel inner-state">
+          <text class="state-title">暂无工资记录</text>
+        </view>
+
+        <view wx:else class="payroll-list">
+          <view wx:for="{{payrollRows}}" wx:key="key" class="payroll-card">
+            <view class="payroll-head">
+              <text class="payroll-name">{{item.workerName}}</text>
+              <text class="payroll-status {{item.statusClass}}">{{item.statusText}}</text>
+            </view>
+
+            <view class="payroll-main">
+              <text class="payroll-total-label">累计工资</text>
+              <text class="payroll-total-value">¥{{item.totalAmountText}}</text>
+            </view>
+
+            <view class="payroll-meta">
+              <text>已发放 ¥{{item.paidAmountText}}</text>
+              <text>待发放 ¥{{item.pendingAmountText}}</text>
+              <text>上岗 {{item.recordCount}} 次</text>
+            </view>
+            <text class="payroll-date">最近上岗：{{item.lastWorkDateText}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </block>
+</view>

@@ -1,0 +1,3 @@
+{"id":501,"operationType":"CREATE","resourceType":"USER","resourceId":6,"description":"创建测试工人乙","userId":3,"createdAt":"2026-05-06T09:00:00.000Z","updatedAt":"2026-05-06T09:00:00.000Z"}
+{"id":502,"operationType":"AUDIT","resourceType":"BASE","resourceId":1,"description":"审核基地通过：测试苹果基地","userId":3,"createdAt":"2026-05-06T09:30:00.000Z","updatedAt":"2026-05-06T09:30:00.000Z"}
+{"id":503,"operationType":"UPDATE","resourceType":"SALARY","resourceId":202,"description":"处理工资申诉：测试工人乙","userId":4,"createdAt":"2026-05-06T19:30:00.000Z","updatedAt":"2026-05-06T19:30:00.000Z"}

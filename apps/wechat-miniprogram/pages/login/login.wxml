@@ -1,0 +1,120 @@
+﻿<view class="login-page {{pageLeaving ? 'page-leave' : 'page-enter'}}">
+  <view class="paper-bg"></view>
+
+  <view class="top-header" style="padding-top: {{statusBarHeight}}px;">
+    <view class="top-header-inner" style="height: {{navBarHeight}}px;">
+      <text class="top-title">登录</text>
+    </view>
+  </view>
+
+  <view class="content-wrap">
+    <view class="logo-area">
+      <image class="brand-logo logo-float" src="/images/zhihui-logo.jpg" mode="aspectFit" />
+      <text class="brand-name">智汇就业</text>
+      <text class="brand-desc">苏陕协作就业服务与劳务对接平台</text>
+    </view>
+
+    <view class="role-switch">
+      <view class="role-pill {{loginRole === 'worker' ? 'active' : ''}}" data-role="worker" bindtap="onSwitchRole">
+        👷 我是员工
+      </view>
+      <view class="role-pill {{loginRole === 'boss' ? 'active' : ''}}" data-role="boss" bindtap="onSwitchRole">
+        🏢 我是老板
+      </view>
+    </view>
+
+    <view class="login-card">
+      <view class="welcome-row">
+        <text class="card-title">欢迎回来</text>
+        <text class="leaf-anim">🍃</text>
+      </view>
+      <text class="card-subtitle">请输入手机号和身份证后6位</text>
+
+      <view class="form-item">
+        <view class="input-shell {{focusField === 'phone' ? 'is-focus' : ''}}">
+          <text class="input-icon">📱</text>
+          <input
+            class="input-field"
+            type="number"
+            maxlength="11"
+            value="{{phone}}"
+            placeholder="请输入手机号"
+            placeholder-class="placeholder"
+            bindfocus="onInputFocus"
+            bindblur="onInputBlur"
+            bindinput="onInputPhone"
+            data-field="phone"
+          />
+        </view>
+      </view>
+
+      <view class="form-item">
+        <view class="input-shell {{focusField === 'idCard' ? 'is-focus' : ''}}">
+          <text class="input-icon">🔒</text>
+          <input
+            class="input-field"
+            type="text"
+            maxlength="6"
+            value="{{idCardLast6}}"
+            placeholder="身份证后6位"
+            placeholder-class="placeholder"
+            bindfocus="onInputFocus"
+            bindblur="onInputBlur"
+            bindinput="onInputIdCard"
+            data-field="idCard"
+          />
+        </view>
+      </view>
+
+      <view class="error-msg" wx:if="{{error}}">
+        <text>{{error}}</text>
+      </view>
+
+      <button
+        class="login-btn {{btnPressed ? 'btn-pressed' : ''}}"
+        bindtap="handleLogin"
+        bindtouchstart="onLoginPressStart"
+        bindtouchend="onLoginPressEnd"
+        bindtouchcancel="onLoginPressEnd"
+        loading="{{loading}}"
+        disabled="{{loading || !canSubmit}}"
+      >
+        {{loading ? '登录中...' : '进入智汇就业'}}
+      </button>
+
+      <view class="footer-links">
+        <text class="register-text">还没有账号？</text>
+        <text class="register-link" bindtap="goToRegister">立即注册</text>
+      </view>
+
+      <view class="proxy-entry">
+        <text class="proxy-entry-label">帮家人代办入职？</text>
+        <text class="proxy-entry-link" bindtap="goToProxyRegister">进入家人代注册</text>
+      </view>
+
+      <view class="network-panel">
+        <view class="network-header" bindtap="toggleApiConfig">
+          <text class="network-title">网络设置</text>
+          <text class="network-summary">当前接口：{{currentBaseUrlDisplay}}</text>
+        </view>
+
+        <view wx:if="{{showApiConfig}}" class="network-body">
+          <text class="network-tip">手机真机调试请填写电脑可访问的内网地址，例如 `http://192.168.1.10:3001/api`。</text>
+          <input
+            class="network-input"
+            type="text"
+            value="{{apiBaseUrlInput}}"
+            placeholder="http://你的电脑内网IP:3001/api"
+            placeholder-class="placeholder"
+            bindinput="onInputApiBaseUrl"
+          />
+          <view class="preset-row">
+            <view class="preset-chip" data-url="{{devtoolsBaseUrl}}" bindtap="useApiPreset" wx:if="{{devtoolsBaseUrl}}">开发者工具</view>
+            <view class="preset-chip" data-url="{{lanBaseUrl}}" bindtap="useApiPreset" wx:if="{{lanBaseUrl}}">当前局域网预设</view>
+          </view>
+          <button class="network-save-btn" bindtap="saveApiBaseUrl">保存接口地址</button>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>
