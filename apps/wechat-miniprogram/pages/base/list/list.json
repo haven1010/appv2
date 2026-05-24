@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "基地广场",
+  "navigationBarBackgroundColor": "#F6F9FF",
+  "navigationBarTextStyle": "black",
+  "enablePullDownRefresh": true,
+  "usingComponents": {}
+}

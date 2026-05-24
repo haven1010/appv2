@@ -1,0 +1,80 @@
+<view class="page">
+  <block wx:if="{{loading}}">
+    <view class="state-panel">
+      <text class="state-title">正在加载页面...</text>
+      <text class="state-desc">请稍候</text>
+    </view>
+  </block>
+
+  <block wx:else>
+    <block wx:if="{{loadError}}">
+      <view class="state-panel">
+        <text class="state-title">页面加载失败</text>
+        <text class="state-desc">{{loadError}}</text>
+      </view>
+    </block>
+
+    <block wx:else>
+      <view class="hero-card">
+        <view class="hero-head">
+          <view>
+            <text class="hero-title">{{isBossView ? '岗位发布' : '岗位广场'}}</text>
+            <text class="hero-subtitle">{{isBossView ? '查看并发布岗位，统一管理招聘信息' : '浏览基地岗位，快速选择适合的工作'}}</text>
+          </view>
+          <text class="hero-badge">{{isBossView ? '老板视角' : '工人视角'}}</text>
+        </view>
+      </view>
+
+      <view class="job-section-card">
+        <text class="job-section-title">{{isBossView ? '我的发布岗位' : '可报名岗位'}}</text>
+
+        <view wx:if="{{viewJobs.length === 0}}" class="state-panel inner-state">
+          <text class="state-title">{{isBossView ? '当前基地暂无岗位信息' : '暂无可报名岗位'}}</text>
+          <text class="state-desc">可调整筛选条件后重试</text>
+        </view>
+
+        <view wx:else class="job-list">
+          <view
+            wx:for="{{viewJobs}}"
+            wx:key="id"
+            class="job-card pressable"
+            bindtap="goToDetail"
+            data-id="{{item.id}}"
+            data-baseid="{{item.baseId}}"
+            hover-class="pressing"
+            hover-stay-time="100"
+          >
+            <view class="job-top">
+              <text class="job-title">{{item.jobTitle}}</text>
+              <text class="job-salary">{{item.salaryText}}</text>
+            </view>
+
+            <view class="job-meta">
+              <text class="meta-tag">{{item.baseName}}</text>
+              <text class="meta-item">{{item.payModeText}}</text>
+              <text class="meta-item">招聘 {{item.recruitCount}} 人</text>
+              <text class="meta-item">已报名 {{item.applicantCount}} 人</text>
+            </view>
+
+            <view class="job-meta">
+              <text class="meta-item">{{item.workDateRange}}</text>
+            </view>
+
+            <view class="job-bottom">
+              <text class="status {{item.statusClass}}">{{item.statusText}}</text>
+              <view wx:if="{{!isBossView}}" class="apply-btn pressable" catchtap="applyJob" data-id="{{item.id}}" data-baseid="{{item.baseId}}">立即报名</view>
+              <text wx:if="{{isBossView}}" class="boss-tip">点击查看详情</text>
+            </view>
+          </view>
+        </view>
+      </view>
+    </block>
+  </block>
+
+  <view wx:if="{{isBossView}}" class="boss-bottom-nav">
+    <view class="boss-bottom-item" bindtap="goToBossDashboard">工作台</view>
+    <view class="boss-bottom-item" bindtap="goToBossBaseList">我的基地</view>
+    <view class="boss-bottom-item active">岗位发布</view>
+    <view class="boss-bottom-item" bindtap="goToBossProfile">我的</view>
+  </view>
+</view>

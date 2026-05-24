@@ -1,0 +1,164 @@
+/* pages/profile/complete-info/complete-info.wxss — Claude Purple Theme */
+.page {
+  min-height: 100vh;
+  background: var(--page-bg);
+}
+
+.hero-section {
+  padding: 120rpx 24rpx 40rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.hero-title {
+  font-size: 48rpx;
+  font-weight: 900;
+  color: var(--ink-main);
+}
+
+.hero-desc {
+  margin-top: 10rpx;
+  font-size: 28rpx;
+  color: var(--ink-sub);
+}
+
+.form-card {
+  margin: 0 24rpx;
+  padding: 30rpx 22rpx 36rpx;
+  border-radius: var(--radius-lg);
+  background: var(--card-bg);
+  border: var(--border-soft);
+  box-shadow: var(--shadow-md);
+}
+
+.form-item {
+  margin-bottom: 24rpx;
+}
+
+.field-label {
+  display: block;
+  margin-bottom: 10rpx;
+  color: #4a4d5e;
+  font-size: 28rpx;
+  font-weight: 700;
+}
+
+.input-shell {
+  min-height: 96rpx;
+  border-radius: var(--radius-md);
+  border: var(--border-soft);
+  background: #f5f2ff;
+  display: flex;
+  align-items: center;
+  padding: 0 20rpx;
+  box-sizing: border-box;
+  transition: all 0.25s;
+}
+
+.input-shell:focus-within {
+  border-color: var(--brand-purple);
+  background: #ffffff;
+  box-shadow: 0 0 0 6rpx rgba(102, 126, 234, 0.1);
+}
+
+.input-icon {
+  width: 50rpx;
+  text-align: center;
+  font-size: 30rpx;
+  line-height: 1;
+  margin-right: 10rpx;
+  color: var(--brand-purple);
+  font-weight: 800;
+}
+
+.field-input {
+  flex: 1;
+  height: 88rpx;
+  font-size: 32rpx;
+  color: var(--ink-main);
+}
+
+.placeholder {
+  color: var(--ink-muted);
+}
+
+.wechat-phone-btn {
+  margin-top: 14rpx;
+  height: 72rpx;
+  line-height: 72rpx;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(135deg, #07c160 0%, #06ad56 100%);
+  color: #ffffff;
+  font-size: 26rpx;
+  font-weight: 700;
+  border: none;
+}
+
+.wechat-phone-btn::after {
+  border: none;
+}
+
+.ocr-btn {
+  margin-top: 8rpx;
+  height: 80rpx;
+  line-height: 80rpx;
+  border-radius: var(--radius-md);
+  border: 2rpx dashed rgba(102, 126, 234, 0.3);
+  background: rgba(102, 126, 234, 0.04);
+  color: var(--brand-purple);
+  font-size: 28rpx;
+  font-weight: 700;
+}
+
+.ocr-btn::after {
+  border: none;
+}
+
+.error-msg {
+  margin-top: 16rpx;
+  border-radius: var(--radius-sm);
+  border: 2rpx solid rgba(235, 107, 107, 0.18);
+  background: rgba(255, 238, 238, 0.95);
+  color: #bb4c4c;
+  padding: 16rpx 18rpx;
+  font-size: 26rpx;
+  line-height: 1.55;
+}
+
+.submit-btn {
+  margin-top: 24rpx;
+  height: 98rpx;
+  line-height: 98rpx;
+  border-radius: var(--radius-pill);
+  border: none;
+  background: var(--brand-purple);
+  color: #ffffff;
+  font-size: 34rpx;
+  font-weight: 900;
+  box-shadow: 0 14rpx 28rpx rgba(102, 126, 234, 0.24);
+  transition: all 0.2s;
+}
+
+.submit-btn:active {
+  transform: scale(0.97);
+  opacity: 0.92;
+}
+
+.submit-btn::after {
+  border: none;
+}
+
+.submit-btn[disabled] {
+  background: #d4d0e0;
+  box-shadow: none;
+  color: #9a94a8;
+}
+
+.skip-text {
+  display: block;
+  text-align: center;
+  margin-top: 32rpx;
+  color: var(--ink-sub);
+  font-size: 28rpx;
+}

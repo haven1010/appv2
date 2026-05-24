@@ -1,0 +1,52 @@
+<view class="page-admin">
+  <view class="hero-card">
+    <view class="hero-title">我的信息</view>
+    <view class="hero-sub">管理员个人资料与账号操作</view>
+  </view>
+
+  <view class="section-card">
+    <view class="section-title">账户信息</view>
+    <view class="list-item">
+      <view class="item-title">姓名：{{profile.name}}</view>
+      <view class="item-sub">UID：{{profile.uid}}</view>
+      <view class="item-sub">角色：{{profile.role}}</view>
+      <view class="item-sub">手机号：{{profile.phoneMasked}}</view>
+      <view class="item-sub">紧急联系人：{{profile.emergencyContact}}</view>
+      <view class="item-sub">紧急联系电话：{{profile.emergencyPhone}}</view>
+      <view class="item-sub">关联基地ID：{{profile.assignedBaseId}}</view>
+    </view>
+
+    <view class="actions-row">
+      <button class="btn-ghost" bindtap="refreshAll">刷新信息</button>
+      <button class="btn-danger" bindtap="logout">退出登录</button>
+    </view>
+  </view>
+
+  <view class="section-card" wx:if="{{canViewLogs}}">
+    <view class="section-title">操作日志（最近20条）</view>
+    <view class="actions-row">
+      <button class="btn-ghost" bindtap="loadOperationLogs" loading="{{logsLoading}}">刷新日志</button>
+    </view>
+
+    <view class="empty-text" wx:if="{{logsLoading}}">日志加载中...</view>
+    <view class="empty-text" wx:if="{{!logsLoading && !operationLogs.length}}">暂无操作日志</view>
+
+    <view class="list-item" wx:for="{{operationLogs}}" wx:key="id">
+      <view class="item-title">{{item.operationTypeText}} · {{item.resourceTypeText}}#{{item.resourceId}}</view>
+      <view class="item-sub">{{item.description}}</view>
+      <view class="item-sub">操作人ID：{{item.userId}} · {{item.createdAtText}}</view>
+    </view>
+  </view>
+
+  <view class="empty-text" wx:if="{{loading}}">加载中...</view>
+
+  <view class="admin-bottom-nav">
+    <view class="admin-bottom-item {{activeNav === 'home' ? 'active' : ''}}" data-target="home" bindtap="switchAdminNav">{{role === 'super_admin' || role === 'region_admin' ? '人员管理' : '首页'}}</view>
+    <view class="admin-bottom-item {{activeNav === 'base' ? 'active' : ''}}" wx:if="{{role !== 'field_manager'}}" data-target="base" bindtap="switchAdminNav">{{role === 'super_admin' || role === 'region_admin' ? '基地管理' : '基地'}}</view>
+    <view class="admin-bottom-item {{activeNav === 'scan' ? 'active' : ''}}" wx:if="{{role !== 'super_admin' && role !== 'region_admin'}}" data-target="scan" bindtap="switchAdminNav">扫码</view>
+    <view class="admin-bottom-item {{activeNav === 'audit' ? 'active' : ''}}" wx:if="{{role === 'super_admin' || role === 'region_admin'}}" data-target="audit" bindtap="switchAdminNav">审核</view>
+    <view class="admin-bottom-item {{activeNav === 'payroll' ? 'active' : ''}}" wx:if="{{role === 'super_admin' || role === 'region_admin'}}" data-target="payroll" bindtap="switchAdminNav">工资管理</view>
+    <view class="admin-bottom-item {{activeNav === 'me' ? 'active' : ''}}" data-target="me" bindtap="switchAdminNav">我的信息</view>
+  </view>
+</view>
+

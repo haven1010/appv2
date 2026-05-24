@@ -1,0 +1,64 @@
+<view class="page">
+  <view class="page-body page-enter">
+    <view class="card header-card card-in">
+      <text class="header-title">考勤详情</text>
+      <text class="header-subtitle">{{baseName}} - {{jobTitle}}</text>
+      <text class="work-date">工作日期：{{workDate}}</text>
+    </view>
+
+    <view class="card status-card card-in delay-1">
+      <view class="status-row">
+        <text class="status-label">签到状态</text>
+        <text class="status-value {{statusClass}}">{{statusText}}</text>
+      </view>
+      <view class="status-row" wx:if="{{checkinTime}}">
+        <text class="status-label">签到时间</text>
+        <text class="status-value">{{checkinTime}}</text>
+      </view>
+      <view class="status-row" wx:if="{{checkoutTime}}">
+        <text class="status-label">签退时间</text>
+        <text class="status-value">{{checkoutTime}}</text>
+      </view>
+      <view class="status-row" wx:if="{{workDuration}}">
+        <text class="status-label">工作时长</text>
+        <text class="status-value">{{workDuration}} 小时</text>
+      </view>
+    </view>
+
+    <view class="card work-card card-in delay-2">
+      <text class="section-title">工作记录</text>
+      <view class="work-item">
+        <text class="work-label">工作地点</text>
+        <text class="work-value">{{baseName}}</text>
+      </view>
+      <view class="work-item">
+        <text class="work-label">工作岗位</text>
+        <text class="work-value">{{jobTitle}}</text>
+      </view>
+      <view class="work-item" wx:if="{{pieceCount}}">
+        <text class="work-label">完成数量</text>
+        <text class="work-value">{{pieceCount}} 件</text>
+      </view>
+      <view class="work-item" wx:if="{{notes}}">
+        <text class="work-label">备注</text>
+        <text class="work-value">{{notes}}</text>
+      </view>
+    </view>
+
+    <view class="card salary-card card-in delay-3" wx:if="{{hasSalary}}">
+      <text class="section-title">工资信息</text>
+      <view class="salary-amount">¥{{salaryAmount}}</view>
+      <view class="salary-status">
+        <text class="salary-label">发放状态：</text>
+        <text class="salary-value {{salaryStatusClass}}">{{salaryStatusText}}</text>
+      </view>
+      <button class="view-salary-btn btn-primary" bindtap="goToSalary">查看工资详情</button>
+    </view>
+
+    <view class="action-card card-in delay-4">
+      <button class="btn-ghost" bindtap="goBack">返回</button>
+    </view>
+
+    <view class="page-bottom-gap"></view>
+  </view>
+</view>

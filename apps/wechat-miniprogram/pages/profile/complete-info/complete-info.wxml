@@ -1,0 +1,47 @@
+<view class="page">
+  <view class="hero-section">
+    <text class="hero-title">还差最后一步</text>
+    <text class="hero-desc">完善个人信息即可开始使用</text>
+  </view>
+
+  <view class="form-card">
+    <view class="form-item">
+      <text class="field-label">姓名</text>
+      <view class="input-shell">
+        <text class="input-icon">名</text>
+        <input class="field-input" placeholder="请输入真实姓名" value="{{name}}" bindinput="onInputName" />
+      </view>
+    </view>
+
+    <view class="form-item">
+      <text class="field-label">手机号</text>
+      <view class="input-shell">
+        <text class="input-icon">☎</text>
+        <input class="field-input" type="number" maxlength="11" placeholder="请输入手机号" value="{{phone}}" bindinput="onInputPhone" />
+      </view>
+      <button class="wechat-phone-btn" open-type="getPhoneNumber" bindgetphonenumber="onGetPhoneNumber">
+        微信一键获取手机号
+      </button>
+    </view>
+
+    <view class="form-item">
+      <text class="field-label">身份证号</text>
+      <view class="input-shell">
+        <text class="input-icon">证</text>
+        <input class="field-input" placeholder="请输入身份证号" value="{{idCard}}" bindinput="onInputIdCard" />
+      </view>
+    </view>
+
+    <button class="ocr-btn" bindtap="handleOcr">拍照识别身份证</button>
+
+    <view class="error-msg" wx:if="{{error}}">
+      <text>{{error}}</text>
+    </view>
+
+    <button class="submit-btn" bindtap="handleSubmit" loading="{{submitting}}" disabled="{{submitting || !canSubmit}}">
+      {{submitting ? '提交中...' : '提交信息'}}
+    </button>
+
+    <text class="skip-text" bindtap="handleSkip">跳过，稍后再说</text>
+  </view>
+</view>

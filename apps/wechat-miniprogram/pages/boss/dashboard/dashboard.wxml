@@ -1,0 +1,202 @@
+<view class="page page-enter">
+  <view class="paper-bg"></view>
+  <view class="container">
+    <view class="hero-card">
+      <view class="hero-head">
+        <view>
+          <text class="hero-title">企业工作台</text>
+          <text class="hero-subtitle">先入驻，再运营；当前页面会根据入驻状态自动切换内容。</text>
+        </view>
+        <button class="hero-logout-btn" bindtap="logout">退出登录</button>
+      </view>
+    </view>
+
+    <view wx:if="{{bossStage === 'unsettled' || bossStage === 'pending'}}" class="status-card">
+      <text class="status-title">企业入驻</text>
+      <text class="status-desc" wx:if="{{bossStage === 'unsettled'}}">请先填写基础入驻资料并上传营业执照，提交后进入审核流程。</text>
+      <text class="status-desc" wx:elif="{{bossStage === 'pending'}}">入驻资料已提交，系统正在审核中。审核通过后会自动开放岗位发布与工资运营。</text>
+
+      <view class="flow-chip-row">
+        <text class="flow-chip">1 填写资料</text>
+        <text class="flow-chip">2 上传执照</text>
+        <text class="flow-chip">3 提交审核</text>
+        <text class="flow-chip">4 等待审核</text>
+      </view>
+    </view>
+
+    <view wx:if="{{bossStage === 'unsettled' || bossStage === 'rejected'}}" class="form-card">
+      <view class="section-title">基础入驻资料</view>
+
+      <view class="field">
+        <text class="label">老板姓名</text>
+        <input class="input" placeholder="请输入老板姓名" value="{{ownerName}}" data-field="ownerName" bindinput="onFieldInput" />
+      </view>
+
+      <view class="field">
+        <text class="label">老板手机号</text>
+        <input class="input" type="number" maxlength="11" placeholder="用于身份核验" value="{{ownerPhone}}" data-field="ownerPhone" bindinput="onFieldInput" />
+      </view>
+
+      <view class="field">
+        <text class="label">身份证</text>
+        <view class="readonly-box">{{ownerIdCardMasked || '登录后自动带出'}}</view>
+      </view>
+
+      <view class="field">
+        <text class="label">公司管理员</text>
+        <input class="input" placeholder="填写企业现场联系人" value="{{companyAdminName}}" data-field="companyAdminName" bindinput="onFieldInput" />
+      </view>
+
+      <view class="field">
+        <text class="label">管理员手机号</text>
+        <input class="input" type="number" maxlength="11" placeholder="用于通知联络" value="{{companyAdminPhone}}" data-field="companyAdminPhone" bindinput="onFieldInput" />
+      </view>
+
+      <view class="field">
+        <text class="label">企业名称</text>
+        <input class="input" placeholder="请输入企业名称" value="{{companyName}}" data-field="companyName" bindinput="onFieldInput" />
+      </view>
+
+      <view class="field">
+        <text class="label">企业类别</text>
+        <picker mode="selector" range="{{categoryOptions}}" range-key="label" value="{{categoryIndex}}" bindchange="onCategoryChange">
+          <view class="picker-box">{{categoryOptions[categoryIndex].label}}</view>
+        </picker>
+      </view>
+
+      <view class="field">
+        <text class="label">区域编码</text>
+        <input class="input" type="number" placeholder="如 610100" value="{{regionCode}}" data-field="regionCode" bindinput="onFieldInput" />
+      </view>
+
+      <view class="field">
+        <text class="label">营业执照</text>
+        <view class="upload-box" bindtap="chooseLicenseImage">
+          <text wx:if="{{uploadingLicense}}" class="upload-text">上传中...</text>
+          <image wx:elif="{{licenseImage}}" class="upload-preview" src="{{licenseImage}}" mode="aspectFill" binderror="onLicensePreviewError"></image>
+          <text wx:else class="upload-text">点击上传营业执照</text>
+        </view>
+      </view>
+
+      <view wx:if="{{error}}" class="error-msg">{{error}}</view>
+
+      <button class="submit-btn" loading="{{submitting}}" disabled="{{submitting || uploadingLicense}}" bindtap="submitForAudit">
+        {{submitting ? '提交中...' : '提交审核'}}
+      </button>
+    </view>
+
+    <view wx:if="{{bossStage === 'pending'}}" class="status-card">
+      <text class="status-title">审核进度</text>
+      <text class="status-desc">入驻资料已提交，系统正在审核中。审核通过后会自动开放“岗位发布”和“工资运营”模块。</text>
+      <view class="quick-actions">
+        <button class="action-btn" bindtap="goToBossProfile">去我的查看入驻资料</button>
+      </view>
+    </view>
+
+    <view wx:if="{{bossStage === 'approved'}}" class="status-card">
+      <text class="status-title">运营工作区</text>
+      <text class="status-desc">审核通过后，工作台只保留岗位运营和工资结算入口。</text>
+      <view class="flow-chip-row">
+        <text class="flow-chip">岗位发布</text>
+        <text class="flow-chip">报名筛选</text>
+        <text class="flow-chip">工资结算</text>
+        <text class="flow-chip">平台收费</text>
+      </view>
+      <view class="quick-actions">
+        <button class="action-btn" bindtap="goToJobList">岗位发布</button>
+        <button class="action-btn" bindtap="goToApplicants">报名管理</button>
+        <button class="action-btn" bindtap="goToBaseList">我的基地</button>
+      </view>
+    </view>
+
+    <view wx:if="{{bossStage === 'approved'}}" class="status-card">
+      <text class="status-title">工资结算与平台收费</text>
+      <text class="status-desc">确认工资后可自动同步工资表，并展示平台服务费与支付通道费。</text>
+
+      <view class="field">
+        <text class="label">选择基地</text>
+        <picker mode="selector" range="{{payrollBases}}" range-key="baseName" value="{{payrollBaseIndex}}" bindchange="onPayrollBaseChange">
+          <view class="picker-box">{{payrollBases.length ? payrollBases[payrollBaseIndex].baseName : '暂无基地'}}</view>
+        </picker>
+      </view>
+
+      <view class="date-grid">
+        <view class="field field-half">
+          <text class="label">开始日期</text>
+          <picker mode="date" value="{{payrollDateFrom}}" bindchange="onPayrollDateFromChange">
+            <view class="picker-box">{{payrollDateFrom}}</view>
+          </picker>
+        </view>
+        <view class="field field-half">
+          <text class="label">结束日期</text>
+          <picker mode="date" value="{{payrollDateTo}}" bindchange="onPayrollDateToChange">
+            <view class="picker-box">{{payrollDateTo}}</view>
+          </picker>
+        </view>
+      </view>
+
+      <view class="summary-chip-row">
+        <text class="summary-chip info">工资单 {{payrollSummary.totalRecords}}</text>
+        <text class="summary-chip pending">待确认 {{payrollSummary.pendingCount}}</text>
+        <text class="summary-chip info">待结算 {{payrollSummary.confirmedCount}}</text>
+        <text class="summary-chip success">已发放 {{payrollSummary.paidCount}}</text>
+        <text class="summary-chip success">工资总额 ¥{{payrollSummary.totalAmount}}</text>
+      </view>
+
+      <view class="fee-grid">
+        <view class="fee-card">
+          <text class="fee-label">平台服务费</text>
+          <text class="fee-rate">{{feeSummary.serviceRateText}}</text>
+          <text class="fee-value">¥{{feeSummary.serviceFeeText}}</text>
+        </view>
+        <view class="fee-card">
+          <text class="fee-label">支付通道费</text>
+          <text class="fee-rate">{{feeSummary.channelRateText}}</text>
+          <text class="fee-value">¥{{feeSummary.channelFeeText}}</text>
+        </view>
+        <view class="fee-card total">
+          <text class="fee-label">平台收费合计</text>
+          <text class="fee-rate">自动计算</text>
+          <text class="fee-value">¥{{feeSummary.totalFeeText}}</text>
+        </view>
+        <view class="fee-card total">
+          <text class="fee-label">本次应付总额</text>
+          <text class="fee-rate">工资 + 平台收费</text>
+          <text class="fee-value">¥{{feeSummary.payableTotalText}}</text>
+        </view>
+      </view>
+
+      <view class="payroll-action-row">
+        <button class="payroll-primary-btn" bindtap="settleConfirmedPayrolls" loading="{{payrollSettling}}" disabled="{{payrollSettling || payrollLoading}}">批量结算工资</button>
+        <button class="secondary-action-btn" bindtap="syncPayrollReportSnapshot" disabled="{{payrollLoading}}">同步本期工资表</button>
+        <button class="secondary-action-btn" bindtap="refreshPayrollBoard" disabled="{{payrollLoading}}">刷新工资面板</button>
+      </view>
+
+      <text class="payroll-generated-tip" wx:if="{{payrollReportFileName}}">最新工资表：{{payrollReportFileName}} · {{payrollReportGeneratedAtText}}</text>
+      <text class="readonly-hint" wx:if="{{!payrollRows.length}}">当前周期暂无工资记录，请先让基地管理员生成工资单并由工人确认。</text>
+
+      <view class="payroll-list" wx:if="{{payrollRows.length}}">
+        <view class="payroll-item" wx:for="{{payrollRows}}" wx:key="id">
+          <view class="payroll-top">
+            <view class="payroll-main">
+              <text class="payroll-name">{{item.workerName}}（{{item.workerUid}}）</text>
+              <text class="payroll-meta">{{item.baseName}} · {{item.jobTitle}} · {{item.workDate}}</text>
+              <text class="payroll-detail">{{item.volumeText}} · 生成时间 {{item.createdAtText}}</text>
+            </view>
+            <view class="payroll-side">
+              <text class="payroll-amount">¥{{item.amountText}}</text>
+              <text class="payroll-chip {{item.statusClass}}">{{item.statusText}}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view wx:if="{{bossStage === 'approved'}}" class="boss-bottom-nav">
+      <view class="boss-bottom-item active">工作台</view>
+      <view class="boss-bottom-item" bindtap="goToBaseList">我的基地</view>
+      <view class="boss-bottom-item" bindtap="goToJobList">岗位发布</view>
+      <view class="boss-bottom-item" bindtap="goToBossProfile">我的</view>
+    </view>
+  </view>
+</view>

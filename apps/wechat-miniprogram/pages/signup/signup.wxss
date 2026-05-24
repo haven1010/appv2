@@ -1,0 +1,237 @@
+/* ═══════════════════════════════════════════
+   signup/signup - Claude Purple Theme
+   ═══════════════════════════════════════════ */
+.page {
+  background: transparent;
+}
+
+/* ───── Hero Stats (in-header summary) ───── */
+.hero-stats {
+  margin-top: 24rpx;
+  display: flex;
+  gap: 16rpx;
+}
+
+.hero-stat {
+  flex: 1;
+  background: var(--card-bg-soft);
+  border-radius: var(--radius-md);
+  padding: 16rpx 12rpx;
+  text-align: center;
+  border: var(--border-soft);
+}
+
+.hero-stat-value {
+  display: block;
+  font-size: 28rpx;
+  font-weight: 900;
+  color: var(--brand-purple);
+}
+
+.hero-stat-label {
+  display: block;
+  margin-top: 6rpx;
+  font-size: 22rpx;
+  color: var(--ink-sub);
+}
+
+/* ───── Hero / Header Card ───── */
+.header-card {
+  background: var(--card-bg);
+  border-radius: var(--radius-lg);
+  padding: 28rpx;
+  box-shadow: var(--shadow-md);
+  border: var(--border-soft);
+  margin-bottom: 20rpx;
+}
+
+.header-title {
+  display: block;
+  font-size: 44rpx;
+  font-weight: 900;
+  color: var(--ink-main);
+  line-height: 1.3;
+}
+
+.header-desc {
+  display: block;
+  margin-top: 8rpx;
+  font-size: 26rpx;
+  color: var(--ink-sub);
+  line-height: 1.5;
+}
+
+/* ───── Form Card ───── */
+.form-card {
+  background: var(--card-bg);
+  border-radius: var(--radius-lg);
+  padding: 28rpx;
+  box-shadow: var(--shadow-md);
+  border: var(--border-soft);
+  margin-bottom: 20rpx;
+}
+
+.form-card-title {
+  display: block;
+  font-size: 32rpx;
+  font-weight: 800;
+  color: var(--ink-main);
+  margin-bottom: 24rpx;
+}
+
+/* ───── Form Fields ───── */
+.form-field {
+  margin-bottom: 20rpx;
+}
+
+.form-field:last-child {
+  margin-bottom: 0;
+}
+
+.field-label {
+  display: block;
+  margin-bottom: 10rpx;
+  font-size: 26rpx;
+  font-weight: 700;
+  color: var(--ink-main);
+}
+
+.input-wrapper {
+  display: flex;
+  align-items: center;
+  height: 88rpx;
+  padding: 0 20rpx;
+  border-radius: var(--radius-md);
+  background: #f5f2ff;
+  border: 2rpx solid #e8e4f0;
+  box-sizing: border-box;
+  transition: all 0.25s;
+}
+
+.input-wrapper:focus-within {
+  border-color: var(--brand-purple);
+  background: #ffffff;
+  box-shadow: 0 0 0 6rpx rgba(102, 126, 234, 0.1);
+}
+
+.input-field {
+  flex: 1;
+  height: 100%;
+  font-size: 28rpx;
+  color: var(--ink-main);
+  background: transparent;
+  min-height: 44rpx;
+}
+
+.textarea-field {
+  width: 100%;
+  box-sizing: border-box;
+  border-radius: var(--radius-md);
+  background: #f5f2ff;
+  border: 2rpx solid #e8e4f0;
+  color: var(--ink-main);
+  font-size: 28rpx;
+  padding: 20rpx 22rpx;
+  min-height: 160rpx;
+  line-height: 1.6;
+  transition: all 0.25s;
+}
+
+.textarea-field:focus {
+  border-color: var(--brand-purple);
+  background: #ffffff;
+  box-shadow: 0 0 0 6rpx rgba(102, 126, 234, 0.1);
+}
+
+.picker-field {
+  display: flex;
+  align-items: center;
+  height: 88rpx;
+  padding: 0 20rpx;
+  border-radius: var(--radius-md);
+  background: #f5f2ff;
+  border: 2rpx solid #e8e4f0;
+  box-sizing: border-box;
+  transition: all 0.25s;
+}
+
+.picker-field:active {
+  border-color: var(--brand-purple);
+  background: #ffffff;
+}
+
+.picker-text {
+  flex: 1;
+  font-size: 28rpx;
+  color: var(--ink-main);
+}
+
+.picker-placeholder {
+  color: var(--ink-muted);
+  font-size: 26rpx;
+}
+
+/* ───── Form Hint ───── */
+.form-hint {
+  display: block;
+  margin-top: 12rpx;
+  font-size: 24rpx;
+  color: var(--ink-sub);
+  line-height: 1.5;
+}
+
+/* ───── Submit Button Area ───── */
+.submit-area {
+  margin-top: 24rpx;
+}
+
+.submit-btn {
+  height: 88rpx;
+  line-height: 88rpx;
+  border-radius: var(--radius-pill);
+  color: #ffffff;
+  font-size: 32rpx;
+  font-weight: 900;
+  background: var(--brand-purple);
+  box-shadow: 0 12rpx 24rpx rgba(102, 126, 234, 0.3);
+  transition: all 0.2s;
+}
+
+.submit-btn::after {
+  border: none;
+}
+
+.submit-btn:active {
+  transform: scale(0.97);
+  opacity: 0.92;
+}
+
+/* ───── Empty State ───── */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80rpx 48rpx;
+  text-align: center;
+}
+
+.empty-icon {
+  font-size: 80rpx;
+  line-height: 1;
+  margin-bottom: 20rpx;
+}
+
+.empty-title {
+  font-size: 30rpx;
+  font-weight: 800;
+  color: var(--ink-main);
+  line-height: 1.4;
+}
+
+.empty-desc {
+  margin-top: 8rpx;
+  font-size: 26rpx;
+  color: var(--ink-sub);
+  line-height: 1.5;
+}

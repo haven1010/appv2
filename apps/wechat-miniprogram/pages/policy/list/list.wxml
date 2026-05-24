@@ -1,0 +1,57 @@
+<view class="page page-enter">
+  <view class="page-body">
+    <view class="search-bar">
+      <view class="search-box">
+        <text class="search-icon">🔍</text>
+        <input
+          class="search-input"
+          type="text"
+          placeholder="搜索政策关键词"
+          value="{{searchKeyword}}"
+          bindinput="onSearchInput"
+          bindconfirm="onSearch"
+        />
+      </view>
+    </view>
+
+    <view class="category-tabs">
+      <view
+        class="tab-item {{activeCategory === item.id ? 'tab-active' : ''}}"
+        wx:for="{{categories}}"
+        wx:key="id"
+        data-id="{{item.id}}"
+        bindtap="onCategoryTap"
+      >{{item.name}}</view>
+    </view>
+
+    <view wx:if="{{loading}}" class="loading-state">
+      <text class="loading-text">加载中...</text>
+    </view>
+
+    <view wx:elif="{{policies.length}}" class="policy-list">
+      <view
+        class="policy-card"
+        wx:for="{{policies}}"
+        wx:key="id"
+        style="animation-delay: {{item.delay}};"
+        bindtap="goToPolicyDetail"
+        data-id="{{item.id}}"
+      >
+        <view class="policy-header">
+          <text class="policy-title">{{item.title}}</text>
+        </view>
+        <text class="policy-summary">{{item.summary}}</text>
+        <view class="policy-footer">
+          <text class="policy-category">{{item.category}}</text>
+          <text class="policy-date">{{item.publishDate}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view wx:else class="empty-state">
+      <text class="empty-text">暂无相关政策</text>
+    </view>
+
+    <view class="page-bottom-gap"></view>
+  </view>
+</view>

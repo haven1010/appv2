@@ -1,0 +1,73 @@
+﻿<view class="page">
+  <view class="page-body page-enter">
+    <view class="success-card ds-card card-in">
+      <view class="stamp-wrap">
+        <text class="stamp-icon">OK</text>
+      </view>
+      <text class="title">{{duplicate ? '今日已报名，无需重复提交' : '报名成功'}}</text>
+      <text class="subtitle">报名信息已同步到报名表和岗位申请表</text>
+      <text wx:if="{{cancelled}}" class="cancelled-tip">当前报名已取消，报名表记录已删除，岗位申请已取消</text>
+    </view>
+
+    <view class="detail-card ds-card card-in delay-1">
+      <view class="detail-row">
+        <text class="label">报名人</text>
+        <text class="value">{{workerName}}（{{workerUid}}）</text>
+      </view>
+      <view class="detail-row">
+        <text class="label">报名基地</text>
+        <text class="value">{{baseName}}</text>
+      </view>
+      <view class="detail-row">
+        <text class="label">报名岗位</text>
+        <text class="value">{{jobTitle}}</text>
+      </view>
+      <view class="detail-row" wx:if="{{workDate}}">
+        <text class="label">工作日期</text>
+        <text class="value">{{workDate}}</text>
+      </view>
+    </view>
+
+    <view class="action-card ds-card card-in delay-2">
+      <button class="btn-primary" bindtap="goWorkHistory">查看我的报名记录</button>
+      <view class="archive-form">
+        <view class="archive-title">结束本次务工</view>
+        <text class="archive-subtitle">请按实际务工情况填写，提交后会进入务工归档</text>
+
+        <view class="archive-field">
+          <text class="archive-label">本次工资</text>
+          <view class="archive-input-wrap">
+            <text class="archive-prefix">￥</text>
+            <input
+              class="archive-input"
+              type="digit"
+              placeholder="请输入本次工资金额"
+              value="{{totalAmountInput}}"
+              bindinput="onAmountInput"
+            />
+          </view>
+        </view>
+
+        <view class="archive-field">
+          <text class="archive-label">补充备注</text>
+          <textarea
+            class="archive-textarea"
+            placeholder="请输入发薪方式、离场情况等补充信息"
+            value="{{remarkInput}}"
+            bindinput="onRemarkInput"
+            auto-height
+          />
+        </view>
+      </view>
+      <button class="btn-secondary" bindtap="completeWorklog" loading="{{completing}}" disabled="{{completing}}">结束本次务工并归档</button>
+      <button
+        wx:if="{{canCancel}}"
+        class="btn-danger"
+        bindtap="onCancelSignup"
+        loading="{{cancelling}}"
+        disabled="{{cancelling || cancelled}}"
+      >{{cancelling ? '取消中...' : '取消报名并删除记录'}}</button>
+      <button class="btn-ghost" bindtap="backToSquare">返回广场</button>
+    </view>
+  </view>
+</view>

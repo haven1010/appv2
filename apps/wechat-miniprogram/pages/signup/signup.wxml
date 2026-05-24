@@ -1,0 +1,67 @@
+<view class="page page-enter">
+  <view class="page-body">
+
+    <view class="header-card">
+      <text class="header-title">填写报名信息</text>
+      <text class="header-desc">请确认报名信息无误后提交</text>
+
+      <view class="hero-stats">
+        <view class="hero-stat">
+          <text class="hero-stat-value">基地名称</text>
+          <text class="hero-stat-label">报名基地</text>
+        </view>
+        <view class="hero-stat">
+          <text class="hero-stat-value">岗位名称</text>
+          <text class="hero-stat-label">报名岗位</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="form-card">
+      <text class="form-card-title">个人信息</text>
+
+      <view class="form-field">
+        <text class="field-label">姓名</text>
+        <view class="input-wrapper">
+          <input class="input-field" placeholder="请输入您的姓名" placeholder-class="placeholder" />
+        </view>
+      </view>
+
+      <view class="form-field">
+        <text class="field-label">联系电话</text>
+        <view class="input-wrapper">
+          <input class="input-field" type="number" placeholder="请输入联系电话" placeholder-class="placeholder" />
+        </view>
+      </view>
+
+      <view class="form-field">
+        <text class="field-label">身份证号</text>
+        <view class="input-wrapper">
+          <input class="input-field" type="idcard" placeholder="请输入身份证号" placeholder-class="placeholder" />
+        </view>
+      </view>
+
+      <view class="form-field">
+        <text class="field-label">工作日期</text>
+        <view class="picker-field">
+          <text class="picker-placeholder">请选择工作日期</text>
+        </view>
+      </view>
+
+      <view class="form-field">
+        <text class="field-label">备注</text>
+        <textarea class="textarea-field" placeholder="如有特殊需求或说明请在此填写" placeholder-class="placeholder" />
+      </view>
+    </view>
+
+    <view class="form-card">
+      <text class="form-card-title">报名确认</text>
+      <text class="form-hint">提交报名即表示您已阅读并同意相关服务条款。工作人员将在审核后与您联系确认。</text>
+
+      <view class="submit-area">
+        <button class="submit-btn">提交报名信息</button>
+      </view>
+    </view>
+
+  </view>
+</view>

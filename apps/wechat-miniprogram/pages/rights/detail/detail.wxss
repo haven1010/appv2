@@ -1,0 +1,95 @@
+/* === Rights Detail — Claude Purple === */
+
+.page-body {
+  padding: 24rpx 28rpx;
+}
+
+/* ── Loading ── */
+.loading-state {
+  text-align: center;
+  padding: 140rpx 0;
+}
+
+.loading-text {
+  font-size: 26rpx;
+  color: var(--ink-muted);
+}
+
+/* ── Cards ── */
+.header-card,
+.info-card,
+.reply-card,
+.tips-card {
+  background: var(--card-bg);
+  border-radius: var(--radius-lg);
+  padding: 28rpx;
+  margin-bottom: 20rpx;
+  border: var(--border-soft);
+  box-shadow: var(--shadow-md);
+}
+
+.header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14rpx;
+  margin-bottom: 12rpx;
+}
+
+.issue-type {
+  font-size: 36rpx;
+  font-weight: 900;
+  color: var(--ink-main);
+}
+
+.status-badge {
+  padding: 6rpx 18rpx;
+  border-radius: var(--radius-pill);
+  font-size: 22rpx;
+  font-weight: 700;
+}
+
+.status-pending {
+  background: rgba(102, 126, 234, 0.1);
+  color: var(--brand-purple);
+}
+
+.status-processing {
+  background: rgba(102, 126, 234, 0.08);
+  color: var(--brand-purple);
+}
+
+.status-completed {
+  background: rgba(49, 164, 124, 0.1);
+  color: var(--accent-green);
+}
+
+.created-time,
+.reply-time {
+  display: block;
+  font-size: 22rpx;
+  color: var(--ink-muted);
+}
+
+.section-title {
+  display: block;
+  font-size: 30rpx;
+  font-weight: 800;
+  color: var(--ink-main);
+  margin-bottom: 16rpx;
+}
+
+.info-text,
+.reply-text,
+.tips-text {
+  display: block;
+  font-size: 26rpx;
+  color: var(--ink-sub);
+  line-height: 1.9;
+  white-space: pre-wrap;
+}
+
+/* ── Bottom ── */
+.page-bottom-gap {
+  height: 56rpx;
+}

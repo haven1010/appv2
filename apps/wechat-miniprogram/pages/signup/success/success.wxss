@@ -1,0 +1,229 @@
+/* ═══════════════════════════════════════════
+   signup/success - Claude Purple Theme
+   ═══════════════════════════════════════════ */
+.page {
+  background: transparent;
+}
+
+/* ───── Shared Card Base (ds-card compat) ───── */
+.ds-card {
+  background: var(--card-bg);
+  border-radius: var(--radius-lg);
+  padding: 28rpx;
+  box-shadow: var(--shadow-md);
+  border: var(--border-soft);
+}
+
+.card-in {
+  animation: cardFadeIn 0.35s ease both;
+}
+
+@keyframes cardFadeIn {
+  from { opacity: 0; transform: translate3d(0, 20rpx, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+
+/* ───── Animation Delays ───── */
+.delay-1 { animation-delay: 80ms; }
+.delay-2 { animation-delay: 140ms; }
+
+/* ───── Success Card ───── */
+.success-card {
+  text-align: center;
+  border-radius: var(--radius-lg);
+  border: var(--border-medium);
+}
+
+.stamp-wrap {
+  width: 130rpx;
+  height: 130rpx;
+  margin: 6rpx auto 14rpx;
+  border-radius: 50%;
+  background: rgba(102, 126, 234, 0.1);
+  border: 4rpx dashed rgba(102, 126, 234, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stamp-icon {
+  font-size: 56rpx;
+  line-height: 1;
+  color: var(--brand-purple);
+  font-weight: 900;
+}
+
+.title {
+  display: block;
+  color: var(--ink-main);
+  font-size: 40rpx;
+  font-weight: 900;
+  line-height: 1.35;
+}
+
+.subtitle {
+  display: block;
+  margin-top: 12rpx;
+  color: var(--ink-sub);
+  font-size: 28rpx;
+  line-height: 1.55;
+}
+
+.cancelled-tip {
+  display: block;
+  margin-top: 16rpx;
+  color: var(--accent-red);
+  font-size: 26rpx;
+  line-height: 1.5;
+  font-weight: 700;
+}
+
+/* ───── Detail Card ───── */
+.detail-card {
+  margin-top: 20rpx;
+}
+
+.detail-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18rpx;
+}
+
+.detail-row + .detail-row {
+  margin-top: 16rpx;
+  padding-top: 16rpx;
+  border-top: 1rpx dashed rgba(102, 126, 234, 0.12);
+}
+
+.label {
+  flex-shrink: 0;
+  color: var(--ink-sub);
+  font-size: 28rpx;
+}
+
+.value {
+  flex: 1;
+  text-align: right;
+  color: var(--ink-main);
+  font-size: 30rpx;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+/* ───── Action Card ───── */
+.action-card {
+  margin-top: 20rpx;
+}
+
+/* ───── Archive Form ───── */
+.archive-form {
+  margin-top: 20rpx;
+  padding: 24rpx;
+  border-radius: var(--radius-md);
+  background: rgba(102, 126, 234, 0.06);
+  border: var(--border-medium);
+}
+
+.archive-title {
+  font-size: 30rpx;
+  font-weight: 800;
+  color: var(--ink-main);
+}
+
+.archive-subtitle {
+  display: block;
+  margin-top: 8rpx;
+  margin-bottom: 20rpx;
+  color: var(--ink-sub);
+  font-size: 24rpx;
+  line-height: 1.5;
+}
+
+.archive-field + .archive-field {
+  margin-top: 20rpx;
+}
+
+.archive-label {
+  display: block;
+  margin-bottom: 10rpx;
+  color: var(--ink-main);
+  font-size: 26rpx;
+  font-weight: 700;
+}
+
+.archive-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  min-height: 88rpx;
+  padding: 0 20rpx;
+  border-radius: var(--radius-md);
+  background: #f5f2ff;
+  border: 2rpx solid #e8e4f0;
+  transition: all 0.25s;
+}
+
+.archive-input-wrap:focus-within {
+  border-color: var(--brand-purple);
+  background: #ffffff;
+  box-shadow: 0 0 0 6rpx rgba(102, 126, 234, 0.1);
+}
+
+.archive-prefix {
+  flex-shrink: 0;
+  color: var(--brand-purple);
+  font-size: 30rpx;
+  font-weight: 800;
+}
+
+.archive-input {
+  flex: 1;
+  width: auto;
+  min-height: 88rpx;
+  background: transparent;
+  border: 0;
+  color: var(--ink-main);
+  font-size: 30rpx;
+  padding: 0;
+}
+
+.archive-textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border-radius: var(--radius-md);
+  background: #f5f2ff;
+  border: 2rpx solid #e8e4f0;
+  color: var(--ink-main);
+  font-size: 28rpx;
+  padding: 20rpx 22rpx;
+  min-height: 160rpx;
+  line-height: 1.6;
+  transition: all 0.25s;
+}
+
+.archive-textarea:focus {
+  border-color: var(--brand-purple);
+  background: #ffffff;
+  box-shadow: 0 0 0 6rpx rgba(102, 126, 234, 0.1);
+}
+
+/* ───── Buttons ───── */
+.btn-primary {
+  margin-top: 0;
+}
+
+.btn-secondary {
+  margin-top: 16rpx;
+  width: 100%;
+}
+
+.btn-danger {
+  margin-top: 16rpx;
+  width: 100%;
+}
+
+.btn-ghost {
+  margin-top: 16rpx;
+  width: 100%;
+}

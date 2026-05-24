@@ -1,0 +1,66 @@
+<view class="page ai-page">
+  <view class="page-body ai-body {{pageReady ? 'page-enter' : ''}}">
+    <!-- ── Top Header ── -->
+    <view class="ai-top">
+      <text class="ai-title">{{title}}</text>
+      <text class="ai-subtitle">{{subtitle}}</text>
+    </view>
+
+    <!-- ── Chat Stream ── -->
+    <view class="chat-stream">
+      <!-- User Messages -->
+      <view class="user-row" wx:for="{{messages}}" wx:key="index" wx:if="{{item.role === 'user'}}">
+        <view class="user-bubble">{{item.content}}</view>
+      </view>
+
+      <!-- Assistant Messages -->
+      <view class="assistant-card" wx:for="{{messages}}" wx:key="index" wx:if="{{item.role === 'assistant'}}">
+        <text class="assistant-text">{{item.content}}</text>
+
+        <view class="assistant-actions">
+          <view
+            class="assistant-action-btn"
+            wx:for="{{toolActions}}"
+            wx:key="id"
+            data-id="{{item.id}}"
+            bindtap="tapToolAction"
+          >
+            <text class="assistant-action-icon">{{item.icon}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- ── Quick Actions ── -->
+    <view class="quick-action-row">
+      <view
+        class="quick-chip"
+        wx:for="{{quickActions}}"
+        wx:key="id"
+        data-prompt="{{item.prompt}}"
+        bindtap="usePrompt"
+      >
+        <text class="quick-chip-icon">{{item.icon}}</text>
+        <text class="quick-chip-text">{{item.label}}</text>
+      </view>
+    </view>
+
+    <!-- ── Composer ── -->
+    <view class="composer-shell">
+      <view class="composer-bar">
+        <view class="composer-left-icon">📷</view>
+        <input
+          class="composer-input"
+          placeholder="发消息或按住说话..."
+          value="{{inputValue}}"
+          bindinput="onInput"
+        />
+        <view class="composer-right-icons">
+          <view class="composer-small-icon">🔊</view>
+          <view class="composer-small-icon">＋</view>
+        </view>
+      </view>
+      <button class="composer-send" bindtap="submit">发送</button>
+    </view>
+  </view>
+</view>

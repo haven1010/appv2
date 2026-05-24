@@ -1,0 +1,267 @@
+[31m[Nest] 103604  - [39m2026/05/02 23:46:21 [31m  ERROR[39m [38;5;3m[BaseSeedService] [39m[31mSeed demo jobs failed: Unknown column 'SysUser.gender' in 'field list'[39m
+[31m[Nest] 103604  - [39m2026/05/03 00:06:45 [31m  ERROR[39m [38;5;3m[ExceptionsHandler] [39m[31mUnknown column 'job.audit_status' in 'field list'[39m
+QueryFailedError: Unknown column 'job.audit_status' in 'field list'
+    at Query.onResult (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\typeorm\driver\src\driver\mysql\MysqlQueryRunner.ts:248:33)
+    at Query.execute (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\commands\command.js:36:14)
+    at PoolConnection.handlePacket (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\base\connection.js:477:34)
+    at PacketParser.onPacket (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\base\connection.js:93:12)
+    at PacketParser.executeStart (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\packet_parser.js:75:16)
+    at Socket.<anonymous> (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\base\connection.js:100:25)
+    at Socket.emit (node:events:519:28)
+    at addChunk (node:internal/streams/readable:559:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:510:3)
+    at Readable.push (node:internal/streams/readable:390:5)
+[31m[Nest] 103604  - [39m2026/05/03 00:06:48 [31m  ERROR[39m [38;5;3m[ExceptionsHandler] [39m[31mUnknown column 'BaseInfo__BaseInfo_jobs.audit_status' in 'field list'[39m
+QueryFailedError: Unknown column 'BaseInfo__BaseInfo_jobs.audit_status' in 'field list'
+    at Query.onResult (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\typeorm\driver\src\driver\mysql\MysqlQueryRunner.ts:248:33)
+    at Query.execute (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\commands\command.js:36:14)
+    at PoolConnection.handlePacket (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\base\connection.js:477:34)
+    at PacketParser.onPacket (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\base\connection.js:93:12)
+    at PacketParser.executeStart (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\packet_parser.js:75:16)
+    at Socket.<anonymous> (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\base\connection.js:100:25)
+    at Socket.emit (node:events:519:28)
+    at addChunk (node:internal/streams/readable:559:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:510:3)
+    at Readable.push (node:internal/streams/readable:390:5)
+[31m[Nest] 103604  - [39m2026/05/03 00:06:51 [31m  ERROR[39m [38;5;3m[ExceptionsHandler] [39m[31mUnknown column 'BaseInfo__BaseInfo_jobs.audit_status' in 'field list'[39m
+QueryFailedError: Unknown column 'BaseInfo__BaseInfo_jobs.audit_status' in 'field list'
+    at Query.onResult (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\typeorm\driver\src\driver\mysql\MysqlQueryRunner.ts:248:33)
+    at Query.execute (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\commands\command.js:36:14)
+    at PoolConnection.handlePacket (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\base\connection.js:477:34)
+    at PacketParser.onPacket (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\base\connection.js:93:12)
+    at PacketParser.executeStart (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\packet_parser.js:75:16)
+    at Socket.<anonymous> (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\base\connection.js:100:25)
+    at Socket.emit (node:events:519:28)
+    at addChunk (node:internal/streams/readable:559:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:510:3)
+    at Readable.push (node:internal/streams/readable:390:5)
+[31m[Nest] 103604  - [39m2026/05/03 00:06:51 [31m  ERROR[39m [38;5;3m[ExceptionsHandler] [39m[31mUnknown column 'BaseInfo__BaseInfo_jobs.audit_status' in 'field list'[39m
+QueryFailedError: Unknown column 'BaseInfo__BaseInfo_jobs.audit_status' in 'field list'
+    at Query.onResult (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\typeorm\driver\src\driver\mysql\MysqlQueryRunner.ts:248:33)
+    at Query.execute (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\commands\command.js:36:14)
+    at PoolConnection.handlePacket (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\base\connection.js:477:34)
+    at PacketParser.onPacket (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\base\connection.js:93:12)
+    at PacketParser.executeStart (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\packet_parser.js:75:16)
+    at Socket.<anonymous> (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\base\connection.js:100:25)
+    at Socket.emit (node:events:519:28)
+    at addChunk (node:internal/streams/readable:559:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:510:3)
+    at Readable.push (node:internal/streams/readable:390:5)
+[31m[Nest] 103604  - [39m2026/05/03 00:13:57 [31m  ERROR[39m [38;5;3m[ExceptionsHandler] [39m[31mUnknown column 'job.audit_status' in 'field list'[39m
+QueryFailedError: Unknown column 'job.audit_status' in 'field list'
+    at Query.onResult (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\typeorm\driver\src\driver\mysql\MysqlQueryRunner.ts:248:33)
+    at Query.execute (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\commands\command.js:36:14)
+    at PoolConnection.handlePacket (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\base\connection.js:477:34)
+    at PacketParser.onPacket (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\base\connection.js:93:12)
+    at PacketParser.executeStart (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\packet_parser.js:75:16)
+    at Socket.<anonymous> (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\base\connection.js:100:25)
+    at Socket.emit (node:events:519:28)
+    at addChunk (node:internal/streams/readable:559:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:510:3)
+    at Readable.push (node:internal/streams/readable:390:5)
+[31m[Nest] 103604  - [39m2026/05/03 00:14:00 [31m  ERROR[39m [38;5;3m[ExceptionsHandler] [39m[31mUnknown column 'BaseInfo__BaseInfo_jobs.audit_status' in 'field list'[39m
+QueryFailedError: Unknown column 'BaseInfo__BaseInfo_jobs.audit_status' in 'field list'
+    at Query.onResult (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\typeorm\driver\src\driver\mysql\MysqlQueryRunner.ts:248:33)
+    at Query.execute (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\commands\command.js:36:14)
+    at PoolConnection.handlePacket (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\base\connection.js:477:34)
+    at PacketParser.onPacket (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\base\connection.js:93:12)
+    at PacketParser.executeStart (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\packet_parser.js:75:16)
+    at Socket.<anonymous> (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\base\connection.js:100:25)
+    at Socket.emit (node:events:519:28)
+    at addChunk (node:internal/streams/readable:559:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:510:3)
+    at Readable.push (node:internal/streams/readable:390:5)
+[31m[Nest] 103604  - [39m2026/05/03 00:14:01 [31m  ERROR[39m [38;5;3m[ExceptionsHandler] [39m[31mUnknown column 'BaseInfo__BaseInfo_jobs.audit_status' in 'field list'[39m
+QueryFailedError: Unknown column 'BaseInfo__BaseInfo_jobs.audit_status' in 'field list'
+    at Query.onResult (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\typeorm\driver\src\driver\mysql\MysqlQueryRunner.ts:248:33)
+    at Query.execute (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\commands\command.js:36:14)
+    at PoolConnection.handlePacket (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\base\connection.js:477:34)
+    at PacketParser.onPacket (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\base\connection.js:93:12)
+    at PacketParser.executeStart (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\packet_parser.js:75:16)
+    at Socket.<anonymous> (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\base\connection.js:100:25)
+    at Socket.emit (node:events:519:28)
+    at addChunk (node:internal/streams/readable:559:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:510:3)
+    at Readable.push (node:internal/streams/readable:390:5)
+[31m[Nest] 103604  - [39m2026/05/03 00:14:02 [31m  ERROR[39m [38;5;3m[ExceptionsHandler] [39m[31mUnknown column 'BaseInfo__BaseInfo_jobs.audit_status' in 'field list'[39m
+QueryFailedError: Unknown column 'BaseInfo__BaseInfo_jobs.audit_status' in 'field list'
+    at Query.onResult (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\typeorm\driver\src\driver\mysql\MysqlQueryRunner.ts:248:33)
+    at Query.execute (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\commands\command.js:36:14)
+    at PoolConnection.handlePacket (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\base\connection.js:477:34)
+    at PacketParser.onPacket (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\base\connection.js:93:12)
+    at PacketParser.executeStart (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\packet_parser.js:75:16)
+    at Socket.<anonymous> (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\base\connection.js:100:25)
+    at Socket.emit (node:events:519:28)
+    at addChunk (node:internal/streams/readable:559:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:510:3)
+    at Readable.push (node:internal/streams/readable:390:5)
+[31m[Nest] 103604  - [39m2026/05/03 00:14:02 [31m  ERROR[39m [38;5;3m[ExceptionsHandler] [39m[31mUnknown column 'BaseInfo__BaseInfo_jobs.audit_status' in 'field list'[39m
+QueryFailedError: Unknown column 'BaseInfo__BaseInfo_jobs.audit_status' in 'field list'
+    at Query.onResult (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\typeorm\driver\src\driver\mysql\MysqlQueryRunner.ts:248:33)
+    at Query.execute (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\commands\command.js:36:14)
+    at PoolConnection.handlePacket (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\base\connection.js:477:34)
+    at PacketParser.onPacket (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\base\connection.js:93:12)
+    at PacketParser.executeStart (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\packet_parser.js:75:16)
+    at Socket.<anonymous> (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\base\connection.js:100:25)
+    at Socket.emit (node:events:519:28)
+    at addChunk (node:internal/streams/readable:559:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:510:3)
+    at Readable.push (node:internal/streams/readable:390:5)
+[31m[Nest] 103604  - [39m2026/05/03 00:14:03 [31m  ERROR[39m [38;5;3m[ExceptionsHandler] [39m[31mUnknown column 'BaseInfo__BaseInfo_jobs.audit_status' in 'field list'[39m
+QueryFailedError: Unknown column 'BaseInfo__BaseInfo_jobs.audit_status' in 'field list'
+    at Query.onResult (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\typeorm\driver\src\driver\mysql\MysqlQueryRunner.ts:248:33)
+    at Query.execute (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\commands\command.js:36:14)
+    at PoolConnection.handlePacket (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\base\connection.js:477:34)
+    at PacketParser.onPacket (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\base\connection.js:93:12)
+    at PacketParser.executeStart (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\packet_parser.js:75:16)
+    at Socket.<anonymous> (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\base\connection.js:100:25)
+    at Socket.emit (node:events:519:28)
+    at addChunk (node:internal/streams/readable:559:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:510:3)
+    at Readable.push (node:internal/streams/readable:390:5)
+[31m[Nest] 103604  - [39m2026/05/03 00:14:03 [31m  ERROR[39m [38;5;3m[ExceptionsHandler] [39m[31mUnknown column 'BaseInfo__BaseInfo_jobs.audit_status' in 'field list'[39m
+QueryFailedError: Unknown column 'BaseInfo__BaseInfo_jobs.audit_status' in 'field list'
+    at Query.onResult (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\typeorm\driver\src\driver\mysql\MysqlQueryRunner.ts:248:33)
+    at Query.execute (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\commands\command.js:36:14)
+    at PoolConnection.handlePacket (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\base\connection.js:477:34)
+    at PacketParser.onPacket (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\base\connection.js:93:12)
+    at PacketParser.executeStart (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\packet_parser.js:75:16)
+    at Socket.<anonymous> (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\base\connection.js:100:25)
+    at Socket.emit (node:events:519:28)
+    at addChunk (node:internal/streams/readable:559:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:510:3)
+    at Readable.push (node:internal/streams/readable:390:5)
+[31m[Nest] 103604  - [39m2026/05/03 00:14:03 [31m  ERROR[39m [38;5;3m[ExceptionsHandler] [39m[31mUnknown column 'BaseInfo__BaseInfo_jobs.audit_status' in 'field list'[39m
+QueryFailedError: Unknown column 'BaseInfo__BaseInfo_jobs.audit_status' in 'field list'
+    at Query.onResult (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\typeorm\driver\src\driver\mysql\MysqlQueryRunner.ts:248:33)
+    at Query.execute (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\commands\command.js:36:14)
+    at PoolConnection.handlePacket (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\base\connection.js:477:34)
+    at PacketParser.onPacket (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\base\connection.js:93:12)
+    at PacketParser.executeStart (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\packet_parser.js:75:16)
+    at Socket.<anonymous> (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\base\connection.js:100:25)
+    at Socket.emit (node:events:519:28)
+    at addChunk (node:internal/streams/readable:559:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:510:3)
+    at Readable.push (node:internal/streams/readable:390:5)
+[31m[Nest] 103604  - [39m2026/05/03 00:14:38 [31m  ERROR[39m [38;5;3m[ExceptionsHandler] [39m[31mUnknown column 'BaseInfo__BaseInfo_jobs.audit_status' in 'field list'[39m
+QueryFailedError: Unknown column 'BaseInfo__BaseInfo_jobs.audit_status' in 'field list'
+    at Query.onResult (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\typeorm\driver\src\driver\mysql\MysqlQueryRunner.ts:248:33)
+    at Query.execute (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\commands\command.js:36:14)
+    at PoolConnection.handlePacket (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\base\connection.js:477:34)
+    at PacketParser.onPacket (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\base\connection.js:93:12)
+    at PacketParser.executeStart (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\packet_parser.js:75:16)
+    at Socket.<anonymous> (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\base\connection.js:100:25)
+    at Socket.emit (node:events:519:28)
+    at addChunk (node:internal/streams/readable:559:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:510:3)
+    at Readable.push (node:internal/streams/readable:390:5)
+[31m[Nest] 103604  - [39m2026/05/03 00:14:38 [31m  ERROR[39m [38;5;3m[ExceptionsHandler] [39m[31mUnknown column 'job.audit_status' in 'field list'[39m
+QueryFailedError: Unknown column 'job.audit_status' in 'field list'
+    at Query.onResult (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\typeorm\driver\src\driver\mysql\MysqlQueryRunner.ts:248:33)
+    at Query.execute (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\commands\command.js:36:14)
+    at PoolConnection.handlePacket (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\base\connection.js:477:34)
+    at PacketParser.onPacket (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\base\connection.js:93:12)
+    at PacketParser.executeStart (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\packet_parser.js:75:16)
+    at Socket.<anonymous> (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\base\connection.js:100:25)
+    at Socket.emit (node:events:519:28)
+    at addChunk (node:internal/streams/readable:559:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:510:3)
+    at Readable.push (node:internal/streams/readable:390:5)
+[31m[Nest] 103604  - [39m2026/05/03 00:15:07 [31m  ERROR[39m [38;5;3m[ExceptionsHandler] [39m[31mUnknown column 'BaseInfo__BaseInfo_jobs.audit_status' in 'field list'[39m
+QueryFailedError: Unknown column 'BaseInfo__BaseInfo_jobs.audit_status' in 'field list'
+    at Query.onResult (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\typeorm\driver\src\driver\mysql\MysqlQueryRunner.ts:248:33)
+    at Query.execute (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\commands\command.js:36:14)
+    at PoolConnection.handlePacket (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\base\connection.js:477:34)
+    at PacketParser.onPacket (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\base\connection.js:93:12)
+    at PacketParser.executeStart (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\packet_parser.js:75:16)
+    at Socket.<anonymous> (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\base\connection.js:100:25)
+    at Socket.emit (node:events:519:28)
+    at addChunk (node:internal/streams/readable:559:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:510:3)
+    at Readable.push (node:internal/streams/readable:390:5)
+[31m[Nest] 103604  - [39m2026/05/03 00:15:07 [31m  ERROR[39m [38;5;3m[ExceptionsHandler] [39m[31mUnknown column 'job.audit_status' in 'field list'[39m
+QueryFailedError: Unknown column 'job.audit_status' in 'field list'
+    at Query.onResult (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\typeorm\driver\src\driver\mysql\MysqlQueryRunner.ts:248:33)
+    at Query.execute (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\commands\command.js:36:14)
+    at PoolConnection.handlePacket (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\base\connection.js:477:34)
+    at PacketParser.onPacket (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\base\connection.js:93:12)
+    at PacketParser.executeStart (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\packet_parser.js:75:16)
+    at Socket.<anonymous> (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\base\connection.js:100:25)
+    at Socket.emit (node:events:519:28)
+    at addChunk (node:internal/streams/readable:559:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:510:3)
+    at Readable.push (node:internal/streams/readable:390:5)
+[31m[Nest] 103604  - [39m2026/05/03 00:15:31 [31m  ERROR[39m [38;5;3m[ExceptionsHandler] [39m[31mUnknown column 'BaseInfo__BaseInfo_jobs.audit_status' in 'field list'[39m
+QueryFailedError: Unknown column 'BaseInfo__BaseInfo_jobs.audit_status' in 'field list'
+    at Query.onResult (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\typeorm\driver\src\driver\mysql\MysqlQueryRunner.ts:248:33)
+    at Query.execute (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\commands\command.js:36:14)
+    at PoolConnection.handlePacket (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\base\connection.js:477:34)
+    at PacketParser.onPacket (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\base\connection.js:93:12)
+    at PacketParser.executeStart (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\packet_parser.js:75:16)
+    at Socket.<anonymous> (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\base\connection.js:100:25)
+    at Socket.emit (node:events:519:28)
+    at addChunk (node:internal/streams/readable:559:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:510:3)
+    at Readable.push (node:internal/streams/readable:390:5)
+[31m[Nest] 103604  - [39m2026/05/03 00:15:31 [31m  ERROR[39m [38;5;3m[ExceptionsHandler] [39m[31mUnknown column 'job.audit_status' in 'field list'[39m
+QueryFailedError: Unknown column 'job.audit_status' in 'field list'
+    at Query.onResult (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\typeorm\driver\src\driver\mysql\MysqlQueryRunner.ts:248:33)
+    at Query.execute (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\commands\command.js:36:14)
+    at PoolConnection.handlePacket (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\base\connection.js:477:34)
+    at PacketParser.onPacket (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\base\connection.js:93:12)
+    at PacketParser.executeStart (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\packet_parser.js:75:16)
+    at Socket.<anonymous> (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\base\connection.js:100:25)
+    at Socket.emit (node:events:519:28)
+    at addChunk (node:internal/streams/readable:559:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:510:3)
+    at Readable.push (node:internal/streams/readable:390:5)
+[31m[Nest] 103604  - [39m2026/05/03 00:19:11 [31m  ERROR[39m [38;5;3m[ExceptionsHandler] [39m[31mUnknown column 'BaseInfo__BaseInfo_jobs.audit_status' in 'field list'[39m
+QueryFailedError: Unknown column 'BaseInfo__BaseInfo_jobs.audit_status' in 'field list'
+    at Query.onResult (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\typeorm\driver\src\driver\mysql\MysqlQueryRunner.ts:248:33)
+    at Query.execute (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\commands\command.js:36:14)
+    at PoolConnection.handlePacket (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\base\connection.js:477:34)
+    at PacketParser.onPacket (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\base\connection.js:93:12)
+    at PacketParser.executeStart (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\packet_parser.js:75:16)
+    at Socket.<anonymous> (D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\node_modules\mysql2\lib\base\connection.js:100:25)
+    at Socket.emit (node:events:519:28)
+    at addChunk (node:internal/streams/readable:559:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:510:3)
+    at Readable.push (node:internal/streams/readable:390:5)
+[31m[Nest] 103716  - [39m2026/05/03 00:21:54 [31m  ERROR[39m [38;5;3m[BaseSeedService] [39m[31mSeed demo jobs failed: Unknown column 'SysUser.gender' in 'field list'[39m
+[31m[Nest] 103716  - [39m2026/05/03 00:21:54 [31m  ERROR[39m [38;5;3m[NestApplication] [39m[31mError: listen EADDRINUSE: address already in use 0.0.0.0:3001[39m[38;5;3m +2ms[39m
+node:net:1898
+    const ex = new UVExceptionWithHostPort(err, 'listen', address, port);
+               ^
+
+Error: listen EADDRINUSE: address already in use 0.0.0.0:3001
+    at Server.setupListenHandle [as _listen2] (node:net:1898:16)
+    at listenInCluster (node:net:1946:12)
+    at doListen (node:net:2116:7)
+    at process.processTicksAndRejections (node:internal/process/task_queues:83:21) {
+  code: 'EADDRINUSE',
+  errno: -4091,
+  syscall: 'listen',
+  address: '0.0.0.0',
+  port: 3001
+}
+
+Node.js v20.13.1
+[31m[Nest] 108480  - [39m2026/05/03 00:22:42 [31m  ERROR[39m [38;5;3m[BaseSeedService] [39m[31mSeed demo jobs failed: Unknown column 'SysUser.gender' in 'field list'[39m
+[31m[Nest] 108480  - [39m2026/05/03 00:22:42 [31m  ERROR[39m [38;5;3m[NestApplication] [39m[31mError: listen EADDRINUSE: address already in use 0.0.0.0:3001[39m[38;5;3m +3ms[39m
+node:net:1898
+    const ex = new UVExceptionWithHostPort(err, 'listen', address, port);
+               ^
+
+Error: listen EADDRINUSE: address already in use 0.0.0.0:3001
+    at Server.setupListenHandle [as _listen2] (node:net:1898:16)
+    at listenInCluster (node:net:1946:12)
+    at doListen (node:net:2116:7)
+    at process.processTicksAndRejections (node:internal/process/task_queues:83:21) {
+  code: 'EADDRINUSE',
+  errno: -4091,
+  syscall: 'listen',
+  address: '0.0.0.0',
+  port: 3001
+}
+
+Node.js v20.13.1

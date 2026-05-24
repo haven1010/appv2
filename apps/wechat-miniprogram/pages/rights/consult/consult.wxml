@@ -1,0 +1,94 @@
+<view class="page page-enter">
+  <view class="page-body">
+    <view class="header-card">
+      <text class="header-icon">🛡️</text>
+      <text class="header-title">维权咨询</text>
+      <text class="header-subtitle">遇到问题？我们帮您解决</text>
+    </view>
+
+    <view class="form-card">
+      <text class="form-label required">问题类型</text>
+      <picker
+        mode="selector"
+        range="{{issueTypes}}"
+        range-key="label"
+        value="{{issueTypeIndex}}"
+        bindchange="onIssueTypeChange"
+      >
+        <view class="picker-box">
+          <text class="picker-text {{issueType ? '' : 'placeholder'}}">
+            {{issueType ? issueTypes[issueTypeIndex].label : '请选择问题类型'}}
+          </text>
+          <text class="picker-arrow">▼</text>
+        </view>
+      </picker>
+    </view>
+
+    <view class="form-card">
+      <text class="form-label required">问题描述</text>
+      <textarea
+        class="form-textarea"
+        placeholder="请详细描述您遇到的问题，包括时间、地点、涉及人员等（至少10个字）"
+        value="{{description}}"
+        bindinput="onDescriptionInput"
+        maxlength="500"
+        show-confirm-bar="{{false}}"
+      />
+      <text class="char-count">{{description.length}}/500</text>
+    </view>
+
+    <view class="form-card">
+      <text class="form-label required">联系电话</text>
+      <input
+        class="form-input"
+        type="number"
+        placeholder="请输入您的联系电话"
+        value="{{contactPhone}}"
+        bindinput="onPhoneInput"
+        maxlength="11"
+      />
+    </view>
+
+    <view class="form-card">
+      <text class="form-label">上传凭证（选填）</text>
+      <view class="upload-area">
+        <view
+          class="image-item"
+          wx:for="{{attachments}}"
+          wx:key="*this"
+        >
+          <image class="preview-image" src="{{item}}" mode="aspectFill" />
+          <view class="remove-btn" data-index="{{index}}" bindtap="removeImage">×</view>
+        </view>
+        <view
+          wx:if="{{attachments.length < 3}}"
+          class="upload-btn"
+          bindtap="chooseImage"
+        >
+          <text class="upload-icon">+</text>
+          <text class="upload-text">上传图片</text>
+        </view>
+      </view>
+      <text class="form-hint">最多上传3张图片，支持合同、聊天记录等凭证</text>
+    </view>
+
+    <view class="tips-card">
+      <text class="tips-title">💡 温馨提示</text>
+      <text class="tips-item">• 平台会在1-3个工作日内受理您的咨询</text>
+      <text class="tips-item">• 请保持电话畅通，方便工作人员联系</text>
+      <text class="tips-item">• 提供详细信息有助于更快解决问题</text>
+    </view>
+
+    <view class="action-card">
+      <button
+        class="btn-primary"
+        bindtap="onSubmit"
+        loading="{{submitting}}"
+        disabled="{{submitting}}"
+      >提交咨询</button>
+      <button class="btn-ghost" bindtap="goBack">取消</button>
+    </view>
+
+    <view class="page-bottom-gap"></view>
+  </view>
+</view>

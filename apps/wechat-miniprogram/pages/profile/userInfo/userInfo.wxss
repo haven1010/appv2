@@ -1,0 +1,267 @@
+/* pages/profile/userInfo/userInfo.wxss — Claude Purple Theme */
+.page {
+  min-height: 100vh;
+  background: var(--page-bg);
+}
+
+.scroll-wrap {
+  height: 100vh;
+  padding: 24rpx 24rpx calc(42rpx + env(safe-area-inset-bottom));
+  box-sizing: border-box;
+}
+
+.module-card,
+.empty-card {
+  border-radius: var(--radius-lg);
+  background: var(--card-bg);
+  border: var(--border-soft);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+}
+
+.module-head {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  padding: 24rpx;
+}
+
+.avatar-wrap {
+  width: 96rpx;
+  height: 96rpx;
+  border-radius: 50%;
+  border: 4rpx solid rgba(102, 126, 234, 0.12);
+  background: var(--card-bg-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.avatar-image {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+}
+
+.avatar-text {
+  font-size: 40rpx;
+  font-weight: 800;
+  color: var(--brand-purple);
+}
+
+.head-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.head-name {
+  display: block;
+  font-size: 34rpx;
+  font-weight: 900;
+  color: var(--ink-main);
+}
+
+.head-sub {
+  display: block;
+  margin-top: 6rpx;
+  font-size: 26rpx;
+  color: var(--ink-sub);
+}
+
+.head-toggle {
+  font-size: 24rpx;
+  color: var(--brand-purple);
+  padding: 10rpx 16rpx;
+  border-radius: var(--radius-pill);
+  background: rgba(102, 126, 234, 0.1);
+  font-weight: 700;
+}
+
+.module-body {
+  padding: 0 24rpx 24rpx;
+  max-height: 1900rpx;
+  overflow: hidden;
+  opacity: 1;
+  transition: max-height 300ms ease, opacity 240ms ease, transform 240ms ease;
+}
+
+.module-card.closed .module-body {
+  max-height: 0;
+  opacity: 0;
+  padding-bottom: 0;
+  transform: translateY(-10rpx);
+}
+
+.info-grid {
+  padding-top: 16rpx;
+}
+
+.info-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14rpx 0;
+}
+
+.info-label {
+  font-size: 24rpx;
+  color: var(--ink-sub);
+}
+
+.info-value {
+  max-width: 62%;
+  text-align: right;
+  font-size: 28rpx;
+  font-weight: 700;
+  color: var(--ink-main);
+}
+
+.divider {
+  height: 1rpx;
+  margin: 10rpx 0 14rpx;
+  background: linear-gradient(90deg, transparent, #e2dff0, transparent);
+}
+
+.proxy-takeover-card {
+  margin: 6rpx 0 20rpx;
+  padding: 18rpx;
+  border-radius: var(--radius-md);
+  border: var(--border-soft);
+  background: var(--card-bg-soft);
+}
+
+.proxy-takeover-title {
+  font-size: 30rpx;
+  font-weight: 800;
+  color: var(--brand-purple);
+}
+
+.proxy-takeover-sub,
+.proxy-takeover-status {
+  margin-top: 8rpx;
+  font-size: 24rpx;
+  color: var(--ink-sub);
+  line-height: 1.5;
+}
+
+.takeover-btn {
+  margin-top: 16rpx;
+  border-radius: var(--radius-pill);
+  height: 82rpx;
+  line-height: 82rpx;
+  background: var(--brand-gradient);
+  color: #fff;
+  font-size: 30rpx;
+  font-weight: 800;
+  border: none;
+}
+
+.takeover-btn::after {
+  border: none;
+}
+
+.field-group {
+  padding: 4rpx 0;
+}
+
+.field-group + .field-group {
+  margin-top: 26rpx;
+}
+
+.field-label {
+  display: block;
+  font-size: 28rpx;
+  color: #4a4d5e;
+  margin-bottom: 10rpx;
+  font-weight: 700;
+}
+
+.field-value {
+  display: block;
+  font-size: 28rpx;
+  font-weight: 700;
+  color: var(--ink-main);
+  padding: 18rpx 20rpx;
+  border-radius: 18rpx;
+  background: #f5f2ff;
+  border: var(--border-soft);
+}
+
+.field-input {
+  width: 100%;
+  box-sizing: border-box;
+  font-size: 30rpx;
+  color: var(--ink-main);
+  font-weight: 700;
+  padding: 20rpx;
+  min-height: 84rpx;
+  border-radius: var(--radius-md);
+  background: #f5f2ff;
+  border: 2rpx solid rgba(102, 126, 234, 0.08);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.field-input.focus {
+  border-color: var(--brand-purple);
+  background: #ffffff;
+  box-shadow: 0 0 0 6rpx rgba(102, 126, 234, 0.1);
+}
+
+.field-input.invalid {
+  border-color: var(--accent-red);
+  box-shadow: 0 0 8rpx rgba(228, 92, 109, 0.16);
+}
+
+.field-textarea {
+  min-height: 96rpx;
+  height: auto;
+  line-height: 1.5;
+  padding-top: 16rpx;
+}
+
+.error {
+  display: block;
+  margin-top: 10rpx;
+  color: var(--accent-red);
+  font-size: 24rpx;
+  line-height: 1.4;
+  text-align: left;
+}
+
+.save-btn {
+  margin-top: 24rpx;
+  border-radius: var(--radius-pill);
+  border: none;
+  background: var(--brand-purple);
+  color: #fff;
+  font-size: 32rpx;
+  font-weight: 800;
+  height: 88rpx;
+  line-height: 88rpx;
+  box-shadow: 0 14rpx 28rpx rgba(102, 126, 234, 0.24);
+}
+
+.save-btn::after {
+  border: none;
+}
+
+.empty-card {
+  margin-top: 12rpx;
+  padding: 40rpx 28rpx;
+  text-align: center;
+}
+
+.empty-title {
+  display: block;
+  color: var(--ink-main);
+  font-size: 32rpx;
+  font-weight: 700;
+}
+
+.empty-desc {
+  display: block;
+  margin-top: 10rpx;
+  color: var(--ink-sub);
+  font-size: 28rpx;
+  line-height: 1.5;
+}

@@ -1,0 +1,26 @@
+<view class="page services-page">
+  <view class="page-body services-body">
+    <!-- ── Hero ── -->
+    <view class="services-hero">
+      <text class="services-title">更多服务</text>
+      <text class="services-subtitle">把不常用但重要的工人端功能集中到这里</text>
+    </view>
+
+    <!-- ── Service List ── -->
+    <view class="services-list">
+      <view
+        class="service-card"
+        wx:for="{{items}}"
+        wx:key="key"
+        data-url="{{item.url}}"
+        bindtap="onItemTap"
+      >
+        <view class="service-copy">
+          <text class="service-card-title">{{item.title}}</text>
+          <text class="service-card-desc">{{item.desc}}</text>
+        </view>
+        <text class="service-arrow">></text>
+      </view>
+    </view>
+  </view>
+</view>

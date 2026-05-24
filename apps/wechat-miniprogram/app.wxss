@@ -1,0 +1,399 @@
+/** app.wxss — Claude Style Design System */
+/* 白色干净背景，紫色做点缀色 */
+
+/* ═══════════════════════════════════════════
+   Design Tokens
+   ═══════════════════════════════════════════ */
+:root {
+  --ink-main: #1a1d26;
+  --ink-sub: #8e96a8;
+  --ink-muted: #c0c5d0;
+  --page-bg: #f2f4f8;
+  --card-bg: #ffffff;
+  --card-bg-soft: #f7f8fc;
+  --brand-purple: #5A6CD6;
+  --brand-purple-light: #764ba2;
+  --brand-gradient: linear-gradient(135deg, #5A6CD6 0%, #4A5AC0 100%);
+  --accent-gold: #f2b84b;
+  --accent-green: #31a47c;
+  --accent-red: #e45c6d;
+  --accent-blue: #4da6ff;
+  --radius-sm: 12rpx;
+  --radius-md: 20rpx;
+  --radius-lg: 28rpx;
+  --radius-pill: 999rpx;
+  --shadow-sm: 0 2rpx 8rpx rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4rpx 24rpx rgba(0, 0, 0, 0.07);
+  --shadow-lg: 0 12rpx 40rpx rgba(0, 0, 0, 0.09);
+  --shadow-xl: 0 20rpx 56rpx rgba(90, 108, 214, 0.18);
+  --shadow-purple: 0 8rpx 32rpx rgba(90, 108, 214, 0.25);
+  --border-soft: 1rpx solid rgba(0, 0, 0, 0.04);
+  --border-medium: 1rpx solid rgba(0, 0, 0, 0.08);
+}
+
+/* ═══════════════════════════════════════════
+   Base
+   ═══════════════════════════════════════════ */
+page {
+  color: var(--ink-main);
+  font-family: 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  background: linear-gradient(180deg, #f2f4f8 0%, #e8ebf2 100%) !important;
+}
+
+page,
+.page {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #f2f4f8 0%, #e8ebf2 100%) !important;
+}
+
+.page-body {
+  box-sizing: border-box;
+  padding: 20rpx 24rpx;
+}
+
+.safe-bottom {
+  height: calc(16rpx + env(safe-area-inset-bottom));
+}
+
+/* ═══════════════════════════════════════════
+   Typography
+   ═══════════════════════════════════════════ */
+.page-title {
+  font-size: 44rpx;
+  font-weight: 900;
+  color: var(--ink-main);
+  line-height: 1.3;
+}
+
+.section-title {
+  font-size: 34rpx;
+  font-weight: 800;
+  color: var(--ink-main);
+  line-height: 1.4;
+}
+
+.body-text {
+  font-size: 30rpx;
+  line-height: 1.7;
+  color: var(--ink-main);
+  font-weight: 600;
+}
+
+.meta-text {
+  font-size: 28rpx;
+  color: #4a4d5e;
+  line-height: 1.6;
+  font-weight: 600;
+}
+
+.money-number {
+  font-size: 48rpx;
+  line-height: 1.1;
+  color: #1a1d26;
+  font-weight: 900;
+}
+
+.money-number.purple { color: var(--brand-purple); }
+.money-number.gold { color: var(--accent-gold); }
+.money-number.green { color: var(--accent-green); }
+.money-number.red { color: var(--accent-red); }
+
+/* ═══════════════════════════════════════════
+   Cards
+   ═══════════════════════════════════════════ */
+.card {
+  background: var(--card-bg);
+  border-radius: var(--radius-lg);
+  padding: 24rpx;
+  box-shadow: var(--shadow-md);
+}
+
+.card-sm {
+  background: var(--card-bg);
+  border-radius: var(--radius-md);
+  padding: 16rpx 20rpx;
+  box-shadow: var(--shadow-sm);
+}
+
+.card-soft {
+  background: var(--card-bg-soft);
+  border-radius: var(--radius-md);
+  padding: 16rpx 20rpx;
+}
+
+/* ── Glass Card (磨砂玻璃效果) ── */
+.card-glass {
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(20rpx);
+  -webkit-backdrop-filter: blur(20rpx);
+  border-radius: var(--radius-lg);
+  padding: 28rpx;
+  border: 1rpx solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 8rpx 32rpx rgba(90, 108, 214, 0.10);
+}
+
+/* ═══════════════════════════════════════════
+   Buttons (精致简约)
+   ═══════════════════════════════════════════ */
+.btn {
+  border: none;
+  border-radius: 28rpx;
+  min-height: 92rpx;
+  height: 92rpx;
+  line-height: 92rpx;
+  font-size: 30rpx;
+  font-weight: 800;
+  transition: all 0.2s;
+}
+
+.btn-primary {
+  color: #ffffff;
+  background: var(--brand-purple);
+  box-shadow: var(--shadow-purple);
+}
+
+.btn-primary:active { transform: scale(0.97); opacity: 0.88; }
+
+.btn-primary[disabled] {
+  background: #b8b4c8;
+  box-shadow: none;
+  color: #e8e4f0;
+}
+
+.btn-secondary {
+  color: var(--ink-main);
+  background: #ffffff;
+  border: 2rpx solid rgba(0, 0, 0, 0.1);
+  font-weight: 800;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.04);
+}
+
+.btn-secondary:active { transform: scale(0.97); background: #f5f5f7; }
+
+.btn-ghost {
+  color: var(--brand-purple);
+  background: rgba(90, 108, 214, 0.08);
+  border: 2rpx solid rgba(90, 108, 214, 0.25);
+  font-weight: 800;
+}
+
+.btn-ghost:active { opacity: 0.7; background: rgba(90, 108, 214, 0.15); }
+
+.btn-danger {
+  color: #ffffff;
+  background: var(--accent-red);
+  box-shadow: 0 8rpx 24rpx rgba(228, 92, 109, 0.3);
+}
+
+.btn-sm {
+  min-height: 72rpx;
+  height: 72rpx;
+  line-height: 72rpx;
+  font-size: 28rpx;
+  border-radius: 22rpx;
+}
+
+.btn-lg {
+  min-height: 100rpx;
+  height: 100rpx;
+  line-height: 100rpx;
+  font-size: 34rpx;
+  border-radius: 28rpx;
+}
+
+.btn::after { border: none; }
+
+/* ═══════════════════════════════════════════
+   Tags (紫色点缀)
+   ═══════════════════════════════════════════ */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 8rpx 18rpx;
+  border-radius: var(--radius-pill);
+  font-size: 26rpx;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.tag-purple { background: rgba(90, 108, 214, 0.15); color: var(--brand-purple); border: 1rpx solid rgba(90, 108, 214, 0.25); }
+.tag-green { background: rgba(49, 164, 124, 0.15); color: var(--accent-green); border: 1rpx solid rgba(49, 164, 124, 0.2); }
+.tag-red { background: rgba(228, 92, 109, 0.15); color: var(--accent-red); border: 1rpx solid rgba(228, 92, 109, 0.2); }
+.tag-gold { background: rgba(242, 184, 75, 0.2); color: #8b6914; border: 1rpx solid rgba(242, 184, 75, 0.25); }
+.tag-blue { background: rgba(77, 166, 255, 0.15); color: var(--accent-blue); border: 1rpx solid rgba(77, 166, 255, 0.2); }
+
+/* ═══════════════════════════════════════════
+   Forms
+   ═══════════════════════════════════════════ */
+.field-label {
+  display: block;
+  margin-bottom: 8rpx;
+  font-size: 26rpx;
+  font-weight: 700;
+  color: #4a4d5e;
+}
+
+.input-wrapper {
+  display: flex;
+  align-items: center;
+  height: 88rpx;
+  padding: 0 20rpx;
+  border-radius: var(--radius-md);
+  background: #f5f5f7;
+  border: 2rpx solid #e8e8ea;
+  box-sizing: border-box;
+  transition: all 0.25s;
+}
+
+.input-wrapper.focus {
+  border-color: var(--brand-purple);
+  background: #ffffff;
+  box-shadow: 0 0 0 4rpx rgba(90, 108, 214, 0.12);
+}
+
+.input-field {
+  flex: 1;
+  height: 100%;
+  font-size: 28rpx;
+  color: var(--ink-main);
+  background: transparent;
+  min-height: 44rpx;
+}
+
+.placeholder {
+  color: var(--ink-muted);
+  font-size: 26rpx;
+}
+
+/* ═══════════════════════════════════════════
+   Layout Utilities
+   ═══════════════════════════════════════════ */
+.flex-row { display: flex; align-items: center; }
+.flex-between { display: flex; align-items: center; justify-content: space-between; }
+.flex-center { display: flex; align-items: center; justify-content: center; }
+.flex-col { display: flex; flex-direction: column; }
+
+.gap-sm { gap: 12rpx; }
+.gap-md { gap: 16rpx; }
+.gap-lg { gap: 24rpx; }
+
+.mt-sm { margin-top: 12rpx; }
+.mt-md { margin-top: 20rpx; }
+.mt-lg { margin-top: 28rpx; }
+
+.mb-sm { margin-bottom: 12rpx; }
+.mb-md { margin-bottom: 20rpx; }
+.mb-lg { margin-bottom: 28rpx; }
+
+.p-sm { padding: 12rpx; }
+.p-md { padding: 20rpx; }
+.p-lg { padding: 28rpx; }
+
+.text-center { text-align: center; }
+.text-right { text-align: right; }
+.text-purple { color: var(--brand-purple); }
+.text-sub { color: var(--ink-sub); }
+.text-muted { color: var(--ink-muted); }
+.text-green { color: var(--accent-green); }
+.text-red { color: var(--accent-red); }
+.fw-700 { font-weight: 700; }
+.fw-800 { font-weight: 800; }
+.fw-900 { font-weight: 900; }
+
+/* ═══════════════════════════════════════════
+   Dividers
+   ═══════════════════════════════════════════ */
+.divider {
+  height: 1rpx;
+  background: #ececed;
+  margin: 20rpx 0;
+}
+
+/* ═══════════════════════════════════════════
+   Animations
+   ═══════════════════════════════════════════ */
+.page-enter {
+  animation: pageFadeIn 0.3s ease both;
+}
+
+@keyframes pageFadeIn {
+  from { opacity: 0; transform: translate3d(0, 12rpx, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+
+/* ═══════════════════════════════════════════
+   Misc
+   ═══════════════════════════════════════════ */
+.section + .section { margin-top: 24rpx; }
+
+/* ── 装饰性模块头部 ── */
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 14rpx;
+  margin-bottom: 20rpx;
+}
+
+.section-header-accent {
+  width: 8rpx;
+  height: 36rpx;
+  border-radius: 4rpx;
+  background: var(--brand-gradient);
+  flex-shrink: 0;
+}
+
+.section-header-title {
+  font-size: 32rpx;
+  font-weight: 900;
+  color: var(--ink-main);
+  flex: 1;
+}
+
+.section-header-more {
+  font-size: 24rpx;
+  color: var(--ink-sub);
+  font-weight: 600;
+}
+
+/* ── 模块交替背景 ── */
+.section-block {
+  border-radius: var(--radius-lg);
+  padding: 24rpx 22rpx;
+  background: var(--card-bg);
+  box-shadow: var(--shadow-md);
+  border: var(--border-soft);
+}
+
+.section-block-soft {
+  border-radius: var(--radius-lg);
+  padding: 24rpx 22rpx;
+  background: var(--card-bg-soft);
+}
+
+/* ── 装饰点缀徽章 ── */
+.accent-dot {
+  display: inline-block;
+  width: 12rpx;
+  height: 12rpx;
+  border-radius: 50%;
+  background: var(--brand-purple);
+}
+
+.accent-dot.gold { background: var(--accent-gold); }
+.accent-dot.green { background: var(--accent-green); }
+.accent-dot.red { background: var(--accent-red); }
+
+.pressable { transition: transform 0.2s ease, opacity 0.2s ease; }
+.pressing { transform: scale(0.96); opacity: 0.92; }
+
+.error-text {
+  color: var(--accent-red);
+  font-size: 24rpx;
+  line-height: 1.4;
+}
+
+.ellipsis {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}

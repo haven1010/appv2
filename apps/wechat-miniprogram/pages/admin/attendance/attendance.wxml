@@ -1,0 +1,178 @@
+<view class="page-admin">
+  <view class="hero-card">
+    <view class="hero-title">{{canManageSalary ? '签到与工资单' : '扫码操作（辅助）'}}</view>
+    <view class="hero-sub">{{canManageSalary ? roleText + ' · 现场签到、工资单生成与提交确认' : roleText + ' · 全场景扫码签到与实时同步'}}</view>
+
+    <view class="form-label">日期</view>
+    <picker mode="date" value="{{selectedDate}}" bindchange="onDateChange">
+      <view class="picker">{{selectedDate}}</view>
+    </picker>
+
+    <view class="form-label">基地</view>
+    <picker mode="selector" value="{{baseIndex}}" range="{{bases}}" range-key="baseName" bindchange="onBaseChange">
+      <view class="picker">{{bases.length ? bases[baseIndex].baseName : '暂无基地'}}</view>
+    </picker>
+  </view>
+
+  <view class="section-card">
+    <view class="section-title">扫码签到</view>
+    <view class="section-sub">支持管理人员辅助现场签到，数据实时同步</view>
+
+    <input class="input" value="{{checkinQrContent}}" bindinput="onCheckinInput" placeholder="扫码或输入二维码内容" />
+    <view class="actions-row">
+      <button class="btn-secondary" bindtap="scanAndCheckin">扫码</button>
+      <button class="btn-primary" bindtap="submitCheckin" loading="{{checkinLoading}}">提交签到</button>
+      <button class="btn-ghost" bindtap="loadAttendanceData">刷新记录</button>
+    </view>
+
+    <view class="chip-row" wx:if="{{checkinResult}}">
+      <text class="chip success">{{checkinResult}}</text>
+    </view>
+  </view>
+
+  <view class="section-card">
+    <view class="section-title">当日签到总览</view>
+    <view class="grid-2">
+      <view class="stat-card">
+        <view class="stat-label">已签到</view>
+        <view class="stat-value">{{stats.checkedIn || 0}}</view>
+      </view>
+      <view class="stat-card">
+        <view class="stat-label">已报名</view>
+        <view class="stat-value">{{stats.signedUp || 0}}</view>
+      </view>
+      <view class="stat-card">
+        <view class="stat-label">缺勤</view>
+        <view class="stat-value">{{stats.absent || 0}}</view>
+      </view>
+      <view class="stat-card">
+        <view class="stat-label">出勤率</view>
+        <view class="stat-value">{{stats.attendanceRate || 0}}%</view>
+      </view>
+    </view>
+
+    <view class="list-item" wx:for="{{baseStats}}" wx:key="key">
+      <view class="item-title">{{item.baseName}}</view>
+      <view class="item-sub">{{item.present}} / {{item.total}} · 出勤率 {{item.attendanceRate}}%</view>
+    </view>
+
+    <view class="actions-row">
+      <button class="btn-secondary" bindtap="exportBaseStats">导出签到统计</button>
+    </view>
+  </view>
+
+  <view class="section-card" wx:if="{{canManageSalary}}">
+    <view class="section-title">工资单生成</view>
+    <view class="section-sub">基地管理员生成工资单并核对金额后，等待采摘工确认；如果工人发起申诉，也可以在这里直接处理并修改工资单</view>
+    <view class="chip-row">
+      <text class="chip info">工资记录：{{salarySummary.totalRecords}}</text>
+      <text class="chip pending">待确认：{{salarySummary.pendingCount}}</text>
+      <text class="chip info">已确认：{{salarySummary.confirmedCount}}</text>
+      <text class="chip danger">待处理申诉：{{salarySummary.appealedCount}}</text>
+      <text class="chip success">已发放：{{salarySummary.paidCount}}</text>
+      <text class="chip success">总金额：{{salarySummary.totalAmount}}</text>
+    </view>
+    <view class="actions-row">
+      <button class="btn-primary" bindtap="generateSalaryDrafts" loading="{{salaryDraftLoading}}" disabled="{{salaryDraftLoading}}">批量生成当日工资单</button>
+      <button class="btn-ghost" bindtap="refreshSalarySummary">刷新工资单</button>
+    </view>
+
+    <view class="empty-text" wx:if="{{!salaryRecords.length && !salaryDraftLoading}}">当前日期暂无工资单，请先为已签到人员生成工资单</view>
+    <view class="list-item" wx:for="{{salaryRecords}}" wx:key="id">
+      <view class="item-title">{{item.workerName}}（{{item.workerUid}}）</view>
+      <view class="item-sub">{{item.baseName}} · {{item.jobTitle}} · {{item.workDate}}</view>
+      <view class="chip-row">
+        <text class="chip {{item.statusChipType}}">{{item.statusText}}</text>
+        <text wx:if="{{item.appealStatusText}}" class="chip {{item.appealChipType}}">{{item.appealStatusText}}</text>
+        <text class="chip success">金额：¥{{item.amountText}}</text>
+        <text class="chip info">{{item.volumeText}}</text>
+      </view>
+      <view class="item-sub">工资单 #{{item.id}} · 生成时间：{{item.createdAtText}}</view>
+
+      <view wx:if="{{item.workerAppealReason || item.appealReply}}" class="appeal-block">
+        <view wx:if="{{item.workerAppealReason}}" class="item-sub">工人申诉：{{item.workerAppealReason}}</view>
+        <view wx:if="{{item.workerExpectedAmountText}}" class="item-sub">期望金额：¥{{item.workerExpectedAmountText}}</view>
+        <view wx:if="{{item.workerAppealedAtText && item.workerAppealedAtText !== '-'}}" class="item-sub">申诉时间：{{item.workerAppealedAtText}}</view>
+        <view wx:if="{{item.appealReply}}" class="item-sub">处理说明：{{item.appealReply}}</view>
+        <view wx:if="{{item.appealHandledAtText && item.appealHandledAtText !== '-'}}" class="item-sub">处理时间：{{item.appealHandledAtText}}</view>
+      </view>
+
+      <view wx:if="{{item.canHandleAppeal}}" class="actions-row">
+        <button class="btn-secondary" bindtap="openAppealEditor" data-id="{{item.id}}">处理申诉</button>
+      </view>
+
+      <view wx:if="{{appealEditorId === item.id}}" class="appeal-editor-card">
+        <view class="item-sub">按申诉内容修改工资单。可只改金额，也可同时改工时或计件。</view>
+        <view class="item-sub">当前工资：¥{{item.amountText}} · {{item.volumeText}}</view>
+        <input
+          wx:if="{{item.payType === 2}}"
+          class="input"
+          type="digit"
+          placeholder="调整后工时，例如 8 或 8.5"
+          value="{{appealDurationInput}}"
+          data-field="appealDurationInput"
+          bindinput="onAppealFieldInput"
+        />
+        <input
+          wx:if="{{item.payType === 3}}"
+          class="input"
+          type="number"
+          placeholder="调整后计件数量"
+          value="{{appealCountInput}}"
+          data-field="appealCountInput"
+          bindinput="onAppealFieldInput"
+        />
+        <input
+          class="input"
+          type="digit"
+          placeholder="调整后工资金额"
+          value="{{appealAmountInput}}"
+          data-field="appealAmountInput"
+          bindinput="onAppealFieldInput"
+        />
+        <textarea
+          class="textarea"
+          placeholder="填写处理说明，调整后会展示给工人"
+          value="{{appealReplyInput}}"
+          data-field="appealReplyInput"
+          bindinput="onAppealFieldInput"
+        />
+        <view class="actions-row">
+          <button class="btn-primary" bindtap="submitAppealAdjustment" data-id="{{item.id}}" loading="{{appealSubmitting}}" disabled="{{appealSubmitting}}">修改工资单</button>
+          <button class="btn-danger" bindtap="rejectAppeal" data-id="{{item.id}}" loading="{{appealSubmitting}}" disabled="{{appealSubmitting}}">驳回申诉</button>
+          <button class="btn-ghost" bindtap="closeAppealEditor" disabled="{{appealSubmitting}}">取消</button>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="section-card">
+    <view class="section-title">人员信息表（报名/签到）</view>
+    <view class="actions-row">
+      <button class="btn-secondary" bindtap="exportRecords" loading="{{exportLoading}}">导出报名/签到表</button>
+    </view>
+
+    <view class="empty-text" wx:if="{{!records.length}}">暂无报名/签到记录</view>
+    <view class="list-item" wx:for="{{records}}" wx:key="id">
+      <view class="item-title">{{item.workerName}}（{{item.workerUid}}）</view>
+      <view class="item-sub">手机号：{{item.workerPhone}} ｜ 身份证：{{item.workerIdCard}}</view>
+      <view class="item-sub">基地：{{item.baseName}}</view>
+      <view class="item-sub">岗位：{{item.jobTitle}}</view>
+      <view class="chip-row">
+        <text class="chip info">{{item.statusText}}</text>
+        <text class="chip info">{{item.checkinTimeText}}</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="empty-text" wx:if="{{loading}}">加载中...</view>
+
+  <view class="admin-bottom-nav">
+    <view class="admin-bottom-item {{activeNav === 'home' ? 'active' : ''}}" data-target="home" bindtap="switchAdminNav">{{role === 'super_admin' || role === 'region_admin' ? '人员管理' : '首页'}}</view>
+    <view class="admin-bottom-item {{activeNav === 'base' ? 'active' : ''}}" wx:if="{{role !== 'field_manager'}}" data-target="base" bindtap="switchAdminNav">{{role === 'super_admin' || role === 'region_admin' ? '基地管理' : '基地'}}</view>
+    <view class="admin-bottom-item {{activeNav === 'scan' ? 'active' : ''}}" wx:if="{{role !== 'super_admin' && role !== 'region_admin'}}" data-target="scan" bindtap="switchAdminNav">扫码</view>
+    <view class="admin-bottom-item {{activeNav === 'audit' ? 'active' : ''}}" wx:if="{{role === 'super_admin' || role === 'region_admin'}}" data-target="audit" bindtap="switchAdminNav">审核</view>
+    <view class="admin-bottom-item {{activeNav === 'payroll' ? 'active' : ''}}" wx:if="{{role === 'super_admin' || role === 'region_admin'}}" data-target="payroll" bindtap="switchAdminNav">工资管理</view>
+    <view class="admin-bottom-item {{activeNav === 'me' ? 'active' : ''}}" data-target="me" bindtap="switchAdminNav">我的信息</view>
+  </view>
+</view>

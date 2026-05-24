@@ -1,0 +1,64 @@
+<!-- pages/field/scan/scan.wxml -->
+<view class="page page-enter">
+  <view class="scan-header">
+    <text class="scan-title">扫码签到</text>
+    <picker mode="selector" value="{{baseIndex}}" range="{{managedBases}}" range-key="baseName" bindchange="onBaseChange" wx:if="{{managedBases.length}}">
+      <view class="scan-picker">{{managedBases.length > 1 ? '切换基地：' : '当前基地：'}}{{baseName || '未绑定基地'}}</view>
+    </picker>
+    <text class="scan-base" wx:if="{{baseName}}">当前基地：{{baseName}}</text>
+    <text class="scan-base warn" wx:elif="{{!baseId}}">未绑定基地</text>
+  </view>
+
+  <view class="result-card {{scanResult.success ? 'success' : 'fail'}}" wx:if="{{scanResult}}">
+    <view class="result-icon">{{scanResult.success ? '✅' : '❌'}}</view>
+    <view class="result-name" wx:if="{{scanResult.name}}">{{scanResult.name}}</view>
+    <view class="result-msg">{{scanResult.message}}</view>
+    <view class="result-time" wx:if="{{scanResult.time}}">{{scanResult.time}}</view>
+    <view class="btn-clear" bindtap="clearResult">确定</view>
+  </view>
+
+  <view class="scan-area" wx:if="{{!scanResult}}">
+    <view class="scan-visual">
+      <view class="scan-frame">
+        <view class="corner tl"></view>
+        <view class="corner tr"></view>
+        <view class="corner bl"></view>
+        <view class="corner br"></view>
+        <view class="scan-line" wx:if="{{scanning}}"></view>
+      </view>
+      <text class="scan-hint">{{scanning ? '扫描中...' : '点击下方按钮开始扫码'}}</text>
+    </view>
+
+    <button class="btn-scan" bindtap="startScan" disabled="{{loading || scanning}}">
+      <text class="btn-scan-icon">📷</text>
+      <text class="btn-scan-text">{{loading ? '处理中...' : '打开摄像头扫码'}}</text>
+    </button>
+
+    <view class="manual-section">
+      <view class="manual-title">或手动输入二维码内容</view>
+      <view class="manual-row">
+        <input
+          class="manual-input"
+          placeholder="粘贴二维码内容"
+          value="{{manualInput}}"
+          bindinput="onManualInput"
+        />
+        <view class="btn-manual" bindtap="submitManual">签到</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="history-section" wx:if="{{history.length > 0}}">
+    <view class="section-title">本次扫码记录 ({{history.length}})</view>
+    <view class="history-list">
+      <view class="history-item {{item.success ? 'success' : 'fail'}}" wx:for="{{history}}" wx:key="index">
+        <view class="history-status">{{item.success ? '✅' : '❌'}}</view>
+        <view class="history-info">
+          <text class="history-name">{{item.name || '未知'}}</text>
+          <text class="history-msg">{{item.message}}</text>
+        </view>
+        <text class="history-time">{{item.time}}</text>
+      </view>
+    </view>
+  </view>
+</view>

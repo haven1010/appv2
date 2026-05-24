@@ -1,0 +1,52 @@
+<view class="page page-enter">
+  <view class="records-header">
+    <text class="records-title">签到表</text>
+    <text class="records-base">现场管理员可查看当日签到名单并直接导出</text>
+    <picker mode="selector" value="{{baseIndex}}" range="{{managedBases}}" range-key="baseName" bindchange="onBaseChange" wx:if="{{managedBases.length}}">
+      <view class="records-picker">{{baseName || '请选择基地'}}</view>
+    </picker>
+  </view>
+
+  <view class="date-switcher">
+    <view class="date-btn" bindtap="prevDay">‹</view>
+    <picker mode="date" value="{{selectedDate}}" end="{{selectedDate}}" bindchange="onDateChange">
+      <view class="date-display">
+        <text class="date-label">{{dateLabel}}</text>
+        <text class="date-value">{{selectedDate}}</text>
+      </view>
+    </picker>
+    <view class="date-btn" bindtap="nextDay">›</view>
+  </view>
+
+  <view class="count-bar">
+    <text class="count-text">共 <text class="count-num">{{totalCount}}</text> 人已生成签到记录</text>
+    <button class="export-btn" bindtap="exportRecords" loading="{{exporting}}" disabled="{{exporting || !totalCount}}">导出签到表</button>
+  </view>
+
+  <view class="loading-box" wx:if="{{loading}}">
+    <text>加载中...</text>
+  </view>
+
+  <view class="record-list" wx:elif="{{records.length > 0}}">
+    <view class="record-item" wx:for="{{records}}" wx:key="id">
+      <view class="record-left">
+        <view class="record-avatar">{{item.displayAvatar}}</view>
+        <view class="record-idx">{{index + 1}}</view>
+      </view>
+      <view class="record-center">
+        <text class="record-name">{{item.displayName}}</text>
+        <text class="record-detail">UID：{{item.displayUid}}</text>
+        <text class="record-detail">岗位：{{item.displayJob}}</text>
+      </view>
+      <view class="record-right">
+        <text class="record-time">{{item.displayTime}}</text>
+        <text class="record-status checked">{{item.statusText}}</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="empty-box" wx:elif="{{!loading}}">
+    <text class="empty-icon">签</text>
+    <text class="empty-text">{{dateLabel}}暂无签到记录</text>
+  </view>
+</view>

@@ -1,0 +1,210 @@
+/* ═══════════════════════════════════════════
+   Attendance Detail — Claude Purple Theme
+   ═══════════════════════════════════════════ */
+
+.page {
+  min-height: 100vh;
+  background:
+}
+
+.page-body {
+  padding: 28rpx 24rpx;
+}
+
+/* ── Header Card ── */
+.header-card {
+  padding: 28rpx;
+  margin-bottom: 20rpx;
+}
+
+.header-title {
+  display: block;
+  font-size: 36rpx;
+  font-weight: 900;
+  color: var(--ink-main);
+  margin-bottom: 8rpx;
+}
+
+.header-subtitle {
+  display: block;
+  font-size: 24rpx;
+  color: var(--ink-sub);
+  margin-bottom: 4rpx;
+}
+
+.work-date {
+  display: block;
+  font-size: 22rpx;
+  color: var(--ink-muted);
+  margin-top: 6rpx;
+}
+
+/* ── Status Card ── */
+.status-card {
+  padding: 24rpx;
+  margin-bottom: 20rpx;
+}
+
+.status-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16rpx;
+}
+
+.status-row:last-child {
+  margin-bottom: 0;
+}
+
+.status-label {
+  font-size: 24rpx;
+  color: var(--ink-sub);
+}
+
+.status-value {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: var(--ink-main);
+}
+
+.status-value.status-ok {
+  color: var(--accent-green);
+}
+
+.status-value.status-pending {
+  color: var(--accent-gold);
+}
+
+.status-value.status-warn {
+  color: var(--accent-red);
+}
+
+/* ── Work Card ── */
+.work-card {
+  padding: 24rpx;
+  margin-bottom: 20rpx;
+}
+
+.section-title {
+  display: block;
+  font-size: 30rpx;
+  font-weight: 800;
+  color: var(--ink-main);
+  margin-bottom: 20rpx;
+}
+
+.work-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16rpx;
+}
+
+.work-item:last-child {
+  margin-bottom: 0;
+}
+
+.work-label {
+  font-size: 24rpx;
+  color: var(--ink-sub);
+  flex-shrink: 0;
+  margin-right: 16rpx;
+}
+
+.work-value {
+  font-size: 24rpx;
+  color: var(--ink-main);
+  text-align: right;
+  flex: 1;
+  font-weight: 700;
+}
+
+/* ── Salary Card ── */
+.salary-card {
+  padding: 28rpx;
+  margin-bottom: 20rpx;
+  text-align: center;
+}
+
+.salary-amount {
+  font-size: 56rpx;
+  font-weight: 900;
+  color: var(--brand-purple);
+  margin: 20rpx 0;
+  line-height: 1.1;
+}
+
+.salary-status {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 20rpx;
+}
+
+.salary-label {
+  font-size: 24rpx;
+  color: var(--ink-sub);
+  margin-right: 8rpx;
+}
+
+.salary-value {
+  font-size: 24rpx;
+  font-weight: 700;
+}
+
+.salary-value.salary-pending {
+  color: var(--accent-gold);
+}
+
+.salary-value.salary-confirmed {
+  color: var(--accent-blue);
+}
+
+.salary-value.salary-paid {
+  color: var(--accent-green);
+}
+
+/* ── View Salary Button ── */
+.view-salary-btn {
+  width: 100%;
+  height: 88rpx;
+  line-height: 88rpx;
+  font-size: 28rpx;
+}
+
+/* ── Action Card ── */
+.action-card {
+  margin-bottom: 24rpx;
+}
+
+.btn-ghost {
+  width: 100%;
+  height: 88rpx;
+  line-height: 88rpx;
+  font-size: 28rpx;
+}
+
+.page-bottom-gap {
+  height: 40rpx;
+}
+
+/* ── Animations ── */
+.card-in {
+  animation: slideUp 0.4s ease-out;
+}
+
+.delay-1 { animation-delay: 0.1s; }
+.delay-2 { animation-delay: 0.2s; }
+.delay-3 { animation-delay: 0.3s; }
+.delay-4 { animation-delay: 0.4s; }
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20rpx);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

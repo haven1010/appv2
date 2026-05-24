@@ -1,0 +1,5 @@
+(node:70192) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+[31m[Nest] 29476  - [39m2026/04/30 02:00:01 [31m  ERROR[39m [38;5;3m[BackupService] [39m[31m[数据备份] 执行失败: Command failed: C:\Program Files\nodejs\node.exe D:\university\npu\智汇就业\智汇就业_校赛提交材料_答辩顺序第11\提交文档\素材与源码\appv2\apps\backend\scripts\db-backup.js
+[backup] failed: spawn gzip ENOENT
+[39m

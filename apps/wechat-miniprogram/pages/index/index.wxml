@@ -1,0 +1,104 @@
+<view class="page worker-home-page">
+  <view class="page-body worker-home-body">
+    <!-- ── Top Bar ── -->
+    <view class="top-bar card-in">
+      <view class="location-chip" bindtap="onLocationTap">
+        <text class="location-dot"></text>
+        <text class="location-text">{{currentLocation}}</text>
+      </view>
+      <view class="search-pill" bindtap="onSearchTap">
+        <text class="search-icon">🔍</text>
+        <text class="search-text">搜索岗位/企业/政策等</text>
+      </view>
+      <view class="notice-pill" bindtap="onNoticeTap">
+        <text class="notice-icon">🔔</text>
+      </view>
+    </view>
+
+    <!-- ── Hero Banner ── -->
+    <view class="hero-banner card-in">
+      <view class="hero-badge">
+        <text class="hero-badge-dot"></text>
+        <text>苏陕协作</text>
+      </view>
+      <text class="hero-title">苏陕协作<br/>智慧就业</text>
+      <text class="hero-subtitle">数字赋能就业 · 服务成就未来</text>
+      <view class="hero-actions">
+        <view class="hero-action-btn" bindtap="goToJobList">找工作</view>
+        <view class="hero-action-btn" bindtap="onSearchTap">查政策</view>
+      </view>
+    </view>
+
+    <!-- ── Profile Tip ── -->
+    <view class="profile-tip card-in" wx:if="{{showProfileTip}}" bindtap="goToProfileComplete">
+      <text class="profile-tip-icon">📝</text>
+      <text class="profile-tip-text">您还未完善个人信息，点击前往补充</text>
+      <text class="profile-tip-arrow">&gt;</text>
+    </view>
+
+    <!-- ── Service Panel ── -->
+    <view class="service-panel card-in delay-1">
+      <view class="panel-head">
+        <view class="panel-head-icon"></view>
+        <text class="panel-title-text">常用功能</text>
+      </view>
+      <text class="panel-subtitle">找工作、报名、签到更快一步</text>
+      <view class="service-grid">
+        <view
+          class="service-item"
+          wx:for="{{serviceItems}}"
+          wx:key="key"
+          data-key="{{item.key}}"
+          bindtap="onServiceTap"
+        >
+          <view class="service-icon service-icon-{{item.badgeClass}}">
+            <text class="service-icon-text">{{item.icon}}</text>
+          </view>
+          <text class="service-title">{{item.title}}</text>
+          <text class="service-subtitle">{{item.subtitle}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- ── Hot Section ── -->
+    <view class="hot-section card-in delay-2">
+      <view class="hot-head">
+        <view class="hot-head-left">
+          <view class="hot-head-icon"></view>
+          <text class="hot-title">热门岗位</text>
+        </view>
+        <text class="hot-more" bindtap="goToJobList">更多</text>
+      </view>
+
+      <view class="hot-divider"></view>
+
+      <view wx:if="{{loadingBases}}" class="ds-empty compact-empty">
+        <text class="ds-empty-title">正在加载岗位</text>
+        <text class="ds-empty-desc">请稍候一下</text>
+      </view>
+
+      <view wx:elif="{{featuredBase}}" class="hot-job-card" data-id="{{featuredBase.id}}" bindtap="goToFeaturedBaseDetail">
+        <view class="hot-job-head">
+          <text class="hot-job-title">{{featuredBase.name}}</text>
+          <view class="hot-job-tags">
+            <text class="hot-job-tag">{{featuredBase.categoryText}}</text>
+          </view>
+        </view>
+        <view class="hot-job-meta">
+          <text class="hot-job-address">{{featuredBase.address}}</text>
+        </view>
+        <view class="hot-job-foot">
+          <text class="hot-job-salary">{{featuredBase.salaryRange || '面议'}} <text class="hot-job-salary-unit">/月</text></text>
+          <button class="hot-job-btn" size="mini" data-id="{{featuredBase.id}}" catchtap="applyForBase">立即报名</button>
+        </view>
+      </view>
+
+      <view wx:else class="ds-empty compact-empty">
+        <text class="ds-empty-title">暂无推荐岗位</text>
+        <text class="ds-empty-desc">{{loadError || '稍后再来看看，或去全部岗位里找一找'}}</text>
+      </view>
+    </view>
+
+    <view class="page-bottom-gap"></view>
+  </view>
+</view>

@@ -1,0 +1,86 @@
+/* ═══════════════════════════════════════════
+   Services Page — Claude Purple Theme
+   ═══════════════════════════════════════════ */
+
+.services-page {
+  min-height: 100vh;
+}
+
+.services-body {
+  padding: 24rpx;
+}
+
+/* ── Hero ── */
+.services-hero {
+  padding: 28rpx 26rpx;
+  border-radius: var(--radius-lg);
+  background: var(--brand-gradient);
+  box-shadow: 0 16rpx 34rpx rgba(102, 126, 234, 0.2);
+}
+
+.services-title {
+  display: block;
+  color: #ffffff;
+  font-size: 40rpx;
+  font-weight: 900;
+}
+
+.services-subtitle {
+  display: block;
+  margin-top: 12rpx;
+  color: rgba(255, 255, 255, 0.86);
+  font-size: 24rpx;
+  line-height: 1.6;
+}
+
+/* ── Service List ── */
+.services-list {
+  margin-top: 20rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.service-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+  padding: 24rpx 22rpx;
+  border-radius: var(--radius-lg);
+  background: var(--card-bg);
+  border: var(--border-soft);
+  box-shadow: var(--shadow-md);
+  transition: all 0.2s;
+}
+
+.service-card:active {
+  transform: scale(0.98);
+  box-shadow: var(--shadow-sm);
+}
+
+.service-copy {
+  flex: 1;
+  min-width: 0;
+}
+
+.service-card-title {
+  display: block;
+  color: var(--ink-main);
+  font-size: 30rpx;
+  font-weight: 800;
+}
+
+.service-card-desc {
+  display: block;
+  margin-top: 8rpx;
+  color: var(--ink-sub);
+  font-size: 24rpx;
+  line-height: 1.6;
+}
+
+.service-arrow {
+  color: var(--brand-purple);
+  font-size: 28rpx;
+  font-weight: 800;
+}

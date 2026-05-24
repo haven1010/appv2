@@ -1,0 +1,80 @@
+<view class="page page-enter">
+  <view class="hero-card">
+    <view class="hero-head">
+      <text class="hero-title">{{isBossView ? '我的基地' : '基地广场'}}</text>
+      <text class="hero-badge">{{isBossView ? '老板视角' : '工人视角'}}</text>
+    </view>
+
+    <text class="hero-subtitle" wx:if="{{isBossView}}">
+      点击基地名称即可查看基地信息、报名进度和工资结算。
+    </text>
+    <text class="hero-subtitle" wx:else>
+      按分类筛选基地，快速查看详情与可报名岗位。
+    </text>
+
+    <view class="hero-stats">
+      <view class="hero-stat">
+        <text class="hero-stat-value">{{bases.length}}</text>
+        <text class="hero-stat-label">{{isBossView ? '我的基地数量' : '当前结果'}}</text>
+      </view>
+      <view class="hero-stat">
+        <text class="hero-stat-value">
+          {{isBossView ? '我的基地' : (category === 0 ? '全部' : category === 1 ? '水果' : category === 2 ? '蔬菜' : '其他')}}
+        </text>
+        <text class="hero-stat-label">{{isBossView ? '数据范围' : '筛选分类'}}</text>
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{!isBossView}}" class="segment-card">
+    <view class="segment-item pressable {{category === 0 ? 'active' : ''}}" data-category="0" bindtap="filterByCategory">全部</view>
+    <view class="segment-item pressable {{category === 1 ? 'active' : ''}}" data-category="1" bindtap="filterByCategory">水果</view>
+    <view class="segment-item pressable {{category === 2 ? 'active' : ''}}" data-category="2" bindtap="filterByCategory">蔬菜</view>
+    <view class="segment-item pressable {{category === 3 ? 'active' : ''}}" data-category="3" bindtap="filterByCategory">其他</view>
+  </view>
+
+  <view wx:if="{{loading}}" class="state-panel">
+    <text class="state-title">正在加载基地列表...</text>
+    <text class="state-desc">请稍候</text>
+  </view>
+
+  <view wx:elif="{{bases.length === 0}}" class="state-panel">
+    <text class="state-title">暂无基地信息</text>
+    <text class="state-desc">可下拉刷新后重试</text>
+  </view>
+
+  <view wx:else class="base-list">
+    <view
+      wx:for="{{bases}}"
+      wx:key="id"
+      class="base-card pressable"
+      data-id="{{item.id}}"
+      bindtap="goToDetail"
+    >
+      <view class="base-main">
+        <view class="base-header">
+          <text class="base-name">{{item.baseName || '未命名基地'}}</text>
+          <text class="status-tag {{item.auditStatus === 1 ? 'ok' : 'wait'}}">{{item.auditStatus === 1 ? '已审核' : '待审核'}}</text>
+        </view>
+
+        <view class="base-meta">
+          <text class="category-tag">{{item.category === 1 ? '水果' : item.category === 2 ? '蔬菜' : '其他'}}</text>
+          <text class="base-address">{{item.address || '地址待补充'}}</text>
+        </view>
+
+        <text wx:if="{{isBossView}}" class="base-tip">
+          点击查看基地信息、报名进度、工资结算
+        </text>
+      </view>
+
+      <text class="cell-arrow">></text>
+    </view>
+  </view>
+
+  <view wx:if="{{isBossView}}" class="boss-bottom-nav">
+    <view class="boss-bottom-item" bindtap="goToBossDashboard">工作台</view>
+    <view class="boss-bottom-item active">我的基地</view>
+    <view class="boss-bottom-item" bindtap="goToBossJobList">岗位发布</view>
+    <view class="boss-bottom-item" bindtap="goToBossProfile">我的</view>
+  </view>
+</view>

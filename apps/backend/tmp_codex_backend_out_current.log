@@ -1,0 +1,1143 @@
+
+> caizhaitong-backend@1.0.0 start:dev
+> nest start --watch
+
+[2J[3J[H[[90m14:41:27[0m] Starting compilation in watch mode...
+
+[[90m14:41:31[0m] Found 0 errors. Watching for file changes.
+
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[NestFactory] [39m[32mStarting Nest application...[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mTypeOrmModule dependencies initialized[39m[38;5;3m +13ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mQrCodeModule dependencies initialized[39m[38;5;3m +2ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mPassportModule dependencies initialized[39m[38;5;3m +2ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigHostModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAppModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mDiscoveryModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigModule dependencies initialized[39m[38;5;3m +0ms[39m
+Using DB config from ConfigService: {
+  host: '127.0.0.1',
+  port: '3306',
+  username: 'root',
+  password: '12***',
+  database: 'pickpass_db',
+  synchronize: false
+}
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mScheduleModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mJwtModule dependencies initialized[39m[38;5;3m +38ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mTypeOrmCoreModule dependencies initialized[39m[38;5;3m +30ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mTypeOrmModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mTypeOrmModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mTypeOrmModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mTypeOrmModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mTypeOrmModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mTypeOrmModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mTypeOrmModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAuthModule dependencies initialized[39m[38;5;3m +2ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mCommonModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mRecommendationModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mDashboardModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAttendanceModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mUserModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mBaseModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mSalaryModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mAppController {/api}:[39m[38;5;3m +17ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mOperationLogController {/api/operation-log}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/operation-log/list, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/operation-log/stats, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mUserController {/api/user}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/user/register, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/user/register/boss, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/user/register/ocr, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/user/register/complete, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/user/register/proxy, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/user/proxy-registration/:id/resubmit, PATCH} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/user/admin, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/user/admin/super-admin, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/user/list, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/user/stats, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/user/profile, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/user/profile, PATCH} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/user/profile/bank-card/challenge, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/user/:id/audit, PATCH} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/user/proxy-registration/list, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/user/proxy-registration/:id/review, PATCH} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/user/proxy-registration/:id/takeover, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/user/:id, DELETE} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mBaseController {/api/base}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/base, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/base, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/base/managed, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/base/upload/image, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/base/applications/me, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/base/jobs/expiring, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/base/jobs/deactivate-expired, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/base/:id, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/base/:id, PATCH} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/base/:id, DELETE} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/base/:id/audit, PATCH} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/base/:id/owner, PATCH} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/base/:id/supervisors, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/base/:id/supervisors, PATCH} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/base/:id/jobs, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/base/:id/jobs, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/base/jobs/:jobId, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/base/jobs/:jobId/status, PATCH} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/base/jobs/:jobId/renew, PATCH} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/base/jobs/:jobId/review, PATCH} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/base/:id/statistics, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/base/check-name/:name, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/base/jobs/:jobId/apply, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/base/jobs/:jobId/applications, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/base/:id/applications, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/base/:id/workers/:userId/end-work, PATCH} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/base/:id/workers/end-work-all, PATCH} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/base/applications/:applicationId/review, PATCH} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/base/cooperation, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/base/cooperation/:cooperationId/review, PATCH} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/base/:id/cooperations, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mAttendanceController {/api/attendance}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/attendance/signup, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/attendance/signup/cancel, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/attendance/qrcode, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/attendance/checkin, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/attendance/sync, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/attendance/offline-events, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/attendance/offline-events, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/attendance/offline-events/stats, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/attendance/offline-events/evidence, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/attendance/offline-events/:id/review, PATCH} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/attendance/worker/records, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/attendance/records, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/attendance/stats, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/attendance/bases, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/attendance/export/records, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/attendance/export/base-stats, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mSalaryController {/api/salary}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/salary/list, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/salary/stats, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/salary/worker/stats, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/salary/worker/pending, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/salary/worker/paid, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/salary/worker/:salaryId/confirm, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/salary/worker/:salaryId/appeal, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/salary/calculate/:signupId, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/salary/:salaryId/appeal, PATCH} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/salary/:salaryId/payment, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/salary/:salaryId/settle, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/salary/payment/:id/confirm, PATCH} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/salary/payment/:id/complete, PATCH} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/salary/reports/submit, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/salary/reports/submitted, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/salary/reports/:reportId, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/salary/reports/:reportId/export, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/salary/export/report, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/salary/:salaryId/payments, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mRecommendationController {/api/recommendation}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/recommendation/bases, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mAuthController {/api/auth}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/auth/login, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mDashboardController {/api/dashboard}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/dashboard/stats, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/dashboard/trend, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/dashboard/category, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/dashboard/recent-bases, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[BaseSeedService] [39m[32mTest base ready: 内蒙捡土豆(id=2)[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[BaseSeedService] [39m[32mRecruitment seed skipped: demo data already exists.[39m
+[32m[Nest] 46292  - [39m2026/04/30 14:41:32 [32m    LOG[39m [38;5;3m[NestApplication] [39m[32mNest application successfully started[39m[38;5;3m +1ms[39m
+Backend service started: http://localhost:3001/api
+Swagger docs: http://localhost:3001/docs
+[Auth] 正在验证用户: 13800000001
+[UserService] 查询手机号: 13800000001, phoneHash: b1c4769e3ad14f68...
+[Auth] 正在验证用户: 13800000001
+[UserService] 查询手机号: 13800000001, phoneHash: b1c4769e3ad14f68...
+[Auth] 正在验证用户: 13800000001
+[UserService] 查询手机号: 13800000001, phoneHash: b1c4769e3ad14f68...
+[UserService] 找到用户: SUPERADMIN001 (超级管理员)
+[Auth] 数据库中的身份证(已自动解密): 330106199001010001
+[Auth] 用户输入的后6位: 010001
+[Auth] ✅ 登录验证成功！
+[UserService] 找到用户: SUPERADMIN001 (超级管理员)
+[Auth] 数据库中的身份证(已自动解密): 330106199001010001
+[Auth] 用户输入的后6位: 010001
+[Auth] ✅ 登录验证成功！
+[UserService] 找到用户: SUPERADMIN001 (超级管理员)
+[Auth] 数据库中的身份证(已自动解密): 330106199001010001
+[Auth] 用户输入的后6位: 010001
+[Auth] ✅ 登录验证成功！
+[32m[Nest] 46292  - [39m2026/04/30 16:28:42 [32m    LOG[39m [38;5;3m[BaseService] [39m[32m[鏌ヨ鍩哄湴鍒楄〃] 鍙傛暟: {}[39m
+[32m[Nest] 46292  - [39m2026/04/30 16:28:43 [32m    LOG[39m [38;5;3m[BaseService] [39m[32m[List bases] result count: 3[39m
+[32m[Nest] 46292  - [39m2026/04/30 16:28:43 [32m    LOG[39m [38;5;3m[BaseService] [39m[32m[鏌ヨ鍩哄湴鍒楄〃] 鍙傛暟: {}[39m
+[32m[Nest] 46292  - [39m2026/04/30 16:28:43 [32m    LOG[39m [38;5;3m[BaseService] [39m[32m[List bases] result count: 3[39m
+[32m[Nest] 46292  - [39m2026/04/30 16:28:47 [32m    LOG[39m [38;5;3m[BaseService] [39m[32m[鏌ヨ鍩哄湴鍒楄〃] 鍙傛暟: {}[39m
+[32m[Nest] 46292  - [39m2026/04/30 16:28:47 [32m    LOG[39m [38;5;3m[BaseService] [39m[32m[List bases] result count: 3[39m
+[32m[Nest] 46292  - [39m2026/04/30 16:28:47 [32m    LOG[39m [38;5;3m[BaseService] [39m[32m[鏌ヨ鍩哄湴鍒楄〃] 鍙傛暟: {}[39m
+[32m[Nest] 46292  - [39m2026/04/30 16:28:47 [32m    LOG[39m [38;5;3m[BaseService] [39m[32m[List bases] result count: 3[39m
+[32m[Nest] 46292  - [39m2026/04/30 16:31:14 [32m    LOG[39m [38;5;3m[BaseService] [39m[32m[鏌ヨ鍩哄湴鍒楄〃] 鍙傛暟: {}[39m
+[32m[Nest] 46292  - [39m2026/04/30 16:31:15 [32m    LOG[39m [38;5;3m[BaseService] [39m[32m[List bases] result count: 3[39m
+[32m[Nest] 46292  - [39m2026/04/30 16:31:15 [32m    LOG[39m [38;5;3m[BaseService] [39m[32m[鏌ヨ鍩哄湴鍒楄〃] 鍙傛暟: {}[39m
+[32m[Nest] 46292  - [39m2026/04/30 16:31:15 [32m    LOG[39m [38;5;3m[BaseService] [39m[32m[List bases] result count: 3[39m
+[32m[Nest] 46292  - [39m2026/04/30 16:32:50 [32m    LOG[39m [38;5;3m[BaseService] [39m[32m[鏌ヨ鍩哄湴鍒楄〃] 鍙傛暟: {}[39m
+[32m[Nest] 46292  - [39m2026/04/30 16:32:50 [32m    LOG[39m [38;5;3m[BaseService] [39m[32m[List bases] result count: 3[39m
+[32m[Nest] 46292  - [39m2026/04/30 16:32:50 [32m    LOG[39m [38;5;3m[BaseService] [39m[32m[鏌ヨ鍩哄湴鍒楄〃] 鍙傛暟: {}[39m
+[32m[Nest] 46292  - [39m2026/04/30 16:32:50 [32m    LOG[39m [38;5;3m[BaseService] [39m[32m[List bases] result count: 3[39m
+[32m[Nest] 46292  - [39m2026/04/30 16:36:30 [32m    LOG[39m [38;5;3m[BaseService] [39m[32m[鏌ヨ鍩哄湴鍒楄〃] 鍙傛暟: {}[39m
+[32m[Nest] 46292  - [39m2026/04/30 16:36:30 [32m    LOG[39m [38;5;3m[BaseService] [39m[32m[List bases] result count: 3[39m
+[32m[Nest] 46292  - [39m2026/04/30 16:36:30 [32m    LOG[39m [38;5;3m[BaseService] [39m[32m[鏌ヨ鍩哄湴鍒楄〃] 鍙傛暟: {}[39m
+[32m[Nest] 46292  - [39m2026/04/30 16:36:30 [32m    LOG[39m [38;5;3m[BaseService] [39m[32m[List bases] result count: 3[39m
+[32m[Nest] 46292  - [39m2026/04/30 16:39:42 [32m    LOG[39m [38;5;3m[BaseService] [39m[32m[鏌ヨ鍩哄湴鍒楄〃] 鍙傛暟: {}[39m
+[32m[Nest] 46292  - [39m2026/04/30 16:39:42 [32m    LOG[39m [38;5;3m[BaseService] [39m[32m[List bases] result count: 3[39m
+[32m[Nest] 46292  - [39m2026/04/30 16:39:42 [32m    LOG[39m [38;5;3m[BaseService] [39m[32m[鏌ヨ鍩哄湴鍒楄〃] 鍙傛暟: {}[39m
+[32m[Nest] 46292  - [39m2026/04/30 16:39:42 [32m    LOG[39m [38;5;3m[BaseService] [39m[32m[List bases] result count: 3[39m
+[32m[Nest] 46292  - [39m2026/04/30 16:46:45 [32m    LOG[39m [38;5;3m[BaseService] [39m[32m[鏌ヨ鍩哄湴鍒楄〃] 鍙傛暟: {}[39m
+[32m[Nest] 46292  - [39m2026/04/30 16:46:45 [32m    LOG[39m [38;5;3m[BaseService] [39m[32m[List bases] result count: 3[39m
+[32m[Nest] 46292  - [39m2026/04/30 16:46:45 [32m    LOG[39m [38;5;3m[BaseService] [39m[32m[鏌ヨ鍩哄湴鍒楄〃] 鍙傛暟: {}[39m
+[32m[Nest] 46292  - [39m2026/04/30 16:46:45 [32m    LOG[39m [38;5;3m[BaseService] [39m[32m[List bases] result count: 3[39m
+[2J[3J[H[[90m16:56:29[0m] File change detected. Starting incremental compilation...
+
+[32m[Nest] 46292  - [39m2026/04/30 17:16:22 [32m    LOG[39m [38;5;3m[BaseService] [39m[32m[鏌ヨ鍩哄湴鍒楄〃] 鍙傛暟: {}[39m
+[32m[Nest] 46292  - [39m2026/04/30 17:16:22 [32m    LOG[39m [38;5;3m[BaseService] [39m[32m[List bases] result count: 3[39m
+[32m[Nest] 46292  - [39m2026/04/30 17:16:22 [32m    LOG[39m [38;5;3m[BaseService] [39m[32m[鏌ヨ鍩哄湴鍒楄〃] 鍙傛暟: {}[39m
+[32m[Nest] 46292  - [39m2026/04/30 17:16:22 [32m    LOG[39m [38;5;3m[BaseService] [39m[32m[List bases] result count: 3[39m
+[32m[Nest] 46292  - [39m2026/04/30 17:16:24 [32m    LOG[39m [38;5;3m[BaseService] [39m[32m[鏌ヨ鍩哄湴璇︽儏] id=3[39m
+[32m[Nest] 46292  - [39m2026/04/30 17:16:24 [32m    LOG[39m [38;5;3m[BaseService] [39m[32m[鏌ヨ鍩哄湴璇︽儏] 鎴愬姛: id=3, 鍚嶇О=山阳颐管家养[39m
+[32m[Nest] 46292  - [39m2026/04/30 17:16:27 [32m    LOG[39m [38;5;3m[BaseService] [39m[32m[鏌ヨ鍩哄湴鍒楄〃] 鍙傛暟: {}[39m
+[32m[Nest] 46292  - [39m2026/04/30 17:16:27 [32m    LOG[39m [38;5;3m[BaseService] [39m[32m[List bases] result count: 3[39m
+[2J[3J[H[[90m18:07:13[0m] File change detected. Starting incremental compilation...
+
+[2J[3J[H[[90m19:37:48[0m] File change detected. Starting incremental compilation...
+
+[2J[3J[H[[90m20:37:28[0m] File change detected. Starting incremental compilation...
+
+[[90m20:37:39[0m] Found 0 errors. Watching for file changes.
+
+[32m[Nest] 33340  - [39m2026/04/30 20:37:42 [32m    LOG[39m [38;5;3m[NestFactory] [39m[32mStarting Nest application...[39m
+[32m[Nest] 33340  - [39m2026/04/30 20:37:42 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mTypeOrmModule dependencies initialized[39m[38;5;3m +9ms[39m
+[32m[Nest] 33340  - [39m2026/04/30 20:37:42 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mQrCodeModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 33340  - [39m2026/04/30 20:37:42 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mPassportModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 33340  - [39m2026/04/30 20:37:42 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigHostModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 33340  - [39m2026/04/30 20:37:42 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAppModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 33340  - [39m2026/04/30 20:37:42 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mDiscoveryModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 33340  - [39m2026/04/30 20:37:42 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 33340  - [39m2026/04/30 20:37:42 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigModule dependencies initialized[39m[38;5;3m +0ms[39m
+Using DB config from ConfigService: {
+  host: 'cd-cdb-4wz4qeqq.sql.tencentcdb.com',
+  port: '26982',
+  username: 'root',
+  password: '12***',
+  database: 'pickpass_db',
+  synchronize: false
+}
+[32m[Nest] 33340  - [39m2026/04/30 20:37:42 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mScheduleModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 33340  - [39m2026/04/30 20:37:42 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mJwtModule dependencies initialized[39m[38;5;3m +67ms[39m
+[2J[3J[H[[90m21:04:48[0m] File change detected. Starting incremental compilation...
+
+[[90m21:04:50[0m] Found 0 errors. Watching for file changes.
+
+[32m[Nest] 11460  - [39m2026/04/30 21:04:52 [32m    LOG[39m [38;5;3m[NestFactory] [39m[32mStarting Nest application...[39m
+[32m[Nest] 11460  - [39m2026/04/30 21:04:52 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mTypeOrmModule dependencies initialized[39m[38;5;3m +12ms[39m
+[32m[Nest] 11460  - [39m2026/04/30 21:04:52 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mQrCodeModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 11460  - [39m2026/04/30 21:04:52 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mPassportModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 11460  - [39m2026/04/30 21:04:52 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigHostModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 11460  - [39m2026/04/30 21:04:52 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAppModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 11460  - [39m2026/04/30 21:04:52 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mDiscoveryModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 11460  - [39m2026/04/30 21:04:52 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 11460  - [39m2026/04/30 21:04:52 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigModule dependencies initialized[39m[38;5;3m +0ms[39m
+Using DB config from ConfigService: {
+  host: 'cd-cdb-4wz4qeqq.sql.tencentcdb.com',
+  port: '26982',
+  username: 'root',
+  password: '12***',
+  database: 'pickpass_db',
+  synchronize: false
+}
+[32m[Nest] 11460  - [39m2026/04/30 21:04:52 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mScheduleModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 11460  - [39m2026/04/30 21:04:52 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mJwtModule dependencies initialized[39m[38;5;3m +50ms[39m
+[2J[3J[H[[90m21:11:54[0m] File change detected. Starting incremental compilation...
+
+[[90m21:11:55[0m] Found 0 errors. Watching for file changes.
+
+[32m[Nest] 34216  - [39m2026/04/30 21:11:57 [32m    LOG[39m [38;5;3m[NestFactory] [39m[32mStarting Nest application...[39m
+[32m[Nest] 34216  - [39m2026/04/30 21:11:57 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mTypeOrmModule dependencies initialized[39m[38;5;3m +11ms[39m
+[32m[Nest] 34216  - [39m2026/04/30 21:11:57 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mQrCodeModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 34216  - [39m2026/04/30 21:11:57 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mPassportModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 34216  - [39m2026/04/30 21:11:57 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigHostModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 34216  - [39m2026/04/30 21:11:57 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAppModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 34216  - [39m2026/04/30 21:11:57 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mDiscoveryModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 34216  - [39m2026/04/30 21:11:57 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 34216  - [39m2026/04/30 21:11:57 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigModule dependencies initialized[39m[38;5;3m +0ms[39m
+Using DB config from ConfigService: {
+  host: 'cd-cdb-4wz4qeqq.sql.tencentcdb.com',
+  port: '26982',
+  username: 'root',
+  password: '12***',
+  database: 'pickpass_db',
+  synchronize: false
+}
+[32m[Nest] 34216  - [39m2026/04/30 21:11:57 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mScheduleModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 34216  - [39m2026/04/30 21:11:57 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mJwtModule dependencies initialized[39m[38;5;3m +51ms[39m
+[2J[3J[H[[90m21:12:03[0m] File change detected. Starting incremental compilation...
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m1064[0m:[93m19[0m - [91merror[0m[90m TS2304: [0mCannot find name 'savedSignup'.
+
+[7m1064[0m       resourceId: savedSignup.id,
+[7m    [0m [91m                  ~~~~~~~~~~~[0m
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m1067[0m:[93m40[0m - [91merror[0m[90m TS2304: [0mCannot find name 'savedSignup'.
+
+[7m1067[0m       description: `创建报名记录: signupId=${savedSignup.id}, baseId=${baseId}, jobId=${jobId}`,
+[7m    [0m [91m                                       ~~~~~~~~~~~[0m
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m1073[0m:[93m17[0m - [91merror[0m[90m TS2304: [0mCannot find name 'savedSignup'.
+
+[7m1073[0m         status: savedSignup.status,
+[7m    [0m [91m                ~~~~~~~~~~~[0m
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m1095[0m:[93m36[0m - [91merror[0m[90m TS2552: [0mCannot find name 'savedProxySignups'. Did you mean 'savedProxySignup'?
+
+[7m1095[0m     for (const savedProxySignup of savedProxySignups) {
+[7m    [0m [91m                                   ~~~~~~~~~~~~~~~~~[0m
+
+  [96msrc/modules/attendance/attendance.service.ts[0m:[93m1095[0m:[93m16[0m
+    [7m1095[0m     for (const savedProxySignup of savedProxySignups) {
+    [7m    [0m [96m               ~~~~~~~~~~~~~~~~[0m
+    'savedProxySignup' is declared here.
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m1115[0m:[93m12[0m - [91merror[0m[90m TS2304: [0mCannot find name 'savedSignup'.
+
+[7m1115[0m     return savedSignup;
+[7m    [0m [91m           ~~~~~~~~~~~[0m
+
+[[90m21:12:03[0m] Found 5 errors. Watching for file changes.
+
+[2J[3J[H[[90m21:15:08[0m] File change detected. Starting incremental compilation...
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m1064[0m:[93m19[0m - [91merror[0m[90m TS2304: [0mCannot find name 'savedSignup'.
+
+[7m1064[0m       resourceId: savedSignup.id,
+[7m    [0m [91m                  ~~~~~~~~~~~[0m
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m1067[0m:[93m40[0m - [91merror[0m[90m TS2304: [0mCannot find name 'savedSignup'.
+
+[7m1067[0m       description: `创建报名记录: signupId=${savedSignup.id}, baseId=${baseId}, jobId=${jobId}`,
+[7m    [0m [91m                                       ~~~~~~~~~~~[0m
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m1073[0m:[93m17[0m - [91merror[0m[90m TS2304: [0mCannot find name 'savedSignup'.
+
+[7m1073[0m         status: savedSignup.status,
+[7m    [0m [91m                ~~~~~~~~~~~[0m
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m1095[0m:[93m36[0m - [91merror[0m[90m TS2552: [0mCannot find name 'savedProxySignups'. Did you mean 'savedProxySignup'?
+
+[7m1095[0m     for (const savedProxySignup of savedProxySignups) {
+[7m    [0m [91m                                   ~~~~~~~~~~~~~~~~~[0m
+
+  [96msrc/modules/attendance/attendance.service.ts[0m:[93m1095[0m:[93m16[0m
+    [7m1095[0m     for (const savedProxySignup of savedProxySignups) {
+    [7m    [0m [96m               ~~~~~~~~~~~~~~~~[0m
+    'savedProxySignup' is declared here.
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m1115[0m:[93m12[0m - [91merror[0m[90m TS2304: [0mCannot find name 'savedSignup'.
+
+[7m1115[0m     return savedSignup;
+[7m    [0m [91m           ~~~~~~~~~~~[0m
+
+[[90m21:15:08[0m] Found 5 errors. Watching for file changes.
+
+[2J[3J[H[[90m21:16:23[0m] File change detected. Starting incremental compilation...
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m1100[0m:[93m19[0m - [91merror[0m[90m TS2304: [0mCannot find name 'savedSignup'.
+
+[7m1100[0m       resourceId: savedSignup.id,
+[7m    [0m [91m                  ~~~~~~~~~~~[0m
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m1103[0m:[93m40[0m - [91merror[0m[90m TS2304: [0mCannot find name 'savedSignup'.
+
+[7m1103[0m       description: `创建报名记录: signupId=${savedSignup.id}, baseId=${baseId}, jobId=${jobId}`,
+[7m    [0m [91m                                       ~~~~~~~~~~~[0m
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m1109[0m:[93m17[0m - [91merror[0m[90m TS2304: [0mCannot find name 'savedSignup'.
+
+[7m1109[0m         status: savedSignup.status,
+[7m    [0m [91m                ~~~~~~~~~~~[0m
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m1131[0m:[93m36[0m - [91merror[0m[90m TS2552: [0mCannot find name 'savedProxySignups'. Did you mean 'savedProxySignup'?
+
+[7m1131[0m     for (const savedProxySignup of savedProxySignups) {
+[7m    [0m [91m                                   ~~~~~~~~~~~~~~~~~[0m
+
+  [96msrc/modules/attendance/attendance.service.ts[0m:[93m1131[0m:[93m16[0m
+    [7m1131[0m     for (const savedProxySignup of savedProxySignups) {
+    [7m    [0m [96m               ~~~~~~~~~~~~~~~~[0m
+    'savedProxySignup' is declared here.
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m1151[0m:[93m12[0m - [91merror[0m[90m TS2304: [0mCannot find name 'savedSignup'.
+
+[7m1151[0m     return savedSignup;
+[7m    [0m [91m           ~~~~~~~~~~~[0m
+
+[[90m21:16:23[0m] Found 5 errors. Watching for file changes.
+
+[2J[3J[H[[90m21:16:34[0m] File change detected. Starting incremental compilation...
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m1100[0m:[93m19[0m - [91merror[0m[90m TS2304: [0mCannot find name 'savedSignup'.
+
+[7m1100[0m       resourceId: savedSignup.id,
+[7m    [0m [91m                  ~~~~~~~~~~~[0m
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m1103[0m:[93m40[0m - [91merror[0m[90m TS2304: [0mCannot find name 'savedSignup'.
+
+[7m1103[0m       description: `创建报名记录: signupId=${savedSignup.id}, baseId=${baseId}, jobId=${jobId}`,
+[7m    [0m [91m                                       ~~~~~~~~~~~[0m
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m1109[0m:[93m17[0m - [91merror[0m[90m TS2304: [0mCannot find name 'savedSignup'.
+
+[7m1109[0m         status: savedSignup.status,
+[7m    [0m [91m                ~~~~~~~~~~~[0m
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m1131[0m:[93m36[0m - [91merror[0m[90m TS2552: [0mCannot find name 'savedProxySignups'. Did you mean 'savedProxySignup'?
+
+[7m1131[0m     for (const savedProxySignup of savedProxySignups) {
+[7m    [0m [91m                                   ~~~~~~~~~~~~~~~~~[0m
+
+  [96msrc/modules/attendance/attendance.service.ts[0m:[93m1131[0m:[93m16[0m
+    [7m1131[0m     for (const savedProxySignup of savedProxySignups) {
+    [7m    [0m [96m               ~~~~~~~~~~~~~~~~[0m
+    'savedProxySignup' is declared here.
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m1151[0m:[93m12[0m - [91merror[0m[90m TS2304: [0mCannot find name 'savedSignup'.
+
+[7m1151[0m     return savedSignup;
+[7m    [0m [91m           ~~~~~~~~~~~[0m
+
+[[90m21:16:34[0m] Found 5 errors. Watching for file changes.
+
+[2J[3J[H[[90m21:17:43[0m] File change detected. Starting incremental compilation...
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m1120[0m:[93m19[0m - [91merror[0m[90m TS2304: [0mCannot find name 'savedSignup'.
+
+[7m1120[0m       resourceId: savedSignup.id,
+[7m    [0m [91m                  ~~~~~~~~~~~[0m
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m1123[0m:[93m40[0m - [91merror[0m[90m TS2304: [0mCannot find name 'savedSignup'.
+
+[7m1123[0m       description: `创建报名记录: signupId=${savedSignup.id}, baseId=${baseId}, jobId=${jobId}`,
+[7m    [0m [91m                                       ~~~~~~~~~~~[0m
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m1129[0m:[93m17[0m - [91merror[0m[90m TS2304: [0mCannot find name 'savedSignup'.
+
+[7m1129[0m         status: savedSignup.status,
+[7m    [0m [91m                ~~~~~~~~~~~[0m
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m1151[0m:[93m36[0m - [91merror[0m[90m TS2552: [0mCannot find name 'savedProxySignups'. Did you mean 'savedProxySignup'?
+
+[7m1151[0m     for (const savedProxySignup of savedProxySignups) {
+[7m    [0m [91m                                   ~~~~~~~~~~~~~~~~~[0m
+
+  [96msrc/modules/attendance/attendance.service.ts[0m:[93m1151[0m:[93m16[0m
+    [7m1151[0m     for (const savedProxySignup of savedProxySignups) {
+    [7m    [0m [96m               ~~~~~~~~~~~~~~~~[0m
+    'savedProxySignup' is declared here.
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m1171[0m:[93m12[0m - [91merror[0m[90m TS2304: [0mCannot find name 'savedSignup'.
+
+[7m1171[0m     return savedSignup;
+[7m    [0m [91m           ~~~~~~~~~~~[0m
+
+[[90m21:17:44[0m] Found 5 errors. Watching for file changes.
+
+[2J[3J[H[[90m21:17:52[0m] File change detected. Starting incremental compilation...
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m1120[0m:[93m19[0m - [91merror[0m[90m TS2304: [0mCannot find name 'savedSignup'.
+
+[7m1120[0m       resourceId: savedSignup.id,
+[7m    [0m [91m                  ~~~~~~~~~~~[0m
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m1123[0m:[93m40[0m - [91merror[0m[90m TS2304: [0mCannot find name 'savedSignup'.
+
+[7m1123[0m       description: `创建报名记录: signupId=${savedSignup.id}, baseId=${baseId}, jobId=${jobId}`,
+[7m    [0m [91m                                       ~~~~~~~~~~~[0m
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m1129[0m:[93m17[0m - [91merror[0m[90m TS2304: [0mCannot find name 'savedSignup'.
+
+[7m1129[0m         status: savedSignup.status,
+[7m    [0m [91m                ~~~~~~~~~~~[0m
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m1151[0m:[93m36[0m - [91merror[0m[90m TS2552: [0mCannot find name 'savedProxySignups'. Did you mean 'savedProxySignup'?
+
+[7m1151[0m     for (const savedProxySignup of savedProxySignups) {
+[7m    [0m [91m                                   ~~~~~~~~~~~~~~~~~[0m
+
+  [96msrc/modules/attendance/attendance.service.ts[0m:[93m1151[0m:[93m16[0m
+    [7m1151[0m     for (const savedProxySignup of savedProxySignups) {
+    [7m    [0m [96m               ~~~~~~~~~~~~~~~~[0m
+    'savedProxySignup' is declared here.
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m1171[0m:[93m12[0m - [91merror[0m[90m TS2304: [0mCannot find name 'savedSignup'.
+
+[7m1171[0m     return savedSignup;
+[7m    [0m [91m           ~~~~~~~~~~~[0m
+
+[[90m21:17:53[0m] Found 5 errors. Watching for file changes.
+
+[2J[3J[H[[90m21:18:02[0m] File change detected. Starting incremental compilation...
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m1121[0m:[93m19[0m - [91merror[0m[90m TS2304: [0mCannot find name 'savedSignup'.
+
+[7m1121[0m       resourceId: savedSignup.id,
+[7m    [0m [91m                  ~~~~~~~~~~~[0m
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m1124[0m:[93m40[0m - [91merror[0m[90m TS2304: [0mCannot find name 'savedSignup'.
+
+[7m1124[0m       description: `创建报名记录: signupId=${savedSignup.id}, baseId=${baseId}, jobId=${jobId}`,
+[7m    [0m [91m                                       ~~~~~~~~~~~[0m
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m1130[0m:[93m17[0m - [91merror[0m[90m TS2304: [0mCannot find name 'savedSignup'.
+
+[7m1130[0m         status: savedSignup.status,
+[7m    [0m [91m                ~~~~~~~~~~~[0m
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m1152[0m:[93m36[0m - [91merror[0m[90m TS2552: [0mCannot find name 'savedProxySignups'. Did you mean 'savedProxySignup'?
+
+[7m1152[0m     for (const savedProxySignup of savedProxySignups) {
+[7m    [0m [91m                                   ~~~~~~~~~~~~~~~~~[0m
+
+  [96msrc/modules/attendance/attendance.service.ts[0m:[93m1152[0m:[93m16[0m
+    [7m1152[0m     for (const savedProxySignup of savedProxySignups) {
+    [7m    [0m [96m               ~~~~~~~~~~~~~~~~[0m
+    'savedProxySignup' is declared here.
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m1172[0m:[93m12[0m - [91merror[0m[90m TS2304: [0mCannot find name 'savedSignup'.
+
+[7m1172[0m     return savedSignup;
+[7m    [0m [91m           ~~~~~~~~~~~[0m
+
+[[90m21:18:03[0m] Found 5 errors. Watching for file changes.
+
+[2J[3J[H[[90m21:19:42[0m] File change detected. Starting incremental compilation...
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m913[0m:[93m61[0m - [91merror[0m[90m TS2304: [0mCannot find name 'signupResult'.
+
+[7m913[0m     const { savedSignup, savedProxySignups, isDuplicate } = signupResult;
+[7m   [0m [91m                                                            ~~~~~~~~~~~~[0m
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m1126[0m:[93m19[0m - [91merror[0m[90m TS2304: [0mCannot find name 'savedSignup'.
+
+[7m1126[0m       resourceId: savedSignup.id,
+[7m    [0m [91m                  ~~~~~~~~~~~[0m
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m1129[0m:[93m40[0m - [91merror[0m[90m TS2304: [0mCannot find name 'savedSignup'.
+
+[7m1129[0m       description: `创建报名记录: signupId=${savedSignup.id}, baseId=${baseId}, jobId=${jobId}`,
+[7m    [0m [91m                                       ~~~~~~~~~~~[0m
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m1135[0m:[93m17[0m - [91merror[0m[90m TS2304: [0mCannot find name 'savedSignup'.
+
+[7m1135[0m         status: savedSignup.status,
+[7m    [0m [91m                ~~~~~~~~~~~[0m
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m1157[0m:[93m36[0m - [91merror[0m[90m TS2552: [0mCannot find name 'savedProxySignups'. Did you mean 'savedProxySignup'?
+
+[7m1157[0m     for (const savedProxySignup of savedProxySignups) {
+[7m    [0m [91m                                   ~~~~~~~~~~~~~~~~~[0m
+
+  [96msrc/modules/attendance/attendance.service.ts[0m:[93m1157[0m:[93m16[0m
+    [7m1157[0m     for (const savedProxySignup of savedProxySignups) {
+    [7m    [0m [96m               ~~~~~~~~~~~~~~~~[0m
+    'savedProxySignup' is declared here.
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m1177[0m:[93m12[0m - [91merror[0m[90m TS2304: [0mCannot find name 'savedSignup'.
+
+[7m1177[0m     return savedSignup;
+[7m    [0m [91m           ~~~~~~~~~~~[0m
+
+[[90m21:19:43[0m] Found 6 errors. Watching for file changes.
+
+[2J[3J[H[[90m21:20:14[0m] File change detected. Starting incremental compilation...
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m913[0m:[93m61[0m - [91merror[0m[90m TS2304: [0mCannot find name 'signupResult'.
+
+[7m913[0m     const { savedSignup, savedProxySignups, isDuplicate } = signupResult;
+[7m   [0m [91m                                                            ~~~~~~~~~~~~[0m
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m1126[0m:[93m19[0m - [91merror[0m[90m TS2304: [0mCannot find name 'savedSignup'.
+
+[7m1126[0m       resourceId: savedSignup.id,
+[7m    [0m [91m                  ~~~~~~~~~~~[0m
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m1129[0m:[93m40[0m - [91merror[0m[90m TS2304: [0mCannot find name 'savedSignup'.
+
+[7m1129[0m       description: `创建报名记录: signupId=${savedSignup.id}, baseId=${baseId}, jobId=${jobId}`,
+[7m    [0m [91m                                       ~~~~~~~~~~~[0m
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m1135[0m:[93m17[0m - [91merror[0m[90m TS2304: [0mCannot find name 'savedSignup'.
+
+[7m1135[0m         status: savedSignup.status,
+[7m    [0m [91m                ~~~~~~~~~~~[0m
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m1157[0m:[93m36[0m - [91merror[0m[90m TS2552: [0mCannot find name 'savedProxySignups'. Did you mean 'savedProxySignup'?
+
+[7m1157[0m     for (const savedProxySignup of savedProxySignups) {
+[7m    [0m [91m                                   ~~~~~~~~~~~~~~~~~[0m
+
+  [96msrc/modules/attendance/attendance.service.ts[0m:[93m1157[0m:[93m16[0m
+    [7m1157[0m     for (const savedProxySignup of savedProxySignups) {
+    [7m    [0m [96m               ~~~~~~~~~~~~~~~~[0m
+    'savedProxySignup' is declared here.
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m1177[0m:[93m26[0m - [91merror[0m[90m TS2304: [0mCannot find name 'savedSignup'.
+
+[7m1177[0m     return Object.assign(savedSignup, { duplicate: false }) as DailySignup;
+[7m    [0m [91m                         ~~~~~~~~~~~[0m
+
+[[90m21:20:14[0m] Found 6 errors. Watching for file changes.
+
+[2J[3J[H[[90m21:20:58[0m] File change detected. Starting incremental compilation...
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m1121[0m:[93m19[0m - [91merror[0m[90m TS2304: [0mCannot find name 'savedSignup'.
+
+[7m1121[0m       resourceId: savedSignup.id,
+[7m    [0m [91m                  ~~~~~~~~~~~[0m
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m1124[0m:[93m40[0m - [91merror[0m[90m TS2304: [0mCannot find name 'savedSignup'.
+
+[7m1124[0m       description: `创建报名记录: signupId=${savedSignup.id}, baseId=${baseId}, jobId=${jobId}`,
+[7m    [0m [91m                                       ~~~~~~~~~~~[0m
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m1130[0m:[93m17[0m - [91merror[0m[90m TS2304: [0mCannot find name 'savedSignup'.
+
+[7m1130[0m         status: savedSignup.status,
+[7m    [0m [91m                ~~~~~~~~~~~[0m
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m1152[0m:[93m36[0m - [91merror[0m[90m TS2552: [0mCannot find name 'savedProxySignups'. Did you mean 'savedProxySignup'?
+
+[7m1152[0m     for (const savedProxySignup of savedProxySignups) {
+[7m    [0m [91m                                   ~~~~~~~~~~~~~~~~~[0m
+
+  [96msrc/modules/attendance/attendance.service.ts[0m:[93m1152[0m:[93m16[0m
+    [7m1152[0m     for (const savedProxySignup of savedProxySignups) {
+    [7m    [0m [96m               ~~~~~~~~~~~~~~~~[0m
+    'savedProxySignup' is declared here.
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m1172[0m:[93m26[0m - [91merror[0m[90m TS2304: [0mCannot find name 'savedSignup'.
+
+[7m1172[0m     return Object.assign(savedSignup, { duplicate: false }) as DailySignup;
+[7m    [0m [91m                         ~~~~~~~~~~~[0m
+
+[[90m21:20:59[0m] Found 5 errors. Watching for file changes.
+
+[2J[3J[H[[90m21:21:06[0m] File change detected. Starting incremental compilation...
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m1126[0m:[93m31[0m - [91merror[0m[90m TS2339: [0mProperty 'id' does not exist on type 'DailySignup | DailySignup[]'.
+  Property 'id' does not exist on type 'DailySignup[]'.
+
+[7m1126[0m       resourceId: savedSignup.id,
+[7m    [0m [91m                              ~~[0m
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m1129[0m:[93m52[0m - [91merror[0m[90m TS2339: [0mProperty 'id' does not exist on type 'DailySignup | DailySignup[]'.
+  Property 'id' does not exist on type 'DailySignup[]'.
+
+[7m1129[0m       description: `创建报名记录: signupId=${savedSignup.id}, baseId=${baseId}, jobId=${jobId}`,
+[7m    [0m [91m                                                   ~~[0m
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m1135[0m:[93m29[0m - [91merror[0m[90m TS2339: [0mProperty 'status' does not exist on type 'DailySignup | DailySignup[]'.
+  Property 'status' does not exist on type 'DailySignup[]'.
+
+[7m1135[0m         status: savedSignup.status,
+[7m    [0m [91m                            ~~~~~~[0m
+
+[[90m21:21:07[0m] Found 3 errors. Watching for file changes.
+
+[2J[3J[H[[90m21:21:20[0m] File change detected. Starting incremental compilation...
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m1126[0m:[93m31[0m - [91merror[0m[90m TS2339: [0mProperty 'id' does not exist on type 'DailySignup | DailySignup[]'.
+  Property 'id' does not exist on type 'DailySignup[]'.
+
+[7m1126[0m       resourceId: savedSignup.id,
+[7m    [0m [91m                              ~~[0m
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m1129[0m:[93m52[0m - [91merror[0m[90m TS2339: [0mProperty 'id' does not exist on type 'DailySignup | DailySignup[]'.
+  Property 'id' does not exist on type 'DailySignup[]'.
+
+[7m1129[0m       description: `创建报名记录: signupId=${savedSignup.id}, baseId=${baseId}, jobId=${jobId}`,
+[7m    [0m [91m                                                   ~~[0m
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m1135[0m:[93m29[0m - [91merror[0m[90m TS2339: [0mProperty 'status' does not exist on type 'DailySignup | DailySignup[]'.
+  Property 'status' does not exist on type 'DailySignup[]'.
+
+[7m1135[0m         status: savedSignup.status,
+[7m    [0m [91m                            ~~~~~~[0m
+
+[[90m21:21:20[0m] Found 3 errors. Watching for file changes.
+
+[2J[3J[H[[90m21:22:43[0m] File change detected. Starting incremental compilation...
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m1126[0m:[93m31[0m - [91merror[0m[90m TS2339: [0mProperty 'id' does not exist on type 'DailySignup | DailySignup[]'.
+  Property 'id' does not exist on type 'DailySignup[]'.
+
+[7m1126[0m       resourceId: savedSignup.id,
+[7m    [0m [91m                              ~~[0m
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m1129[0m:[93m52[0m - [91merror[0m[90m TS2339: [0mProperty 'id' does not exist on type 'DailySignup | DailySignup[]'.
+  Property 'id' does not exist on type 'DailySignup[]'.
+
+[7m1129[0m       description: `创建报名记录: signupId=${savedSignup.id}, baseId=${baseId}, jobId=${jobId}`,
+[7m    [0m [91m                                                   ~~[0m
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m1135[0m:[93m29[0m - [91merror[0m[90m TS2339: [0mProperty 'status' does not exist on type 'DailySignup | DailySignup[]'.
+  Property 'status' does not exist on type 'DailySignup[]'.
+
+[7m1135[0m         status: savedSignup.status,
+[7m    [0m [91m                            ~~~~~~[0m
+
+[[90m21:22:44[0m] Found 3 errors. Watching for file changes.
+
+[2J[3J[H[[90m21:23:32[0m] File change detected. Starting incremental compilation...
+
+[2J[3J[H[[90m21:23:52[0m] File change detected. Starting incremental compilation...
+
+[[90m21:23:52[0m] Found 0 errors. Watching for file changes.
+
+[32m[Nest] 22676  - [39m2026/04/30 21:23:55 [32m    LOG[39m [38;5;3m[NestFactory] [39m[32mStarting Nest application...[39m
+[32m[Nest] 22676  - [39m2026/04/30 21:23:55 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mTypeOrmModule dependencies initialized[39m[38;5;3m +13ms[39m
+[32m[Nest] 22676  - [39m2026/04/30 21:23:55 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mQrCodeModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 22676  - [39m2026/04/30 21:23:55 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mPassportModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 22676  - [39m2026/04/30 21:23:55 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigHostModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 22676  - [39m2026/04/30 21:23:55 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAppModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 22676  - [39m2026/04/30 21:23:55 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mDiscoveryModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 22676  - [39m2026/04/30 21:23:55 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 22676  - [39m2026/04/30 21:23:55 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigModule dependencies initialized[39m[38;5;3m +2ms[39m
+Using DB config from ConfigService: {
+  host: 'cd-cdb-4wz4qeqq.sql.tencentcdb.com',
+  port: '26982',
+  username: 'root',
+  password: '12***',
+  database: 'pickpass_db',
+  synchronize: false
+}
+[32m[Nest] 22676  - [39m2026/04/30 21:23:55 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mScheduleModule dependencies initialized[39m[38;5;3m +2ms[39m
+[32m[Nest] 22676  - [39m2026/04/30 21:23:55 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mJwtModule dependencies initialized[39m[38;5;3m +91ms[39m
+[2J[3J[H[[90m21:45:02[0m] File change detected. Starting incremental compilation...
+
+[[90m21:45:03[0m] Found 0 errors. Watching for file changes.
+
+[2J[3J[H[[90m21:45:03[0m] File change detected. Starting incremental compilation...
+
+[[90m21:45:04[0m] Found 0 errors. Watching for file changes.
+
+[32m[Nest] 43384  - [39m2026/04/30 21:45:07 [32m    LOG[39m [38;5;3m[NestFactory] [39m[32mStarting Nest application...[39m
+[32m[Nest] 43384  - [39m2026/04/30 21:45:07 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mTypeOrmModule dependencies initialized[39m[38;5;3m +15ms[39m
+[32m[Nest] 43384  - [39m2026/04/30 21:45:07 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mQrCodeModule dependencies initialized[39m[38;5;3m +2ms[39m
+[32m[Nest] 43384  - [39m2026/04/30 21:45:07 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mPassportModule dependencies initialized[39m[38;5;3m +2ms[39m
+[32m[Nest] 43384  - [39m2026/04/30 21:45:07 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigHostModule dependencies initialized[39m[38;5;3m +2ms[39m
+[32m[Nest] 43384  - [39m2026/04/30 21:45:07 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAppModule dependencies initialized[39m[38;5;3m +2ms[39m
+[32m[Nest] 43384  - [39m2026/04/30 21:45:07 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mDiscoveryModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 43384  - [39m2026/04/30 21:45:07 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigModule dependencies initialized[39m[38;5;3m +2ms[39m
+[32m[Nest] 43384  - [39m2026/04/30 21:45:07 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigModule dependencies initialized[39m[38;5;3m +0ms[39m
+Using DB config from ConfigService: {
+  host: 'cd-cdb-4wz4qeqq.sql.tencentcdb.com',
+  port: '26982',
+  username: 'root',
+  password: '12***',
+  database: 'pickpass_db',
+  synchronize: false
+}
+[32m[Nest] 43384  - [39m2026/04/30 21:45:07 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mScheduleModule dependencies initialized[39m[38;5;3m +5ms[39m
+[32m[Nest] 43384  - [39m2026/04/30 21:45:07 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mJwtModule dependencies initialized[39m[38;5;3m +76ms[39m
+[2J[3J[H[[90m21:51:18[0m] File change detected. Starting incremental compilation...
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m111[0m:[93m11[0m - [91merror[0m[90m TS2358: [0mThe left-hand side of an 'instanceof' expression must be of type 'any', an object type or a type parameter.
+
+[7m111[0m       if (conflictRow.workDate instanceof Date) {
+[7m   [0m [91m          ~~~~~~~~~~~~~~~~~~~~[0m
+
+[[90m21:51:18[0m] Found 1 error. Watching for file changes.
+
+[2J[3J[H[[90m21:51:35[0m] File change detected. Starting incremental compilation...
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m111[0m:[93m11[0m - [91merror[0m[90m TS2358: [0mThe left-hand side of an 'instanceof' expression must be of type 'any', an object type or a type parameter.
+
+[7m111[0m       if (conflictRow.workDate instanceof Date) {
+[7m   [0m [91m          ~~~~~~~~~~~~~~~~~~~~[0m
+
+[[90m21:51:41[0m] Found 1 error. Watching for file changes.
+
+[2J[3J[H[[90m21:51:49[0m] File change detected. Starting incremental compilation...
+
+[[90m21:51:50[0m] Found 0 errors. Watching for file changes.
+
+[32m[Nest] 54716  - [39m2026/04/30 21:51:52 [32m    LOG[39m [38;5;3m[NestFactory] [39m[32mStarting Nest application...[39m
+[32m[Nest] 54716  - [39m2026/04/30 21:51:52 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mTypeOrmModule dependencies initialized[39m[38;5;3m +14ms[39m
+[32m[Nest] 54716  - [39m2026/04/30 21:51:52 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mQrCodeModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 54716  - [39m2026/04/30 21:51:52 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mPassportModule dependencies initialized[39m[38;5;3m +2ms[39m
+[32m[Nest] 54716  - [39m2026/04/30 21:51:52 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigHostModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 54716  - [39m2026/04/30 21:51:52 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAppModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 54716  - [39m2026/04/30 21:51:52 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mDiscoveryModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 54716  - [39m2026/04/30 21:51:52 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 54716  - [39m2026/04/30 21:51:52 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigModule dependencies initialized[39m[38;5;3m +0ms[39m
+Using DB config from ConfigService: {
+  host: 'cd-cdb-4wz4qeqq.sql.tencentcdb.com',
+  port: '26982',
+  username: 'root',
+  password: '12***',
+  database: 'pickpass_db',
+  synchronize: false
+}
+[32m[Nest] 54716  - [39m2026/04/30 21:51:52 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mScheduleModule dependencies initialized[39m[38;5;3m +4ms[39m
+[32m[Nest] 54716  - [39m2026/04/30 21:51:52 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mJwtModule dependencies initialized[39m[38;5;3m +76ms[39m
+[2J[3J[H[[90m22:03:13[0m] File change detected. Starting incremental compilation...
+
+[[90m22:03:14[0m] Found 0 errors. Watching for file changes.
+
+[32m[Nest] 32420  - [39m2026/04/30 22:03:16 [32m    LOG[39m [38;5;3m[NestFactory] [39m[32mStarting Nest application...[39m
+[32m[Nest] 32420  - [39m2026/04/30 22:03:16 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mTypeOrmModule dependencies initialized[39m[38;5;3m +18ms[39m
+[32m[Nest] 32420  - [39m2026/04/30 22:03:16 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mQrCodeModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 32420  - [39m2026/04/30 22:03:16 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mPassportModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 32420  - [39m2026/04/30 22:03:16 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigHostModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 32420  - [39m2026/04/30 22:03:16 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAppModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 32420  - [39m2026/04/30 22:03:16 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mDiscoveryModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 32420  - [39m2026/04/30 22:03:16 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 32420  - [39m2026/04/30 22:03:16 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigModule dependencies initialized[39m[38;5;3m +1ms[39m
+Using DB config from ConfigService: {
+  host: 'cd-cdb-4wz4qeqq.sql.tencentcdb.com',
+  port: '26982',
+  username: 'root',
+  password: '12***',
+  database: 'pickpass_db',
+  synchronize: false
+}
+[32m[Nest] 32420  - [39m2026/04/30 22:03:16 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mScheduleModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 32420  - [39m2026/04/30 22:03:16 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mJwtModule dependencies initialized[39m[38;5;3m +77ms[39m
+[2J[3J[H[[90m22:06:47[0m] File change detected. Starting incremental compilation...
+
+[[90m22:06:48[0m] Found 0 errors. Watching for file changes.
+
+[32m[Nest] 40588  - [39m2026/04/30 22:06:50 [32m    LOG[39m [38;5;3m[NestFactory] [39m[32mStarting Nest application...[39m
+[32m[Nest] 40588  - [39m2026/04/30 22:06:50 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mTypeOrmModule dependencies initialized[39m[38;5;3m +15ms[39m
+[32m[Nest] 40588  - [39m2026/04/30 22:06:50 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mQrCodeModule dependencies initialized[39m[38;5;3m +2ms[39m
+[32m[Nest] 40588  - [39m2026/04/30 22:06:50 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mPassportModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 40588  - [39m2026/04/30 22:06:50 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigHostModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 40588  - [39m2026/04/30 22:06:50 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAppModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 40588  - [39m2026/04/30 22:06:50 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mDiscoveryModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 40588  - [39m2026/04/30 22:06:50 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 40588  - [39m2026/04/30 22:06:50 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigModule dependencies initialized[39m[38;5;3m +1ms[39m
+Using DB config from ConfigService: {
+  host: 'cd-cdb-4wz4qeqq.sql.tencentcdb.com',
+  port: '26982',
+  username: 'root',
+  password: '12***',
+  database: 'pickpass_db',
+  synchronize: false
+}
+[32m[Nest] 40588  - [39m2026/04/30 22:06:50 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mScheduleModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 40588  - [39m2026/04/30 22:06:50 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mJwtModule dependencies initialized[39m[38;5;3m +69ms[39m
+[2J[3J[H[[90m22:06:57[0m] File change detected. Starting incremental compilation...
+
+[[90m22:06:57[0m] Found 0 errors. Watching for file changes.
+
+[32m[Nest] 53372  - [39m2026/04/30 22:07:00 [32m    LOG[39m [38;5;3m[NestFactory] [39m[32mStarting Nest application...[39m
+[32m[Nest] 53372  - [39m2026/04/30 22:07:00 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mTypeOrmModule dependencies initialized[39m[38;5;3m +19ms[39m
+[32m[Nest] 53372  - [39m2026/04/30 22:07:00 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mQrCodeModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 53372  - [39m2026/04/30 22:07:00 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mPassportModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 53372  - [39m2026/04/30 22:07:00 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigHostModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 53372  - [39m2026/04/30 22:07:00 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAppModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 53372  - [39m2026/04/30 22:07:00 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mDiscoveryModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 53372  - [39m2026/04/30 22:07:00 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 53372  - [39m2026/04/30 22:07:00 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigModule dependencies initialized[39m[38;5;3m +0ms[39m
+Using DB config from ConfigService: {
+  host: 'cd-cdb-4wz4qeqq.sql.tencentcdb.com',
+  port: '26982',
+  username: 'root',
+  password: '12***',
+  database: 'pickpass_db',
+  synchronize: false
+}
+[32m[Nest] 53372  - [39m2026/04/30 22:07:00 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mScheduleModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 53372  - [39m2026/04/30 22:07:00 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mJwtModule dependencies initialized[39m[38;5;3m +70ms[39m
+[2J[3J[H[[90m23:12:09[0m] File change detected. Starting incremental compilation...
+
+[2J[3J[H[[90m23:14:58[0m] File change detected. Starting incremental compilation...
+
+[[90m23:15:00[0m] Found 0 errors. Watching for file changes.
+
+[2J[3J[H[[90m23:15:01[0m] File change detected. Starting incremental compilation...
+
+[32m[Nest] 16228  - [39m2026/04/30 23:15:02 [32m    LOG[39m [38;5;3m[NestFactory] [39m[32mStarting Nest application...[39m
+[32m[Nest] 16228  - [39m2026/04/30 23:15:02 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mTypeOrmModule dependencies initialized[39m[38;5;3m +17ms[39m
+[32m[Nest] 16228  - [39m2026/04/30 23:15:02 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mQrCodeModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 16228  - [39m2026/04/30 23:15:02 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mPassportModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 16228  - [39m2026/04/30 23:15:02 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigHostModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 16228  - [39m2026/04/30 23:15:02 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAppModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 16228  - [39m2026/04/30 23:15:02 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mDiscoveryModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 16228  - [39m2026/04/30 23:15:02 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 16228  - [39m2026/04/30 23:15:02 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigModule dependencies initialized[39m[38;5;3m +1ms[39m
+Using DB config from ConfigService: {
+  host: 'cd-cdb-4wz4qeqq.sql.tencentcdb.com',
+  port: '26982',
+  username: 'root',
+  password: '12***',
+  database: 'pickpass_db',
+  synchronize: false
+}
+[32m[Nest] 16228  - [39m2026/04/30 23:15:02 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mScheduleModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 16228  - [39m2026/04/30 23:15:02 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mJwtModule dependencies initialized[39m[38;5;3m +55ms[39m
+[[90m23:15:11[0m] Found 0 errors. Watching for file changes.
+
+[2J[3J[H[[90m23:15:12[0m] File change detected. Starting incremental compilation...
+
+[32m[Nest] 14476  - [39m2026/04/30 23:15:13 [32m    LOG[39m [38;5;3m[NestFactory] [39m[32mStarting Nest application...[39m
+[32m[Nest] 14476  - [39m2026/04/30 23:15:13 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mTypeOrmModule dependencies initialized[39m[38;5;3m +10ms[39m
+[32m[Nest] 14476  - [39m2026/04/30 23:15:13 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mQrCodeModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 14476  - [39m2026/04/30 23:15:13 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mPassportModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 14476  - [39m2026/04/30 23:15:13 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigHostModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 14476  - [39m2026/04/30 23:15:13 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAppModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 14476  - [39m2026/04/30 23:15:13 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mDiscoveryModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 14476  - [39m2026/04/30 23:15:13 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 14476  - [39m2026/04/30 23:15:13 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigModule dependencies initialized[39m[38;5;3m +0ms[39m
+Using DB config from ConfigService: {
+  host: 'cd-cdb-4wz4qeqq.sql.tencentcdb.com',
+  port: '26982',
+  username: 'root',
+  password: '12***',
+  database: 'pickpass_db',
+  synchronize: false
+}
+[32m[Nest] 14476  - [39m2026/04/30 23:15:13 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mScheduleModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 14476  - [39m2026/04/30 23:15:13 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mJwtModule dependencies initialized[39m[38;5;3m +52ms[39m
+[[90m23:15:18[0m] Found 0 errors. Watching for file changes.
+
+[32m[Nest] 42780  - [39m2026/04/30 23:15:20 [32m    LOG[39m [38;5;3m[NestFactory] [39m[32mStarting Nest application...[39m
+[32m[Nest] 42780  - [39m2026/04/30 23:15:20 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mTypeOrmModule dependencies initialized[39m[38;5;3m +9ms[39m
+[32m[Nest] 42780  - [39m2026/04/30 23:15:20 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mQrCodeModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 42780  - [39m2026/04/30 23:15:20 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mPassportModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 42780  - [39m2026/04/30 23:15:20 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigHostModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 42780  - [39m2026/04/30 23:15:20 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAppModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 42780  - [39m2026/04/30 23:15:20 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mDiscoveryModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 42780  - [39m2026/04/30 23:15:20 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 42780  - [39m2026/04/30 23:15:20 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigModule dependencies initialized[39m[38;5;3m +0ms[39m
+Using DB config from ConfigService: {
+  host: 'cd-cdb-4wz4qeqq.sql.tencentcdb.com',
+  port: '26982',
+  username: 'root',
+  password: '12***',
+  database: 'pickpass_db',
+  synchronize: false
+}
+[32m[Nest] 42780  - [39m2026/04/30 23:15:20 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mScheduleModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 42780  - [39m2026/04/30 23:15:20 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mJwtModule dependencies initialized[39m[38;5;3m +51ms[39m
+[2J[3J[H[[90m23:30:04[0m] File change detected. Starting incremental compilation...
+
+[[90m23:30:05[0m] Found 0 errors. Watching for file changes.
+
+[32m[Nest] 48108  - [39m2026/04/30 23:30:06 [32m    LOG[39m [38;5;3m[NestFactory] [39m[32mStarting Nest application...[39m
+[32m[Nest] 48108  - [39m2026/04/30 23:30:06 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mTypeOrmModule dependencies initialized[39m[38;5;3m +10ms[39m
+[32m[Nest] 48108  - [39m2026/04/30 23:30:06 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mQrCodeModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 48108  - [39m2026/04/30 23:30:06 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mPassportModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 48108  - [39m2026/04/30 23:30:06 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigHostModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 48108  - [39m2026/04/30 23:30:06 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAppModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 48108  - [39m2026/04/30 23:30:06 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mDiscoveryModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 48108  - [39m2026/04/30 23:30:06 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 48108  - [39m2026/04/30 23:30:06 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigModule dependencies initialized[39m[38;5;3m +0ms[39m
+Using DB config from ConfigService: {
+  host: 'cd-cdb-4wz4qeqq.sql.tencentcdb.com',
+  port: '26982',
+  username: 'root',
+  password: '12***',
+  database: 'pickpass_db',
+  synchronize: false
+}
+[32m[Nest] 48108  - [39m2026/04/30 23:30:06 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mScheduleModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 48108  - [39m2026/04/30 23:30:06 [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mJwtModule dependencies initialized[39m[38;5;3m +53ms[39m
+[2J[3J[H[[90m23:36:44[0m] File change detected. Starting incremental compilation...
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m76[0m:[93m11[0m - [91merror[0m[90m TS2393: [0mDuplicate function implementation.
+
+[7m76[0m   private parseWorkHoursRange(workHours?: string | null): { start: number; end: number } | null {
+[7m  [0m [91m          ~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m119[0m:[93m11[0m - [91merror[0m[90m TS2393: [0mDuplicate function implementation.
+
+[7m119[0m   private buildSignupConflictException(conflictRow: any): ConflictException {
+[7m   [0m [91m          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m255[0m:[93m11[0m - [91merror[0m[90m TS2393: [0mDuplicate function implementation.
+
+[7m255[0m   private parseWorkHoursRange(workHours?: string | null): { start: number; end: number } | null {
+[7m   [0m [91m          ~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m293[0m:[93m11[0m - [91merror[0m[90m TS2393: [0mDuplicate function implementation.
+
+[7m293[0m   private buildSignupConflictException(conflictRow: {
+[7m   [0m [91m          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[[90m23:36:45[0m] Found 4 errors. Watching for file changes.
+
+[2J[3J[H[[90m23:47:03[0m] File change detected. Starting incremental compilation...
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m76[0m:[93m11[0m - [91merror[0m[90m TS2393: [0mDuplicate function implementation.
+
+[7m76[0m   private parseWorkHoursRange(workHours?: string | null): { start: number; end: number } | null {
+[7m  [0m [91m          ~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m119[0m:[93m11[0m - [91merror[0m[90m TS2393: [0mDuplicate function implementation.
+
+[7m119[0m   private buildSignupConflictException(conflictRow: any): ConflictException {
+[7m   [0m [91m          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m255[0m:[93m11[0m - [91merror[0m[90m TS2393: [0mDuplicate function implementation.
+
+[7m255[0m   private parseWorkHoursRange(workHours?: string | null): { start: number; end: number } | null {
+[7m   [0m [91m          ~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m293[0m:[93m11[0m - [91merror[0m[90m TS2393: [0mDuplicate function implementation.
+
+[7m293[0m   private buildSignupConflictException(conflictRow: {
+[7m   [0m [91m          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[[90m23:47:04[0m] Found 4 errors. Watching for file changes.
+
+[2J[3J[H[[90m23:47:29[0m] File change detected. Starting incremental compilation...
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m76[0m:[93m11[0m - [91merror[0m[90m TS2393: [0mDuplicate function implementation.
+
+[7m76[0m   private parseWorkHoursRange(workHours?: string | null): { start: number; end: number } | null {
+[7m  [0m [91m          ~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m119[0m:[93m11[0m - [91merror[0m[90m TS2393: [0mDuplicate function implementation.
+
+[7m119[0m   private buildSignupConflictException(conflictRow: any): ConflictException {
+[7m   [0m [91m          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m255[0m:[93m11[0m - [91merror[0m[90m TS2393: [0mDuplicate function implementation.
+
+[7m255[0m   private parseWorkHoursRange(workHours?: string | null): { start: number; end: number } | null {
+[7m   [0m [91m          ~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m293[0m:[93m11[0m - [91merror[0m[90m TS2393: [0mDuplicate function implementation.
+
+[7m293[0m   private buildSignupConflictException(conflictRow: {
+[7m   [0m [91m          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[[90m23:47:30[0m] Found 4 errors. Watching for file changes.
+
+[2J[3J[H[[90m23:47:55[0m] File change detected. Starting incremental compilation...
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m76[0m:[93m11[0m - [91merror[0m[90m TS2393: [0mDuplicate function implementation.
+
+[7m76[0m   private parseWorkHoursRange(workHours?: string | null): { start: number; end: number } | null {
+[7m  [0m [91m          ~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m119[0m:[93m11[0m - [91merror[0m[90m TS2393: [0mDuplicate function implementation.
+
+[7m119[0m   private buildSignupConflictException(conflictRow: any): ConflictException {
+[7m   [0m [91m          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m255[0m:[93m11[0m - [91merror[0m[90m TS2393: [0mDuplicate function implementation.
+
+[7m255[0m   private parseWorkHoursRange(workHours?: string | null): { start: number; end: number } | null {
+[7m   [0m [91m          ~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m293[0m:[93m11[0m - [91merror[0m[90m TS2393: [0mDuplicate function implementation.
+
+[7m293[0m   private buildSignupConflictException(conflictRow: {
+[7m   [0m [91m          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[[90m23:47:57[0m] Found 4 errors. Watching for file changes.
+
+[2J[3J[H[[90m23:49:30[0m] File change detected. Starting incremental compilation...
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m76[0m:[93m11[0m - [91merror[0m[90m TS2393: [0mDuplicate function implementation.
+
+[7m76[0m   private parseWorkHoursRange(workHours?: string | null): { start: number; end: number } | null {
+[7m  [0m [91m          ~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m119[0m:[93m11[0m - [91merror[0m[90m TS2393: [0mDuplicate function implementation.
+
+[7m119[0m   private buildSignupConflictException(conflictRow: any): ConflictException {
+[7m   [0m [91m          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m255[0m:[93m11[0m - [91merror[0m[90m TS2393: [0mDuplicate function implementation.
+
+[7m255[0m   private parseWorkHoursRange(workHours?: string | null): { start: number; end: number } | null {
+[7m   [0m [91m          ~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m293[0m:[93m11[0m - [91merror[0m[90m TS2393: [0mDuplicate function implementation.
+
+[7m293[0m   private buildSignupConflictException(conflictRow: {
+[7m   [0m [91m          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[[90m23:49:31[0m] Found 4 errors. Watching for file changes.
+
+[2J[3J[H[[90m23:54:08[0m] File change detected. Starting incremental compilation...
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m76[0m:[93m11[0m - [91merror[0m[90m TS2393: [0mDuplicate function implementation.
+
+[7m76[0m   private parseWorkHoursRange(workHours?: string | null): { start: number; end: number } | null {
+[7m  [0m [91m          ~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m119[0m:[93m11[0m - [91merror[0m[90m TS2393: [0mDuplicate function implementation.
+
+[7m119[0m   private buildSignupConflictException(conflictRow: any): ConflictException {
+[7m   [0m [91m          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m255[0m:[93m11[0m - [91merror[0m[90m TS2393: [0mDuplicate function implementation.
+
+[7m255[0m   private parseWorkHoursRange(workHours?: string | null): { start: number; end: number } | null {
+[7m   [0m [91m          ~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m293[0m:[93m11[0m - [91merror[0m[90m TS2393: [0mDuplicate function implementation.
+
+[7m293[0m   private buildSignupConflictException(conflictRow: {
+[7m   [0m [91m          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[[90m23:54:09[0m] Found 4 errors. Watching for file changes.
+
+[2J[3J[H[[90m23:54:25[0m] File change detected. Starting incremental compilation...
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m76[0m:[93m11[0m - [91merror[0m[90m TS2393: [0mDuplicate function implementation.
+
+[7m76[0m   private parseWorkHoursRange(workHours?: string | null): { start: number; end: number } | null {
+[7m  [0m [91m          ~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m119[0m:[93m11[0m - [91merror[0m[90m TS2393: [0mDuplicate function implementation.
+
+[7m119[0m   private buildSignupConflictException(conflictRow: any): ConflictException {
+[7m   [0m [91m          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m255[0m:[93m11[0m - [91merror[0m[90m TS2393: [0mDuplicate function implementation.
+
+[7m255[0m   private parseWorkHoursRange(workHours?: string | null): { start: number; end: number } | null {
+[7m   [0m [91m          ~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m293[0m:[93m11[0m - [91merror[0m[90m TS2393: [0mDuplicate function implementation.
+
+[7m293[0m   private buildSignupConflictException(conflictRow: {
+[7m   [0m [91m          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[[90m23:54:25[0m] Found 4 errors. Watching for file changes.
+
+[2J[3J[H[[90m23:54:44[0m] File change detected. Starting incremental compilation...
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m76[0m:[93m11[0m - [91merror[0m[90m TS2393: [0mDuplicate function implementation.
+
+[7m76[0m   private parseWorkHoursRange(workHours?: string | null): { start: number; end: number } | null {
+[7m  [0m [91m          ~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m119[0m:[93m11[0m - [91merror[0m[90m TS2393: [0mDuplicate function implementation.
+
+[7m119[0m   private buildSignupConflictException(conflictRow: any): ConflictException {
+[7m   [0m [91m          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m255[0m:[93m11[0m - [91merror[0m[90m TS2393: [0mDuplicate function implementation.
+
+[7m255[0m   private parseWorkHoursRange(workHours?: string | null): { start: number; end: number } | null {
+[7m   [0m [91m          ~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/modules/attendance/attendance.service.ts[0m:[93m293[0m:[93m11[0m - [91merror[0m[90m TS2393: [0mDuplicate function implementation.
+
+[7m293[0m   private buildSignupConflictException(conflictRow: {
+[7m   [0m [91m          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[[90m23:54:44[0m] Found 4 errors. Watching for file changes.
+

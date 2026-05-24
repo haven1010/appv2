@@ -1,0 +1,99 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/index/services/services",
+    "pages/login/login",
+    "pages/boss/dashboard/dashboard",
+    "pages/boss/profile/profile",
+    "pages/boss/applicants/applicants",
+    "pages/register/register",
+    "pages/profile/complete-info/complete-info",
+    "pages/profile/profile",
+    "pages/profile/settings/settings",
+    "pages/applications/applications",
+    "pages/base/list/list",
+    "pages/base/detail/detail",
+    "pages/job/list/list",
+    "pages/job/detail/detail",
+    "pages/signup/signup",
+    "pages/signup/success/success",
+    "pages/qrcode/qrcode",
+    "pages/attendance/attendance",
+    "pages/salary/salary",
+    "pages/profile/workHistory/workHistory",
+    "pages/profile/signups/signups",
+    "pages/profile/userInfo/userInfo",
+    "pages/profile/salaryCard/salaryCard",
+    "pages/attendance/detail/detail",
+    "pages/salary/detail/detail",
+    "pages/salary/appeal/appeal",
+    "pages/salary/payment/payment",
+    "pages/review/employer/employer",
+    "pages/training/list/list",
+    "pages/training/detail/detail",
+    "pages/rights/consult/consult",
+    "pages/rights/list/list",
+    "pages/rights/detail/detail",
+    "pages/ai/chat/chat",
+    "pages/policy/list/list",
+    "pages/policy/detail/detail",
+    "pages/policy/apply/apply",
+    "pages/field/home/home",
+    "pages/field/scan/scan",
+    "pages/field/records/records",
+    "pages/field/profile/profile",
+    "pages/admin/home/home",
+    "pages/admin/base/base",
+    "pages/admin/attendance/attendance",
+    "pages/admin/users/users",
+    "pages/admin/system/system",
+    "pages/admin/profile/profile"
+  ],
+  "window": {
+    "backgroundTextStyle": "dark",
+    "navigationBarBackgroundColor": "#f5f5f7",
+    "navigationBarTitleText": "\u667a\u6c47\u5c31\u4e1a",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#f5f5f7",
+    "enablePullDownRefresh": true
+  },
+  "tabBar": {
+    "color": "#8a94a6",
+    "selectedColor": "#667eea",
+    "backgroundColor": "#f5f5f7",
+    "borderStyle": "white",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "首页",
+        "iconPath": "images/tabbar/home.png",
+        "selectedIconPath": "images/tabbar/home-active.png"
+      },
+      {
+        "pagePath": "pages/qrcode/qrcode",
+        "text": "签到码",
+        "iconPath": "images/tabbar/qrcode.png",
+        "selectedIconPath": "images/tabbar/qrcode-active.png"
+      },
+      {
+        "pagePath": "pages/ai/chat/chat",
+        "text": "小玉",
+        "iconPath": "images/tabbar/chat.png",
+        "selectedIconPath": "images/tabbar/chat-active.png"
+      },
+      {
+        "pagePath": "pages/profile/profile",
+        "text": "我的",
+        "iconPath": "images/tabbar/profile.png",
+        "selectedIconPath": "images/tabbar/profile-active.png"
+      }
+    ]
+  },
+  "requiredPrivateInfos": [
+    "getLocation"
+  ],
+  "darkmode": false,
+  "style": "v2",
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents"
+}

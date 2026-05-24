@@ -1,0 +1,76 @@
+<view class="page page-enter">
+  <view class="page-body">
+    <view class="header-card">
+      <text class="header-icon">📝</text>
+      <text class="header-title">政策申请</text>
+      <text class="header-subtitle">{{policyTitle}}</text>
+    </view>
+
+    <view class="form-card">
+      <text class="form-label required">姓名</text>
+      <input
+        class="form-input"
+        type="text"
+        placeholder="请输入您的姓名"
+        value="{{name}}"
+        bindinput="onNameInput"
+      />
+    </view>
+
+    <view class="form-card">
+      <text class="form-label required">联系电话</text>
+      <input
+        class="form-input"
+        type="number"
+        placeholder="请输入您的联系电话"
+        value="{{phone}}"
+        bindinput="onPhoneInput"
+        maxlength="11"
+      />
+    </view>
+
+    <view class="form-card">
+      <text class="form-label required">身份证号</text>
+      <input
+        class="form-input"
+        type="idcard"
+        placeholder="请输入您的身份证号"
+        value="{{idCard}}"
+        bindinput="onIdCardInput"
+        maxlength="18"
+      />
+    </view>
+
+    <view class="form-card">
+      <text class="form-label required">申请理由</text>
+      <textarea
+        class="form-textarea"
+        placeholder="请说明您的申请理由和实际情况"
+        value="{{reason}}"
+        bindinput="onReasonInput"
+        maxlength="300"
+        show-confirm-bar="{{false}}"
+      />
+      <text class="char-count">{{reason.length}}/300</text>
+    </view>
+
+    <view class="tips-card">
+      <text class="tips-title">💡 温馨提示</text>
+      <text class="tips-item">• 提交后工作人员会在3个工作日内联系您</text>
+      <text class="tips-item">• 请确保填写信息真实有效</text>
+      <text class="tips-item">• 请保持电话畅通</text>
+    </view>
+
+    <view class="action-card">
+      <button
+        class="btn-primary"
+        bindtap="onSubmit"
+        loading="{{submitting}}"
+        disabled="{{submitting}}"
+      >提交申请</button>
+      <button class="btn-ghost" bindtap="goBack">取消</button>
+    </view>
+
+    <view class="page-bottom-gap"></view>
+  </view>
+</view>

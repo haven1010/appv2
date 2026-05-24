@@ -1,0 +1,77 @@
+<view class="chat-page">
+  <!-- 欢迎界面 -->
+  <view wx:if="{{showGreeting && messages.length === 0}}" class="welcome">
+    <view class="welcome-avatar">
+      <text class="welcome-avatar-text">智</text>
+    </view>
+    <text class="welcome-title">你好呀～我是小玉</text>
+    <text class="welcome-desc">你的智能就业助手，有什么想问的尽管说～</text>
+    <view class="welcome-suggestions">
+      <view class="suggestion-chip" data-prompt="帮我推荐一个适合今天报名的工作" bindtap="usePrompt">
+        <text class="suggestion-icon">🌟</text>
+        <text class="suggestion-text">推荐工作</text>
+      </view>
+      <view class="suggestion-chip" data-prompt="现在有哪些基地在招人？" bindtap="usePrompt">
+        <text class="suggestion-icon">📋</text>
+        <text class="suggestion-text">在招岗位</text>
+      </view>
+      <view class="suggestion-chip" data-prompt="工资怎么计算的？" bindtap="usePrompt">
+        <text class="suggestion-icon">💰</text>
+        <text class="suggestion-text">工资问题</text>
+      </view>
+      <view class="suggestion-chip" data-prompt="怎么报名工作？需要什么条件？" bindtap="usePrompt">
+        <text class="suggestion-icon">📝</text>
+        <text class="suggestion-text">报名流程</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 对话列表 -->
+  <view wx:else class="chat-list">
+    <view wx:for="{{messages}}" wx:key="index" wx:for-index="idx" class="msg-row msg-{{item.role}}">
+      <view wx:if="{{item.role === 'assistant'}}" class="msg-avatar">
+        <text class="msg-avatar-text">智</text>
+      </view>
+      <view class="msg-content">
+        <view class="msg-bubble">{{item.content}}</view>
+        <view wx:if="{{item.role === 'assistant' && idx === messages.length - 1 && !isLoading}}" class="msg-tools">
+          <view class="msg-tool" data-id="copy" data-index="{{idx}}" bindtap="tapTool">📋 复制</view>
+          <view class="msg-tool" data-id="voice" data-index="{{idx}}" bindtap="tapTool">🔊 朗读</view>
+          <view class="msg-tool" data-id="refresh" data-index="{{idx}}" bindtap="tapTool">🔄 重试</view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 加载 -->
+    <view wx:if="{{isLoading}}" class="msg-row msg-assistant">
+      <view class="msg-avatar"><text class="msg-avatar-text">智</text></view>
+      <view class="msg-content">
+        <view class="msg-bubble thinking">
+          <text class="dot">.</text><text class="dot">.</text><text class="dot">.</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 底部输入 -->
+  <view class="input-area {{showGreeting && messages.length === 0 ? 'input-area-welcome' : ''}}">
+    <view class="input-bar {{isRecording ? 'input-bar-recording' : ''}}">
+      <view class="voice-btn {{isRecording ? 'voice-active' : ''}}" bindtouchstart="startRecord" bindtouchend="stopRecord">
+        <text class="voice-icon">{{isRecording ? '⏹' : '🎤'}}</text>
+      </view>
+      <input
+        class="text-input"
+        placeholder="{{isRecording ? '录音中...松开结束' : '给小玉发消息...'}}"
+        value="{{inputValue}}"
+        bindinput="onInput"
+        disabled="{{isRecording}}"
+        confirm-type="send"
+        bindconfirm="submit"
+      />
+      <view class="send-btn {{canSend ? 'send-active' : ''}}" bindtap="submit" wx:if="{{canSend}}">
+        <text class="send-icon">➤</text>
+      </view>
+    </view>
+    <text class="input-disclaimer">内容由 AI 生成，仅供参考</text>
+  </view>
+</view>

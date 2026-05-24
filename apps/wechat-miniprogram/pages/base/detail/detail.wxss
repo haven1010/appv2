@@ -1,0 +1,382 @@
+/* ═══════════════════════════════════════════
+   bases/detail - Claude Purple Theme
+   ═══════════════════════════════════════════ */
+.page {
+  min-height: 100vh;
+  padding: 24rpx 24rpx 56rpx;
+  box-sizing: border-box;
+  background: transparent;
+}
+
+/* ───── Shared Card Base ───── */
+.hero-card,
+.section-card,
+.state-panel,
+.accordion-card {
+  background: var(--card-bg);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  border: var(--border-soft);
+}
+
+/* ───── Hero Card ───── */
+.hero-card {
+  padding: 28rpx;
+}
+
+.hero-head {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.hero-title {
+  flex: 1;
+  font-size: 40rpx;
+  line-height: 1.25;
+  color: var(--ink-main);
+  font-weight: 900;
+}
+
+.status-tag {
+  flex-shrink: 0;
+  font-size: 22rpx;
+  font-weight: 700;
+  padding: 6rpx 16rpx;
+  border-radius: var(--radius-pill);
+}
+
+.status-tag.approved {
+  background: rgba(49, 164, 124, 0.1);
+  color: var(--accent-green);
+}
+
+.status-tag.pending {
+  background: rgba(242, 184, 75, 0.15);
+  color: #b8860b;
+}
+
+.status-tag.rejected {
+  background: rgba(228, 92, 109, 0.1);
+  color: var(--accent-red);
+}
+
+.hero-subtitle {
+  display: block;
+  margin-top: 10rpx;
+  font-size: 26rpx;
+  line-height: 1.5;
+  color: var(--ink-sub);
+}
+
+/* ───── Accordion Card ───── */
+.accordion-card {
+  margin-top: 20rpx;
+  overflow: hidden;
+}
+
+.accordion-head {
+  padding: 24rpx 24rpx;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1rpx solid rgba(102, 126, 234, 0.08);
+}
+
+.accordion-title {
+  font-size: 32rpx;
+  font-weight: 800;
+  color: var(--ink-main);
+}
+
+.accordion-arrow {
+  font-size: 24rpx;
+  color: var(--ink-sub);
+  font-weight: 700;
+}
+
+.accordion-body {
+  padding: 0 20rpx 20rpx;
+}
+
+/* ───── Section Card (inside accordion) ───── */
+.section-card {
+  margin-top: 16rpx;
+  padding: 24rpx;
+}
+
+.section-title {
+  display: block;
+  font-size: 30rpx;
+  line-height: 1.35;
+  color: var(--ink-main);
+  font-weight: 800;
+  margin-bottom: 16rpx;
+}
+
+/* ───── Info Rows ───── */
+.info-row {
+  padding: 16rpx 0;
+  border-bottom: 1rpx dashed rgba(102, 126, 234, 0.1);
+}
+
+.info-row:last-child {
+  border-bottom: none;
+}
+
+.info-label {
+  display: block;
+  font-size: 24rpx;
+  line-height: 1.35;
+  color: var(--ink-sub);
+}
+
+.info-value {
+  display: block;
+  margin-top: 6rpx;
+  font-size: 28rpx;
+  line-height: 1.45;
+  color: var(--ink-main);
+  word-break: break-all;
+}
+
+/* ───── Summary Chips ───── */
+.summary-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+}
+
+.summary-chip {
+  font-size: 22rpx;
+  padding: 6rpx 16rpx;
+  border-radius: var(--radius-pill);
+  background: rgba(102, 126, 234, 0.08);
+  color: var(--ink-sub);
+  font-weight: 700;
+}
+
+.summary-chip.success {
+  background: rgba(49, 164, 124, 0.1);
+  color: var(--accent-green);
+}
+
+.summary-chip.warn {
+  background: rgba(242, 184, 75, 0.15);
+  color: #b8860b;
+}
+
+.summary-chip.info {
+  background: rgba(77, 166, 255, 0.1);
+  color: var(--accent-blue);
+}
+
+/* ───── Environment Images ───── */
+.env-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+}
+
+.env-image {
+  width: calc((100% - 24rpx) / 3);
+  height: 180rpx;
+  border-radius: var(--radius-md);
+  border: var(--border-soft);
+  background: var(--card-bg-soft);
+}
+
+.empty-box {
+  border-radius: var(--radius-md);
+  border: 2rpx dashed rgba(102, 126, 234, 0.15);
+  background: var(--card-bg-soft);
+  padding: 40rpx 20rpx;
+  text-align: center;
+}
+
+.empty-text {
+  font-size: 26rpx;
+  line-height: 1.45;
+  color: var(--ink-sub);
+}
+
+.warn-tip {
+  display: block;
+  margin-top: 12rpx;
+  font-size: 24rpx;
+  line-height: 1.4;
+  color: var(--accent-red);
+}
+
+/* ───── State Panel ───── */
+.state-panel {
+  margin-top: 20rpx;
+  padding: 52rpx 28rpx;
+  text-align: center;
+}
+
+.state-panel.inner-state {
+  margin-top: 16rpx;
+  padding: 36rpx 24rpx;
+}
+
+.state-title {
+  display: block;
+  font-size: 30rpx;
+  line-height: 1.4;
+  color: var(--ink-main);
+  font-weight: 800;
+}
+
+.state-desc {
+  display: block;
+  margin-top: 8rpx;
+  font-size: 24rpx;
+  line-height: 1.45;
+  color: var(--ink-sub);
+}
+
+/* ───── Progress & Payroll Lists ───── */
+.progress-list,
+.payroll-list {
+  margin-top: 16rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+}
+
+.progress-card,
+.payroll-card {
+  background: var(--card-bg-soft);
+  border-radius: var(--radius-md);
+  padding: 20rpx;
+  border: var(--border-soft);
+}
+
+.progress-head,
+.payroll-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.progress-title,
+.payroll-name {
+  font-size: 30rpx;
+  font-weight: 800;
+  color: var(--ink-main);
+}
+
+.progress-status,
+.payroll-status {
+  font-size: 22rpx;
+  border-radius: var(--radius-pill);
+  padding: 4rpx 14rpx;
+  font-weight: 700;
+}
+
+.progress-status.open {
+  background: rgba(49, 164, 124, 0.1);
+  color: var(--accent-green);
+}
+
+.progress-status.closed {
+  background: rgba(228, 92, 109, 0.1);
+  color: var(--accent-red);
+}
+
+.progress-meta,
+.payroll-meta {
+  margin-top: 10rpx;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+  font-size: 24rpx;
+  color: var(--ink-sub);
+}
+
+.progress-date,
+.payroll-date {
+  display: block;
+  margin-top: 8rpx;
+  font-size: 22rpx;
+  color: var(--ink-muted);
+}
+
+.name-list {
+  margin-top: 12rpx;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8rpx;
+}
+
+.name-chip {
+  font-size: 22rpx;
+  color: var(--brand-purple);
+  background: rgba(102, 126, 234, 0.08);
+  border-radius: var(--radius-pill);
+  padding: 6rpx 14rpx;
+}
+
+/* ───── Payroll Stats ───── */
+.payroll-stats {
+  display: flex;
+  gap: 12rpx;
+}
+
+.payroll-stat {
+  flex: 1;
+  border-radius: var(--radius-md);
+  border: var(--border-soft);
+  background: var(--card-bg);
+  padding: 16rpx 10rpx;
+  text-align: center;
+}
+
+.payroll-stat-value {
+  display: block;
+  font-size: 28rpx;
+  font-weight: 900;
+  color: var(--brand-purple);
+}
+
+.payroll-stat-label {
+  display: block;
+  margin-top: 6rpx;
+  font-size: 22rpx;
+  color: var(--ink-sub);
+}
+
+.payroll-status.pending {
+  background: rgba(242, 184, 75, 0.15);
+  color: #b8860b;
+}
+
+.payroll-status.confirm {
+  background: rgba(49, 164, 124, 0.1);
+  color: var(--accent-green);
+}
+
+.payroll-status.paid {
+  background: rgba(49, 164, 124, 0.15);
+  color: var(--accent-green);
+}
+
+.payroll-main {
+  margin-top: 14rpx;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.payroll-total-label {
+  font-size: 24rpx;
+  color: var(--ink-sub);
+}
+
+.payroll-total-value {
+  font-size: 34rpx;
+  color: var(--brand-purple);
+  font-weight: 900;
+}

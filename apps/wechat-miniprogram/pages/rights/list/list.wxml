@@ -1,0 +1,38 @@
+<view class="page page-enter">
+  <view class="page-body">
+    <view class="header-card">
+      <text class="header-title">我的咨询</text>
+      <button class="btn-new" bindtap="goToConsult">+ 新建咨询</button>
+    </view>
+
+    <view wx:if="{{loading}}" class="loading-state">
+      <text class="loading-text">加载中...</text>
+    </view>
+
+    <view wx:elif="{{consultations.length}}" class="consultation-list">
+      <view
+        class="consultation-card"
+        wx:for="{{consultations}}"
+        wx:key="id"
+        style="animation-delay: {{item.delay}};"
+        bindtap="goToDetail"
+        data-id="{{item.id}}"
+      >
+        <view class="card-header">
+          <text class="issue-type">{{item.issueTypeText}}</text>
+          <text class="status-badge {{item.statusClass}}">{{item.statusText}}</text>
+        </view>
+        <text class="description">{{item.description}}</text>
+        <text class="created-time">提交时间：{{item.createdAt}}</text>
+      </view>
+    </view>
+
+    <view wx:else class="empty-state">
+      <text class="empty-icon">📋</text>
+      <text class="empty-text">暂无咨询记录</text>
+      <button class="btn-consult" bindtap="goToConsult">立即咨询</button>
+    </view>
+
+    <view class="page-bottom-gap"></view>
+  </view>
+</view>

@@ -1,0 +1,100 @@
+<view class="page {{pageReady ? 'page-enter' : ''}}">
+  <view class="paper-bg"></view>
+
+  <view class="container theme-{{currentTheme}}">
+    <block wx:if="{{cards.length}}">
+      <view class="card-zone">
+        <swiper class="card-swiper" current="{{currentIndex}}" duration="260" bindchange="onSwiperChange">
+          <block wx:for="{{cards}}" wx:key="id">
+            <swiper-item>
+              <view class="bank-card theme-{{item.theme}}">
+                <view class="card-top">
+                  <text class="bank-name">{{item.bankName}}</text>
+                  <text class="card-tag">工资卡</text>
+                </view>
+
+                <text class="card-no">{{currentIndex === index && showFull ? item.formattedNumber : item.maskedNumber}}</text>
+
+                <view class="card-bottom">
+                  <view class="bottom-col">
+                    <text class="bottom-label">持卡人</text>
+                    <text class="bottom-value">{{item.name}}</text>
+                  </view>
+                  <view class="bottom-col right">
+                    <text class="bottom-label">更新日期</text>
+                    <text class="bottom-value">{{item.updateTime}}</text>
+                  </view>
+                </view>
+              </view>
+            </swiper-item>
+          </block>
+        </swiper>
+
+        <view class="dot-row">
+          <block wx:for="{{cards}}" wx:key="id">
+            <view class="dot {{currentIndex === index ? 'active' : ''}}"></view>
+          </block>
+        </view>
+      </view>
+
+      <view class="action-row">
+        <button class="action-btn action-ghost" bindtap="toggleCard">{{showFull ? '隐藏卡号' : '查看卡号'}}</button>
+        <button class="action-btn action-primary" bindtap="copyCard">复制卡号</button>
+      </view>
+
+      <view class="salary-card">
+        <view class="salary-header">
+          <text class="salary-title">最近到账</text>
+          <text wx:if="{{currentCard}}" class="salary-link">到账提醒已关联尾号 {{currentCard.last4}}</text>
+        </view>
+
+        <view wx:if="{{recentSalary}}" class="salary-body">
+          <text class="amount {{amountAnimate ? 'amount-pop' : ''}}">+{{recentSalary.amount}} 元</text>
+          <text class="salary-meta">{{recentSalary.job}} · {{recentSalary.date}}</text>
+        </view>
+
+        <view wx:else class="salary-empty">
+          <text class="salary-empty-icon">💰</text>
+          <text class="salary-empty-title">暂无到账记录</text>
+          <text class="salary-empty-desc">完成工作并结算后会显示在这里</text>
+        </view>
+      </view>
+    </block>
+
+    <view wx:else class="empty-card">
+      <text class="empty-icon">🌿</text>
+      <text class="empty-title">暂无银行卡</text>
+      <text class="empty-desc">请先填写银行卡信息并保存</text>
+    </view>
+
+    <view class="edit-card">
+      <view class="edit-title">银行卡信息维护</view>
+      <view class="edit-item">
+        <text class="edit-label">开户银行</text>
+        <input
+          class="edit-input"
+          type="text"
+          placeholder="请输入开户银行"
+          value="{{form.bankName}}"
+          bindinput="onInputBankName"
+        />
+      </view>
+
+      <view class="edit-item">
+        <text class="edit-label">银行卡号</text>
+        <input
+          class="edit-input"
+          type="number"
+          placeholder="请输入银行卡号"
+          value="{{form.bankCardNo}}"
+          maxlength="30"
+          bindinput="onInputBankCardNo"
+        />
+      </view>
+
+      <button class="save-btn" loading="{{saving}}" disabled="{{saving || loading}}" bindtap="saveCard">
+        {{saving ? '保存中...' : '保存银行卡'}}
+      </button>
+    </view>
+  </view>
+</view>

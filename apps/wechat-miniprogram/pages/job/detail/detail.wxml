@@ -1,0 +1,104 @@
+<view class="page">
+
+  <view class="page-body page-enter">
+    <view wx:if="{{loading}}" class="state-card ds-card card-in">
+      <text class="state-title">正在加载岗位详情...</text>
+      <text class="state-desc">请稍候</text>
+    </view>
+
+    <block wx:elif="{{jobInfo}}">
+      <view class="overview-card ds-card card-in">
+        <view class="overview-top">
+          <view class="overview-main">
+            <text class="job-title">{{jobInfo.jobTitle || '岗位详情'}}</text>
+            <text class="job-subtitle">{{jobInfo.baseName || '岗位信息'}} · {{jobInfo.workCycleText}}</text>
+          </view>
+          <text class="status-badge {{jobInfo.statusClass}}">{{jobInfo.statusText}}</text>
+        </view>
+
+        <view class="salary-focus">
+          <text class="salary-label">薪资</text>
+          <text class="salary-value">{{jobInfo.salaryText}}</text>
+        </view>
+
+        <view class="key-row">
+          <view class="key-item">
+            <text class="key-icon">👥</text>
+            <text class="key-text">{{jobInfo.recruitText}}</text>
+          </view>
+          <view class="key-item">
+            <text class="key-icon">💼</text>
+            <text class="key-text">{{jobInfo.payTypeText}}</text>
+          </view>
+          <view class="key-item">
+            <text class="key-icon">📅</text>
+            <text class="key-text">{{jobInfo.workCycleText}}</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="section-card ds-card card-in delay-1">
+        <text class="section-title">岗位信息</text>
+        <view class="info-list">
+          <view class="info-row">
+            <text class="info-label">薪资类型</text>
+            <text class="info-value">{{jobInfo.payTypeText}}</text>
+          </view>
+          <view class="info-row">
+            <text class="info-label">薪资标准</text>
+            <text class="info-value salary">{{jobInfo.salaryText}}</text>
+          </view>
+          <view class="info-row">
+            <text class="info-label">招聘人数</text>
+            <text class="info-value">{{jobInfo.recruitText}}</text>
+          </view>
+          <view class="info-row">
+            <text class="info-label">结算周期</text>
+            <text class="info-value">{{jobInfo.workCycleText}}</text>
+          </view>
+          <view
+            class="info-row info-row-address {{jobInfo.hasMapLocation ? 'is-clickable' : 'is-disabled'}}"
+            bindtap="openWorkAddress"
+          >
+            <text class="info-label">工作地址</text>
+            <view class="address-value">
+              <text class="address-icon">📍</text>
+              <text class="info-value address-text">{{jobInfo.workAddress || '地址待补充'}}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <view class="section-card ds-card card-in delay-2" wx:if="{{jobInfo.jobDescription}}">
+        <text class="section-title">工作内容</text>
+        <view class="note-card">
+          <text class="note-text">{{jobInfo.jobDescription}}</text>
+        </view>
+      </view>
+
+      <view class="section-card ds-card card-in delay-3" wx:if="{{jobInfo.requirements}}">
+        <text class="section-title">招聘要求</text>
+        <view class="note-card">
+          <text class="note-text">{{jobInfo.requirements}}</text>
+        </view>
+      </view>
+    </block>
+
+    <view wx:else class="state-card ds-card card-in">
+      <text class="state-title">岗位信息不存在</text>
+      <text class="state-desc">请返回岗位列表重新选择</text>
+    </view>
+
+    <view class="page-bottom-gap"></view>
+  </view>
+
+  <view class="action-shell">
+    <button
+      class="apply-btn"
+      hover-class="apply-btn-press"
+      hover-stay-time="100"
+      bindtap="handleApply"
+      disabled="{{!canApply || applying}}"
+    >{{applying ? '报名提交中...' : (canApply ? '立即报名' : '岗位已关闭')}}</button>
+  </view>
+</view>

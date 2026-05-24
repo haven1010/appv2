@@ -1,0 +1,126 @@
+/* === Policy Detail — Claude Purple === */
+
+.page-body {
+  padding: 24rpx 28rpx;
+}
+
+/* ── Loading ── */
+.loading-state {
+  text-align: center;
+  padding: 140rpx 0;
+}
+
+.loading-text {
+  font-size: 26rpx;
+  color: var(--ink-muted);
+}
+
+/* ── Header Card ── */
+.header-card {
+  background: var(--brand-gradient);
+  border-radius: var(--radius-lg);
+  padding: 32rpx 28rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 16rpx 40rpx rgba(102, 126, 234, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+.header-card::before {
+  content: '';
+  position: absolute;
+  top: -30%;
+  right: -15%;
+  width: 180rpx;
+  height: 180rpx;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.policy-title {
+  display: block;
+  font-size: 38rpx;
+  font-weight: 900;
+  color: #ffffff;
+  line-height: 1.45;
+  margin-bottom: 18rpx;
+  position: relative;
+  z-index: 1;
+}
+
+.policy-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+  position: relative;
+  z-index: 1;
+}
+
+.meta-item {
+  padding: 8rpx 20rpx;
+  background: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+  border-radius: var(--radius-pill);
+  font-size: 22rpx;
+  font-weight: 700;
+}
+
+/* ── Content Cards ── */
+.content-card,
+.info-card {
+  background: var(--card-bg);
+  border-radius: var(--radius-lg);
+  padding: 28rpx;
+  margin-bottom: 20rpx;
+  border: var(--border-soft);
+  box-shadow: var(--shadow-md);
+}
+
+.section-title {
+  display: block;
+  font-size: 30rpx;
+  font-weight: 800;
+  color: var(--ink-main);
+  margin-bottom: 16rpx;
+}
+
+.content-text,
+.info-text {
+  display: block;
+  font-size: 26rpx;
+  color: var(--ink-sub);
+  line-height: 1.9;
+  white-space: pre-wrap;
+}
+
+/* ── Action ── */
+.action-card {
+  margin-bottom: 20rpx;
+}
+
+.btn-primary {
+  width: 100%;
+  height: 88rpx;
+  line-height: 88rpx;
+  background: var(--brand-purple);
+  color: #ffffff;
+  border-radius: var(--radius-pill);
+  font-size: 30rpx;
+  font-weight: 800;
+  border: none;
+  box-shadow: 0 8rpx 24rpx rgba(102, 126, 234, 0.3);
+}
+
+.btn-primary:active {
+  transform: scale(0.97);
+  opacity: 0.92;
+}
+
+.btn-primary::after {
+  border: none;
+}
+
+/* ── Bottom ── */
+.page-bottom-gap {
+  height: 56rpx;
+}

@@ -1,0 +1,9 @@
+/* ═══════════════════════════════════════════
+   Admin Users — Claude Purple Theme
+   ═══════════════════════════════════════════ */
+
+@import "../common.wxss";
+
+.page-admin .item-sub {
+  word-break: break-all;
+}

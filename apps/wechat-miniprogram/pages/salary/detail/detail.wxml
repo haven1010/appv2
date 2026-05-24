@@ -1,0 +1,88 @@
+<view class="page">
+  <view class="page-body page-enter">
+    <view class="header-card ds-card card-in">
+      <text class="header-icon">💰</text>
+      <text class="header-title">工资详情</text>
+      <view class="amount-display">¥{{totalAmount}}</view>
+      <text class="work-info">{{baseName}} · {{workDate}}</text>
+    </view>
+
+    <view class="detail-card ds-card card-in delay-1">
+      <text class="section-title">工资明细</text>
+      <view class="detail-row">
+        <text class="detail-label">工作时长</text>
+        <text class="detail-value">{{workDuration}} 小时</text>
+      </view>
+      <view class="detail-row" wx:if="{{pieceCount}}">
+        <text class="detail-label">完成数量</text>
+        <text class="detail-value">{{pieceCount}} 件</text>
+      </view>
+      <view class="detail-row">
+        <text class="detail-label">单价</text>
+        <text class="detail-value">¥{{unitPrice}}</text>
+      </view>
+      <view class="detail-divider"></view>
+      <view class="detail-row total-row">
+        <text class="detail-label">应发工资</text>
+        <text class="detail-value total-value">¥{{totalAmount}}</text>
+      </view>
+    </view>
+
+    <view class="status-card ds-card card-in delay-2">
+      <text class="section-title">发放信息</text>
+      <view class="status-row">
+        <text class="status-label">发放状态</text>
+        <text class="status-badge {{statusClass}}">{{statusText}}</text>
+      </view>
+      <view class="status-row" wx:if="{{payoutType}}">
+        <text class="status-label">发放方式</text>
+        <text class="status-value">{{payoutTypeText}}</text>
+      </view>
+      <view class="status-row" wx:if="{{bankCard}}">
+        <text class="status-label">收款账户</text>
+        <text class="status-value">{{bankCard}}</text>
+      </view>
+      <view class="status-row" wx:if="{{paidTime}}">
+        <text class="status-label">发放时间</text>
+        <text class="status-value">{{paidTime}}</text>
+      </view>
+    </view>
+
+    <view class="appeal-card ds-card card-in delay-3" wx:if="{{hasAppeal}}">
+      <text class="section-title">申诉记录</text>
+      <view class="appeal-status">
+        <text class="appeal-badge {{appealStatusClass}}">{{appealStatusText}}</text>
+      </view>
+      <view class="appeal-content">
+        <text class="appeal-label">申诉原因：</text>
+        <text class="appeal-text">{{appealReason}}</text>
+      </view>
+      <view class="appeal-content" wx:if="{{expectedAmount}}">
+        <text class="appeal-label">期望金额：</text>
+        <text class="appeal-text">¥{{expectedAmount}}</text>
+      </view>
+      <view class="appeal-content" wx:if="{{appealReply}}">
+        <text class="appeal-label">处理结果：</text>
+        <text class="appeal-text">{{appealReply}}</text>
+      </view>
+    </view>
+
+    <view class="action-card card-in delay-4">
+      <button
+        wx:if="{{canConfirm}}"
+        class="btn-primary"
+        bindtap="onConfirm"
+        loading="{{confirming}}"
+        disabled="{{confirming}}"
+      >确认工资</button>
+      <button
+        wx:if="{{canAppeal}}"
+        class="btn-warn"
+        bindtap="onAppeal"
+      >申请申诉</button>
+      <button class="btn-ghost" bindtap="goBack">返回</button>
+    </view>
+
+    <view class="page-bottom-gap"></view>
+  </view>
+</view>

@@ -1,0 +1,357 @@
+/* === Field Scan — Claude Purple === */
+
+.page {
+  padding: 24rpx 28rpx;
+  padding-bottom: 140rpx;
+}
+
+/* ── Scan Header ── */
+.scan-header {
+  text-align: center;
+  margin-bottom: 32rpx;
+}
+
+.scan-title {
+  font-size: 40rpx;
+  font-weight: 900;
+  color: var(--ink-main);
+  display: block;
+  margin-bottom: 12rpx;
+}
+
+.scan-picker {
+  display: inline-block;
+  font-size: 24rpx;
+  color: var(--brand-purple);
+  background: rgba(102, 126, 234, 0.1);
+  padding: 10rpx 20rpx;
+  border-radius: var(--radius-pill);
+  margin-bottom: 10rpx;
+  font-weight: 700;
+}
+
+.scan-base {
+  font-size: 26rpx;
+  color: var(--ink-sub);
+  display: block;
+}
+
+.scan-base.warn {
+  color: var(--accent-red);
+}
+
+/* ── Scan Area ── */
+.scan-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.scan-visual {
+  width: 480rpx;
+  height: 480rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 28rpx;
+}
+
+.scan-frame {
+  width: 400rpx;
+  height: 400rpx;
+  position: relative;
+  margin-bottom: 24rpx;
+  border-radius: var(--radius-md);
+  background: var(--card-bg);
+  border: var(--border-soft);
+  box-shadow: var(--shadow-md);
+}
+
+.corner {
+  position: absolute;
+  width: 48rpx;
+  height: 48rpx;
+  border-color: var(--brand-purple);
+  border-style: solid;
+  border-width: 0;
+}
+
+.corner.tl {
+  top: 0;
+  left: 0;
+  border-top-width: 6rpx;
+  border-left-width: 6rpx;
+  border-radius: 10rpx 0 0 0;
+}
+
+.corner.tr {
+  top: 0;
+  right: 0;
+  border-top-width: 6rpx;
+  border-right-width: 6rpx;
+  border-radius: 0 10rpx 0 0;
+}
+
+.corner.bl {
+  bottom: 0;
+  left: 0;
+  border-bottom-width: 6rpx;
+  border-left-width: 6rpx;
+  border-radius: 0 0 0 10rpx;
+}
+
+.corner.br {
+  bottom: 0;
+  right: 0;
+  border-bottom-width: 6rpx;
+  border-right-width: 6rpx;
+  border-radius: 0 0 10rpx 0;
+}
+
+.scan-line {
+  position: absolute;
+  left: 24rpx;
+  right: 24rpx;
+  height: 4rpx;
+  background: linear-gradient(90deg, transparent, var(--brand-purple), transparent);
+  animation: scanAnim 2s ease-in-out infinite;
+}
+
+@keyframes scanAnim {
+  0% { top: 24rpx; }
+  50% { top: 376rpx; }
+  100% { top: 24rpx; }
+}
+
+.scan-hint {
+  font-size: 24rpx;
+  color: var(--ink-sub);
+}
+
+/* ── Scan Button ── */
+.btn-scan {
+  width: 80%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16rpx;
+  background: var(--brand-purple);
+  color: #ffffff;
+  border-radius: var(--radius-lg);
+  padding: 30rpx;
+  font-size: 32rpx;
+  font-weight: 800;
+  margin-bottom: 34rpx;
+  border: none;
+  box-shadow: 0 8rpx 24rpx rgba(102, 126, 234, 0.3);
+  transition: all 0.2s;
+}
+
+.btn-scan:active {
+  transform: scale(0.97);
+  opacity: 0.92;
+}
+
+.btn-scan[disabled] {
+  opacity: 0.62;
+  box-shadow: none;
+}
+
+.btn-scan::after {
+  border: none;
+}
+
+.btn-scan-icon {
+  font-size: 36rpx;
+}
+
+.btn-scan-text {
+  font-size: 32rpx;
+  color: #ffffff;
+}
+
+/* ── Manual Input ── */
+.manual-section {
+  width: 100%;
+  margin-top: 10rpx;
+}
+
+.manual-title {
+  font-size: 24rpx;
+  color: var(--ink-sub);
+  text-align: center;
+  margin-bottom: 14rpx;
+}
+
+.manual-row {
+  display: flex;
+  gap: 14rpx;
+  align-items: center;
+}
+
+.manual-input {
+  flex: 1;
+  background: var(--card-bg);
+  border: 2rpx solid #e8e4f0;
+  border-radius: var(--radius-md);
+  padding: 20rpx 24rpx;
+  font-size: 28rpx;
+  color: var(--ink-main);
+  transition: all 0.25s;
+}
+
+.manual-input:focus {
+  border-color: var(--brand-purple);
+  box-shadow: 0 0 0 6rpx rgba(102, 126, 234, 0.1);
+}
+
+.btn-manual {
+  background: rgba(102, 126, 234, 0.1);
+  color: var(--brand-purple);
+  border: 2rpx solid rgba(102, 126, 234, 0.15);
+  padding: 20rpx 36rpx;
+  border-radius: var(--radius-md);
+  font-size: 28rpx;
+  font-weight: 800;
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+
+.btn-manual:active {
+  opacity: 0.7;
+}
+
+/* ── Result Card ── */
+.result-card {
+  border-radius: var(--radius-lg);
+  padding: 52rpx 34rpx;
+  text-align: center;
+  margin-bottom: 34rpx;
+  background: var(--card-bg);
+  border: var(--border-soft);
+  box-shadow: var(--shadow-md);
+}
+
+.result-card.success {
+  border-color: rgba(49, 164, 124, 0.3);
+  background: rgba(49, 164, 124, 0.04);
+}
+
+.result-card.fail {
+  border-color: rgba(228, 92, 109, 0.25);
+  background: rgba(228, 92, 109, 0.04);
+}
+
+.result-icon {
+  font-size: 88rpx;
+  margin-bottom: 24rpx;
+}
+
+.result-name {
+  font-size: 40rpx;
+  font-weight: 800;
+  color: var(--ink-main);
+  margin-bottom: 12rpx;
+}
+
+.result-msg {
+  font-size: 28rpx;
+  color: var(--ink-sub);
+  margin-bottom: 16rpx;
+}
+
+.result-time {
+  font-size: 24rpx;
+  color: var(--ink-muted);
+  margin-bottom: 30rpx;
+}
+
+.btn-clear {
+  display: inline-block;
+  background: rgba(102, 126, 234, 0.1);
+  color: var(--brand-purple);
+  border: 2rpx solid rgba(102, 126, 234, 0.15);
+  padding: 16rpx 64rpx;
+  border-radius: var(--radius-pill);
+  font-size: 28rpx;
+  font-weight: 700;
+}
+
+/* ── History Section ── */
+.history-section {
+  margin-top: 28rpx;
+}
+
+.section-title {
+  font-size: 30rpx;
+  font-weight: 800;
+  color: var(--ink-main);
+  margin-bottom: 16rpx;
+}
+
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+}
+
+.history-item {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  background: var(--card-bg);
+  border-radius: var(--radius-md);
+  padding: 20rpx 24rpx;
+  border: var(--border-soft);
+}
+
+.history-item.success {
+  border-color: rgba(49, 164, 124, 0.2);
+}
+
+.history-item.fail {
+  border-color: rgba(228, 92, 109, 0.18);
+}
+
+.history-status {
+  width: 48rpx;
+  height: 48rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28rpx;
+  flex-shrink: 0;
+}
+
+.history-item.success .history-status {
+  background: rgba(49, 164, 124, 0.14);
+}
+
+.history-item.fail .history-status {
+  background: rgba(228, 92, 109, 0.14);
+}
+
+.history-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.history-name {
+  font-size: 26rpx;
+  font-weight: 700;
+  color: var(--ink-main);
+}
+
+.history-msg {
+  font-size: 22rpx;
+  color: var(--ink-sub);
+}
+
+.history-time {
+  font-size: 22rpx;
+  color: var(--ink-muted);
+  flex-shrink: 0;
+}

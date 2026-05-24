@@ -1,0 +1,71 @@
+<view class="page {{pageReady ? 'page-enter' : ''}}">
+  <view class="hero-card">
+    <view class="hero-head">
+      <view class="hero-main">
+        <text class="hero-title">考勤管理</text>
+        <text class="hero-subtitle">{{dateText}} {{weekText}} · {{periodText}}班次</text>
+      </view>
+      <text class="hero-badge">今日任务</text>
+    </view>
+
+    <view class="hero-stats">
+      <view class="hero-stat">
+        <text class="hero-stat-value">签到</text>
+        <text class="hero-stat-label">二维码打卡</text>
+      </view>
+      <view class="hero-stat">
+        <text class="hero-stat-value">记录</text>
+        <text class="hero-stat-label">工时可追溯</text>
+      </view>
+      <view class="hero-stat">
+        <text class="hero-stat-value">薪资</text>
+        <text class="hero-stat-label">待确认可查</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="module-card pressable" hover-class="pressing" hover-stay-time="100" bindtap="goToQrcode">
+    <view class="module-icon mint">码</view>
+    <view class="module-main">
+      <text class="module-title">签到码</text>
+      <text class="module-desc">展示个人签到二维码，供基地现场扫码</text>
+    </view>
+    <text class="cell-arrow">›</text>
+  </view>
+
+  <view class="module-card pressable" hover-class="pressing" hover-stay-time="100" bindtap="goToWorkHistory">
+    <view class="module-icon blue">历</view>
+    <view class="module-main">
+      <text class="module-title">考勤记录</text>
+      <text class="module-desc">查看签到时间、工作历程与累计记录</text>
+    </view>
+    <text class="cell-arrow">›</text>
+  </view>
+
+  <view class="module-card pressable" hover-class="pressing" hover-stay-time="100" bindtap="goToSalary">
+    <view class="module-icon sky">薪</view>
+    <view class="module-main">
+      <text class="module-title">薪资结算</text>
+      <text class="module-desc">核对待确认工资，处理结算进度</text>
+    </view>
+    <text class="cell-arrow">›</text>
+  </view>
+
+  <view class="guide-card">
+    <view class="section-head">
+      <text class="section-title">今日操作建议</text>
+    </view>
+    <view class="step-item">
+      <text class="step-index">1</text>
+      <text class="step-text">开工前先展示签到码，确保当天工时被记录。</text>
+    </view>
+    <view class="step-item">
+      <text class="step-index">2</text>
+      <text class="step-text">收工后到考勤记录页确认是否有漏记。</text>
+    </view>
+    <view class="step-item">
+      <text class="step-index">3</text>
+      <text class="step-text">工资待确认时进入薪资结算页及时处理。</text>
+    </view>
+  </view>
+</view>

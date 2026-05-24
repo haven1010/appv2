@@ -1,0 +1,50 @@
+<!-- custom-tab-bar/index.wxml -->
+<view class="tab-shell {{role === 'boss' || role === 'field_manager' ? 'compact-shell' : ''}}">
+  <view class="tab-bar {{role === 'boss' || role === 'field_manager' ? 'compact-bar' : ''}}">
+    <block wx:if="{{role === 'field_manager'}}">
+      <view
+        wx:for="{{fieldList}}"
+        wx:key="pagePath"
+        class="tab-item {{selected === index ? 'active' : ''}}"
+        data-path="{{item.pagePath}}"
+        bindtap="switchTab"
+      >
+        <view class="icon-wrap">
+          <text class="icon-text">{{item.icon}}</text>
+        </view>
+        <text class="tab-text">{{item.text}}</text>
+      </view>
+    </block>
+
+    <block wx:elif="{{role === 'boss'}}">
+      <view
+        wx:for="{{bossList}}"
+        wx:key="pagePath"
+        class="tab-item {{selected === index ? 'active' : ''}}"
+        data-path="{{item.pagePath}}"
+        bindtap="switchTab"
+      >
+        <view class="icon-wrap">
+          <text class="icon-text">{{item.icon}}</text>
+        </view>
+        <text class="tab-text">{{item.text}}</text>
+      </view>
+    </block>
+
+    <block wx:else>
+      <view
+        wx:for="{{workerList}}"
+        wx:key="pagePath"
+        class="tab-item {{item.center ? 'is-center' : ''}} {{selected === index ? 'active' : ''}}"
+        data-path="{{item.pagePath}}"
+        bindtap="switchTab"
+      >
+        <view class="icon-wrap {{item.center ? 'center-wrap' : ''}}">
+          <view wx:if="{{item.center}}" class="center-glow"></view>
+          <text class="icon-text">{{item.icon}}</text>
+        </view>
+        <text class="tab-text">{{item.text}}</text>
+      </view>
+    </block>
+  </view>
+</view>

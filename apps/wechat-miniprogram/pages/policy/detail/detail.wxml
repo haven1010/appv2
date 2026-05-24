@@ -1,0 +1,39 @@
+<view class="page page-enter">
+  <view class="page-body">
+    <view wx:if="{{loading}}" class="loading-state">
+      <text class="loading-text">加载中...</text>
+    </view>
+
+    <view wx:elif="{{policy}}" class="content">
+      <view class="header-card">
+        <text class="policy-title">{{policy.title}}</text>
+        <view class="policy-meta">
+          <text class="meta-item">{{policy.category}}</text>
+          <text class="meta-item">{{policy.department}}</text>
+          <text class="meta-item">{{policy.publishDate}}</text>
+        </view>
+      </view>
+
+      <view class="content-card">
+        <text class="section-title">政策内容</text>
+        <text class="content-text">{{policy.content}}</text>
+      </view>
+
+      <view class="info-card">
+        <text class="section-title">申请条件</text>
+        <text class="info-text">{{policy.requirements}}</text>
+      </view>
+
+      <view class="info-card">
+        <text class="section-title">申请方式</text>
+        <text class="info-text">{{policy.applyMethod}}</text>
+      </view>
+
+      <view class="action-card">
+        <button class="btn-primary" bindtap="applyConsult">咨询/申请</button>
+      </view>
+    </view>
+
+    <view class="page-bottom-gap"></view>
+  </view>
+</view>

@@ -1,0 +1,86 @@
+<view class="page">
+  <view class="page-body">
+    <view class="filter-section">
+      <view class="filter-row">
+        <text class="filter-label">选择基地</text>
+        <picker mode="selector" range="{{bases}}" range-key="baseName" value="{{baseIndex}}" bindchange="onBaseChange">
+          <view class="picker-box">
+            <text class="picker-text">{{bases[baseIndex].baseName || '请选择基地'}}</text>
+            <text class="picker-arrow">▼</text>
+          </view>
+        </picker>
+      </view>
+
+      <view class="filter-row">
+        <text class="filter-label">选择岗位</text>
+        <picker mode="selector" range="{{jobs}}" range-key="jobTitle" value="{{jobIndex}}" bindchange="onJobChange">
+          <view class="picker-box">
+            <text class="picker-text">{{jobs[jobIndex].jobTitle || '请选择岗位'}}</text>
+            <text class="picker-arrow">▼</text>
+          </view>
+        </picker>
+      </view>
+
+      <view class="filter-row">
+        <text class="filter-label">筛选状态</text>
+        <picker mode="selector" range="{{statusFilters}}" range-key="label" value="{{filterStatus}}" bindchange="onFilterChange">
+          <view class="picker-box">
+            <text class="picker-text">{{statusFilters[filterStatus].label || '全部'}}</text>
+            <text class="picker-arrow">▼</text>
+          </view>
+        </picker>
+      </view>
+    </view>
+
+    <view wx:if="{{loading}}" class="loading-state">
+      <text class="loading-text">加载中...</text>
+    </view>
+
+    <view wx:elif="{{!applicants.length}}" class="empty-state">
+      <text class="empty-icon">📋</text>
+      <text class="empty-text">暂无报名人员</text>
+    </view>
+
+    <view wx:else class="applicant-list">
+      <view
+        wx:for="{{applicants}}"
+        wx:key="id"
+        class="applicant-card"
+        style="animation-delay: {{item.delay}}"
+      >
+        <view class="applicant-header">
+          <view class="applicant-info">
+            <text class="applicant-name">{{item.userName}}</text>
+            <text class="applicant-phone" bindtap="callApplicant" data-phone="{{item.userPhone}}">
+              📞 {{item.userPhone}}
+            </text>
+          </view>
+          <view class="status-badge {{item.statusClass}}">{{item.statusText}}</view>
+        </view>
+
+        <view class="applicant-meta">
+          <text class="meta-item">工作日期：{{item.workDate}}</text>
+          <text wx:if="{{item.note}}" class="meta-item">备注：{{item.note}}</text>
+        </view>
+
+        <view wx:if="{{item.status === 0}}" class="applicant-actions">
+          <button class="action-btn approve-btn" bindtap="approveApplicant" data-id="{{item.id}}">
+            ✓ 录用
+          </button>
+          <button class="action-btn reject-btn" bindtap="rejectApplicant" data-id="{{item.id}}">
+            ✕ 拒绝
+          </button>
+        </view>
+      </view>
+    </view>
+
+    <view class="page-bottom-gap"></view>
+
+    <view class="boss-bottom-nav">
+      <view class="boss-bottom-item" bindtap="goToBossDashboard">工作台</view>
+      <view class="boss-bottom-item" bindtap="goToBossBaseList">我的基地</view>
+      <view class="boss-bottom-item" bindtap="goToBossJobList">岗位发布</view>
+      <view class="boss-bottom-item" bindtap="goToBossProfile">我的</view>
+    </view>
+  </view>
+</view>

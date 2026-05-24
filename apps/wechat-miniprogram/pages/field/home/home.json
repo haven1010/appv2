@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "现场管理工作台",
+  "navigationBarBackgroundColor": "#F6F9FF",
+  "navigationBarTextStyle": "black",
+  "enablePullDownRefresh": true,
+  "usingComponents": {}
+}

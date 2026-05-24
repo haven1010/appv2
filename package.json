@@ -1,0 +1,13 @@
+{
+  "name": "picking-pass",
+  "private": true,
+  "description": "采摘通农业劳动力全生命周期管理平台",
+  "scripts": {
+    "dev:backend": "npm --prefix apps/backend run start:dev",
+    "dev:web": "npm --prefix apps/web-admin run dev",
+    "build:backend": "npm --prefix apps/backend run build",
+    "build:web": "npm --prefix apps/web-admin run build",
+    "lint:backend": "npm --prefix apps/backend run lint",
+    "simulate:full-flow": "npm --prefix apps/backend run simulate:full-flow"
+  }
+}

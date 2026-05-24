@@ -1,0 +1,276 @@
+/* pages/salary/detail/detail.wxss — Claude Purple Theme */
+.page {
+  min-height: 100vh;
+  background: var(--page-bg);
+}
+
+.page-body {
+  padding: 24rpx 28rpx;
+  box-sizing: border-box;
+}
+
+/* Shared card classes */
+.ds-card {
+  background: var(--card-bg);
+  border-radius: var(--radius-lg);
+  padding: 28rpx;
+  border: var(--border-soft);
+  box-shadow: var(--shadow-md);
+}
+
+.card-in {
+  animation: fadeUp 0.4s ease both;
+}
+
+.delay-1 { animation-delay: 0.1s; }
+.delay-2 { animation-delay: 0.2s; }
+.delay-3 { animation-delay: 0.3s; }
+.delay-4 { animation-delay: 0.4s; }
+
+.header-card {
+  text-align: center;
+}
+
+.header-icon {
+  font-size: 96rpx;
+  display: block;
+  margin-bottom: 16rpx;
+}
+
+.header-title {
+  display: block;
+  font-size: 40rpx;
+  font-weight: 600;
+  color: var(--ink-sub);
+  margin-bottom: 16rpx;
+}
+
+.amount-display {
+  font-size: 96rpx;
+  font-weight: 700;
+  color: var(--brand-purple);
+  margin-bottom: 8rpx;
+  line-height: 1.1;
+}
+
+.work-info {
+  display: block;
+  font-size: 28rpx;
+  color: var(--ink-sub);
+}
+
+.detail-card,
+.status-card,
+.appeal-card {
+  margin-top: 16rpx;
+}
+
+.section-title {
+  display: block;
+  font-size: 32rpx;
+  font-weight: 800;
+  color: var(--ink-main);
+  margin-bottom: 20rpx;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16rpx 0;
+}
+
+.detail-label {
+  font-size: 28rpx;
+  color: var(--ink-sub);
+}
+
+.detail-value {
+  font-size: 28rpx;
+  color: var(--ink-main);
+  font-weight: 700;
+}
+
+.detail-divider {
+  height: 1rpx;
+  background: linear-gradient(90deg, transparent, #e2dff0, transparent);
+  margin: 8rpx 0;
+}
+
+.total-row {
+  margin-top: 8rpx;
+}
+
+.total-row .detail-label {
+  font-size: 30rpx;
+  font-weight: 800;
+  color: var(--ink-main);
+}
+
+.total-value {
+  font-size: 36rpx;
+  font-weight: 900;
+  color: var(--brand-purple);
+}
+
+.status-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16rpx 0;
+}
+
+.status-label {
+  font-size: 28rpx;
+  color: var(--ink-sub);
+}
+
+.status-value {
+  font-size: 28rpx;
+  color: var(--ink-main);
+  font-weight: 700;
+}
+
+.status-badge {
+  padding: 6rpx 18rpx;
+  border-radius: var(--radius-pill);
+  font-size: 24rpx;
+  font-weight: 700;
+}
+
+.status-badge.status-pending {
+  background: rgba(242, 184, 75, 0.15);
+  color: var(--accent-gold);
+}
+
+.status-badge.status-confirmed {
+  background: rgba(102, 126, 234, 0.1);
+  color: var(--brand-purple);
+}
+
+.status-badge.status-paid {
+  background: rgba(49, 164, 124, 0.1);
+  color: var(--accent-green);
+}
+
+.appeal-status {
+  margin-bottom: 16rpx;
+}
+
+.appeal-badge {
+  padding: 8rpx 24rpx;
+  border-radius: var(--radius-pill);
+  font-size: 26rpx;
+  font-weight: 700;
+  display: inline-block;
+}
+
+.appeal-badge.appeal-pending {
+  background: rgba(242, 184, 75, 0.15);
+  color: var(--accent-gold);
+}
+
+.appeal-badge.appeal-resolved {
+  background: rgba(102, 126, 234, 0.1);
+  color: var(--brand-purple);
+}
+
+.appeal-badge.appeal-rejected {
+  background: rgba(228, 92, 109, 0.1);
+  color: var(--accent-red);
+}
+
+.appeal-content {
+  margin-bottom: 16rpx;
+}
+
+.appeal-content:last-child {
+  margin-bottom: 0;
+}
+
+.appeal-label {
+  display: block;
+  font-size: 26rpx;
+  color: var(--ink-sub);
+  margin-bottom: 4rpx;
+}
+
+.appeal-text {
+  display: block;
+  font-size: 28rpx;
+  color: var(--ink-main);
+  line-height: 1.6;
+}
+
+.action-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+  margin-top: 24rpx;
+}
+
+.btn-primary,
+.btn-warn,
+.btn-ghost {
+  width: 100%;
+  height: 88rpx;
+  border-radius: var(--radius-pill);
+  font-size: 32rpx;
+  font-weight: 700;
+  border: none;
+  transition: all 0.2s;
+}
+
+.btn-primary {
+  background: var(--brand-purple);
+  color: #FFFFFF;
+  box-shadow: 0 8rpx 24rpx rgba(102, 126, 234, 0.3);
+}
+
+.btn-primary:active {
+  transform: scale(0.97);
+  opacity: 0.92;
+}
+
+.btn-primary[disabled] {
+  background: #d4d0e0;
+  box-shadow: none;
+  color: #9a94a8;
+}
+
+.btn-warn {
+  background: linear-gradient(90deg, var(--accent-red) 0%, #ee7b88 100%);
+  color: #FFFFFF;
+  box-shadow: 0 8rpx 24rpx rgba(228, 92, 109, 0.25);
+}
+
+.btn-warn:active {
+  transform: scale(0.97);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--brand-purple);
+}
+
+.btn-ghost:active {
+  opacity: 0.6;
+}
+
+.page-bottom-gap {
+  height: 48rpx;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20rpx); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.page-enter {
+  animation: fadeIn 0.3s ease both;
+}

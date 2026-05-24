@@ -1,0 +1,243 @@
+/* pages/profile/workHistory/workHistory.wxss — Claude Purple Theme */
+.page {
+  min-height: 100vh;
+  background: var(--page-bg);
+}
+
+.scroll-wrap {
+  height: 100vh;
+  padding: 0 24rpx 48rpx;
+  box-sizing: border-box;
+}
+
+.sticky-shell {
+  position: sticky;
+  top: 0;
+  z-index: 8;
+  padding: 22rpx 0 18rpx;
+}
+
+.sticky-glow {
+  position: absolute;
+  left: -24rpx;
+  right: -24rpx;
+  top: 0;
+  bottom: 0;
+  background: linear-gradient(180deg, rgba(248, 246, 255, 0.98) 0%, rgba(248, 246, 255, 0.72) 74%, rgba(248, 246, 255, 0) 100%);
+  pointer-events: none;
+}
+
+.brand-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.brand-logo {
+  width: 58rpx;
+  height: 58rpx;
+  border-radius: 12rpx;
+  border: 1rpx solid rgba(102, 126, 234, 0.22);
+  background: #fff;
+}
+
+.sticky-title {
+  display: block;
+  font-size: 36rpx;
+  font-weight: 800;
+  color: var(--ink-main);
+}
+
+.sticky-sub {
+  display: block;
+  margin-top: 6rpx;
+  color: var(--ink-sub);
+  font-size: 23rpx;
+}
+
+.state-card {
+  margin-top: 22rpx;
+  border-radius: var(--radius-lg);
+  text-align: center;
+  padding: 56rpx 28rpx;
+  background: var(--card-bg);
+  box-shadow: var(--shadow-md);
+  border: var(--border-soft);
+}
+
+.state-title {
+  display: block;
+  font-size: 30rpx;
+  color: var(--ink-main);
+  font-weight: 700;
+}
+
+.state-desc {
+  display: block;
+  margin-top: 8rpx;
+  font-size: 24rpx;
+  color: var(--ink-sub);
+}
+
+.timeline {
+  position: relative;
+  margin-top: 8rpx;
+  padding-left: 24rpx;
+}
+
+.timeline-axis {
+  position: absolute;
+  left: 18rpx;
+  top: 8rpx;
+  bottom: 0;
+  width: 4rpx;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(180deg, var(--brand-purple) 0%, #764ba2 62%, rgba(102, 126, 234, 0.4) 100%);
+}
+
+.timeline-item {
+  position: relative;
+  padding-left: 24rpx;
+  margin-bottom: 20rpx;
+  opacity: 0;
+  animation: timelineEnter 520ms cubic-bezier(0.18, 0.72, 0.22, 1) forwards;
+  transition: transform 320ms ease;
+}
+
+.item-dot {
+  position: absolute;
+  left: -4rpx;
+  top: 34rpx;
+  width: 18rpx;
+  height: 18rpx;
+  border-radius: 50%;
+  border: 4rpx solid rgba(255, 255, 255, 0.95);
+  background: var(--brand-purple);
+  box-shadow: 0 0 0 7rpx rgba(102, 126, 234, 0.24);
+  z-index: 2;
+}
+
+.item-card {
+  border-radius: var(--radius-lg);
+  border: var(--border-soft);
+  background: var(--card-bg);
+  box-shadow: var(--shadow-md);
+  padding: 22rpx;
+  transition: all 0.2s;
+}
+
+.timeline-item.open .item-card {
+  background: var(--card-bg);
+  box-shadow: var(--shadow-lg);
+}
+
+.item-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+}
+
+.item-time {
+  font-size: 24rpx;
+  color: var(--ink-sub);
+}
+
+.item-action {
+  font-size: 22rpx;
+  font-weight: 700;
+  color: var(--brand-purple);
+}
+
+.item-company {
+  display: block;
+  margin-top: 12rpx;
+  font-size: 30rpx;
+  color: var(--ink-main);
+  font-weight: 800;
+}
+
+.item-role {
+  display: block;
+  margin-top: 8rpx;
+  font-size: 25rpx;
+  color: var(--ink-sub);
+}
+
+.item-meta {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin-top: 12rpx;
+}
+
+.meta-pill {
+  font-size: 21rpx;
+  font-weight: 700;
+  border-radius: var(--radius-pill);
+  padding: 7rpx 14rpx;
+  background: rgba(102, 126, 234, 0.1);
+  color: var(--brand-purple);
+}
+
+.meta-time {
+  font-size: 22rpx;
+  color: var(--ink-sub);
+}
+
+.item-detail {
+  margin-top: 0;
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: max-height 340ms ease, opacity 280ms ease, margin-top 280ms ease;
+}
+
+.timeline-item.open .item-detail {
+  margin-top: 12rpx;
+  max-height: 240rpx;
+  opacity: 1;
+}
+
+.detail-text {
+  display: block;
+  font-size: 24rpx;
+  color: var(--ink-sub);
+  line-height: 1.6;
+  padding: 14rpx 16rpx;
+  border-radius: var(--radius-sm);
+  background: rgba(102, 126, 234, 0.08);
+  border: var(--border-soft);
+}
+
+.status-ok {
+  color: var(--accent-green);
+  background: rgba(49, 164, 124, 0.1);
+}
+
+.status-paid {
+  color: var(--brand-purple);
+  background: rgba(102, 126, 234, 0.1);
+}
+
+.status-pending {
+  color: var(--accent-gold);
+  background: rgba(242, 184, 75, 0.15);
+}
+
+.status-error {
+  color: var(--accent-red);
+  background: rgba(228, 92, 109, 0.1);
+}
+
+@keyframes timelineEnter {
+  from {
+    opacity: 0;
+    transform: translateY(18rpx);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

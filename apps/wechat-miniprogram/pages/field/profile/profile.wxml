@@ -1,0 +1,86 @@
+﻿<!--pages/field/profile/profile.wxml-->
+<view class="page page-enter">
+  <view class="profile-header">
+    <view class="avatar">{{userInfo.name ? userInfo.name[0] : '?'}}</view>
+    <view class="user-name">{{userInfo.name || '未登录'}}</view>
+    <view class="user-tags">
+      <text class="tag role-tag">{{roleText}}</text>
+      <text class="tag uid-tag" wx:if="{{userInfo.uid}}">{{userInfo.uid}}</text>
+    </view>
+  </view>
+
+  <view class="loading-box" wx:if="{{loading}}">
+    <text>加载中...</text>
+  </view>
+
+  <block wx:else>
+    <view class="info-card">
+      <view class="card-title">关联基地</view>
+      <view class="card-content" wx:if="{{profileData.assignedBaseId}}">
+        <view class="base-row">
+          <text class="base-icon">🏕️</text>
+          <view class="base-info">
+            <text class="base-name">{{baseName || '基地名称未获取'}}</text>
+            <text class="base-id">基地ID: {{profileData.assignedBaseId}}</text>
+          </view>
+        </view>
+      </view>
+      <view class="card-content empty" wx:else>
+        <text class="empty-text">未关联基地，请联系上级管理员分配</text>
+      </view>
+    </view>
+
+    <view class="info-card">
+      <view class="card-title">个人信息</view>
+      <view class="info-row">
+        <text class="info-label">姓名</text>
+        <text class="info-value">{{profileData.name || userInfo.name || '-'}}</text>
+      </view>
+      <view class="info-row">
+        <text class="info-label">手机号</text>
+        <text class="info-value">{{profileData.phoneMasked || '-'}}</text>
+      </view>
+      <view class="info-row">
+        <text class="info-label">角色</text>
+        <text class="info-value">{{roleText}}</text>
+      </view>
+      <view class="info-row" wx:if="{{profileData.regionCode}}">
+        <text class="info-label">地区编码</text>
+        <text class="info-value">{{profileData.regionCode}}</text>
+      </view>
+    </view>
+
+    <view class="menu-list">
+      <view class="menu-item" bindtap="goScan">
+        <view class="menu-left">
+          <text class="menu-icon">📲</text>
+          <text class="menu-label">扫码签到</text>
+        </view>
+        <text class="menu-arrow">></text>
+      </view>
+      <view class="menu-item" bindtap="goRecords">
+        <view class="menu-left">
+          <text class="menu-icon">📝</text>
+          <text class="menu-label">考勤记录</text>
+        </view>
+        <text class="menu-arrow">></text>
+      </view>
+      <view class="menu-item" wx:if="{{canOpenAdmin}}" bindtap="goAdminCenter">
+        <view class="menu-left">
+          <text class="menu-icon">🛠️</text>
+          <text class="menu-label">管理中心</text>
+        </view>
+        <text class="menu-arrow">></text>
+      </view>
+      <view class="menu-item" bindtap="goSettings">
+        <view class="menu-left">
+          <text class="menu-icon">⚙️</text>
+          <text class="menu-label">设置</text>
+        </view>
+        <text class="menu-arrow">></text>
+      </view>
+    </view>
+  </block>
+
+  <button class="btn-logout" bindtap="logout">退出当前账号</button>
+</view>

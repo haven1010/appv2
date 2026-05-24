@@ -1,0 +1,40 @@
+/* ═══════════════════════════════════════════
+   Admin Base — Claude Purple Theme
+   ═══════════════════════════════════════════ */
+
+@import "../common.wxss";
+
+.person-head-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+}
+
+.person-head-main {
+  flex: 1;
+  min-width: 0;
+}
+
+/* ── Base Name Card ── */
+.base-name-card {
+  margin-top: 12rpx;
+  background: var(--card-bg-soft);
+  border: 2rpx solid rgba(102, 126, 234, 0.14);
+  border-radius: 22rpx;
+  padding: 16rpx;
+  transition: all 0.2s;
+}
+
+.base-name-card.active {
+  border-color: var(--brand-purple);
+  box-shadow: 0 8rpx 18rpx rgba(102, 126, 234, 0.14);
+  background: rgba(102, 126, 234, 0.04);
+}
+
+.base-name-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12rpx;
+}

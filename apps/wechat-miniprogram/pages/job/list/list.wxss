@@ -1,0 +1,242 @@
+/* ═══════════════════════════════════════════
+   jobs/list - Claude Purple Theme
+   ═══════════════════════════════════════════ */
+.page {
+  min-height: 100vh;
+  padding: 24rpx 24rpx calc(220rpx + env(safe-area-inset-bottom));
+  box-sizing: border-box;
+  background: transparent;
+}
+
+/* ───── State Panels ───── */
+.state-panel {
+  background: var(--card-bg);
+  border-radius: var(--radius-lg);
+  text-align: center;
+  padding: 50rpx 28rpx;
+  box-shadow: var(--shadow-md);
+  border: var(--border-soft);
+}
+
+.state-panel.inner-state {
+  margin-top: 20rpx;
+  padding: 40rpx 24rpx;
+}
+
+.state-title {
+  display: block;
+  font-size: 30rpx;
+  font-weight: 800;
+  color: var(--ink-main);
+}
+
+.state-desc {
+  display: block;
+  margin-top: 8rpx;
+  font-size: 24rpx;
+  color: var(--ink-sub);
+}
+
+/* ───── Hero Card ───── */
+.hero-card {
+  background: var(--card-bg);
+  border-radius: var(--radius-lg);
+  padding: 28rpx;
+  box-shadow: var(--shadow-md);
+  border: var(--border-soft);
+}
+
+.hero-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12rpx;
+}
+
+.hero-title {
+  flex: 1;
+  font-size: 44rpx;
+  font-weight: 900;
+  color: var(--ink-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hero-badge {
+  font-size: 22rpx;
+  color: var(--brand-purple);
+  background: rgba(102, 126, 234, 0.1);
+  border: 1rpx solid rgba(102, 126, 234, 0.15);
+  border-radius: var(--radius-pill);
+  padding: 6rpx 16rpx;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.hero-subtitle {
+  margin-top: 10rpx;
+  display: block;
+  font-size: 26rpx;
+  color: var(--ink-sub);
+  line-height: 1.5;
+}
+
+/* ───── Job Section ───── */
+.job-section-card {
+  margin-top: 20rpx;
+  background: var(--card-bg);
+  border-radius: var(--radius-lg);
+  padding: 24rpx;
+  box-shadow: var(--shadow-md);
+  border: var(--border-soft);
+}
+
+.job-section-title {
+  display: block;
+  font-size: 32rpx;
+  font-weight: 800;
+  color: var(--ink-main);
+  margin-bottom: 4rpx;
+}
+
+/* ───── Job List ───── */
+.job-list {
+  margin-top: 16rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.job-card {
+  background: var(--card-bg-soft);
+  border-radius: var(--radius-md);
+  padding: 20rpx;
+  border: var(--border-soft);
+  transition: all 0.2s;
+}
+
+.job-card:active {
+  transform: scale(0.98);
+}
+
+.job-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12rpx;
+}
+
+.job-title {
+  flex: 1;
+  font-size: 30rpx;
+  font-weight: 800;
+  color: var(--ink-main);
+}
+
+.job-salary {
+  font-size: 28rpx;
+  font-weight: 900;
+  color: var(--brand-purple);
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.job-meta {
+  margin-top: 10rpx;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.meta-tag {
+  font-size: 22rpx;
+  color: var(--brand-purple);
+  background: rgba(102, 126, 234, 0.1);
+  border-radius: var(--radius-pill);
+  padding: 4rpx 14rpx;
+  font-weight: 700;
+}
+
+.meta-item {
+  font-size: 24rpx;
+  color: var(--ink-sub);
+}
+
+.job-bottom {
+  margin-top: 14rpx;
+  padding-top: 12rpx;
+  border-top: 1rpx dashed rgba(102, 126, 234, 0.12);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.status {
+  font-size: 22rpx;
+  font-weight: 700;
+  border-radius: var(--radius-pill);
+  padding: 4rpx 14rpx;
+}
+
+.status-open {
+  background: rgba(49, 164, 124, 0.1);
+  color: var(--accent-green);
+}
+
+.status-closed {
+  background: rgba(228, 92, 109, 0.1);
+  color: var(--accent-red);
+}
+
+.apply-btn {
+  border-radius: var(--radius-pill);
+  padding: 12rpx 28rpx;
+  font-size: 26rpx;
+  font-weight: 800;
+  color: #ffffff;
+  background: var(--brand-purple);
+  box-shadow: 0 8rpx 24rpx rgba(102, 126, 234, 0.3);
+  transition: all 0.2s;
+}
+
+.apply-btn:active {
+  transform: scale(0.96);
+  opacity: 0.92;
+}
+
+.boss-tip {
+  font-size: 24rpx;
+  color: var(--ink-muted);
+}
+
+/* ───── Boss Bottom Nav ───── */
+.boss-bottom-nav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 90;
+  display: flex;
+  padding: 12rpx 24rpx calc(12rpx + env(safe-area-inset-bottom));
+  background: rgba(255, 255, 255, 0.96);
+  border-top: var(--border-soft);
+  box-shadow: 0 -6rpx 24rpx rgba(102, 126, 234, 0.06);
+  backdrop-filter: blur(20rpx);
+}
+
+.boss-bottom-item {
+  flex: 1;
+  min-width: 0;
+  text-align: center;
+  padding: 14rpx 8rpx 10rpx;
+  color: var(--ink-sub);
+  font-size: 24rpx;
+  font-weight: 800;
+  background: transparent;
+}
+
+.boss-bottom-item.active {
+  color: var(--brand-purple);
+}

@@ -1,0 +1,24 @@
+/**
+ * Layer: Backend Module
+ * Responsibility: Defines provider wiring, repository exposure, and dependency composition for the Dashboard module.
+ * Notes: Keep comments focused on intent, invariants, side effects, and cross-module contracts.
+ */
+import { Module } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { DashboardController } from './dashboard.controller';
+import { DashboardService } from './dashboard.service';
+import { SysUser } from '../user/entities/sys-user.entity';
+import { BaseInfo } from '../base/entities/base-info.entity';
+import { DailySignup } from '../attendance/entities/daily-signup.entity';
+import { LaborSalary } from '../salary/entities/labor-salary.entity';
+import { BaseModule } from '../base/base.module';
+
+@Module({
+  imports: [
+    TypeOrmModule.forFeature([SysUser, BaseInfo, DailySignup, LaborSalary]),
+    BaseModule,
+  ],
+  controllers: [DashboardController],
+  providers: [DashboardService],
+})
+export class DashboardModule {}

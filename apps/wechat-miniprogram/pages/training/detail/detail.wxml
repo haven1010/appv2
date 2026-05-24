@@ -1,0 +1,51 @@
+<view class="page page-enter">
+  <view class="page-body">
+    <view wx:if="{{loading}}" class="loading-state">
+      <text class="loading-text">加载中...</text>
+    </view>
+
+    <view wx:elif="{{course}}" class="content">
+      <view class="header-card">
+        <text class="course-title">{{course.title}}</text>
+        <view class="course-tags">
+          <text class="tag">{{course.category}}</text>
+          <text class="tag">{{course.duration}}</text>
+        </view>
+      </view>
+
+      <view class="info-card">
+        <text class="section-title">课程信息</text>
+        <view class="info-row">
+          <text class="info-label">授课讲师</text>
+          <text class="info-value">{{course.instructor}}</text>
+        </view>
+        <view class="info-row">
+          <text class="info-label">培训地点</text>
+          <text class="info-value">{{course.location}}</text>
+        </view>
+        <view class="info-row" wx:if="{{course.startTime}}">
+          <text class="info-label">开课时间</text>
+          <text class="info-value">{{course.startTime}}</text>
+        </view>
+      </view>
+
+      <view class="desc-card">
+        <text class="section-title">课程介绍</text>
+        <text class="desc-text">{{course.description}}</text>
+      </view>
+
+      <view class="action-card">
+        <button
+          wx:if="{{!course.enrolled}}"
+          class="btn-primary"
+          bindtap="enrollCourse"
+        >立即报名</button>
+        <view wx:else class="enrolled-badge">
+          <text class="enrolled-text">✓ 已报名</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="page-bottom-gap"></view>
+  </view>
+</view>

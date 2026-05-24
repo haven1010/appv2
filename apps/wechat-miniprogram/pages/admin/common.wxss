@@ -1,0 +1,356 @@
+/* ═══════════════════════════════════════════
+   Admin Common — Claude Purple Theme
+   ═══════════════════════════════════════════ */
+
+/* ── Page ── */
+.page-admin {
+  min-height: 100vh;
+  max-width: 1120rpx;
+  margin: 0 auto;
+  padding: 24rpx;
+  padding-bottom: 186rpx;
+  box-sizing: border-box;
+  background: var(--page-bg);
+}
+
+/* ── Hero Card / Section Card ── */
+.hero-card,
+.section-card {
+  background: var(--card-bg);
+  border: var(--border-soft);
+  border-radius: var(--radius-lg);
+  padding: 26rpx;
+  box-shadow: var(--shadow-md);
+  box-sizing: border-box;
+}
+
+.hero-card {
+  margin-bottom: 18rpx;
+}
+
+.section-card {
+  margin-top: 16rpx;
+}
+
+.hero-title {
+  font-size: 40rpx;
+  font-weight: 800;
+  color: var(--ink-main);
+}
+
+.hero-sub {
+  margin-top: 8rpx;
+  font-size: 24rpx;
+  color: var(--ink-sub);
+}
+
+/* ── Info Row ── */
+.info-row {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin-top: 14rpx;
+}
+
+/* ── Role Chip ── */
+.role-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 6rpx 16rpx;
+  border-radius: var(--radius-pill);
+  font-size: 20rpx;
+  color: var(--brand-purple);
+  background: rgba(102, 126, 234, 0.08);
+  border: 1rpx solid rgba(102, 126, 234, 0.16);
+}
+
+.role-chip.super {
+  color: var(--accent-green);
+  background: rgba(49, 164, 124, 0.1);
+  border-color: rgba(49, 164, 124, 0.18);
+}
+
+/* ── Section Title ── */
+.section-title {
+  font-size: 30rpx;
+  color: var(--ink-main);
+  font-weight: 800;
+}
+
+.section-sub {
+  margin-top: 6rpx;
+  font-size: 22rpx;
+  color: var(--ink-sub);
+}
+
+/* ── Grid ── */
+.grid-2 {
+  margin-top: 16rpx;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14rpx;
+}
+
+/* ── Stat Card ── */
+.stat-card {
+  background: var(--card-bg-soft);
+  border: var(--border-soft);
+  border-radius: 22rpx;
+  padding: 18rpx;
+}
+
+.stat-label {
+  font-size: 20rpx;
+  color: var(--ink-sub);
+}
+
+.stat-value {
+  margin-top: 10rpx;
+  font-size: 34rpx;
+  font-weight: 800;
+  color: var(--brand-purple);
+}
+
+/* ── Input / Picker / Textarea ── */
+.input,
+.picker,
+.textarea,
+.select {
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 10rpx;
+  background: var(--card-bg-soft);
+  border: 2rpx solid rgba(102, 126, 234, 0.12);
+  border-radius: var(--radius-sm);
+  padding: 16rpx 18rpx;
+  font-size: 26rpx;
+  color: var(--ink-main);
+  transition: all 0.25s;
+}
+
+.input:focus,
+.picker:focus,
+.textarea:focus {
+  border-color: var(--brand-purple);
+  background: #ffffff;
+  box-shadow: 0 0 0 6rpx rgba(102, 126, 234, 0.1);
+}
+
+.textarea {
+  min-height: 120rpx;
+}
+
+/* ── Form Label ── */
+.form-label {
+  margin-top: 18rpx;
+  font-size: 22rpx;
+  color: var(--ink-sub);
+  font-weight: 700;
+}
+
+/* ── Actions Row ── */
+.actions-row {
+  margin-top: 16rpx;
+  display: flex;
+  gap: 12rpx;
+  flex-wrap: wrap;
+}
+
+/* ── Buttons ── */
+.btn-primary,
+.btn-secondary,
+.btn-danger,
+.btn-ghost {
+  border-radius: var(--radius-pill);
+  padding: 0 24rpx;
+  min-height: 76rpx;
+  line-height: 76rpx;
+  font-size: 24rpx;
+  font-weight: 700;
+  border: none;
+  transition: all 0.2s;
+}
+
+.btn-primary {
+  color: #ffffff;
+  background: var(--brand-gradient);
+  box-shadow: 0 8rpx 24rpx rgba(102, 126, 234, 0.3);
+}
+
+.btn-primary:active {
+  transform: scale(0.97);
+  opacity: 0.92;
+}
+
+.btn-secondary {
+  color: var(--brand-purple);
+  background: rgba(102, 126, 234, 0.08);
+}
+
+.btn-secondary:active {
+  transform: scale(0.97);
+}
+
+.btn-danger {
+  color: #ffffff;
+  background: linear-gradient(90deg, var(--accent-red) 0%, #ee7b88 100%);
+  box-shadow: 0 8rpx 24rpx rgba(228, 92, 109, 0.25);
+}
+
+.btn-danger:active {
+  transform: scale(0.97);
+}
+
+.btn-ghost {
+  color: var(--brand-purple);
+  background: #ffffff;
+  border: 2rpx solid rgba(102, 126, 234, 0.16);
+}
+
+.btn-ghost:active {
+  opacity: 0.6;
+}
+
+.btn-primary::after,
+.btn-secondary::after,
+.btn-danger::after,
+.btn-ghost::after {
+  border: none;
+}
+
+/* ── Delete Mini ── */
+.btn-delete-mini {
+  min-height: 58rpx;
+  line-height: 58rpx;
+  min-width: 132rpx;
+  width: auto !important;
+  max-width: 180rpx;
+  padding: 0 22rpx;
+  font-size: 22rpx;
+  font-weight: 700;
+  margin: 0;
+  border-radius: var(--radius-pill);
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff !important;
+  background: linear-gradient(90deg, var(--accent-red) 0%, #ee7b88 100%) !important;
+  border: none !important;
+  box-shadow: 0 4rpx 12rpx rgba(228, 92, 109, 0.2);
+}
+
+.btn-delete-mini::after {
+  border: none !important;
+}
+
+/* ── List Item ── */
+.list-item {
+  margin-top: 12rpx;
+  background: var(--card-bg-soft);
+  border: var(--border-soft);
+  border-radius: 22rpx;
+  padding: 16rpx;
+}
+
+.item-title {
+  font-size: 28rpx;
+  color: var(--ink-main);
+  font-weight: 700;
+}
+
+.item-sub {
+  margin-top: 6rpx;
+  font-size: 22rpx;
+  color: var(--ink-sub);
+}
+
+/* ── Chip Row ── */
+.chip-row {
+  display: flex;
+  gap: 10rpx;
+  margin-top: 10rpx;
+  flex-wrap: wrap;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  font-size: 20rpx;
+  border-radius: var(--radius-pill);
+  padding: 4rpx 12rpx;
+  border: 1rpx solid rgba(102, 126, 234, 0.14);
+}
+
+.chip.pending {
+  color: var(--brand-purple);
+  background: rgba(102, 126, 234, 0.1);
+  border-color: rgba(102, 126, 234, 0.18);
+}
+
+.chip.success {
+  color: var(--accent-green);
+  background: rgba(49, 164, 124, 0.1);
+  border-color: rgba(49, 164, 124, 0.18);
+}
+
+.chip.danger {
+  color: var(--accent-red);
+  background: rgba(228, 92, 109, 0.1);
+  border-color: rgba(228, 92, 109, 0.16);
+}
+
+.chip.info {
+  color: #4a4d5e;
+  background: rgba(102, 126, 234, 0.06);
+  border-color: rgba(102, 126, 234, 0.12);
+}
+
+/* ── Empty Text ── */
+.empty-text {
+  margin-top: 18rpx;
+  color: var(--ink-sub);
+  font-size: 24rpx;
+  text-align: center;
+}
+
+/* ── Bottom Nav ── */
+.admin-bottom-nav {
+  position: fixed;
+  left: 16rpx;
+  right: 16rpx;
+  bottom: 12rpx;
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  padding: 10rpx 12rpx calc(env(safe-area-inset-bottom) + 8rpx);
+  border-radius: 34rpx;
+  border: var(--border-soft);
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: var(--shadow-lg);
+  box-sizing: border-box;
+}
+
+.admin-bottom-item {
+  flex: 1;
+  padding: 14rpx 6rpx;
+  text-align: center;
+  border-radius: 18rpx;
+  font-size: 20rpx;
+  line-height: 1.15;
+  font-weight: 800;
+  color: var(--ink-sub);
+  background: transparent;
+  transition: all 0.2s;
+}
+
+.admin-bottom-item.active {
+  color: var(--brand-purple);
+  background: rgba(102, 126, 234, 0.1);
+}
+
+.admin-bottom-item:active {
+  opacity: 0.7;
+  transform: scale(0.96);
+}

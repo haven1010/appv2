@@ -1,0 +1,95 @@
+<view class="page page-enter">
+  <view class="page-body">
+    <view class="hero-card">
+      <text class="hero-title">现场签到工作台</text>
+      <text class="hero-subtitle">{{userInfo.name}} · 今日负责现场签到与到岗核验</text>
+    </view>
+
+    <view class="base-card" wx:if="{{managedBases.length}}">
+      <text class="section-title">当前基地</text>
+      <picker mode="selector" value="{{baseIndex}}" range="{{managedBases}}" range-key="baseName" bindchange="onBaseChange">
+        <view class="base-switch">{{baseName}}</view>
+      </picker>
+      <text class="base-desc">{{baseInfo.address || '请先选择基地查看信息'}}</text>
+    </view>
+
+    <view class="loading-box" wx:if="{{loading}}">
+      <text>加载中...</text>
+    </view>
+
+    <view class="error-card" wx:elif="{{error}}">
+      <text class="error-msg">{{error}}</text>
+      <view class="btn-retry" bindtap="loadData">重试</view>
+    </view>
+
+    <block wx:else>
+      <view class="stats-card">
+        <view class="section-title-row">
+          <text class="section-title">今日签到概况</text>
+        </view>
+        <view class="stats-grid">
+          <view class="stat-item">
+            <text class="stat-value blue">{{stats.checkedIn}}</text>
+            <text class="stat-label">已签到</text>
+          </view>
+          <view class="stat-item">
+            <text class="stat-value orange">{{stats.pending}}</text>
+            <text class="stat-label">待签到</text>
+          </view>
+          <view class="stat-item">
+            <text class="stat-value red">{{stats.absent}}</text>
+            <text class="stat-label">缺勤</text>
+          </view>
+          <view class="stat-item">
+            <text class="stat-value">{{stats.rate}}</text>
+            <text class="stat-label">签到率</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="actions">
+        <view class="action-btn scan-btn" bindtap="goScan">
+          <text class="action-text">扫码签到</text>
+          <text class="action-desc">扫描工人二维码完成到岗确认</text>
+        </view>
+        <view class="action-btn records-btn" bindtap="goRecords">
+          <text class="action-text">签到表</text>
+          <text class="action-desc">查看今日签到记录与签到表</text>
+        </view>
+      </view>
+
+      <view class="recent-section" wx:if="{{pendingWorkers.length > 0}}">
+        <view class="section-title-row">
+          <text class="section-title">待签到名单</text>
+        </view>
+        <view class="record-list">
+          <view class="record-item" wx:for="{{pendingWorkers}}" wx:key="id">
+            <view class="record-avatar">{{item.workerName ? item.workerName[0] : '?'}}</view>
+            <view class="record-info">
+              <text class="record-name">{{item.workerName}}</text>
+              <text class="record-time">{{item.jobTitle}}</text>
+            </view>
+            <view class="record-status pending">待签到</view>
+          </view>
+        </view>
+      </view>
+
+      <view class="recent-section" wx:if="{{recentRecords.length > 0}}">
+        <view class="section-title-row">
+          <text class="section-title">最近签到</text>
+          <text class="section-link" bindtap="goRecords">查看全部 ></text>
+        </view>
+        <view class="record-list">
+          <view class="record-item" wx:for="{{recentRecords}}" wx:key="id">
+            <view class="record-avatar">{{item.user ? item.user.name[0] : '?'}}</view>
+            <view class="record-info">
+              <text class="record-name">{{item.user ? item.user.name : item.workerName || '未知'}}</text>
+              <text class="record-time">{{item.checkinTime || item.createdAt || '-'}}</text>
+            </view>
+            <view class="record-status success">已签到</view>
+          </view>
+        </view>
+      </view>
+    </block>
+  </view>
+</view>

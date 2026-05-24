@@ -1,0 +1,489 @@
+/* ═══════════════════════════════════════════
+   Boss Dashboard — Claude Purple Theme
+   ═══════════════════════════════════════════ */
+
+.page {
+  min-height: 100vh;
+  position: relative;
+  background: var(--page-bg);
+}
+
+.paper-bg {
+  display: none;
+}
+
+.container {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  box-sizing: border-box;
+  padding: 28rpx 26rpx calc(170rpx + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+}
+
+/* ── Cards ── */
+.hero-card,
+.form-card,
+.status-card {
+  background: var(--card-bg);
+  border: var(--border-soft);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+}
+
+.hero-card,
+.form-card,
+.status-card {
+  padding: 24rpx 22rpx;
+}
+
+/* ── Hero ── */
+.hero-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+}
+
+.hero-title {
+  display: block;
+  color: var(--ink-main);
+  font-size: 38rpx;
+  font-weight: 900;
+}
+
+.hero-subtitle {
+  display: block;
+  margin-top: 8rpx;
+  color: var(--ink-sub);
+  font-size: 26rpx;
+  line-height: 1.6;
+}
+
+/* ── Logout Button ── */
+.hero-logout-btn,
+.action-btn,
+.secondary-action-btn,
+.payroll-primary-btn,
+.submit-btn {
+  border-radius: var(--radius-pill);
+  border: none;
+  font-weight: 800;
+  transition: all 0.2s;
+}
+
+.hero-logout-btn {
+  margin: 0;
+  min-width: 176rpx;
+  height: 68rpx;
+  line-height: 68rpx;
+  padding: 0 22rpx;
+  background: rgba(102, 126, 234, 0.08);
+  color: var(--brand-purple);
+  font-size: 24rpx;
+}
+
+.hero-logout-btn:active {
+  transform: scale(0.96);
+  opacity: 0.7;
+}
+
+.hero-logout-btn::after,
+.action-btn::after,
+.secondary-action-btn::after,
+.payroll-primary-btn::after,
+.submit-btn::after {
+  border: none;
+}
+
+/* ── Status / Section Title ── */
+.status-title,
+.section-title {
+  display: block;
+  color: var(--ink-main);
+  font-size: 30rpx;
+  font-weight: 800;
+}
+
+.status-desc,
+.label,
+.salary-readonly-tip,
+.readonly-hint,
+.payroll-generated-tip {
+  color: var(--ink-sub);
+  font-size: 24rpx;
+  line-height: 1.6;
+}
+
+.status-desc {
+  margin-top: 8rpx;
+}
+
+/* ── Chips ── */
+.flow-chip-row,
+.summary-chip-row,
+.quick-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10rpx;
+  margin-top: 16rpx;
+}
+
+.flow-chip,
+.summary-chip,
+.payroll-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 8rpx 16rpx;
+  border-radius: var(--radius-pill);
+  font-size: 24rpx;
+  font-weight: 700;
+}
+
+.flow-chip,
+.summary-chip.info,
+.payroll-chip.pending {
+  background: rgba(102, 126, 234, 0.08);
+  color: var(--brand-purple);
+}
+
+.summary-chip.pending,
+.payroll-chip.confirmed {
+  background: rgba(102, 126, 234, 0.12);
+  color: var(--brand-purple);
+}
+
+.summary-chip.success,
+.payroll-chip.paid {
+  background: rgba(49, 164, 124, 0.12);
+  color: var(--accent-green);
+}
+
+/* ── Form Card ── */
+.form-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.field + .field {
+  margin-top: 18rpx;
+}
+
+.label {
+  display: block;
+  margin-bottom: 8rpx;
+  font-weight: 700;
+  color: #4a4d5e;
+}
+
+.input,
+.textarea,
+.picker-box,
+.readonly-box {
+  width: 100%;
+  box-sizing: border-box;
+  border-radius: 18rpx;
+  border: var(--border-soft);
+  background: var(--card-bg-soft);
+  color: var(--ink-main);
+  font-size: 28rpx;
+  padding: 18rpx;
+  transition: all 0.25s;
+}
+
+.input:focus,
+.textarea:focus {
+  border-color: var(--brand-purple);
+  background: #ffffff;
+  box-shadow: 0 0 0 6rpx rgba(102, 126, 234, 0.1);
+}
+
+.textarea {
+  min-height: 132rpx;
+}
+
+.readonly-box {
+  color: var(--ink-sub);
+}
+
+/* ── Upload Box ── */
+.upload-box {
+  height: 210rpx;
+  border-radius: 20rpx;
+  border: 2rpx dashed rgba(102, 126, 234, 0.24);
+  background: var(--card-bg-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.upload-box-disabled,
+.env-add-disabled,
+.submit-btn[disabled] {
+  opacity: 0.65;
+}
+
+.upload-preview {
+  width: 100%;
+  height: 100%;
+}
+
+.upload-text,
+.env-add-mini {
+  color: var(--brand-purple);
+  font-size: 26rpx;
+  font-weight: 700;
+}
+
+/* ── Environment List ── */
+.env-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+}
+
+.env-item,
+.env-add-mini {
+  width: 150rpx;
+  height: 150rpx;
+  border-radius: 20rpx;
+  position: relative;
+}
+
+.env-item {
+  border: var(--border-soft);
+  background: var(--card-bg-soft);
+  overflow: hidden;
+}
+
+.env-preview {
+  width: 100%;
+  height: 100%;
+}
+
+.remove-env {
+  position: absolute;
+  top: 8rpx;
+  right: 8rpx;
+  width: 34rpx;
+  height: 34rpx;
+  border-radius: 50%;
+  background: rgba(26, 29, 38, 0.45);
+  color: #ffffff;
+  font-size: 22rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.env-add-mini {
+  border: 2rpx dashed rgba(102, 126, 234, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--card-bg-soft);
+}
+
+.env-add-mini-text {
+  line-height: 1;
+}
+
+/* ── Error Message ── */
+.error-msg {
+  margin-top: 14rpx;
+  border-radius: 14rpx;
+  background: rgba(228, 92, 109, 0.08);
+  border: 1rpx solid rgba(228, 92, 109, 0.14);
+  color: var(--accent-red);
+  padding: 12rpx 14rpx;
+  font-size: 24rpx;
+}
+
+/* ── Submit / Payroll Buttons ── */
+.submit-btn,
+.payroll-primary-btn {
+  margin-top: 22rpx;
+  height: 90rpx;
+  line-height: 90rpx;
+  background: var(--brand-purple);
+  color: #ffffff;
+  font-size: 30rpx;
+  box-shadow: 0 10rpx 18rpx rgba(102, 126, 234, 0.16);
+}
+
+.submit-btn:active,
+.payroll-primary-btn:active {
+  transform: scale(0.97);
+  opacity: 0.92;
+}
+
+.submit-btn[disabled],
+.payroll-primary-btn[disabled] {
+  background: #d4d0e0;
+  box-shadow: none;
+  color: #9a94a8;
+}
+
+.action-btn,
+.secondary-action-btn {
+  height: 82rpx;
+  line-height: 82rpx;
+  padding: 0 24rpx;
+  background: rgba(102, 126, 234, 0.08);
+  color: var(--brand-purple);
+  font-size: 26rpx;
+}
+
+.action-btn:active,
+.secondary-action-btn:active {
+  transform: scale(0.97);
+}
+
+/* ── Date Grid ── */
+.date-grid {
+  display: flex;
+  gap: 16rpx;
+}
+
+.field-half {
+  flex: 1;
+  min-width: 0;
+}
+
+/* ── Fee Grid ── */
+.fee-grid {
+  margin-top: 18rpx;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12rpx;
+}
+
+.fee-card {
+  border-radius: var(--radius-md);
+  background: var(--card-bg-soft);
+  border: var(--border-soft);
+  padding: 20rpx 18rpx;
+}
+
+.fee-card.total {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.08) 0%, rgba(118, 75, 162, 0.12) 100%);
+}
+
+.fee-label {
+  display: block;
+  color: #4a4d5e;
+  font-size: 24rpx;
+}
+
+.fee-rate {
+  display: block;
+  margin-top: 8rpx;
+  color: var(--ink-sub);
+  font-size: 22rpx;
+}
+
+.fee-value {
+  display: block;
+  margin-top: 12rpx;
+  color: var(--ink-main);
+  font-size: 36rpx;
+  font-weight: 900;
+}
+
+/* ── Payroll Action Row ── */
+.payroll-action-row {
+  display: flex;
+  flex-direction: column;
+  gap: 14rpx;
+  margin-top: 18rpx;
+}
+
+/* ── Payroll List ── */
+.payroll-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14rpx;
+  margin-top: 18rpx;
+}
+
+.payroll-item {
+  border-radius: var(--radius-md);
+  background: var(--card-bg-soft);
+  border: var(--border-soft);
+  padding: 18rpx;
+}
+
+.payroll-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18rpx;
+}
+
+.payroll-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.payroll-name {
+  display: block;
+  color: var(--ink-main);
+  font-size: 28rpx;
+  font-weight: 800;
+}
+
+.payroll-meta,
+.payroll-detail {
+  display: block;
+  margin-top: 8rpx;
+  color: var(--ink-sub);
+  font-size: 23rpx;
+  line-height: 1.5;
+}
+
+.payroll-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8rpx;
+}
+
+.payroll-amount {
+  color: var(--brand-purple);
+  font-size: 36rpx;
+  font-weight: 900;
+}
+
+/* ── Boss Bottom Nav ── */
+.boss-bottom-nav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 90;
+  display: flex;
+  gap: 0;
+  padding: 12rpx 24rpx calc(12rpx + env(safe-area-inset-bottom));
+  background: rgba(255, 255, 255, 0.96);
+  border-top: var(--border-soft);
+  box-shadow: 0 -6rpx 20rpx rgba(102, 126, 234, 0.06);
+}
+
+.boss-bottom-item {
+  flex: 1;
+  min-width: 0;
+  text-align: center;
+  padding: 14rpx 8rpx 10rpx;
+  color: var(--ink-sub);
+  font-size: 24rpx;
+  font-weight: 800;
+  background: transparent;
+}
+
+.boss-bottom-item.active {
+  color: var(--brand-purple);
+  background: transparent;
+}
