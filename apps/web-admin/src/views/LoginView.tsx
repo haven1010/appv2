@@ -96,32 +96,32 @@ export default function LoginView() {
             <Sprout size={32} className="text-white" />
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-white mb-2">智慧采摘管理系统</h1>
-          <p className="text-slate-400 text-sm">请输入手机号和密码登录</p>
+          <p className="text-slate-300 text-sm">请输入手机号和密码登录</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-4">
             {/* 手机号输入框 */}
             <div className="relative group">
-              <UserIcon className="absolute left-3 top-3.5 text-slate-500 group-focus-within:text-emerald-500 transition-colors" size={18} />
+              <UserIcon className="absolute left-3 top-3.5 text-slate-400 group-focus-within:text-emerald-500 transition-colors" size={18} />
               <input
                 type="text"
                 placeholder="手机号 (例: 13800138000)"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                className="w-full bg-slate-950/50 border border-slate-700 rounded-xl py-3 pl-10 pr-4 text-white focus:outline-none focus:border-emerald-500 transition-all placeholder:text-slate-600"
+                className="w-full bg-slate-950/50 border border-slate-700 rounded-xl py-3 pl-10 pr-4 text-white focus:outline-none focus:border-emerald-500 transition-all placeholder:text-slate-400"
               />
             </div>
 
             {/* 密码输入框 */}
             <div className="relative group">
-              <KeyRound className="absolute left-3 top-3.5 text-slate-500 group-focus-within:text-emerald-500 transition-colors" size={18} />
+              <KeyRound className="absolute left-3 top-3.5 text-slate-400 group-focus-within:text-emerald-500 transition-colors" size={18} />
               <input
                 type="password"
                 placeholder="密码 (默认身份证后6位)"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-slate-950/50 border border-slate-700 rounded-xl py-3 pl-10 pr-4 text-white focus:outline-none focus:border-emerald-500 transition-all placeholder:text-slate-600"
+                className="w-full bg-slate-950/50 border border-slate-700 rounded-xl py-3 pl-10 pr-4 text-white focus:outline-none focus:border-emerald-500 transition-all placeholder:text-slate-400"
               />
             </div>
           </div>
@@ -129,12 +129,12 @@ export default function LoginView() {
           <button
             type="submit"
             disabled={isPending}
-            className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-3 rounded-xl transition-all shadow-lg shadow-emerald-900/20 active:scale-[0.98] flex justify-center items-center gap-2 mt-6 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-3 rounded-xl transition-all shadow-lg shadow-emerald-900/30 active:scale-[0.98] flex justify-center items-center gap-2 mt-6 disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-emerald-500/20"
           >
             {isPending ? <Loader2 className="animate-spin" size={20} /> : '立即登录'}
           </button>
 
-          <p className="text-center text-slate-500 text-sm mt-4">
+          <p className="text-center text-slate-400 text-sm mt-4">
             没有账号？{' '}
             <Link to="/register" className="text-emerald-400 hover:text-emerald-300 font-medium">
               去注册

@@ -31,7 +31,7 @@ export default function Header() {
   return (
     <header className="h-16 border-b border-slate-800/60 glass flex items-center justify-between px-8 z-40 sticky top-0">
       <div className="flex-1 max-w-md relative hidden md:block">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
         <input 
           type="text" 
           placeholder="全局搜索任务、人员或基地..." 
@@ -50,7 +50,7 @@ export default function Header() {
         <div className="flex items-center gap-3">
           <div className="text-right hidden sm:block">
             <p className="text-sm font-semibold text-slate-100 leading-tight">{user?.name}</p>
-            <p className="text-xs text-slate-500">{getRoleLabel(user?.role || '')}</p>
+            <p className="text-xs text-slate-400">{getRoleLabel(user?.role || '')}</p>
           </div>
           <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center border-2 border-slate-800 p-0.5">
             <div className="w-full h-full rounded-full bg-slate-900 flex items-center justify-center overflow-hidden">

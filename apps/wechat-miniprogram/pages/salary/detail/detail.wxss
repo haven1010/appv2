@@ -233,9 +233,9 @@
 }
 
 .btn-primary[disabled] {
-  background: #d4d0e0;
+  background: #b8b4c8;
   box-shadow: none;
-  color: #9a94a8;
+  color: #ffffff;
 }
 
 .btn-warn {

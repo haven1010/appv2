@@ -24,21 +24,26 @@ Page({
   onCategoryTap(e) {
     const categoryId = Number(e.currentTarget.dataset.id);
     this.setData({ activeCategory: categoryId });
-    this.loadCourses();
+    this.loadCourses(categoryId);
   },
 
-  async loadCourses() {
+  catMap: { 1: '采摘技能', 2: '安全培训', 3: '职业素养' },
+
+  async loadCourses(categoryId) {
+    const catId = categoryId ?? this.data.activeCategory;
     this.setData({ loading: true });
     try {
       const res = await app.request({
         url: '/training/courses',
         method: 'GET',
         data: {
-          category: this.data.activeCategory || undefined,
+          category: catId || undefined,
         },
       });
 
-      const courses = (Array.isArray(res) ? res : res.list || []).map((item, index) => ({
+      const courses = (Array.isArray(res) ? res : res.list || [])
+        .filter(item => catId === 0 || item.category === this.catMap[catId])
+        .map((item, index) => ({
         id: item.id,
         title: item.title || '培训课程',
         category: item.category || '技能培训',
@@ -54,11 +59,16 @@ Page({
       console.error('加载课程失败:', err);
 
       // Mock数据
-      const mockCourses = [
+      const mockAll = [
         { id: 1, title: '采摘技能培训', category: '采摘技能', duration: '2小时', status: 1, enrolled: false },
         { id: 2, title: '安全生产培训', category: '安全培训', duration: '3小时', status: 1, enrolled: false },
         { id: 3, title: '职业素养提升', category: '职业素养', duration: '1.5小时', status: 0, enrolled: false },
-      ].map((item, index) => ({
+      ];
+      const filtered = catId === 0
+        ? mockAll
+        : mockAll.filter(c => c.category === this.catMap[catId]);
+
+      const mockCourses = filtered.map((item, index) => ({
         ...item,
         statusText: this.getStatusText(item.status),
         delay: `${index * 80}ms`,

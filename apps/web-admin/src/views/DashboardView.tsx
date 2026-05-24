@@ -121,7 +121,7 @@ export default function DashboardView() {
     return (
       <div className="flex items-center justify-center h-64">
         <Loader2 className="animate-spin text-emerald-400" size={32} />
-        <span className="ml-3 text-slate-400">正在加载数据...</span>
+        <span className="ml-3 text-slate-300">正在加载数据...</span>
       </div>
     );
   }
@@ -132,7 +132,7 @@ export default function DashboardView() {
         <h2 className="text-2xl font-bold text-white mb-2">
           {isGlobal ? '全局概览' : role === UserRole.BASE_MANAGER ? '基地概览' : '工作概览'}
         </h2>
-        <p className="text-slate-400">
+        <p className="text-slate-300">
           欢迎回来{user?.name ? `，${user.name}` : ''}，这是{isGlobal ? '系统的' : '您负责范围内的'}实时运行状态。
         </p>
       </div>
@@ -146,12 +146,12 @@ export default function DashboardView() {
               <div className={`p-3 rounded-2xl bg-slate-900/80 border border-slate-700/50 shadow-inner group-hover:border-${stat.color}-500/50 transition-colors`}>
                 <stat.icon className={`text-${stat.color}-400`} size={24} />
               </div>
-              <div className="flex items-center gap-1 text-sm font-medium text-slate-400">
+              <div className="flex items-center gap-1 text-sm font-medium text-slate-300">
                 {stat.sub}
               </div>
             </div>
             <div>
-              <p className="text-slate-400 text-sm mb-1">{stat.label}</p>
+              <p className="text-slate-300 text-sm mb-1">{stat.label}</p>
               <h3 className="text-3xl font-bold text-white tracking-tight">{stat.value}</h3>
             </div>
           </div>
@@ -167,7 +167,7 @@ export default function DashboardView() {
               className="flex items-center gap-4 p-4 rounded-2xl bg-amber-500/5 border border-amber-500/20 cursor-pointer hover:bg-amber-500/10 transition-colors"
             >
               <AlertTriangle className="text-amber-400 shrink-0" size={20} />
-              <span className="text-amber-300 text-sm font-medium">
+              <span className="text-white text-sm font-medium">
                 有 {stats.pendingAuditUsers} 位用户信息待审核
               </span>
               <ArrowUpRight className="text-amber-400 ml-auto shrink-0" size={16} />
@@ -179,7 +179,7 @@ export default function DashboardView() {
               className="flex items-center gap-4 p-4 rounded-2xl bg-blue-500/5 border border-blue-500/20 cursor-pointer hover:bg-blue-500/10 transition-colors"
             >
               <ShieldCheck className="text-blue-400 shrink-0" size={20} />
-              <span className="text-blue-300 text-sm font-medium">
+              <span className="text-white text-sm font-medium">
                 有 {stats.pendingAuditBases} 个基地待审核入驻
               </span>
               <ArrowUpRight className="text-blue-400 ml-auto shrink-0" size={16} />
@@ -194,7 +194,7 @@ export default function DashboardView() {
           <div className="flex items-center justify-between mb-8">
             <div>
               <h3 className="text-lg font-bold text-white mb-1">签到趋势分析</h3>
-              <p className="text-sm text-slate-400">过去一周的签到人数变化</p>
+              <p className="text-sm text-slate-300">过去一周的签到人数变化</p>
             </div>
           </div>
           <div className="h-[300px] w-full">
@@ -226,14 +226,14 @@ export default function DashboardView() {
                 </AreaChart>
               </ResponsiveContainer>
             ) : (
-              <div className="flex items-center justify-center h-full text-slate-500">暂无趋势数据</div>
+              <div className="flex items-center justify-center h-full text-slate-400">暂无趋势数据</div>
             )}
           </div>
         </div>
 
         {(isGlobal || role === UserRole.BASE_MANAGER) && <div className="glass-card p-8 rounded-3xl border border-slate-800/60 flex flex-col">
           <h3 className="text-lg font-bold text-white mb-1">基地类型占比</h3>
-          <p className="text-sm text-slate-400 mb-8">当前入驻基地的行业分布状况</p>
+          <p className="text-sm text-slate-300 mb-8">当前入驻基地的行业分布状况</p>
           <div className="flex-1 min-h-[250px]">
             {categories.length > 0 && categories.some(c => c.count > 0) ? (
               <ResponsiveContainer width="100%" height="100%">
@@ -254,13 +254,13 @@ export default function DashboardView() {
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <div className="flex items-center justify-center h-full text-slate-500">暂无基地数据</div>
+              <div className="flex items-center justify-center h-full text-slate-400">暂无基地数据</div>
             )}
           </div>
           <div className="mt-4 space-y-2">
             {categories.map((item, i) => (
               <div key={i} className="flex justify-between items-center text-sm">
-                <span className="flex items-center gap-2 text-slate-400">
+                <span className="flex items-center gap-2 text-slate-300">
                   <span className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }}></span>
                   {item.name}
                 </span>
@@ -290,7 +290,7 @@ export default function DashboardView() {
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead>
-              <tr className="border-b border-slate-800/60 text-slate-500 text-xs uppercase tracking-wider">
+              <tr className="border-b border-slate-800/60 text-slate-400 text-xs uppercase tracking-wider">
                 <th className="pb-4 font-semibold">基地名称</th>
                 <th className="pb-4 font-semibold">经营类别</th>
                 <th className="pb-4 font-semibold">地址</th>
@@ -310,11 +310,11 @@ export default function DashboardView() {
                       {row.auditStatusText}
                     </span>
                   </td>
-                  <td className="py-5 text-slate-500 text-sm">{formatDate(row.createdAt)}</td>
+                  <td className="py-5 text-slate-400 text-sm">{formatDate(row.createdAt)}</td>
                 </tr>
               )) : (
                 <tr>
-                  <td colSpan={5} className="py-10 text-center text-slate-500">暂无入驻基地</td>
+                  <td colSpan={5} className="py-10 text-center text-slate-400">暂无入驻基地</td>
                 </tr>
               )}
             </tbody>

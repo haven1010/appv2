@@ -145,7 +145,7 @@ function CreateBaseModal({
             className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white placeholder-slate-500"
             rows={2}
           />
-          <div className="flex gap-2 pt-2 text-xs text-slate-500">
+          <div className="flex gap-2 pt-2 text-xs text-slate-400">
             <span>提示：基地创建后需超级管理员审核通过才能发布招聘岗位。</span>
           </div>
           <div className="flex gap-2 pt-2">
@@ -218,7 +218,7 @@ function BaseDetailDrawer({
                   类别：{CAT_LABEL[(base as any).category] ?? '其他'} · 状态：
                   {STATUS_LABEL[(base as any).auditStatus] ?? '-'}
                 </p>
-                <p className="text-slate-500 text-xs mt-2">
+                <p className="text-slate-400 text-xs mt-2">
                   区域代码 {(base as any).regionCode} · 地址 {(base as any).address || '—'}
                 </p>
               </div>
@@ -246,7 +246,7 @@ function BaseDetailDrawer({
                     <Loader2 className="animate-spin text-emerald-500" size={24} />
                   </div>
                 ) : jobsList.length === 0 ? (
-                  <p className="text-slate-500 text-sm py-4">
+                  <p className="text-slate-400 text-sm py-4">
                     暂无岗位，点击「发布招聘」添加。
                   </p>
                 ) : (
@@ -260,7 +260,7 @@ function BaseDetailDrawer({
                           <span className="font-medium text-white">
                             {job.jobTitle ?? job.title ?? '-'}
                           </span>
-                          <span className="ml-2 text-xs text-slate-500">
+                          <span className="ml-2 text-xs text-slate-400">
                             {job.recruitCount ?? 0} 人 ·{' '}
                             {job.payType === 1
                               ? '固定'
@@ -276,7 +276,7 @@ function BaseDetailDrawer({
               </div>
             </>
           ) : (
-            <p className="text-slate-500 py-8">加载失败或基地不存在</p>
+            <p className="text-slate-400 py-8">加载失败或基地不存在</p>
           )}
         </div>
       </div>
@@ -593,7 +593,7 @@ export default function BaseManagement() {
                 className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${
                   activeTab === 'list'
                     ? 'bg-slate-800 text-white shadow-sm'
-                    : 'text-slate-500 hover:text-slate-300'
+                    : 'text-slate-400 hover:text-slate-300'
                 }`}
               >
                 全部基地
@@ -604,7 +604,7 @@ export default function BaseManagement() {
                 className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${
                   activeTab === 'audit'
                     ? 'bg-slate-800 text-white shadow-sm'
-                    : 'text-slate-500 hover:text-slate-300'
+                    : 'text-slate-400 hover:text-slate-300'
                 }`}
               >
                 审核中 ({pendingBases.length})
@@ -625,7 +625,7 @@ export default function BaseManagement() {
       </div>
 
       {user?.role === UserRole.SUPER_ADMIN && activeTab === 'audit' && (
-        <p className="text-slate-500 text-sm">
+        <p className="text-slate-400 text-sm">
           超级管理员：请在此审核基地提交的入驻申请，通过或驳回。
         </p>
       )}
@@ -650,7 +650,7 @@ export default function BaseManagement() {
                 {String((basesError as any)?.message || basesError)}）
               </div>
             ) : bases.length === 0 ? (
-              <div className="col-span-full text-center py-12 text-slate-500">
+              <div className="col-span-full text-center py-12 text-slate-400">
                 暂无基地数据，请先导入数据库或创建基地。
               </div>
             ) : null}
@@ -700,7 +700,7 @@ export default function BaseManagement() {
                           {base.name}
                         </h3>
                       <div className="flex gap-2 mt-2">
-                          <span className="text-[10px] text-slate-500 font-bold tracking-widest uppercase bg-slate-800/50 px-2 py-0.5 rounded">
+                          <span className="text-[10px] text-slate-400 font-bold tracking-widest uppercase bg-slate-800/50 px-2 py-0.5 rounded">
                             {base.cat}
                           </span>
                       </div>
@@ -708,11 +708,11 @@ export default function BaseManagement() {
                   </div>
                   
                   <div className="grid grid-cols-2 gap-3 mb-6">
-                    <div className="flex items-center gap-2 text-xs text-slate-500">
+                    <div className="flex items-center gap-2 text-xs text-slate-400">
                       <MapPin size={14} className="text-slate-600" />
                       {base.region}
                     </div>
-                    <div className="flex items-center gap-2 text-xs text-slate-500">
+                    <div className="flex items-center gap-2 text-xs text-slate-400">
                       <Phone size={14} className="text-slate-600" />
                       {base.contact}
                     </div>
@@ -742,7 +742,7 @@ export default function BaseManagement() {
             <div className="overflow-x-auto">
               <table className="w-full text-left">
                 <thead>
-                  <tr className="border-b border-slate-800/60 text-slate-500 text-xs uppercase tracking-widest font-bold">
+                  <tr className="border-b border-slate-800/60 text-slate-400 text-xs uppercase tracking-widest font-bold">
                     <th className="pb-4 px-4">申请主体</th>
                     <th className="pb-4">经营类型</th>
                     <th className="pb-4">所属区域</th>
@@ -764,7 +764,7 @@ export default function BaseManagement() {
                           </div>
                           <div className="flex flex-col">
                             <span className="text-slate-100 font-bold">{req.name}</span>
-                            <span className="text-[10px] text-slate-500 font-mono">
+                            <span className="text-[10px] text-slate-400 font-mono">
                               ID {req.id}
                             </span>
                           </div>
@@ -777,7 +777,7 @@ export default function BaseManagement() {
                           资质材料
                         </span>
                       </td>
-                      <td className="py-5 text-slate-500 text-sm">—</td>
+                      <td className="py-5 text-slate-400 text-sm">—</td>
                       <td className="py-5 text-right px-4">
                         <div className="flex justify-end gap-2">
                           <button
@@ -809,7 +809,7 @@ export default function BaseManagement() {
                 <div className="w-16 h-16 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center mx-auto mb-4 text-slate-700">
                   <ClipboardCheck size={32} />
                 </div>
-                <p className="text-slate-500 font-medium">暂无待审核的基地申请</p>
+                <p className="text-slate-400 font-medium">暂无待审核的基地申请</p>
               </div>
             )}
           </motion.div>

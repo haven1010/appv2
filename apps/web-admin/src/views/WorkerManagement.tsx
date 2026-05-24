@@ -377,7 +377,7 @@ export default function WorkerManagement() {
         {/* Search and Filter */}
         <div className="flex flex-col md:flex-row gap-4 mb-6">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
             <input
               type="text"
               placeholder="搜索姓名或UID..."
@@ -417,7 +417,7 @@ export default function WorkerManagement() {
           <div className="overflow-x-auto">
             <table className="w-full text-left">
               <thead>
-                <tr className="border-b border-slate-800/60 text-slate-500 text-xs uppercase tracking-wider">
+                <tr className="border-b border-slate-800/60 text-slate-400 text-xs uppercase tracking-wider">
                   <th className="pb-4 font-semibold px-4">用户</th>
                   <th className="pb-4 font-semibold">角色</th>
                   <th className="pb-4 font-semibold">UID</th>
@@ -440,7 +440,7 @@ export default function WorkerManagement() {
                           </div>
                           <div>
                             <p className="text-slate-100 font-medium">{row.name}</p>
-                            <p className="text-slate-500 text-xs">{maskPhone(row.phone)}</p>
+                            <p className="text-slate-400 text-xs">{maskPhone(row.phone)}</p>
                           </div>
                         </div>
                       </td>
@@ -463,11 +463,11 @@ export default function WorkerManagement() {
                                 </span>
                               ))}
                               {enriched._managedBases.length > 2 && (
-                                <span className="text-slate-500 text-xs">+{enriched._managedBases.length - 2}</span>
+                                <span className="text-slate-400 text-xs">+{enriched._managedBases.length - 2}</span>
                               )}
                             </div>
                           ) : (
-                            <span className="text-slate-500 text-xs">暂无基地</span>
+                            <span className="text-slate-400 text-xs">暂无基地</span>
                           )
                         ) : row.roleKey === 'field_manager' ? (
                           enriched._assignedBaseName ? (
@@ -475,12 +475,12 @@ export default function WorkerManagement() {
                               <Sprout size={10} />{enriched._assignedBaseName}
                             </span>
                           ) : (
-                            <span className="text-slate-500 text-xs">未分配基地</span>
+                            <span className="text-slate-400 text-xs">未分配基地</span>
                           )
                         ) : row.roleKey === 'super_admin' || row.roleKey === 'region_admin' ? (
                           <span className="text-amber-400/70 text-xs">全局权限</span>
                         ) : (
-                          <span className="text-slate-500 text-xs">-</span>
+                          <span className="text-slate-400 text-xs">-</span>
                         )}
                       </td>
                       <td className="py-5">
@@ -488,11 +488,11 @@ export default function WorkerManagement() {
                           {auditStatusText(row.infoAuditStatus)}
                         </span>
                       </td>
-                      <td className="py-5 text-slate-500 text-sm">{row.createdAt?.slice(0, 10)}</td>
+                      <td className="py-5 text-slate-400 text-sm">{row.createdAt?.slice(0, 10)}</td>
                       <td className="py-5 text-right px-4 relative">
                         <button
                           onClick={() => setActionMenuId(actionMenuId === row.id ? null : row.id)}
-                          className="p-2 text-slate-500 hover:text-slate-100 hover:bg-slate-800 rounded-lg transition-all"
+                          className="p-2 text-slate-400 hover:text-slate-100 hover:bg-slate-800 rounded-lg transition-all"
                         >
                           <MoreHorizontal size={18} />
                         </button>
@@ -533,7 +533,7 @@ export default function WorkerManagement() {
                   );
                 }) : (
                   <tr>
-                    <td colSpan={7} className="py-16 text-center text-slate-500">
+                    <td colSpan={7} className="py-16 text-center text-slate-400">
                       暂无用户数据
                     </td>
                   </tr>
@@ -546,7 +546,7 @@ export default function WorkerManagement() {
         {/* Pagination */}
         {totalPages > 1 && (
           <div className="flex items-center justify-between mt-6 pt-4 border-t border-slate-800/40">
-            <span className="text-sm text-slate-500">
+            <span className="text-sm text-slate-400">
               第 {page}/{totalPages} 页，共 {total} 条
             </span>
             <div className="flex gap-2">
@@ -623,7 +623,7 @@ export default function WorkerManagement() {
 
                 {/* Basic Info */}
                 <div>
-                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">基本信息</p>
+                  <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">基本信息</p>
                   {[
                     { label: 'UID', value: detailUser.uid },
                     { label: '手机号', value: detailUser.phone },
@@ -642,7 +642,7 @@ export default function WorkerManagement() {
                 {/* Role-specific Info */}
                 {(detailUser.roleKey === 'base_manager' || detailUser.roleKey === 'field_manager' || detailUser.roleKey === 'super_admin' || detailUser.roleKey === 'region_admin') && (
                   <div>
-                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">角色信息</p>
+                    <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">角色信息</p>
 
                     {(detailUser.roleKey === 'super_admin' || detailUser.roleKey === 'region_admin') && (
                       <div className="p-4 rounded-2xl bg-amber-500/5 border border-amber-500/20">
@@ -667,12 +667,12 @@ export default function WorkerManagement() {
                               <div key={b.id} className="flex items-center gap-2 text-sm">
                                 <span className="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
                                 <span className="text-slate-200">{b.baseName}</span>
-                                <span className="text-slate-500 text-xs">#{b.id}</span>
+                                <span className="text-slate-400 text-xs">#{b.id}</span>
                               </div>
                             ))}
                           </div>
                         ) : (
-                          <p className="text-slate-500 text-xs">暂未创建或拥有基地</p>
+                          <p className="text-slate-400 text-xs">暂未创建或拥有基地</p>
                         )}
                       </div>
                     )}
@@ -686,10 +686,10 @@ export default function WorkerManagement() {
                           <div className="flex items-center gap-2 text-sm">
                             <span className="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
                             <span className="text-slate-200">{detailUser._assignedBaseName}</span>
-                            <span className="text-slate-500 text-xs">#{detailUser.assignedBaseId}</span>
+                            <span className="text-slate-400 text-xs">#{detailUser.assignedBaseId}</span>
                           </div>
                         ) : (
-                          <p className="text-slate-500 text-xs">未分配关联基地</p>
+                          <p className="text-slate-400 text-xs">未分配关联基地</p>
                         )}
                       </div>
                     )}
@@ -699,7 +699,7 @@ export default function WorkerManagement() {
                 {/* Worker specific: could show attendance summary in the future */}
                 {detailUser.roleKey === 'worker' && (
                   <div>
-                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">采摘工信息</p>
+                    <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">采摘工信息</p>
                     <div className="p-4 rounded-2xl bg-emerald-500/5 border border-emerald-500/20">
                       <div className="flex items-center gap-2 text-emerald-400 text-sm font-medium">
                         <Users size={16} /> 终端用户
@@ -767,10 +767,10 @@ export default function WorkerManagement() {
                   <div className="absolute top-1/2 left-0 w-full h-0.5 bg-slate-800 -translate-y-1/2 z-0"></div>
                   {steps.map((step) => (
                     <div key={step.num} className="relative z-10 flex flex-col items-center gap-2">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${activeStep >= step.num ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20' : 'bg-slate-800 text-slate-500 border border-slate-700'}`}>
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${activeStep >= step.num ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20' : 'bg-slate-800 text-slate-400 border border-slate-700'}`}>
                         {activeStep > step.num ? <CheckCircle2 size={20} /> : <step.icon size={20} />}
                       </div>
-                      <span className={`text-xs font-semibold ${activeStep >= step.num ? 'text-emerald-400' : 'text-slate-500'}`}>{step.title}</span>
+                      <span className={`text-xs font-semibold ${activeStep >= step.num ? 'text-emerald-400' : 'text-slate-400'}`}>{step.title}</span>
                     </div>
                   ))}
                 </div>
@@ -782,14 +782,14 @@ export default function WorkerManagement() {
                         onClick={() => setActiveStep(2)}
                         className="flex flex-col items-center justify-center p-8 rounded-2xl bg-slate-800/50 border-2 border-dashed border-slate-700 hover:border-emerald-500 hover:bg-emerald-500/5 transition-all group"
                       >
-                        <Scan size={48} className="text-slate-500 group-hover:text-emerald-400 mb-4" />
+                        <Scan size={48} className="text-slate-400 group-hover:text-emerald-400 mb-4" />
                         <span className="font-bold text-slate-200">快速录入</span>
-                        <span className="text-xs text-slate-500 mt-2">直接填写用户信息</span>
+                        <span className="text-xs text-slate-400 mt-2">直接填写用户信息</span>
                       </button>
                       <button className="flex flex-col items-center justify-center p-8 rounded-2xl bg-slate-800/50 border-2 border-dashed border-slate-700 opacity-50 cursor-not-allowed">
-                        <Smartphone size={48} className="text-slate-500 mb-4" />
+                        <Smartphone size={48} className="text-slate-400 mb-4" />
                         <span className="font-bold text-slate-200">OCR拍照录入</span>
-                        <span className="text-xs text-slate-500 mt-2">需配置OCR服务（即将上线）</span>
+                        <span className="text-xs text-slate-400 mt-2">需配置OCR服务（即将上线）</span>
                       </button>
                     </div>
                   </div>
@@ -799,7 +799,7 @@ export default function WorkerManagement() {
                   <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <label className="text-xs text-slate-500 font-semibold uppercase">真实姓名 *</label>
+                        <label className="text-xs text-slate-400 font-semibold uppercase">真实姓名 *</label>
                         <input
                           type="text"
                           value={addForm.name}
@@ -809,7 +809,7 @@ export default function WorkerManagement() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-xs text-slate-500 font-semibold uppercase">身份证号 *</label>
+                        <label className="text-xs text-slate-400 font-semibold uppercase">身份证号 *</label>
                         <input
                           type="text"
                           value={addForm.idCard}
@@ -820,7 +820,7 @@ export default function WorkerManagement() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-xs text-slate-500 font-semibold uppercase">手机号码 *</label>
+                        <label className="text-xs text-slate-400 font-semibold uppercase">手机号码 *</label>
                         <input
                           type="text"
                           value={addForm.phone}
@@ -831,7 +831,7 @@ export default function WorkerManagement() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-xs text-slate-500 font-semibold uppercase">角色</label>
+                        <label className="text-xs text-slate-400 font-semibold uppercase">角色</label>
                         <select
                           value={addForm.roleKey}
                           onChange={(e) =>
@@ -852,7 +852,7 @@ export default function WorkerManagement() {
                       </div>
                       {addForm.roleKey === 'field_manager' && (
                         <div className="space-y-2">
-                          <label className="text-xs text-slate-500 font-semibold uppercase">绑定基地 *</label>
+                          <label className="text-xs text-slate-400 font-semibold uppercase">绑定基地 *</label>
                           <select
                             value={addForm.assignedBaseId}
                             onChange={(e) => setAddForm({ ...addForm, assignedBaseId: e.target.value })}
@@ -869,7 +869,7 @@ export default function WorkerManagement() {
                       )}
                       {addForm.roleKey === 'super_admin' && (
                         <div className="space-y-2">
-                          <label className="text-xs text-slate-500 font-semibold uppercase">区域代码</label>
+                          <label className="text-xs text-slate-400 font-semibold uppercase">区域代码</label>
                           <input
                             type="number"
                             value={addForm.regionCode}
@@ -880,7 +880,7 @@ export default function WorkerManagement() {
                         </div>
                       )}
                       <div className="space-y-2">
-                        <label className="text-xs text-slate-500 font-semibold uppercase">紧急联系人</label>
+                        <label className="text-xs text-slate-400 font-semibold uppercase">紧急联系人</label>
                         <input
                           type="text"
                           value={addForm.emergencyContact}
@@ -890,7 +890,7 @@ export default function WorkerManagement() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-xs text-slate-500 font-semibold uppercase">紧急联系人电话</label>
+                        <label className="text-xs text-slate-400 font-semibold uppercase">紧急联系人电话</label>
                         <input
                           type="text"
                           value={addForm.emergencyPhone}

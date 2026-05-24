@@ -266,7 +266,7 @@ export default function FieldWorkers() {
       <div className="glass-card rounded-3xl p-6 border border-slate-800/60">
         <div className="flex flex-col md:flex-row gap-4 mb-6">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
             <input
               type="text"
               placeholder="搜索姓名、工号或岗位..."
@@ -303,14 +303,14 @@ export default function FieldWorkers() {
             <span className="ml-2 text-slate-400">加载中...</span>
           </div>
         ) : filtered.length === 0 ? (
-          <div className="text-center py-16 text-slate-500">
+          <div className="text-center py-16 text-slate-400">
             {baseId ? '暂无符合条件的人员记录' : '未找到关联基地，请联系管理员分配'}
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left">
               <thead>
-                <tr className="border-b border-slate-800/60 text-slate-500 text-xs uppercase tracking-wider">
+                <tr className="border-b border-slate-800/60 text-slate-400 text-xs uppercase tracking-wider">
                   <th className="pb-4 font-semibold px-4">工人</th>
                   <th className="pb-4 font-semibold">工号</th>
                   <th className="pb-4 font-semibold">申请岗位</th>
@@ -333,7 +333,7 @@ export default function FieldWorkers() {
                           </div>
                           <div>
                             <p className="text-slate-100 font-medium text-sm">{app.user?.name || '-'}</p>
-                            <p className="text-slate-500 text-xs">{maskPhone(app.user?.phone || '')}</p>
+                            <p className="text-slate-400 text-xs">{maskPhone(app.user?.phone || '')}</p>
                           </div>
                         </div>
                       </td>
@@ -354,14 +354,14 @@ export default function FieldWorkers() {
                           {getAttendanceLabel(attendance)}
                         </span>
                         {attendance?.checkinTime && attendance.status === 1 && (
-                          <span className="text-slate-500 text-xs ml-1">{formatTime(attendance.checkinTime)}</span>
+                          <span className="text-slate-400 text-xs ml-1">{formatTime(attendance.checkinTime)}</span>
                         )}
                       </td>
-                      <td className="py-4 text-slate-500 text-sm">{app.createdAt?.slice(0, 10)}</td>
+                      <td className="py-4 text-slate-400 text-sm">{app.createdAt?.slice(0, 10)}</td>
                       <td className="py-4 text-right px-4">
                         <button
                           onClick={() => setDetailApp(app)}
-                          className="p-2 text-slate-500 hover:text-emerald-400 hover:bg-slate-800 rounded-lg transition-all"
+                          className="p-2 text-slate-400 hover:text-emerald-400 hover:bg-slate-800 rounded-lg transition-all"
                         >
                           <Eye size={16} />
                         </button>
@@ -374,7 +374,7 @@ export default function FieldWorkers() {
           </div>
         )}
 
-        <div className="mt-4 pt-4 border-t border-slate-800/40 text-sm text-slate-500">
+        <div className="mt-4 pt-4 border-t border-slate-800/40 text-sm text-slate-400">
           共 {filtered.length} 条记录
         </div>
       </div>
@@ -428,7 +428,7 @@ export default function FieldWorkers() {
 
                 {/* Basic Info */}
                 <div>
-                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">基本信息</p>
+                  <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">基本信息</p>
                   {[
                     { label: '工号 (UID)', value: detailApp.user?.uid, icon: CreditCard },
                     { label: '手机号', value: detailApp.user?.phone, icon: Phone },
@@ -438,7 +438,7 @@ export default function FieldWorkers() {
                   ].map((item, i) => (
                     <div key={i} className="flex justify-between py-2 border-b border-slate-800/40">
                       <span className="text-slate-400 text-sm flex items-center gap-1.5">
-                        <item.icon size={12} className="text-slate-500" />{item.label}
+                        <item.icon size={12} className="text-slate-400" />{item.label}
                       </span>
                       <span className="text-slate-100 text-sm font-medium">{item.value}</span>
                     </div>
@@ -447,7 +447,7 @@ export default function FieldWorkers() {
 
                 {/* Job Info */}
                 <div>
-                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">岗位信息</p>
+                  <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">岗位信息</p>
                   <div className="p-4 rounded-2xl bg-emerald-500/5 border border-emerald-500/20">
                     <div className="flex items-center gap-2 text-emerald-400 text-sm font-medium mb-2">
                       <Sprout size={16} /> {detailApp.base?.baseName}
@@ -481,7 +481,7 @@ export default function FieldWorkers() {
                   if (!att) return null;
                   return (
                     <div>
-                      <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">今日考勤</p>
+                      <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">今日考勤</p>
                       <div className={`p-4 rounded-2xl border ${att.status === 1 ? 'bg-emerald-500/5 border-emerald-500/20' : att.status === 2 ? 'bg-rose-500/5 border-rose-500/20' : 'bg-amber-500/5 border-amber-500/20'}`}>
                         <div className="flex items-center gap-3">
                           {att.status === 1 ? <CheckCircle2 size={20} className="text-emerald-400" /> :

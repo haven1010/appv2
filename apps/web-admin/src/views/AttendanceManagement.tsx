@@ -429,7 +429,7 @@ export default function AttendanceManagement() {
       case 3:
         return 'bg-rose-500/10 text-rose-300 border border-rose-500/20';
       default:
-        return 'bg-amber-500/10 text-amber-300 border border-amber-500/20';
+        return 'bg-amber-500/10 text-white border border-amber-500/20';
     }
   };
 
@@ -608,7 +608,7 @@ export default function AttendanceManagement() {
                 </div>
                 <div className="text-center">
                   <p className="text-emerald-400 font-bold mb-2">扫码签到</p>
-                  <p className="text-slate-500 text-sm">请将二维码内容粘贴到下方输入框完成签到</p>
+                  <p className="text-slate-400 text-sm">请将二维码内容粘贴到下方输入框完成签到</p>
                 </div>
                 {/* Manual QR input */}
                 <div className="w-full space-y-3">
@@ -666,19 +666,19 @@ export default function AttendanceManagement() {
                 <h3 className="text-2xl font-bold text-white mb-2">签到成功</h3>
                 <div className="w-full space-y-4 mb-8">
                    <div className="flex justify-between py-2 border-b border-slate-800/50">
-                      <span className="text-slate-500">采摘工姓名</span>
+                      <span className="text-slate-400">采摘工姓名</span>
                       <span className="text-white font-medium">{lastScanned.name}</span>
                    </div>
                    <div className="flex justify-between py-2 border-b border-slate-800/50">
-                      <span className="text-slate-500">工号(UID)</span>
+                      <span className="text-slate-400">工号(UID)</span>
                       <span className="text-emerald-400 font-mono">{lastScanned.uid}</span>
                    </div>
                    <div className="flex justify-between py-2 border-b border-slate-800/50">
-                      <span className="text-slate-500">目标基地</span>
+                      <span className="text-slate-400">目标基地</span>
                       <span className="text-white font-medium">{lastScanned.base}</span>
                    </div>
                    <div className="flex justify-between py-2 border-b border-slate-800/50">
-                      <span className="text-slate-500">签到时间</span>
+                      <span className="text-slate-400">签到时间</span>
                       <span className="text-slate-300">{lastScanned.time}</span>
                    </div>
                 </div>
@@ -703,7 +703,7 @@ export default function AttendanceManagement() {
                   <Scan size={64} className="text-slate-700 group-hover:text-emerald-500 transition-all" />
                 </div>
                 <h3 className="text-xl font-bold text-white mb-3">准备开始签到</h3>
-                <p className="text-slate-500 mb-8">请使用移动端设备摄像头扫描采摘工二维码以完成实时考勤录入。</p>
+                <p className="text-slate-400 mb-8">请使用移动端设备摄像头扫描采摘工二维码以完成实时考勤录入。</p>
                 <button 
                   onClick={handleStartScan}
                   className="w-full py-4 bg-emerald-500 hover:bg-emerald-400 text-white font-bold rounded-2xl shadow-xl shadow-emerald-500/20 transition-all flex items-center justify-center gap-3 active:scale-95"
@@ -738,14 +738,14 @@ export default function AttendanceManagement() {
                   <span className="ml-3 text-slate-400">加载中...</span>
                 </div>
               ) : records.length === 0 ? (
-                <div className="text-center py-12 text-slate-500">
+                <div className="text-center py-12 text-slate-400">
                   暂无签到记录
                 </div>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-left">
                     <thead>
-                      <tr className="border-b border-slate-800/60 text-slate-500 text-xs uppercase tracking-wider">
+                      <tr className="border-b border-slate-800/60 text-slate-400 text-xs uppercase tracking-wider">
                         <th className="pb-3 font-semibold">姓名</th>
                         <th className="pb-3 font-semibold">工号</th>
                         <th className="pb-3 font-semibold">基地</th>
@@ -803,7 +803,7 @@ export default function AttendanceManagement() {
                     <div className="flex-1">
                       <div className="flex justify-between items-center mb-1">
                         <span className="font-bold text-slate-100">{record.workerName}</span>
-                        <span className="text-xs text-slate-500">{formatTime(record.checkinTime)}</span>
+                        <span className="text-xs text-slate-400">{formatTime(record.checkinTime)}</span>
                       </div>
                       <p className="text-sm text-slate-400">
                         {record.status === 2 
@@ -814,7 +814,7 @@ export default function AttendanceManagement() {
                   </div>
                 ))}
               {records.filter(r => r.status === 2 || (r.status === 0 && new Date(r.workDate) <= new Date())).length === 0 && (
-                <div className="text-center py-8 text-slate-500 text-sm">暂无异常记录</div>
+                <div className="text-center py-8 text-slate-400 text-sm">暂无异常记录</div>
               )}
             </div>
           </div>
@@ -832,7 +832,7 @@ export default function AttendanceManagement() {
                 <Loader2 className="animate-spin text-emerald-500" size={24} />
               </div>
             ) : baseStats.length === 0 ? (
-              <div className="text-center py-8 text-slate-500 text-sm">暂无基地数据</div>
+              <div className="text-center py-8 text-slate-400 text-sm">暂无基地数据</div>
             ) : (
               <div className="space-y-6">
                 {baseStats.map((base, i) => {
@@ -869,23 +869,23 @@ export default function AttendanceManagement() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="p-4 rounded-2xl bg-slate-950/50 border border-slate-800/60 text-center">
                   <p className="text-2xl font-bold text-emerald-400">{stats.checkedIn}</p>
-                  <p className="text-xs text-slate-500 mt-1 uppercase tracking-wider">已签到</p>
+                  <p className="text-xs text-slate-400 mt-1 uppercase tracking-wider">已签到</p>
                 </div>
                 <div className="p-4 rounded-2xl bg-slate-950/50 border border-slate-800/60 text-center">
                   <p className="text-2xl font-bold text-slate-400">{stats.absent}</p>
-                  <p className="text-xs text-slate-500 mt-1 uppercase tracking-wider">缺勤</p>
+                  <p className="text-xs text-slate-400 mt-1 uppercase tracking-wider">缺勤</p>
                 </div>
                 <div className="p-4 rounded-2xl bg-slate-950/50 border border-slate-800/60 text-center">
                   <p className="text-2xl font-bold text-amber-400">{stats.signedUp}</p>
-                  <p className="text-xs text-slate-500 mt-1 uppercase tracking-wider">已报名</p>
+                  <p className="text-xs text-slate-400 mt-1 uppercase tracking-wider">已报名</p>
                 </div>
                 <div className="p-4 rounded-2xl bg-slate-950/50 border border-slate-800/60 text-center">
                   <p className="text-2xl font-bold text-blue-400">{stats.attendanceRate}%</p>
-                  <p className="text-xs text-slate-500 mt-1 uppercase tracking-wider">到岗率</p>
+                  <p className="text-xs text-slate-400 mt-1 uppercase tracking-wider">到岗率</p>
                 </div>
               </div>
             ) : (
-              <div className="text-center py-8 text-slate-500 text-sm">暂无统计数据</div>
+              <div className="text-center py-8 text-slate-400 text-sm">暂无统计数据</div>
             )}
           </div>
         </div>
@@ -895,9 +895,9 @@ export default function AttendanceManagement() {
         <div className="flex flex-col gap-4 border-b border-slate-800/60 pb-5 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <h4 className="text-lg font-bold text-white">离线补签到工作区</h4>
-            <p className="mt-1 text-sm text-slate-500">断网时先补录原始事件。低风险记录自动入账，高风险记录进入审核队列。</p>
+            <p className="mt-1 text-sm text-slate-400">断网时先补录原始事件。低风险记录自动入账，高风险记录进入审核队列。</p>
           </div>
-          <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500">
+          <div className="flex flex-wrap items-center gap-3 text-xs text-slate-400">
             <span className="rounded-full border border-slate-800 bg-slate-950/50 px-3 py-1.5">按工作日 {selectedDate} 查看</span>
             <button
               onClick={fetchData}
@@ -912,12 +912,12 @@ export default function AttendanceManagement() {
           <div className="rounded-2xl border border-slate-800/60 bg-slate-950/40 p-5">
             <div className="mb-4">
               <h5 className="text-base font-bold text-white">提交补录</h5>
-              <p className="mt-1 text-xs text-slate-500">先记录原始事件，再由系统自动通过或进入审核。</p>
+              <p className="mt-1 text-xs text-slate-400">先记录原始事件，再由系统自动通过或进入审核。</p>
             </div>
 
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 2xl:grid-cols-1">
               <div>
-                <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-500">补录基地</label>
+                <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-400">补录基地</label>
                 <select
                   value={offlineForm.baseId}
                   onChange={(e) => setOfflineForm((current) => ({ ...current, baseId: e.target.value, jobId: '' }))}
@@ -932,7 +932,7 @@ export default function AttendanceManagement() {
               </div>
 
               <div>
-                <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-500">岗位</label>
+                <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-400">岗位</label>
                 <select
                   value={offlineForm.jobId}
                   onChange={(e) => setOfflineForm((current) => ({ ...current, jobId: e.target.value }))}
@@ -946,7 +946,7 @@ export default function AttendanceManagement() {
               </div>
 
               <div className="md:col-span-2 2xl:col-span-1">
-                <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-500">工人 UID</label>
+                <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-400">工人 UID</label>
                 <input
                   value={offlineForm.workerUid}
                   onChange={(e) => setOfflineForm((current) => ({ ...current, workerUid: e.target.value }))}
@@ -956,7 +956,7 @@ export default function AttendanceManagement() {
               </div>
 
               <div>
-                <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-500">工作日</label>
+                <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-400">工作日</label>
                 <input
                   type="date"
                   value={offlineForm.workDate}
@@ -966,7 +966,7 @@ export default function AttendanceManagement() {
               </div>
 
               <div>
-                <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-500">发生时间</label>
+                <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-400">发生时间</label>
                 <input
                   type="datetime-local"
                   value={offlineForm.occurredAt}
@@ -976,7 +976,7 @@ export default function AttendanceManagement() {
               </div>
 
               <div className="md:col-span-2 2xl:col-span-1">
-                <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-500">补录说明</label>
+                <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-400">补录说明</label>
                 <textarea
                   value={offlineForm.evidenceNote}
                   onChange={(e) => setOfflineForm((current) => ({ ...current, evidenceNote: e.target.value }))}
@@ -987,7 +987,7 @@ export default function AttendanceManagement() {
               </div>
 
               <div className="md:col-span-2 2xl:col-span-1">
-                <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-500">证据附件</label>
+                <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-400">证据附件</label>
                 <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-slate-700 bg-slate-800/70 px-4 py-3 text-sm text-slate-300 hover:border-blue-400/40 hover:text-white">
                   {offlineUploadLoading ? <Loader2 className="animate-spin" size={16} /> : <Paperclip size={16} />}
                   上传图片或凭证
@@ -1006,7 +1006,7 @@ export default function AttendanceManagement() {
                   <div className="mt-3 max-h-28 space-y-2 overflow-auto pr-1">
                     {offlineForm.evidenceAttachments.map((item) => (
                       <div key={item.url} className="flex items-center justify-between rounded-xl border border-slate-800 bg-slate-950/50 px-3 py-2 text-xs text-slate-300">
-                        <a href={resolveAttachmentUrl(item.url)} target="_blank" rel="noreferrer" className="truncate hover:text-blue-300">
+                        <a href={resolveAttachmentUrl(item.url)} target="_blank" rel="noreferrer" className="truncate hover:text-blue-200">
                           {item.name}
                         </a>
                         <button
@@ -1037,16 +1037,16 @@ export default function AttendanceManagement() {
             <div className="flex flex-col gap-4 border-b border-slate-800/60 pb-4 xl:flex-row xl:items-start xl:justify-between">
               <div>
                 <h5 className="text-base font-bold text-white">补录队列</h5>
-                <p className="mt-1 text-xs text-slate-500">自动通过会直接完成签到，待审核项需要基地管理员或超级管理员处理。</p>
+                <p className="mt-1 text-xs text-slate-400">自动通过会直接完成签到，待审核项需要基地管理员或超级管理员处理。</p>
               </div>
               {offlineStats ? (
                 <div className="grid grid-cols-5 gap-2 xl:min-w-[420px]">
                   <div className="rounded-xl border border-slate-800 bg-slate-900/60 px-3 py-3 text-center">
-                    <div className="text-[11px] text-slate-500">总数</div>
+                    <div className="text-[11px] text-slate-400">总数</div>
                     <div className="mt-1 text-lg font-bold text-white">{offlineStats.total}</div>
                   </div>
                   <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 px-3 py-3 text-center">
-                    <div className="text-[11px] text-amber-300">待审</div>
+                    <div className="text-[11px] text-amber-200">待审</div>
                     <div className="mt-1 text-lg font-bold text-amber-200">{offlineStats.pendingReview}</div>
                   </div>
                   <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 px-3 py-3 text-center">
@@ -1054,7 +1054,7 @@ export default function AttendanceManagement() {
                     <div className="mt-1 text-lg font-bold text-emerald-200">{offlineStats.autoApproved}</div>
                   </div>
                   <div className="rounded-xl border border-blue-500/20 bg-blue-500/5 px-3 py-3 text-center">
-                    <div className="text-[11px] text-blue-300">人工</div>
+                    <div className="text-[11px] text-blue-200">人工</div>
                     <div className="mt-1 text-lg font-bold text-blue-200">{offlineStats.approved}</div>
                   </div>
                   <div className="rounded-xl border border-rose-500/20 bg-rose-500/5 px-3 py-3 text-center">
@@ -1072,7 +1072,7 @@ export default function AttendanceManagement() {
                   正在加载补录队列...
                 </div>
               ) : offlineEvents.length === 0 ? (
-                <div className="py-12 text-center text-sm text-slate-500">当前没有离线补录记录</div>
+                <div className="py-12 text-center text-sm text-slate-400">当前没有离线补录记录</div>
               ) : (
                 <div className="space-y-3">
                   {offlineEvents.map((event) => (
@@ -1085,16 +1085,16 @@ export default function AttendanceManagement() {
                             <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${getOfflineStatusClass(event.status)}`}>
                               {getOfflineStatusLabel(event.status)}
                             </span>
-                            <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${event.riskLevel === 0 ? 'bg-emerald-500/10 text-emerald-300' : 'bg-amber-500/10 text-amber-300'}`}>
+                            <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${event.riskLevel === 0 ? 'bg-emerald-500/10 text-emerald-200' : 'bg-amber-500/10 text-amber-200'}`}>
                               {event.riskLevel === 0 ? '低风险' : '高风险'}
                             </span>
                           </div>
                           <p className="text-sm text-slate-400">{event.baseName} · {event.jobTitle || '未指定岗位'}</p>
-                          <p className="mt-1 text-xs text-slate-500">
+                          <p className="mt-1 text-xs text-slate-400">
                             工作日 {event.workDate} · 发生于 {new Date(event.occurredAt).toLocaleString('zh-CN')}
                           </p>
                         </div>
-                        <div className="text-xs text-slate-500 xl:text-right">
+                        <div className="text-xs text-slate-400 xl:text-right">
                           <div>提交人：{event.submittedByName}</div>
                           {event.reviewedAt ? <div>审核人：{event.reviewedByName || '-'}</div> : null}
                         </div>
@@ -1105,7 +1105,7 @@ export default function AttendanceManagement() {
                       </div>
 
                       {event.evidenceNote ? (
-                        <p className="mt-2 text-xs text-slate-500">补录说明：{event.evidenceNote}</p>
+                        <p className="mt-2 text-xs text-slate-400">补录说明：{event.evidenceNote}</p>
                       ) : null}
 
                       {event.evidenceAttachments && event.evidenceAttachments.length > 0 ? (
@@ -1151,7 +1151,7 @@ export default function AttendanceManagement() {
 
             {!offlineLoading && offlineStats && offlineStats.total > offlinePageSize ? (
               <div className="mt-4 flex items-center justify-between border-t border-slate-800 pt-4">
-                <span className="text-xs text-slate-500">
+                <span className="text-xs text-slate-400">
                   第 {offlinePage} 页，共 {Math.max(Math.ceil(offlineStats.total / offlinePageSize), 1)} 页
                 </span>
                 <div className="flex gap-2">
@@ -1200,7 +1200,7 @@ export default function AttendanceManagement() {
                     {salaryDraftTarget.workerName} · {salaryDraftTarget.jobTitle}
                   </p>
                 </div>
-                <button onClick={closeSalaryDraftModal} className="text-slate-500 transition hover:text-white">
+                <button onClick={closeSalaryDraftModal} className="text-slate-400 transition hover:text-white">
                   <XCircle size={22} />
                 </button>
               </div>
@@ -1225,7 +1225,7 @@ export default function AttendanceManagement() {
 
                   {salaryJobDetail.payType === 2 && (
                     <div>
-                      <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-500">工作时长（小时）</label>
+                      <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-400">工作时长（小时）</label>
                       <input
                         type="number"
                         min="0"
@@ -1240,7 +1240,7 @@ export default function AttendanceManagement() {
 
                   {salaryJobDetail.payType === 3 && (
                     <div>
-                      <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-500">完成件数</label>
+                      <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-400">完成件数</label>
                       <input
                         type="number"
                         min="0"

@@ -130,7 +130,7 @@
 .wx-hint {
   margin-top: 16rpx;
   font-size: 24rpx;
-  color: #b0aac0;
+  color: #8e96a8;
 }
 
 /* ─── 密码登录入口 ─── */
@@ -324,7 +324,7 @@
 }
 
 .placeholder {
-  color: #b0aac0;
+  color: #8e96a8;
   font-size: 28rpx;
 }
 
@@ -365,9 +365,9 @@
 }
 
 .login-btn[disabled] {
-  background: #d4d0e0;
+  background: #b8b4c8;
   box-shadow: none;
-  color: #9a94a8;
+  color: #ffffff;
 }
 
 /* ─── 注册入口 ─── */
@@ -428,7 +428,7 @@
 
 .network-arrow {
   font-size: 20rpx;
-  color: #b0aac0;
+  color: #8e96a8;
 }
 
 .network-body {

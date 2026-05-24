@@ -268,7 +268,7 @@ export default function JobManagement() {
         <div className="flex flex-col md:flex-row gap-4 mb-6">
           <div className="relative flex-1">
             <Search
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
               size={18}
             />
             <input
@@ -281,7 +281,7 @@ export default function JobManagement() {
           </div>
           <div className="flex gap-2">
             <label className="relative">
-              <Filter className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
+              <Filter className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
               <select
                 value={jobStatusFilter}
                 onChange={(e) => setJobStatusFilter(e.target.value === '' ? '' : Number(e.target.value))}
@@ -303,7 +303,7 @@ export default function JobManagement() {
             正在加载基地信息...
           </div>
         ) : bases.length === 0 ? (
-          <p className="text-slate-500 text-sm mb-4">
+          <p className="text-slate-400 text-sm mb-4">
             暂无可用基地。请先在「基地管理」中申请入驻并通过审核后，再进行招聘管理。
           </p>
         ) : (
@@ -330,7 +330,7 @@ export default function JobManagement() {
               正在加载岗位数据...
             </div>
           ) : visibleJobs.length === 0 ? (
-            <div className="col-span-full text-center py-12 text-slate-500 text-sm">
+            <div className="col-span-full text-center py-12 text-slate-400 text-sm">
               当前筛选下暂无岗位记录。
             </div>
           ) : null}
@@ -352,7 +352,7 @@ export default function JobManagement() {
                         {job.title}
                       </h4>
                       <div className="flex items-center gap-4 mt-2">
-                        <p className="text-xs text-slate-500 flex items-center gap-1.5">
+                        <p className="text-xs text-slate-400 flex items-center gap-1.5">
                           <MapPin size={14} className="text-emerald-500" /> {job.base}
                         </p>
                         <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-900 border border-slate-800 text-slate-400 font-bold uppercase tracking-widest">
@@ -363,14 +363,14 @@ export default function JobManagement() {
                   </div>
                   <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
                     <div className="flex flex-col gap-1">
-                      <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest flex items-center gap-1.5">
+                      <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest flex items-center gap-1.5">
                         <Users size={12} /> 岗位定员
                       </span>
                       <div className="flex items-baseline gap-2">
                         <span className="text-lg font-bold text-slate-100">
                           {job.applied}
                         </span>
-                        <span className="text-slate-500 text-xs">/ {job.count} 人</span>
+                        <span className="text-slate-400 text-xs">/ {job.count} 人</span>
                         <div className="w-full max-w-[60px] h-1 bg-slate-800 rounded-full ml-1 overflow-hidden">
                           <div
                             className="h-full bg-emerald-500"
@@ -382,7 +382,7 @@ export default function JobManagement() {
                       </div>
                     </div>
                     <div className="flex flex-col gap-1">
-                      <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest flex items-center gap-1.5">
+                      <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest flex items-center gap-1.5">
                         <DollarSign size={12} /> 薪资标准
                       </span>
                       <span className="text-lg font-bold text-emerald-400">
@@ -390,13 +390,13 @@ export default function JobManagement() {
                       </span>
                     </div>
                     <div className="flex flex-col gap-1">
-                      <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest flex items-center gap-1.5">
+                      <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest flex items-center gap-1.5">
                         <Calendar size={12} /> 工作周期
                       </span>
                       <span className="text-sm font-bold text-slate-300">{job.period}</span>
                     </div>
                     <div className="flex flex-col gap-1">
-                      <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest flex items-center gap-1.5">
+                      <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest flex items-center gap-1.5">
                         <Clock size={12} /> 状态
                       </span>
                       <span
@@ -407,7 +407,7 @@ export default function JobManagement() {
                             ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
                             : job.statusCode === 3
                             ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-                            : 'bg-slate-800 text-slate-500 border border-slate-700/50'
+                            : 'bg-slate-800 text-slate-400 border border-slate-700/50'
                         }`}
                       >
                         {job.statusLabel}
@@ -430,7 +430,7 @@ export default function JobManagement() {
                   {user?.role === UserRole.BASE_MANAGER ? (
                     <button
                       onClick={() => setManageJob(job)}
-                      className="flex-1 md:w-full py-3 px-4 rounded-2xl bg-slate-950 border border-slate-800 text-slate-500 text-xs font-bold hover:text-slate-100 hover:border-slate-700 transition-all flex items-center justify-center gap-2"
+                      className="flex-1 md:w-full py-3 px-4 rounded-2xl bg-slate-950 border border-slate-800 text-slate-400 text-xs font-bold hover:text-slate-100 hover:border-slate-700 transition-all flex items-center justify-center gap-2"
                     >
                       <MoreVertical size={16} />
                       管理岗位
@@ -466,14 +466,14 @@ export default function JobManagement() {
                   </div>
                   <div>
                     <h3 className="text-2xl font-bold text-white">申请人列表</h3>
-                    <p className="text-sm text-slate-500 mt-0.5">
+                    <p className="text-sm text-slate-400 mt-0.5">
                       {selectedJob?.title} - {selectedJob?.base}
                     </p>
                   </div>
                 </div>
                 <button
                   onClick={() => setShowCandidates(false)}
-                  className="p-2 text-slate-500 hover:text-white transition-colors"
+                  className="p-2 text-slate-400 hover:text-white transition-colors"
                 >
                   <XCircle size={32} />
                 </button>
@@ -487,7 +487,7 @@ export default function JobManagement() {
                       正在加载候选人...
                     </div>
                   ) : applications.length === 0 ? (
-                    <p className="text-center text-slate-500 text-sm py-8">
+                    <p className="text-center text-slate-400 text-sm py-8">
                       暂无报名记录。采摘工可在「采摘工工作台」中申请该岗位后出现在此处。
                     </p>
                   ) : (
@@ -503,7 +503,7 @@ export default function JobManagement() {
                           <div>
                             <h5 className="font-bold text-slate-100 text-lg">{c.name}</h5>
                             <div className="flex items-center gap-3 mt-1">
-                              <span className="text-xs text-slate-500">{c.phone}</span>
+                              <span className="text-xs text-slate-400">{c.phone}</span>
                               <span className="flex items-center gap-1 text-xs text-amber-400">
                                 <CheckCircle2 size={12} /> {c.statusLabel}
                               </span>
@@ -512,7 +512,7 @@ export default function JobManagement() {
                         </div>
                         <div className="flex items-center gap-8">
                           <div className="text-right">
-                            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-1">
+                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">
                               当前状态
                             </p>
                             <span
@@ -606,7 +606,7 @@ export default function JobManagement() {
                   <h3 className="text-2xl font-bold text-white">岗位管理</h3>
                   <p className="mt-1 text-sm text-slate-400">{manageJob.title}</p>
                 </div>
-                <button onClick={() => setManageJob(null)} className="text-slate-500 transition hover:text-white">
+                <button onClick={() => setManageJob(null)} className="text-slate-400 transition hover:text-white">
                   <XCircle size={28} />
                 </button>
               </div>
@@ -619,19 +619,19 @@ export default function JobManagement() {
                 <div className="mt-6 space-y-5">
                   <div className="grid gap-4 md:grid-cols-3">
                     <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
-                      <p className="text-xs uppercase tracking-[0.2em] text-slate-500">当前状态</p>
+                      <p className="text-xs uppercase tracking-[0.2em] text-slate-400">当前状态</p>
                       <p className="mt-3 text-lg font-bold text-white">
                         {JOB_STATUS_LABEL[manageJobDetail.status as number] ?? '未知'}
                       </p>
                     </div>
                     <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
-                      <p className="text-xs uppercase tracking-[0.2em] text-slate-500">有效期</p>
+                      <p className="text-xs uppercase tracking-[0.2em] text-slate-400">有效期</p>
                       <p className="mt-3 text-lg font-bold text-white">
                         {manageJobDetail.validUntil ? String(manageJobDetail.validUntil).slice(0, 10) : '未设置'}
                       </p>
                     </div>
                     <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
-                      <p className="text-xs uppercase tracking-[0.2em] text-slate-500">浏览量</p>
+                      <p className="text-xs uppercase tracking-[0.2em] text-slate-400">浏览量</p>
                       <p className="mt-3 text-lg font-bold text-white">{manageJobDetail.viewCount ?? 0}</p>
                     </div>
                   </div>
@@ -667,7 +667,7 @@ export default function JobManagement() {
                   </div>
 
                   <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
-                    <p className="text-xs uppercase tracking-[0.2em] text-slate-500">岗位说明</p>
+                    <p className="text-xs uppercase tracking-[0.2em] text-slate-400">岗位说明</p>
                     <p className="mt-3 text-sm leading-7 text-slate-300">
                       {manageJobDetail.workContent || manageJobDetail.requirements || '暂无补充说明'}
                     </p>

@@ -92,7 +92,7 @@ export default function DashboardLayout() {
                     </div>
                     <div>
                         <h1 className="font-bold text-lg tracking-tight">采摘通</h1>
-                        <p className="text-[10px] text-slate-500 uppercase tracking-wider">管理后台</p>
+                        <p className="text-[10px] text-slate-400 uppercase tracking-wider">管理后台</p>
                     </div>
                 </div>
 
@@ -106,7 +106,7 @@ export default function DashboardLayout() {
                             lastSection = item.section;
                             sectionHeader = (
                                 <div key={`section-${item.section}`} className="px-4 py-2 mt-3 mb-1">
-                                    <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">{item.section}</p>
+                                    <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">{item.section}</p>
                                 </div>
                             );
                         }
@@ -121,7 +121,7 @@ export default function DashboardLayout() {
                                             : 'text-slate-400 hover:bg-slate-800 hover:text-white'
                                         }`}
                                 >
-                                    <item.icon size={20} className={isActive ? 'text-white' : 'text-slate-500 group-hover:text-white transition-colors'} />
+                                    <item.icon size={20} className={isActive ? 'text-white' : 'text-slate-400 group-hover:text-white transition-colors'} />
                                     <span className="font-medium text-sm">{item.label}</span>
                                 </Link>
                             </React.Fragment>
@@ -138,12 +138,12 @@ export default function DashboardLayout() {
                             </div>
                             <div className="overflow-hidden">
                                 <p className="text-sm font-medium truncate w-24">{user?.name || '管理员'}</p>
-                                <p className="text-xs text-slate-500 truncate">{ROLE_LABEL[role] || '管理员'}</p>
+                                <p className="text-xs text-slate-400 truncate">{ROLE_LABEL[role] || '管理员'}</p>
                             </div>
                         </div>
                         <button
                             onClick={handleLogout}
-                            className="p-2 hover:bg-red-500/20 hover:text-red-400 rounded-lg transition-colors text-slate-500"
+                            className="p-2 hover:bg-red-500/20 hover:text-red-400 rounded-lg transition-colors text-slate-400"
                             title="退出登录"
                         >
                             <LogOut size={18} />

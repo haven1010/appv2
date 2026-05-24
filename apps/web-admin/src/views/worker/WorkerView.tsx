@@ -116,7 +116,7 @@ function ProfileEditForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label className="block text-xs text-slate-500 mb-1">姓名</label>
+        <label className="block text-xs text-slate-400 mb-1">姓名</label>
         <input
           type="text"
           value={name}
@@ -125,7 +125,7 @@ function ProfileEditForm({
         />
       </div>
       <div>
-        <label className="block text-xs text-slate-500 mb-1">手机号</label>
+        <label className="block text-xs text-slate-400 mb-1">手机号</label>
         <input
           type="tel"
           value={phone}
@@ -134,7 +134,7 @@ function ProfileEditForm({
         />
       </div>
       <div>
-        <label className="block text-xs text-slate-500 mb-1">紧急联系人</label>
+        <label className="block text-xs text-slate-400 mb-1">紧急联系人</label>
         <input
           type="text"
           value={emergencyContact}
@@ -144,7 +144,7 @@ function ProfileEditForm({
         />
       </div>
       <div>
-        <label className="block text-xs text-slate-500 mb-1">紧急联系人电话</label>
+        <label className="block text-xs text-slate-400 mb-1">紧急联系人电话</label>
         <input
           type="tel"
           value={emergencyPhone}
@@ -380,15 +380,15 @@ export default function WorkerView() {
         <div className="grid grid-cols-3 gap-4 pt-4 border-t border-white/5">
           <div className="text-center">
             <p className="text-lg font-bold text-white">{workerStats?.workDays ?? '-'}</p>
-            <p className="text-[10px] text-slate-500 font-bold uppercase">已做天数</p>
+            <p className="text-[10px] text-slate-400 font-bold uppercase">已做天数</p>
           </div>
           <div className="text-center border-x border-white/5">
             <p className="text-lg font-bold text-emerald-400">¥{(workerStats?.pendingAmount ?? 0).toLocaleString()}</p>
-            <p className="text-[10px] text-slate-500 font-bold uppercase">待收工资</p>
+            <p className="text-[10px] text-slate-400 font-bold uppercase">待收工资</p>
           </div>
           <div className="text-center">
             <p className="text-lg font-bold text-white">-</p>
-            <p className="text-[10px] text-slate-500 font-bold uppercase">信用评分</p>
+            <p className="text-[10px] text-slate-400 font-bold uppercase">信用评分</p>
           </div>
         </div>
       </motion.div>
@@ -397,7 +397,7 @@ export default function WorkerView() {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-bold text-white">推荐基地</h3>
-          <span className="text-xs text-slate-500">根据匹配度推荐</span>
+          <span className="text-xs text-slate-400">根据匹配度推荐</span>
         </div>
         {basesLoading ? (
           <div className="glass-card p-8 rounded-3xl border-slate-800/60 flex items-center justify-center gap-2 text-slate-400">
@@ -405,7 +405,7 @@ export default function WorkerView() {
             加载中…
           </div>
         ) : recommendedBases.length === 0 ? (
-          <div className="glass-card p-8 rounded-3xl border-slate-800/60 text-center text-slate-500 text-sm">
+          <div className="glass-card p-8 rounded-3xl border-slate-800/60 text-center text-slate-400 text-sm">
             暂无推荐基地，请稍后再看
           </div>
         ) : (
@@ -422,7 +422,7 @@ export default function WorkerView() {
                   <h4 className="font-bold text-slate-100 text-base">{base.baseName}</h4>
                   <div className="flex items-center gap-2 mt-1">
                     <span className="text-xs text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded-lg">{base.categoryName}</span>
-                    <span className="text-[10px] text-slate-500">在招 {base.activeJobsCount} 个岗位</span>
+                    <span className="text-[10px] text-slate-400">在招 {base.activeJobsCount} 个岗位</span>
                   </div>
                 </div>
                 {base.score != null && (
@@ -479,7 +479,7 @@ export default function WorkerView() {
                     加载岗位…
                   </div>
                 ) : (Array.isArray(baseJobs) ? baseJobs : []).length === 0 ? (
-                  <p className="text-center text-slate-500 text-sm py-8">该基地暂无在招岗位</p>
+                  <p className="text-center text-slate-400 text-sm py-8">该基地暂无在招岗位</p>
                 ) : (
                   (Array.isArray(baseJobs) ? baseJobs : []).map((job: any) => (
                     <div key={job.id} className="p-4 rounded-2xl bg-slate-900/50 border border-slate-800">
@@ -487,7 +487,7 @@ export default function WorkerView() {
                         <h4 className="font-bold text-slate-100">{job.jobTitle ?? job.title}</h4>
                         <span className="text-xs text-emerald-400 font-bold">{formatJobSalary(job)}</span>
                       </div>
-                      {job.workContent && <p className="text-xs text-slate-500 line-clamp-2 mb-3">{job.workContent}</p>}
+                      {job.workContent && <p className="text-xs text-slate-400 line-clamp-2 mb-3">{job.workContent}</p>}
                       <button
                         disabled={applyLoading || hasAppliedForJob(job.id, selectedBaseId)}
                         onClick={() => handleApply(job.id, selectedBaseId)}
@@ -514,7 +514,7 @@ export default function WorkerView() {
     <div className="space-y-6 pb-24">
       <h3 className="text-xl font-bold text-white">我的报名进度</h3>
       {applications.length === 0 ? (
-        <div className="glass-card p-8 rounded-3xl border-slate-800/60 text-center text-slate-500 text-sm">
+        <div className="glass-card p-8 rounded-3xl border-slate-800/60 text-center text-slate-400 text-sm">
           暂无报名记录，去广场看看推荐岗位吧
         </div>
       ) : (
@@ -523,7 +523,7 @@ export default function WorkerView() {
           <div className="flex justify-between items-start mb-4">
             <div>
               <h4 className="font-bold text-slate-100">{app.title}</h4>
-              <p className="text-xs text-slate-500 mt-1">{app.base}</p>
+              <p className="text-xs text-slate-400 mt-1">{app.base}</p>
             </div>
             <span className={`px-3 py-1 rounded-full text-[10px] font-bold ${
               app.status === '已录取' ? 'bg-emerald-500/10 text-emerald-400' :
@@ -546,7 +546,7 @@ export default function WorkerView() {
             </div>
           </div>
           
-          <div className="flex justify-between items-center text-[10px] text-slate-500">
+          <div className="flex justify-between items-center text-[10px] text-slate-400">
             <span>报名日期: {app.date}</span>
             <button
               onClick={() => setSelectedAppDetail(app.raw)}
@@ -574,7 +574,7 @@ export default function WorkerView() {
       <div className="mt-8">
         <h3 className="text-lg font-bold text-white mb-4">待发放核对</h3>
         {workerPending.length === 0 ? (
-          <div className="glass-card p-8 rounded-3xl border-slate-800/60 text-center text-slate-500 text-sm">
+          <div className="glass-card p-8 rounded-3xl border-slate-800/60 text-center text-slate-400 text-sm">
             暂无待确认工资
           </div>
         ) : (
@@ -588,7 +588,7 @@ export default function WorkerView() {
                   <h4 className="font-bold text-slate-100">
                     {item.baseName} · {item.jobTitle}
                   </h4>
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-slate-400">
                     {item.workDate ? new Date(item.workDate).toLocaleDateString() : '-'}
                     {item.workDuration > 0 ? ` · 共计 ${item.workDuration} 小时` : ''}
                     {item.pieceCount > 0 ? ` · ${item.pieceCount} 件` : ''}
@@ -630,7 +630,7 @@ export default function WorkerView() {
           <h2 className="text-xl font-bold text-white">{user?.name}</h2>
           <div className="flex items-center gap-2 mt-1">
             <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">实名采摘工</span>
-            <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-800 text-slate-500 border border-slate-700/50">{user?.uid}</span>
+            <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700/50">{user?.uid}</span>
           </div>
        </div>
        
@@ -645,7 +645,7 @@ export default function WorkerView() {
               </div>
               <span className="text-slate-200 font-medium">基本信息</span>
             </div>
-            <div className="flex items-center gap-1 text-slate-500 text-sm">
+            <div className="flex items-center gap-1 text-slate-400 text-sm">
               {profileData === undefined ? '-' : profileData?.infoAuditStatus === 1 ? '已认证' : profileData?.infoAuditStatus === 0 ? '待审核' : '未认证'}
               <ChevronRight size={16} />
             </div>
@@ -660,7 +660,7 @@ export default function WorkerView() {
               </div>
               <span className="text-slate-200 font-medium">薪资卡号</span>
             </div>
-            <div className="flex items-center gap-1 text-slate-500 text-sm">
+            <div className="flex items-center gap-1 text-slate-400 text-sm">
               未绑定
               <ChevronRight size={16} />
             </div>
@@ -675,7 +675,7 @@ export default function WorkerView() {
               </div>
               <span className="text-slate-200 font-medium">工作历程</span>
             </div>
-            <div className="flex items-center gap-1 text-slate-500 text-sm">
+            <div className="flex items-center gap-1 text-slate-400 text-sm">
               {workerStats?.workDays ?? 0} 天签到
               <ChevronRight size={16} />
             </div>
@@ -690,7 +690,7 @@ export default function WorkerView() {
               </div>
               <span className="text-slate-200 font-medium">设置</span>
             </div>
-            <div className="flex items-center gap-1 text-slate-500 text-sm">
+            <div className="flex items-center gap-1 text-slate-400 text-sm">
               <ChevronRight size={16} />
             </div>
           </button>
@@ -736,7 +736,7 @@ export default function WorkerView() {
       <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md h-20 glass border-t border-slate-800/60 flex items-center justify-around px-4 z-50 rounded-t-[32px] shadow-[0_-10px_30px_rgba(0,0,0,0.5)]">
         <button 
           onClick={() => setActiveTab('home')}
-          className={`flex flex-col items-center gap-1 transition-all ${activeTab === 'home' ? 'text-emerald-400' : 'text-slate-500'}`}
+          className={`flex flex-col items-center gap-1 transition-all ${activeTab === 'home' ? 'text-emerald-400' : 'text-slate-400'}`}
         >
           <div className={`p-1 rounded-lg ${activeTab === 'home' ? 'bg-emerald-500/10' : ''}`}>
             <Briefcase size={22} />
@@ -746,7 +746,7 @@ export default function WorkerView() {
         
         <button 
           onClick={() => setActiveTab('applications')}
-          className={`flex flex-col items-center gap-1 transition-all ${activeTab === 'applications' ? 'text-emerald-400' : 'text-slate-500'}`}
+          className={`flex flex-col items-center gap-1 transition-all ${activeTab === 'applications' ? 'text-emerald-400' : 'text-slate-400'}`}
         >
           <div className={`p-1 rounded-lg ${activeTab === 'applications' ? 'bg-emerald-500/10' : ''}`}>
             <Clock size={22} />
@@ -761,12 +761,12 @@ export default function WorkerView() {
           >
             <QrCode size={32} />
           </button>
-          <span className="text-[10px] font-bold uppercase tracking-widest mt-2 text-slate-500">签到码</span>
+          <span className="text-[10px] font-bold uppercase tracking-widest mt-2 text-slate-400">签到码</span>
         </div>
 
         <button 
           onClick={() => setActiveTab('profile')}
-          className={`flex flex-col items-center gap-1 transition-all ${activeTab === 'profile' ? 'text-emerald-400' : 'text-slate-500'}`}
+          className={`flex flex-col items-center gap-1 transition-all ${activeTab === 'profile' ? 'text-emerald-400' : 'text-slate-400'}`}
         >
           <div className={`p-1 rounded-lg ${activeTab === 'profile' ? 'bg-emerald-500/10' : ''}`}>
             <User size={22} />
@@ -802,20 +802,20 @@ export default function WorkerView() {
 
                 <div className="bg-white p-6 rounded-3xl mb-8 flex items-center justify-center shadow-2xl overflow-hidden min-h-[220px]">
                    {qrLoading ? (
-                     <div className="flex items-center gap-2 text-slate-500">
+                     <div className="flex items-center gap-2 text-slate-400">
                        <Loader2 className="animate-spin" size={24} />
                        生成中…
                      </div>
                    ) : qrData?.content ? (
                      <QRCodeSVG value={qrData.content} size={220} level="H" />
                    ) : (
-                     <span className="text-slate-500 text-sm">加载失败</span>
+                     <span className="text-slate-400 text-sm">加载失败</span>
                    )}
                 </div>
 
                 <div className="space-y-2 mb-8 bg-slate-900/50 py-4 rounded-2xl border border-slate-800">
                    <p className="text-emerald-400 font-mono text-2xl font-bold tracking-wider">{user?.uid}</p>
-                   <div className="flex items-center justify-center gap-2 text-slate-500 text-[10px] font-medium">
+                   <div className="flex items-center justify-center gap-2 text-slate-400 text-[10px] font-medium">
                      <Clock size={12} />
                      <span>{qrData?.validDuration ? `有效期 ${qrData.validDuration}` : '请向现场管理员出示此码'}</span>
                    </div>
@@ -886,31 +886,31 @@ export default function WorkerView() {
                 ) : (
                   <div className="space-y-4">
                     <div className="flex justify-between items-center py-2">
-                      <span className="text-slate-500">姓名</span>
+                      <span className="text-slate-400">姓名</span>
                       <span className="text-slate-200 font-medium">{profileData?.name ?? '-'}</span>
                     </div>
                     <div className="flex justify-between items-center py-2">
-                      <span className="text-slate-500">工号</span>
+                      <span className="text-slate-400">工号</span>
                       <span className="text-slate-200 font-mono">{profileData?.uid ?? '-'}</span>
                     </div>
                     <div className="flex justify-between items-center py-2">
-                      <span className="text-slate-500">手机号</span>
+                      <span className="text-slate-400">手机号</span>
                       <span className="text-slate-200">{profileData?.phone ? maskPhone(profileData.phone) : '-'}</span>
                     </div>
                     <div className="flex justify-between items-center py-2">
-                      <span className="text-slate-500">身份证</span>
+                      <span className="text-slate-400">身份证</span>
                       <span className="text-slate-200">{profileData?.idCard ? maskIdCard(profileData.idCard) : '-'}</span>
                     </div>
                     <div className="flex justify-between items-center py-2">
-                      <span className="text-slate-500">紧急联系人</span>
+                      <span className="text-slate-400">紧急联系人</span>
                       <span className="text-slate-200">{profileData?.emergencyContact ?? '-'}</span>
                     </div>
                     <div className="flex justify-between items-center py-2">
-                      <span className="text-slate-500">紧急联系人电话</span>
+                      <span className="text-slate-400">紧急联系人电话</span>
                       <span className="text-slate-200">{profileData?.emergencyPhone ? maskPhone(profileData.emergencyPhone) : '-'}</span>
                     </div>
                     <div className="flex justify-between items-center py-2">
-                      <span className="text-slate-500">认证状态</span>
+                      <span className="text-slate-400">认证状态</span>
                       <span className={`font-medium ${profileData?.infoAuditStatus === 1 ? 'text-emerald-400' : profileData?.infoAuditStatus === 0 ? 'text-amber-400' : 'text-slate-400'}`}>
                         {profileData?.infoAuditStatus === 1 ? '已认证' : profileData?.infoAuditStatus === 0 ? '待审核' : '未通过'}
                       </span>
@@ -955,7 +955,7 @@ export default function WorkerView() {
                     加载中…
                   </div>
                 ) : workRecords.length === 0 ? (
-                  <div className="text-center py-12 text-slate-500 text-sm">暂无签到记录</div>
+                  <div className="text-center py-12 text-slate-400 text-sm">暂无签到记录</div>
                 ) : (
                   workRecords.map((r) => (
                     <div key={r.id} className="p-4 rounded-2xl bg-slate-900/50 border border-slate-800">
@@ -967,7 +967,7 @@ export default function WorkerView() {
                           r.status === 3 ? 'bg-slate-600 text-slate-400' : 'bg-amber-500/10 text-amber-400'
                         }`}>{r.statusText}</span>
                       </div>
-                      <div className="flex items-center gap-2 text-xs text-slate-500">
+                      <div className="flex items-center gap-2 text-xs text-slate-400">
                         <Clock size={12} />
                         {r.workDate ? new Date(r.workDate).toLocaleDateString() : '-'}
                         {r.checkinTime && ` · 签到 ${new Date(r.checkinTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
@@ -1101,20 +1101,20 @@ export default function WorkerView() {
                 </div>
                 {selectedAppDetail.job?.workContent && (
                   <div className="bg-slate-900/50 p-4 rounded-2xl border border-slate-800">
-                    <p className="text-xs text-slate-500 font-bold uppercase mb-2">工作内容</p>
+                    <p className="text-xs text-slate-400 font-bold uppercase mb-2">工作内容</p>
                     <p className="text-sm text-slate-300">{selectedAppDetail.job.workContent}</p>
                   </div>
                 )}
                 <div className="space-y-3 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-slate-500">报名日期</span>
+                    <span className="text-slate-400">报名日期</span>
                     <span className="text-slate-200">
                       {selectedAppDetail.createdAt ? new Date(selectedAppDetail.createdAt).toLocaleString() : '-'}
                     </span>
                   </div>
                   {selectedAppDetail.note && (
                     <div className="flex justify-between items-start gap-2">
-                      <span className="text-slate-500">申请备注</span>
+                      <span className="text-slate-400">申请备注</span>
                       <span className="text-slate-200 text-right">{selectedAppDetail.note}</span>
                     </div>
                   )}
@@ -1126,7 +1126,7 @@ export default function WorkerView() {
                   )}
                   {(selectedAppDetail.status === 1 || selectedAppDetail.status === 2) && selectedAppDetail.reviewedAt && (
                     <div className="flex justify-between">
-                      <span className="text-slate-500">审核时间</span>
+                      <span className="text-slate-400">审核时间</span>
                       <span className="text-slate-200">
                         {new Date(selectedAppDetail.reviewedAt).toLocaleString()}
                       </span>

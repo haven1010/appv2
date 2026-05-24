@@ -69,7 +69,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
               "flex items-center gap-4 px-3 py-3 rounded-xl transition-all duration-200 group relative",
               isActive 
                 ? "bg-emerald-500/10 text-emerald-400 shadow-[inset_0_0_0_1px_rgba(16,185,129,0.2)]" 
-                : "text-slate-400 hover:bg-slate-800 hover:text-slate-100"
+                : "text-slate-300 hover:bg-slate-800 hover:text-white"
             )}
           >
             {/* Fixed: Use function as children to access isActive property provided by NavLink */}

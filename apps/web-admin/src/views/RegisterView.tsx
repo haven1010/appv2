@@ -76,35 +76,35 @@ export default function RegisterView() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="relative group">
-            <UserIcon className="absolute left-3 top-3.5 text-slate-500 group-focus-within:text-emerald-500 transition-colors" size={18} />
+            <UserIcon className="absolute left-3 top-3.5 text-slate-400 group-focus-within:text-emerald-500 transition-colors" size={18} />
             <input
               required
               placeholder="真实姓名"
               value={form.name}
               onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-              className="w-full bg-slate-950/50 border border-slate-700 rounded-xl py-3 pl-10 pr-4 text-white focus:outline-none focus:border-emerald-500 placeholder:text-slate-500"
+              className="w-full bg-slate-950/50 border border-slate-700 rounded-xl py-3 pl-10 pr-4 text-white focus:outline-none focus:border-emerald-500 placeholder:text-slate-400"
             />
           </div>
           <div className="relative group">
-            <CreditCard className="absolute left-3 top-3.5 text-slate-500 group-focus-within:text-emerald-500 transition-colors" size={18} />
+            <CreditCard className="absolute left-3 top-3.5 text-slate-400 group-focus-within:text-emerald-500 transition-colors" size={18} />
             <input
               required
               placeholder="身份证号（18位）"
               value={form.idCard}
               onChange={(e) => setForm((f) => ({ ...f, idCard: e.target.value }))}
-              className="w-full bg-slate-950/50 border border-slate-700 rounded-xl py-3 pl-10 pr-4 text-white focus:outline-none focus:border-emerald-500 placeholder:text-slate-500"
+              className="w-full bg-slate-950/50 border border-slate-700 rounded-xl py-3 pl-10 pr-4 text-white focus:outline-none focus:border-emerald-500 placeholder:text-slate-400"
               maxLength={18}
             />
           </div>
           <div className="relative group">
-            <Phone className="absolute left-3 top-3.5 text-slate-500 group-focus-within:text-emerald-500 transition-colors" size={18} />
+            <Phone className="absolute left-3 top-3.5 text-slate-400 group-focus-within:text-emerald-500 transition-colors" size={18} />
             <input
               required
               type="tel"
               placeholder="手机号（例：13800138000）"
               value={form.phone}
               onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
-              className="w-full bg-slate-950/50 border border-slate-700 rounded-xl py-3 pl-10 pr-4 text-white focus:outline-none focus:border-emerald-500 placeholder:text-slate-500"
+              className="w-full bg-slate-950/50 border border-slate-700 rounded-xl py-3 pl-10 pr-4 text-white focus:outline-none focus:border-emerald-500 placeholder:text-slate-400"
             />
           </div>
           <div className="rounded-2xl border border-emerald-500/15 bg-emerald-500/5 px-4 py-3 text-sm text-emerald-100">
@@ -116,7 +116,7 @@ export default function RegisterView() {
               placeholder="姓名及关系，如：李四-配偶"
               value={form.emergencyContact ?? ''}
               onChange={(e) => setForm((f) => ({ ...f, emergencyContact: e.target.value }))}
-              className="w-full bg-slate-950/50 border border-slate-700 rounded-xl py-3 px-4 text-white focus:outline-none focus:border-emerald-500 placeholder:text-slate-500"
+              className="w-full bg-slate-950/50 border border-slate-700 rounded-xl py-3 px-4 text-white focus:outline-none focus:border-emerald-500 placeholder:text-slate-400"
             />
           </div>
           <div>
@@ -126,7 +126,7 @@ export default function RegisterView() {
               placeholder="13900139000"
               value={form.emergencyPhone ?? ''}
               onChange={(e) => setForm((f) => ({ ...f, emergencyPhone: e.target.value }))}
-              className="w-full bg-slate-950/50 border border-slate-700 rounded-xl py-3 px-4 text-white focus:outline-none focus:border-emerald-500 placeholder:text-slate-500"
+              className="w-full bg-slate-950/50 border border-slate-700 rounded-xl py-3 px-4 text-white focus:outline-none focus:border-emerald-500 placeholder:text-slate-400"
             />
           </div>
 
@@ -139,7 +139,7 @@ export default function RegisterView() {
           </button>
         </form>
 
-        <p className="text-center text-slate-500 text-sm mt-4">
+        <p className="text-center text-slate-400 text-sm mt-4">
           已有账号？{' '}
           <Link to="/login" className="text-emerald-400 hover:text-emerald-300 font-medium">
             去登录

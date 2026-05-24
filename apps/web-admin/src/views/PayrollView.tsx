@@ -42,7 +42,7 @@ const SALARY_STATUS_META: Record<
 > = {
   0: {
     label: '待确认',
-    badgeClass: 'bg-amber-500/10 text-amber-300 ring-1 ring-amber-500/20',
+    badgeClass: 'bg-amber-500/10 text-white ring-1 ring-amber-500/20',
     icon: Clock3,
     helper: '等待工人确认，允许重新计薪。',
   },
@@ -624,7 +624,7 @@ export default function PayrollView() {
         </article>
 
         <article className="rounded-[26px] border border-slate-800/70 bg-slate-950/65 p-5">
-          <div className="flex items-center gap-3 text-amber-300">
+          <div className="flex items-center gap-3 text-amber-200">
             <Clock3 size={20} />
             <span className="text-sm font-medium">待流转金额</span>
           </div>
@@ -661,7 +661,7 @@ export default function PayrollView() {
                   <StatusIcon size={14} />
                   {meta.label}
                 </span>
-                <span className="text-xs uppercase tracking-[0.2em] text-slate-500">{count} 笔</span>
+                <span className="text-xs uppercase tracking-[0.2em] text-slate-400">{count} 笔</span>
               </div>
               <p className="mt-5 text-3xl font-bold text-white">
                 ¥{amount.toLocaleString('zh-CN', { minimumFractionDigits: 2 })}
@@ -687,19 +687,19 @@ export default function PayrollView() {
 
           <div className="space-y-3">
             <label className="relative block">
-              <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
+              <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
               <input
                 type="text"
                 placeholder="搜索工人姓名、UID、基地或单号"
                 value={searchKeyword}
                 onChange={(e) => setSearchKeyword(e.target.value)}
-                className="w-full rounded-2xl border border-slate-800 bg-slate-900/80 py-3 pl-10 pr-4 text-sm text-white placeholder:text-slate-500 focus:border-emerald-500/40 focus:outline-none"
+                className="w-full rounded-2xl border border-slate-800 bg-slate-900/80 py-3 pl-10 pr-4 text-sm text-white placeholder:text-slate-400 focus:border-emerald-500/40 focus:outline-none"
               />
             </label>
 
             <div className="grid gap-3 md:grid-cols-2 2xl:grid-cols-[minmax(220px,1fr)_180px_180px_180px]">
               <label className="relative block min-w-0">
-                <MapPin className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
+                <MapPin className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                 <select
                   value={filterBaseId ?? ''}
                   onChange={(e) => setFilterBaseId(e.target.value ? Number(e.target.value) : null)}
@@ -712,11 +712,11 @@ export default function PayrollView() {
                     </option>
                   ))}
                 </select>
-                <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
+                <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
               </label>
 
               <label className="relative block min-w-0">
-                <CalendarDays className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
+                <CalendarDays className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                 <input
                   type="date"
                   value={dateFrom}
@@ -726,7 +726,7 @@ export default function PayrollView() {
               </label>
 
               <label className="relative block min-w-0">
-                <CalendarDays className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
+                <CalendarDays className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                 <input
                   type="date"
                   value={dateTo}
@@ -736,7 +736,7 @@ export default function PayrollView() {
               </label>
 
               <label className="relative block min-w-0">
-                <Filter className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
+                <Filter className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                 <select
                   value={filterStatus ?? ''}
                   onChange={(e) => setFilterStatus(e.target.value === '' ? null : Number(e.target.value))}
@@ -747,7 +747,7 @@ export default function PayrollView() {
                   <option value={1}>已确认</option>
                   <option value={2}>已发放</option>
                 </select>
-                <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
+                <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
               </label>
             </div>
           </div>
@@ -759,11 +759,11 @@ export default function PayrollView() {
                 <span className="ml-3 text-slate-400">加载工资记录...</span>
               </div>
             ) : filteredList.length === 0 ? (
-              <div className="flex min-h-[520px] items-center justify-center text-slate-500">暂无工资记录</div>
+              <div className="flex min-h-[520px] items-center justify-center text-slate-400">暂无工资记录</div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="min-w-full text-left">
-                  <thead className="border-b border-slate-800/70 bg-slate-950/90 text-xs uppercase tracking-[0.22em] text-slate-500">
+                  <thead className="border-b border-slate-800/70 bg-slate-950/90 text-xs uppercase tracking-[0.22em] text-slate-400">
                     <tr>
                       <th className="px-5 py-4 font-semibold">单号 / 日期</th>
                       <th className="px-5 py-4 font-semibold">采摘工</th>
@@ -786,15 +786,15 @@ export default function PayrollView() {
                         >
                           <td className="px-5 py-4 align-top">
                             <div className="font-mono text-sm text-slate-200">#{row.id}</div>
-                            <div className="mt-1 text-xs text-slate-500">{row.workDate}</div>
+                            <div className="mt-1 text-xs text-slate-400">{row.workDate}</div>
                           </td>
                           <td className="px-5 py-4 align-top">
                             <div className="font-medium text-slate-100">{row.workerName}</div>
-                            <div className="mt-1 text-xs font-mono text-slate-500">{row.workerUid}</div>
+                            <div className="mt-1 text-xs font-mono text-slate-400">{row.workerUid}</div>
                           </td>
                           <td className="px-5 py-4 align-top">
                             <div className="text-sm text-slate-200">{row.jobTitle}</div>
-                            <div className="mt-1 text-xs text-slate-500">{row.baseName}</div>
+                            <div className="mt-1 text-xs text-slate-400">{row.baseName}</div>
                           </td>
                           <td className="px-5 py-4 align-top text-sm text-slate-300">{formatVolume(row)}</td>
                           <td className="px-5 py-4 align-top">
@@ -822,10 +822,10 @@ export default function PayrollView() {
           {selectedRecord ? (
             <div className="flex h-full flex-col">
               <div className="border-b border-slate-800/70 px-5 py-5">
-                <p className="text-xs uppercase tracking-[0.22em] text-slate-500">结算详情</p>
+                <p className="text-xs uppercase tracking-[0.22em] text-slate-400">结算详情</p>
                 <h3 className="mt-2 text-xl font-semibold text-white">
                   {selectedRecord.workerName}
-                  <span className="ml-2 font-mono text-base text-slate-500">#{selectedRecord.id}</span>
+                  <span className="ml-2 font-mono text-base text-slate-400">#{selectedRecord.id}</span>
                 </h3>
                 <div className="mt-4 flex flex-wrap gap-2">
                   {(() => {
@@ -846,7 +846,7 @@ export default function PayrollView() {
 
               <div className="space-y-5 overflow-auto px-5 py-5">
                 <div className="rounded-2xl border border-slate-800/70 bg-slate-950/80 p-4">
-                  <p className="text-xs uppercase tracking-[0.2em] text-slate-500">当前规则</p>
+                  <p className="text-xs uppercase tracking-[0.2em] text-slate-400">当前规则</p>
                   <p className="mt-3 text-sm leading-7 text-slate-300">
                     {SALARY_STATUS_META[selectedRecord.status]?.helper}
                   </p>
@@ -854,36 +854,36 @@ export default function PayrollView() {
 
                 <div className="grid gap-3">
                   <div className="rounded-2xl border border-slate-800/70 bg-slate-950/80 p-4">
-                    <p className="text-xs uppercase tracking-[0.2em] text-slate-500">基地 / 岗位</p>
+                    <p className="text-xs uppercase tracking-[0.2em] text-slate-400">基地 / 岗位</p>
                     <p className="mt-3 text-sm text-slate-200">{selectedRecord.baseName}</p>
                     <p className="mt-1 text-sm text-slate-400">{selectedRecord.jobTitle}</p>
                   </div>
 
                   <div className="rounded-2xl border border-slate-800/70 bg-slate-950/80 p-4">
-                    <p className="text-xs uppercase tracking-[0.2em] text-slate-500">工作量与单价</p>
+                    <p className="text-xs uppercase tracking-[0.2em] text-slate-400">工作量与单价</p>
                     <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
                       <div className="rounded-xl bg-slate-900/80 p-3">
-                        <p className="text-xs text-slate-500">工作量</p>
+                        <p className="text-xs text-slate-400">工作量</p>
                         <p className="mt-2 text-slate-200">{formatVolume(selectedRecord)}</p>
                       </div>
                       <div className="rounded-xl bg-slate-900/80 p-3">
-                        <p className="text-xs text-slate-500">单价快照</p>
+                        <p className="text-xs text-slate-400">单价快照</p>
                         <p className="mt-2 text-slate-200">¥{Number(selectedRecord.unitPriceSnapshot).toFixed(2)}</p>
                       </div>
                     </div>
                   </div>
 
                   <div className="rounded-2xl border border-slate-800/70 bg-slate-950/80 p-4">
-                    <p className="text-xs uppercase tracking-[0.2em] text-slate-500">结算结果</p>
+                    <p className="text-xs uppercase tracking-[0.2em] text-slate-400">结算结果</p>
                     <p className="mt-3 text-3xl font-bold text-emerald-300">
                       ¥{Number(selectedRecord.totalAmount).toLocaleString('zh-CN', { minimumFractionDigits: 2 })}
                     </p>
-                    <p className="mt-2 text-sm text-slate-500">创建于 {String(selectedRecord.createdAt).slice(0, 19).replace('T', ' ')}</p>
+                    <p className="mt-2 text-sm text-slate-400">创建于 {String(selectedRecord.createdAt).slice(0, 19).replace('T', ' ')}</p>
                   </div>
                 </div>
 
                 <div className="rounded-2xl border border-slate-800/70 bg-slate-950/80 p-4">
-                  <p className="text-xs uppercase tracking-[0.2em] text-slate-500">支付流转</p>
+                  <p className="text-xs uppercase tracking-[0.2em] text-slate-400">支付流转</p>
                   <div className="mt-4 space-y-3">
                     {paymentsLoading ? (
                       <div className="flex items-center justify-center py-6">
@@ -892,16 +892,16 @@ export default function PayrollView() {
                     ) : latestPayment ? (
                       <>
                         <div className="rounded-xl bg-slate-900/80 p-3">
-                          <p className="text-xs text-slate-500">支付方式</p>
+                          <p className="text-xs text-slate-400">支付方式</p>
                           <p className="mt-2 text-sm text-slate-200">{PAYMENT_METHOD_LABEL[latestPayment.paymentMethod] ?? latestPayment.paymentMethod}</p>
                         </div>
                         <div className="rounded-xl bg-slate-900/80 p-3">
-                          <p className="text-xs text-slate-500">支付状态</p>
+                          <p className="text-xs text-slate-400">支付状态</p>
                           <p className="mt-2 text-sm text-slate-200">{PAYMENT_STATUS_LABEL[latestPayment.status] ?? '未知'}</p>
                         </div>
                         {latestPayment.confirmSignatureUrl && (
                           <div className="rounded-xl bg-slate-900/80 p-3">
-                            <p className="text-xs text-slate-500">签字回执</p>
+                            <p className="text-xs text-slate-400">签字回执</p>
                             <a href={latestPayment.confirmSignatureUrl} target="_blank" rel="noreferrer" className="mt-2 block text-sm text-cyan-300 hover:text-cyan-200">
                               查看签字附件
                             </a>
@@ -909,7 +909,7 @@ export default function PayrollView() {
                         )}
                         {latestPayment.paymentVoucherUrl && (
                           <div className="rounded-xl bg-slate-900/80 p-3">
-                            <p className="text-xs text-slate-500">付款凭证</p>
+                            <p className="text-xs text-slate-400">付款凭证</p>
                             <a href={latestPayment.paymentVoucherUrl} target="_blank" rel="noreferrer" className="mt-2 block text-sm text-cyan-300 hover:text-cyan-200">
                               查看付款凭证
                             </a>
@@ -917,7 +917,7 @@ export default function PayrollView() {
                         )}
                       </>
                     ) : (
-                      <div className="rounded-xl bg-slate-900/80 p-3 text-sm text-slate-500">
+                      <div className="rounded-xl bg-slate-900/80 p-3 text-sm text-slate-400">
                         当前还没有支付单
                       </div>
                     )}
@@ -928,7 +928,7 @@ export default function PayrollView() {
               </div>
             </div>
           ) : (
-            <div className="flex h-full min-h-[720px] items-center justify-center px-6 text-center text-slate-500">
+            <div className="flex h-full min-h-[720px] items-center justify-center px-6 text-center text-slate-400">
               选择一条工资记录查看详情
             </div>
           )}
@@ -956,14 +956,14 @@ export default function PayrollView() {
                       : '填写付款凭证 URL'}
                 </p>
               </div>
-              <button onClick={closePaymentModal} className="text-slate-500 hover:text-white">
+              <button onClick={closePaymentModal} className="text-slate-400 hover:text-white">
                 <X size={22} />
               </button>
             </div>
 
             {paymentModal.type === 'create' ? (
               <div className="mt-6 space-y-4">
-                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500">支付方式</label>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400">支付方式</label>
                 <select
                   value={paymentMethod}
                   onChange={(e) => setPaymentMethod(e.target.value as 'cash' | 'transfer')}
@@ -975,7 +975,7 @@ export default function PayrollView() {
               </div>
             ) : (
               <div className="mt-6 space-y-4">
-                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500">
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400">
                   {paymentModal.type === 'confirm' ? '签字附件 URL' : '付款凭证 URL'}
                 </label>
                 <input
@@ -1015,7 +1015,7 @@ export default function PayrollView() {
                 <h3 className="text-xl font-bold text-white">发起新结算</h3>
                 <p className="mt-1 text-sm text-slate-400">在薪资页内选择已签到记录，直接生成工资草稿。</p>
               </div>
-              <button onClick={closeDraftModal} className="text-slate-500 hover:text-white">
+              <button onClick={closeDraftModal} className="text-slate-400 hover:text-white">
                 <X size={22} />
               </button>
             </div>
@@ -1024,13 +1024,13 @@ export default function PayrollView() {
               <div className="space-y-4 overflow-hidden">
                 <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_180px_180px]">
                   <label className="relative block">
-                    <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
+                    <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                     <input
                       type="text"
                       value={draftSearchKeyword}
                       onChange={(e) => setDraftSearchKeyword(e.target.value)}
                       placeholder="搜索工人姓名、UID、岗位或签到单号"
-                      className="w-full rounded-2xl border border-slate-800 bg-slate-950/80 py-3 pl-10 pr-4 text-sm text-white placeholder:text-slate-500 focus:border-emerald-500/40 focus:outline-none"
+                      className="w-full rounded-2xl border border-slate-800 bg-slate-950/80 py-3 pl-10 pr-4 text-sm text-white placeholder:text-slate-400 focus:border-emerald-500/40 focus:outline-none"
                     />
                   </label>
                   <select
@@ -1065,13 +1065,13 @@ export default function PayrollView() {
                       {draftError}
                     </div>
                   ) : draftFilteredRecords.length === 0 ? (
-                    <div className="flex min-h-[420px] items-center justify-center px-6 text-center text-sm text-slate-500">
+                    <div className="flex min-h-[420px] items-center justify-center px-6 text-center text-sm text-slate-400">
                       当前筛选条件下没有可结算的已签到记录
                     </div>
                   ) : (
                     <div className="max-h-[420px] overflow-auto">
                       <table className="min-w-full text-left">
-                        <thead className="sticky top-0 border-b border-slate-800/70 bg-slate-950/95 text-xs uppercase tracking-[0.22em] text-slate-500">
+                        <thead className="sticky top-0 border-b border-slate-800/70 bg-slate-950/95 text-xs uppercase tracking-[0.22em] text-slate-400">
                           <tr>
                             <th className="px-5 py-4 font-semibold">签到单 / 日期</th>
                             <th className="px-5 py-4 font-semibold">采摘工</th>
@@ -1090,19 +1090,19 @@ export default function PayrollView() {
                               >
                                 <td className="px-5 py-4 align-top">
                                   <div className="font-mono text-sm text-slate-200">#{row.id}</div>
-                                  <div className="mt-1 text-xs text-slate-500">{row.workDate}</div>
+                                  <div className="mt-1 text-xs text-slate-400">{row.workDate}</div>
                                 </td>
                                 <td className="px-5 py-4 align-top">
                                   <div className="font-medium text-slate-100">{row.workerName}</div>
-                                  <div className="mt-1 text-xs font-mono text-slate-500">{row.workerUid}</div>
+                                  <div className="mt-1 text-xs font-mono text-slate-400">{row.workerUid}</div>
                                 </td>
                                 <td className="px-5 py-4 align-top">
                                   <div className="text-sm text-slate-200">{row.jobTitle}</div>
-                                  <div className="mt-1 text-xs text-slate-500">{row.baseName}</div>
+                                  <div className="mt-1 text-xs text-slate-400">{row.baseName}</div>
                                 </td>
                                 <td className="px-5 py-4 align-top text-sm text-slate-300">
                                   {row.checkinTime ? String(row.checkinTime).slice(11, 16) : '-'}
-                                  {row.isProxy && <span className="ml-2 text-xs text-amber-300">代报名</span>}
+                                  {row.isProxy && <span className="ml-2 text-xs text-amber-200">代报名</span>}
                                 </td>
                               </tr>
                             );
@@ -1118,10 +1118,10 @@ export default function PayrollView() {
                 {draftSelectedRecord ? (
                   <div className="flex h-full flex-col">
                     <div className="border-b border-slate-800/70 px-5 py-5">
-                      <p className="text-xs uppercase tracking-[0.22em] text-slate-500">待生成草稿</p>
+                      <p className="text-xs uppercase tracking-[0.22em] text-slate-400">待生成草稿</p>
                       <h4 className="mt-2 text-xl font-semibold text-white">
                         {draftSelectedRecord.workerName}
-                        <span className="ml-2 font-mono text-base text-slate-500">#{draftSelectedRecord.id}</span>
+                        <span className="ml-2 font-mono text-base text-slate-400">#{draftSelectedRecord.id}</span>
                       </h4>
                       <p className="mt-2 text-sm text-slate-400">
                         {draftSelectedRecord.baseName} · {draftSelectedRecord.jobTitle}
@@ -1130,7 +1130,7 @@ export default function PayrollView() {
 
                     <div className="space-y-4 overflow-auto px-5 py-5">
                       <div className="rounded-2xl border border-slate-800/70 bg-slate-950/80 p-4">
-                        <p className="text-xs uppercase tracking-[0.2em] text-slate-500">签到信息</p>
+                        <p className="text-xs uppercase tracking-[0.2em] text-slate-400">签到信息</p>
                         <div className="mt-3 space-y-2 text-sm text-slate-300">
                           <p>签到日期：{draftSelectedRecord.workDate}</p>
                           <p>签到时间：{draftSelectedRecord.checkinTime ? String(draftSelectedRecord.checkinTime).slice(11, 19) : '-'}</p>
@@ -1139,7 +1139,7 @@ export default function PayrollView() {
                       </div>
 
                       <div className="rounded-2xl border border-slate-800/70 bg-slate-950/80 p-4">
-                        <p className="text-xs uppercase tracking-[0.2em] text-slate-500">计薪规则</p>
+                        <p className="text-xs uppercase tracking-[0.2em] text-slate-400">计薪规则</p>
                         {draftJobLoading ? (
                           <div className="flex items-center justify-center py-8">
                             <Loader2 className="animate-spin text-emerald-300" size={20} />
@@ -1158,7 +1158,7 @@ export default function PayrollView() {
 
                             {draftJobDetail.payType === 2 && (
                               <label className="block">
-                                <span className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-500">工作时长（小时）</span>
+                                <span className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-400">工作时长（小时）</span>
                                 <input
                                   type="number"
                                   min="0"
@@ -1172,7 +1172,7 @@ export default function PayrollView() {
 
                             {draftJobDetail.payType === 3 && (
                               <label className="block">
-                                <span className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-500">完成件数</span>
+                                <span className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-400">完成件数</span>
                                 <input
                                   type="number"
                                   min="0"
@@ -1185,7 +1185,7 @@ export default function PayrollView() {
                             )}
                           </div>
                         ) : (
-                          <p className="mt-3 text-sm text-slate-500">请选择一条签到记录后查看计薪规则。</p>
+                          <p className="mt-3 text-sm text-slate-400">请选择一条签到记录后查看计薪规则。</p>
                         )}
                       </div>
 
@@ -1207,7 +1207,7 @@ export default function PayrollView() {
                     </div>
                   </div>
                 ) : (
-                  <div className="flex h-full min-h-[420px] items-center justify-center px-6 text-center text-sm text-slate-500">
+                  <div className="flex h-full min-h-[420px] items-center justify-center px-6 text-center text-sm text-slate-400">
                     从左侧选择一条已签到记录开始结算
                   </div>
                 )}

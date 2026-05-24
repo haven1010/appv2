@@ -6,7 +6,7 @@
    ═══════════════════════════════════════════ */
 :root {
   --ink-main: #1a1d26;
-  --ink-sub: #8e96a8;
+  --ink-sub: #6b7280;
   --ink-muted: #c0c5d0;
   --page-bg: #f2f4f8;
   --card-bg: #ffffff;
@@ -37,13 +37,13 @@
 page {
   color: var(--ink-main);
   font-family: 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
-  background: linear-gradient(180deg, #f2f4f8 0%, #e8ebf2 100%) !important;
+  background: linear-gradient(180deg, #f8f6ff 0%, #f0ecff 100%) !important;
 }
 
 page,
 .page {
   min-height: 100vh;
-  background: linear-gradient(180deg, #f2f4f8 0%, #e8ebf2 100%) !important;
+  background: linear-gradient(180deg, #f8f6ff 0%, #f0ecff 100%) !important;
 }
 
 .page-body {
@@ -123,13 +123,11 @@ page,
 
 /* ── Glass Card (磨砂玻璃效果) ── */
 .card-glass {
-  background: rgba(255, 255, 255, 0.72);
-  backdrop-filter: blur(20rpx);
-  -webkit-backdrop-filter: blur(20rpx);
+  background: #ffffff;
   border-radius: var(--radius-lg);
   padding: 28rpx;
-  border: 1rpx solid rgba(255, 255, 255, 0.5);
-  box-shadow: 0 8rpx 32rpx rgba(90, 108, 214, 0.10);
+  border: 1rpx solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.06);
 }
 
 /* ═══════════════════════════════════════════
@@ -157,7 +155,7 @@ page,
 .btn-primary[disabled] {
   background: #b8b4c8;
   box-shadow: none;
-  color: #e8e4f0;
+  color: #ffffff;
 }
 
 .btn-secondary {

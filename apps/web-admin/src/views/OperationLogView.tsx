@@ -74,8 +74,8 @@ const OP_TYPE_MAP: Record<
   audit: {
     label: '审核',
     icon: ShieldCheck,
-    badgeClass: 'bg-amber-500/10 text-amber-300 ring-1 ring-amber-500/20',
-    accentClass: 'text-amber-300',
+    badgeClass: 'bg-amber-500/10 text-white ring-1 ring-amber-500/20',
+    accentClass: 'text-amber-200',
   },
   login: {
     label: '登录',
@@ -137,14 +137,14 @@ function PreviewJson({ title, payload }: { title: string; payload: ParsedPayload
     <div className="rounded-2xl border border-slate-800/70 bg-slate-950/60 p-4">
       <div className="mb-3 flex items-center justify-between">
         <h4 className="text-sm font-semibold text-white">{title}</h4>
-        <span className="text-xs text-slate-500">{countFields(payload)} 个字段</span>
+        <span className="text-xs text-slate-400">{countFields(payload)} 个字段</span>
       </div>
       {payload ? (
         <pre className="max-h-72 overflow-auto rounded-xl bg-slate-900/80 p-3 text-xs leading-6 text-slate-300">
           {JSON.stringify(payload, null, 2)}
         </pre>
       ) : (
-        <div className="rounded-xl border border-dashed border-slate-800 px-4 py-6 text-center text-sm text-slate-500">
+        <div className="rounded-xl border border-dashed border-slate-800 px-4 py-6 text-center text-sm text-slate-400">
           无结构化数据
         </div>
       )}
@@ -239,19 +239,19 @@ export default function OperationLogView() {
 
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             <div className="rounded-2xl border border-white/6 bg-slate-950/40 px-4 py-4">
-              <p className="text-xs uppercase tracking-[0.24em] text-slate-500">总日志</p>
+              <p className="text-xs uppercase tracking-[0.24em] text-slate-400">总日志</p>
               <p className="mt-2 text-2xl font-bold text-white">{stats?.total?.toLocaleString() ?? '-'}</p>
             </div>
             <div className="rounded-2xl border border-white/6 bg-slate-950/40 px-4 py-4">
-              <p className="text-xs uppercase tracking-[0.24em] text-slate-500">今日新增</p>
+              <p className="text-xs uppercase tracking-[0.24em] text-slate-400">今日新增</p>
               <p className="mt-2 text-2xl font-bold text-emerald-300">{stats?.todayCount?.toLocaleString() ?? '-'}</p>
             </div>
             <div className="rounded-2xl border border-white/6 bg-slate-950/40 px-4 py-4">
-              <p className="text-xs uppercase tracking-[0.24em] text-slate-500">签到事件</p>
+              <p className="text-xs uppercase tracking-[0.24em] text-slate-400">签到事件</p>
               <p className="mt-2 text-2xl font-bold text-cyan-300">{byTypeMap.get('checkin')?.toLocaleString() ?? '0'}</p>
             </div>
             <div className="rounded-2xl border border-white/6 bg-slate-950/40 px-4 py-4">
-              <p className="text-xs uppercase tracking-[0.24em] text-slate-500">支付事件</p>
+              <p className="text-xs uppercase tracking-[0.24em] text-slate-400">支付事件</p>
               <p className="mt-2 text-2xl font-bold text-orange-300">{byTypeMap.get('payment')?.toLocaleString() ?? '0'}</p>
             </div>
           </div>
@@ -284,7 +284,7 @@ export default function OperationLogView() {
 
             <div className="mt-5 grid gap-3 lg:grid-cols-[minmax(0,1fr)_180px_180px]">
               <label className="relative block">
-                <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
+                <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                 <input
                   type="text"
                   placeholder="搜索描述、资源 ID、操作人 ID"
@@ -293,12 +293,12 @@ export default function OperationLogView() {
                     setKeyword(e.target.value);
                     setPage(1);
                   }}
-                  className="w-full rounded-2xl border border-slate-800 bg-slate-900/80 py-3 pl-10 pr-4 text-sm text-white placeholder:text-slate-500 focus:border-emerald-500/40 focus:outline-none"
+                  className="w-full rounded-2xl border border-slate-800 bg-slate-900/80 py-3 pl-10 pr-4 text-sm text-white placeholder:text-slate-400 focus:border-emerald-500/40 focus:outline-none"
                 />
               </label>
 
               <label className="relative block">
-                <Filter className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
+                <Filter className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                 <select
                   value={opFilter}
                   onChange={(e) => {
@@ -317,7 +317,7 @@ export default function OperationLogView() {
               </label>
 
               <label className="relative block">
-                <Activity className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
+                <Activity className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                 <select
                   value={resFilter}
                   onChange={(e) => {
@@ -347,7 +347,7 @@ export default function OperationLogView() {
               <div className="flex min-h-[420px] flex-col items-center justify-center px-6 text-center">
                 <ScrollText className="mb-4 text-slate-700" size={42} />
                 <p className="text-lg font-semibold text-slate-300">没有匹配的审计记录</p>
-                <p className="mt-2 max-w-md text-sm leading-6 text-slate-500">
+                <p className="mt-2 max-w-md text-sm leading-6 text-slate-400">
                   试试放宽筛选条件，或者先在系统里执行一次登录、审核、支付或签到操作后再回来查看。
                 </p>
               </div>
@@ -355,7 +355,7 @@ export default function OperationLogView() {
               <>
                 <div className="overflow-x-auto">
                   <table className="min-w-full text-left">
-                    <thead className="border-b border-slate-800/70 bg-slate-950/80 text-xs uppercase tracking-[0.22em] text-slate-500">
+                    <thead className="border-b border-slate-800/70 bg-slate-950/80 text-xs uppercase tracking-[0.22em] text-slate-400">
                       <tr>
                         <th className="px-5 py-4 font-semibold">时间</th>
                         <th className="px-5 py-4 font-semibold">动作</th>
@@ -385,7 +385,7 @@ export default function OperationLogView() {
                           >
                             <td className="px-5 py-4 align-top">
                               <div className="text-sm text-slate-300">{formatDateTime(log.createdAt)}</div>
-                              <div className="mt-1 text-xs text-slate-500">操作人 #{log.userId || '-'}</div>
+                              <div className="mt-1 text-xs text-slate-400">操作人 #{log.userId || '-'}</div>
                             </td>
                             <td className="px-5 py-4 align-top">
                               <span className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold ${opInfo.badgeClass}`}>
@@ -397,7 +397,7 @@ export default function OperationLogView() {
                               <div className="text-sm text-slate-200">
                                 {RESOURCE_TYPE_MAP[log.resourceType] || log.resourceType}
                               </div>
-                              <div className="mt-1 font-mono text-xs text-slate-500">#{log.resourceId}</div>
+                              <div className="mt-1 font-mono text-xs text-slate-400">#{log.resourceId}</div>
                             </td>
                             <td className="px-5 py-4 align-top">
                               <div className="max-w-[360px] text-sm leading-6 text-slate-300">{log.description || '-'}</div>
@@ -420,7 +420,7 @@ export default function OperationLogView() {
                 </div>
 
                 <div className="flex flex-col gap-3 border-t border-slate-800/70 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-                  <p className="text-sm text-slate-500">
+                  <p className="text-sm text-slate-400">
                     共 {total} 条，当前第 {page} / {totalPages} 页
                   </p>
                   <div className="flex items-center gap-2">
@@ -451,10 +451,10 @@ export default function OperationLogView() {
               <div className="border-b border-slate-800/70 px-5 py-5">
                 <div className="flex items-start justify-between gap-4">
                   <div>
-                    <p className="text-xs uppercase tracking-[0.22em] text-slate-500">审计详情</p>
+                    <p className="text-xs uppercase tracking-[0.22em] text-slate-400">审计详情</p>
                     <h3 className="mt-2 text-xl font-semibold text-white">
                       {RESOURCE_TYPE_MAP[selectedLog.resourceType] || selectedLog.resourceType}
-                      <span className="ml-2 font-mono text-base text-slate-500">#{selectedLog.resourceId}</span>
+                      <span className="ml-2 font-mono text-base text-slate-400">#{selectedLog.resourceId}</span>
                     </h3>
                   </div>
                   <button
@@ -489,15 +489,15 @@ export default function OperationLogView() {
 
               <div className="space-y-5 overflow-auto px-5 py-5">
                 <div className="rounded-2xl border border-slate-800/70 bg-slate-950/55 p-4">
-                  <p className="text-xs uppercase tracking-[0.2em] text-slate-500">操作摘要</p>
+                  <p className="text-xs uppercase tracking-[0.2em] text-slate-400">操作摘要</p>
                   <p className="mt-3 text-sm leading-7 text-slate-300">{selectedLog.description || '-'}</p>
                   <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
                     <div className="rounded-xl bg-slate-900/80 p-3">
-                      <p className="text-xs uppercase tracking-[0.18em] text-slate-500">操作人</p>
+                      <p className="text-xs uppercase tracking-[0.18em] text-slate-400">操作人</p>
                       <p className="mt-2 font-mono text-slate-200">#{selectedLog.userId || '-'}</p>
                     </div>
                     <div className="rounded-xl bg-slate-900/80 p-3">
-                      <p className="text-xs uppercase tracking-[0.18em] text-slate-500">资源类型</p>
+                      <p className="text-xs uppercase tracking-[0.18em] text-slate-400">资源类型</p>
                       <p className="mt-2 text-slate-200">
                         {RESOURCE_TYPE_MAP[selectedLog.resourceType] || selectedLog.resourceType}
                       </p>
@@ -509,14 +509,14 @@ export default function OperationLogView() {
                 <PreviewJson title="操作后快照" payload={selectedAfter} />
 
                 <div className="rounded-2xl border border-slate-800/70 bg-slate-950/55 p-4">
-                  <p className="text-xs uppercase tracking-[0.2em] text-slate-500">请求线索</p>
+                  <p className="text-xs uppercase tracking-[0.2em] text-slate-400">请求线索</p>
                   <div className="mt-4 space-y-3 text-sm text-slate-300">
                     <div>
-                      <p className="text-xs text-slate-500">IP 地址</p>
+                      <p className="text-xs text-slate-400">IP 地址</p>
                       <p className="mt-1 font-mono text-slate-200">{selectedLog.ipAddress || '未记录'}</p>
                     </div>
                     <div>
-                      <p className="text-xs text-slate-500">User-Agent</p>
+                      <p className="text-xs text-slate-400">User-Agent</p>
                       <p className="mt-1 break-all text-xs leading-6 text-slate-400">
                         {selectedLog.userAgent || '未记录'}
                       </p>
@@ -529,7 +529,7 @@ export default function OperationLogView() {
             <div className="flex h-full min-h-[720px] flex-col items-center justify-center px-6 text-center">
               <ScrollText className="mb-4 text-slate-700" size={42} />
               <p className="text-lg font-semibold text-slate-300">选择一条日志查看详情</p>
-              <p className="mt-2 max-w-sm text-sm leading-6 text-slate-500">
+              <p className="mt-2 max-w-sm text-sm leading-6 text-slate-400">
                 右侧会展示操作前后数据、操作者和请求线索，适合排查审核覆盖、支付流转和签到异常。
               </p>
             </div>

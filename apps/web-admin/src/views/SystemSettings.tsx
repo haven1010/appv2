@@ -48,7 +48,7 @@ interface CooperationRecord {
 }
 
 const COOP_STATUS_MAP: Record<number, { label: string; badgeClass: string }> = {
-  0: { label: '待审核', badgeClass: 'bg-amber-500/10 text-amber-300 ring-1 ring-amber-500/20' },
+  0: { label: '待审核', badgeClass: 'bg-amber-500/10 text-white ring-1 ring-amber-500/20' },
   1: { label: '已同意', badgeClass: 'bg-emerald-500/10 text-emerald-300 ring-1 ring-emerald-500/20' },
   2: { label: '已拒绝', badgeClass: 'bg-rose-500/10 text-rose-300 ring-1 ring-rose-500/20' },
 };
@@ -283,19 +283,19 @@ export default function SystemSettings() {
 
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             <div className="rounded-2xl border border-white/6 bg-slate-950/45 p-4">
-              <p className="text-xs uppercase tracking-[0.24em] text-slate-500">总用户</p>
+              <p className="text-xs uppercase tracking-[0.24em] text-slate-400">总用户</p>
               <p className="mt-2 text-2xl font-bold text-white">{stats?.users.total ?? 0}</p>
             </div>
             <div className="rounded-2xl border border-white/6 bg-slate-950/45 p-4">
-              <p className="text-xs uppercase tracking-[0.24em] text-slate-500">基地</p>
+              <p className="text-xs uppercase tracking-[0.24em] text-slate-400">基地</p>
               <p className="mt-2 text-2xl font-bold text-white">{stats?.bases.total ?? 0}</p>
             </div>
             <div className="rounded-2xl border border-white/6 bg-slate-950/45 p-4">
-              <p className="text-xs uppercase tracking-[0.24em] text-slate-500">今日日志</p>
+              <p className="text-xs uppercase tracking-[0.24em] text-slate-400">今日日志</p>
               <p className="mt-2 text-2xl font-bold text-emerald-300">{stats?.logs.today ?? 0}</p>
             </div>
             <div className="rounded-2xl border border-white/6 bg-slate-950/45 p-4">
-              <p className="text-xs uppercase tracking-[0.24em] text-slate-500">支付日志</p>
+              <p className="text-xs uppercase tracking-[0.24em] text-slate-400">支付日志</p>
               <p className="mt-2 text-2xl font-bold text-orange-300">{logTypeMap.get('payment') ?? 0}</p>
             </div>
           </div>
@@ -304,7 +304,7 @@ export default function SystemSettings() {
 
       <section className="grid gap-5 xl:grid-cols-4">
         {[
-          { title: '管理员', value: stats?.users.admins ?? 0, icon: Shield, tone: 'text-amber-300' },
+          { title: '管理员', value: stats?.users.admins ?? 0, icon: Shield, tone: 'text-amber-200' },
           { title: '采摘工', value: stats?.users.workers ?? 0, icon: Users, tone: 'text-emerald-300' },
           { title: '待审核基地', value: stats?.bases.pending ?? 0, icon: Siren, tone: 'text-rose-300' },
           { title: '审计总量', value: stats?.logs.total ?? 0, icon: ScrollText, tone: 'text-cyan-300' },
@@ -419,7 +419,7 @@ export default function SystemSettings() {
                 <Loader2 className="animate-spin text-amber-400" size={24} />
               </div>
             ) : expiringJobs.length === 0 ? (
-              <div className="rounded-2xl border border-slate-800 bg-slate-950/80 px-4 py-8 text-center text-sm text-slate-500">
+              <div className="rounded-2xl border border-slate-800 bg-slate-950/80 px-4 py-8 text-center text-sm text-slate-400">
                 当前窗口内没有即将过期岗位
               </div>
             ) : (
@@ -428,9 +428,9 @@ export default function SystemSettings() {
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <p className="font-medium text-white">{job.jobTitle}</p>
-                      <p className="mt-1 text-sm text-slate-500">{job.base?.baseName ?? '-'}</p>
+                      <p className="mt-1 text-sm text-slate-400">{job.base?.baseName ?? '-'}</p>
                     </div>
-                    <span className="rounded-full bg-amber-500/10 px-3 py-1 text-xs text-amber-300">
+                    <span className="rounded-full bg-amber-500/10 px-3 py-1 text-xs text-white">
                       {job.validUntil ? String(job.validUntil).slice(0, 10) : '未设置'}
                     </span>
                   </div>
@@ -502,7 +502,7 @@ export default function SystemSettings() {
                   <Loader2 className="animate-spin text-cyan-400" size={24} />
                 </div>
               ) : cooperations.length === 0 ? (
-                <div className="rounded-2xl border border-slate-800 bg-slate-950/80 px-4 py-10 text-center text-sm text-slate-500">
+                <div className="rounded-2xl border border-slate-800 bg-slate-950/80 px-4 py-10 text-center text-sm text-slate-400">
                   当前基地暂无合作记录
                 </div>
               ) : (
@@ -513,7 +513,7 @@ export default function SystemSettings() {
                         <p className="text-sm font-medium text-white">
                           申请人：{item.applicant?.name || `#${item.applicantId}`}
                         </p>
-                        <p className="mt-1 text-xs text-slate-500">
+                        <p className="mt-1 text-xs text-slate-400">
                           提交于 {String(item.createdAt).slice(0, 19).replace('T', ' ')}
                         </p>
                       </div>

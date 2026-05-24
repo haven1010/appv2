@@ -218,7 +218,7 @@ export default function FieldDashboard() {
     return (
       <div className="flex items-center justify-center h-64">
         <Loader2 className="animate-spin text-emerald-400" size={32} />
-        <span className="ml-3 text-slate-400">正在加载工作台...</span>
+        <span className="ml-3 text-slate-300">正在加载工作台...</span>
       </div>
     );
   }
@@ -263,7 +263,7 @@ export default function FieldDashboard() {
                 </button>
               </div>
             ) : (
-              <p className="text-slate-500 text-sm">暂无可用基地。请先让基地管理员创建基地并通过审核。</p>
+              <p className="text-slate-400 text-sm">暂无可用基地。请先让基地管理员创建基地并通过审核。</p>
             )}
           </div>
         </div>
@@ -313,7 +313,7 @@ export default function FieldDashboard() {
                   {baseInfo.auditStatus === 1 ? '运营中' : '审核中'}
                 </span>
               </div>
-              <p className="text-slate-500 text-xs mt-1">基地 ID: #{baseInfo.id}</p>
+              <p className="text-slate-400 text-xs mt-1">基地 ID: #{baseInfo.id}</p>
             </div>
           </div>
 
@@ -321,21 +321,21 @@ export default function FieldDashboard() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Left: Basic Info */}
             <div className="space-y-3">
-              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">基地信息</p>
+              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">基地信息</p>
               <div className="space-y-2.5">
                 {baseInfo.address && (
                   <div className="flex items-start gap-2.5">
-                    <MapPin size={15} className="text-slate-500 mt-0.5 shrink-0" />
+                    <MapPin size={15} className="text-slate-400 mt-0.5 shrink-0" />
                     <div>
-                      <p className="text-xs text-slate-500">地址</p>
+                      <p className="text-xs text-slate-400">地址</p>
                       <p className="text-sm text-slate-200">{baseInfo.address}</p>
                     </div>
                   </div>
                 )}
                 <div className="flex items-start gap-2.5">
-                  <Briefcase size={15} className="text-slate-500 mt-0.5 shrink-0" />
+                  <Briefcase size={15} className="text-slate-400 mt-0.5 shrink-0" />
                   <div>
-                    <p className="text-xs text-slate-500">经营类别</p>
+                    <p className="text-xs text-slate-400">经营类别</p>
                     <p className="text-sm text-slate-200">
                       {baseInfo.category === 1 || baseInfo.category === 'FRUIT' ? '水果种植' :
                        baseInfo.category === 2 || baseInfo.category === 'VEGETABLE' ? '蔬菜种植' :
@@ -346,18 +346,18 @@ export default function FieldDashboard() {
                 </div>
                 {baseInfo.contactPhone && (
                   <div className="flex items-start gap-2.5">
-                    <Phone size={15} className="text-slate-500 mt-0.5 shrink-0" />
+                    <Phone size={15} className="text-slate-400 mt-0.5 shrink-0" />
                     <div>
-                      <p className="text-xs text-slate-500">联系电话</p>
+                      <p className="text-xs text-slate-400">联系电话</p>
                       <p className="text-sm text-slate-200">{baseInfo.contactPhone}</p>
                     </div>
                   </div>
                 )}
                 {baseInfo.createdAt && (
                   <div className="flex items-start gap-2.5">
-                    <CalendarCheck size={15} className="text-slate-500 mt-0.5 shrink-0" />
+                    <CalendarCheck size={15} className="text-slate-400 mt-0.5 shrink-0" />
                     <div>
-                      <p className="text-xs text-slate-500">入驻时间</p>
+                      <p className="text-xs text-slate-400">入驻时间</p>
                       <p className="text-sm text-slate-200">{baseInfo.createdAt?.slice(0, 10)}</p>
                     </div>
                   </div>
@@ -367,43 +367,43 @@ export default function FieldDashboard() {
 
             {/* Right: Recruitment Stats */}
             <div className="space-y-3">
-              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">招聘概况</p>
+              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">招聘概况</p>
               {baseStats ? (
                 <div className="grid grid-cols-2 gap-3">
                   <div className="p-3 rounded-xl bg-slate-800/50 border border-slate-700/30">
                     <div className="flex items-center gap-2 mb-1">
                       <FileText size={13} className="text-blue-400" />
-                      <span className="text-[10px] text-slate-500 uppercase">岗位总数</span>
+                      <span className="text-[10px] text-slate-400 uppercase">岗位总数</span>
                     </div>
                     <p className="text-xl font-bold text-blue-400">{baseStats.statistics.jobs.total}</p>
-                    <p className="text-[10px] text-slate-500">{baseStats.statistics.jobs.recruiting} 个招聘中</p>
+                    <p className="text-[10px] text-slate-400">{baseStats.statistics.jobs.recruiting} 个招聘中</p>
                   </div>
                   <div className="p-3 rounded-xl bg-slate-800/50 border border-slate-700/30">
                     <div className="flex items-center gap-2 mb-1">
                       <Target size={13} className="text-emerald-400" />
-                      <span className="text-[10px] text-slate-500 uppercase">计划招聘</span>
+                      <span className="text-[10px] text-slate-400 uppercase">计划招聘</span>
                     </div>
                     <p className="text-xl font-bold text-emerald-400">{baseStats.statistics.recruitment.target}</p>
-                    <p className="text-[10px] text-slate-500">已申请 {baseStats.statistics.recruitment.applied} 人</p>
+                    <p className="text-[10px] text-slate-400">已申请 {baseStats.statistics.recruitment.applied} 人</p>
                   </div>
                   <div className="p-3 rounded-xl bg-slate-800/50 border border-slate-700/30">
                     <div className="flex items-center gap-2 mb-1">
                       <TrendingUp size={13} className="text-amber-400" />
-                      <span className="text-[10px] text-slate-500 uppercase">招聘完成率</span>
+                      <span className="text-[10px] text-slate-400 uppercase">招聘完成率</span>
                     </div>
                     <p className="text-xl font-bold text-amber-400">{baseStats.statistics.recruitment.completionRate}</p>
                   </div>
                   <div className="p-3 rounded-xl bg-slate-800/50 border border-slate-700/30">
                     <div className="flex items-center gap-2 mb-1">
                       <Building2 size={13} className="text-purple-400" />
-                      <span className="text-[10px] text-slate-500 uppercase">岗位状态</span>
+                      <span className="text-[10px] text-slate-400 uppercase">岗位状态</span>
                     </div>
                     <p className="text-xl font-bold text-purple-400">{baseStats.statistics.jobs.active}</p>
-                    <p className="text-[10px] text-slate-500">活跃岗位</p>
+                    <p className="text-[10px] text-slate-400">活跃岗位</p>
                   </div>
                 </div>
               ) : (
-                <div className="text-slate-500 text-sm py-4">暂无招聘数据</div>
+                <div className="text-slate-400 text-sm py-4">暂无招聘数据</div>
               )}
             </div>
           </div>
@@ -411,7 +411,7 @@ export default function FieldDashboard() {
           {/* Base Description */}
           {baseInfo.description && (
             <div className="pt-3 border-t border-slate-800/40">
-              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">基地简介</p>
+              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">基地简介</p>
               <p className="text-sm text-slate-300 leading-relaxed">{baseInfo.description}</p>
             </div>
           )}
@@ -428,7 +428,7 @@ export default function FieldDashboard() {
             <span className="text-slate-400 text-sm">已签到</span>
           </div>
           <p className="text-3xl font-bold text-emerald-400">{stats?.checkedIn ?? 0}</p>
-          <p className="text-xs text-slate-500 mt-1">今日到岗人数</p>
+          <p className="text-xs text-slate-400 mt-1">今日到岗人数</p>
         </div>
         <div className="glass-card p-5 rounded-2xl border border-slate-800/60">
           <div className="flex items-center gap-3 mb-3">
@@ -438,7 +438,7 @@ export default function FieldDashboard() {
             <span className="text-slate-400 text-sm">待签到</span>
           </div>
           <p className="text-3xl font-bold text-amber-400">{stats?.signedUp ?? 0}</p>
-          <p className="text-xs text-slate-500 mt-1">已报名未签到</p>
+          <p className="text-xs text-slate-400 mt-1">已报名未签到</p>
         </div>
         <div className="glass-card p-5 rounded-2xl border border-slate-800/60">
           <div className="flex items-center gap-3 mb-3">
@@ -448,7 +448,7 @@ export default function FieldDashboard() {
             <span className="text-slate-400 text-sm">缺勤</span>
           </div>
           <p className="text-3xl font-bold text-rose-400">{stats?.absent ?? 0}</p>
-          <p className="text-xs text-slate-500 mt-1">标记为缺勤</p>
+          <p className="text-xs text-slate-400 mt-1">标记为缺勤</p>
         </div>
         <div className="glass-card p-5 rounded-2xl border border-slate-800/60">
           <div className="flex items-center gap-3 mb-3">
@@ -458,7 +458,7 @@ export default function FieldDashboard() {
             <span className="text-slate-400 text-sm">到岗率</span>
           </div>
           <p className="text-3xl font-bold text-blue-400">{stats?.attendanceRate ?? 0}%</p>
-          <p className="text-xs text-slate-500 mt-1">签到/总报名</p>
+          <p className="text-xs text-slate-400 mt-1">签到/总报名</p>
         </div>
       </div>
 
@@ -469,7 +469,7 @@ export default function FieldDashboard() {
           className="flex items-center gap-4 p-4 rounded-2xl bg-amber-500/5 border border-amber-500/20 cursor-pointer hover:bg-amber-500/10 transition-colors"
         >
           <AlertTriangle className="text-amber-400 shrink-0" size={20} />
-          <span className="text-amber-300 text-sm font-medium">
+          <span className="text-white text-sm font-medium">
             今日还有 {pendingRecords.length} 位工人已报名但未签到，请及时扫码核验
           </span>
           <ArrowRight className="text-amber-400 ml-auto shrink-0" size={16} />
@@ -514,7 +514,7 @@ export default function FieldDashboard() {
                 </AreaChart>
               </ResponsiveContainer>
             ) : (
-              <div className="flex items-center justify-center h-full text-slate-500">暂无趋势数据</div>
+              <div className="flex items-center justify-center h-full text-slate-400">暂无趋势数据</div>
             )}
           </div>
         </div>
@@ -534,9 +534,9 @@ export default function FieldDashboard() {
                 <Camera size={20} className="text-emerald-400" />
                 <div className="flex-1">
                   <p className="text-sm font-medium text-white">扫码签到</p>
-                  <p className="text-xs text-slate-500">扫描工人二维码完成考勤</p>
+                  <p className="text-xs text-slate-400">扫描工人二维码完成考勤</p>
                 </div>
-                <ArrowRight size={16} className="text-slate-500 group-hover:text-emerald-400 transition-colors" />
+                <ArrowRight size={16} className="text-slate-400 group-hover:text-emerald-400 transition-colors" />
               </button>
               <button
                 onClick={() => navigate('/dashboard/field-workers')}
@@ -545,9 +545,9 @@ export default function FieldDashboard() {
                 <Users size={20} className="text-blue-400" />
                 <div className="flex-1">
                   <p className="text-sm font-medium text-white">基地人员</p>
-                  <p className="text-xs text-slate-500">查看本基地工人名单</p>
+                  <p className="text-xs text-slate-400">查看本基地工人名单</p>
                 </div>
-                <ArrowRight size={16} className="text-slate-500 group-hover:text-blue-400 transition-colors" />
+                <ArrowRight size={16} className="text-slate-400 group-hover:text-blue-400 transition-colors" />
               </button>
             </div>
           </div>
@@ -583,7 +583,7 @@ export default function FieldDashboard() {
                     style={{ width: `${stats?.attendanceRate ?? 0}%` }}
                   />
                 </div>
-                <p className="text-xs text-slate-500 mt-1 text-right">{stats?.attendanceRate ?? 0}% 到岗率</p>
+                <p className="text-xs text-slate-400 mt-1 text-right">{stats?.attendanceRate ?? 0}% 到岗率</p>
               </div>
             </div>
           </div>
@@ -602,12 +602,12 @@ export default function FieldDashboard() {
           </button>
         </div>
         {records.length === 0 ? (
-          <div className="text-center py-12 text-slate-500">今日暂无签到记录</div>
+          <div className="text-center py-12 text-slate-400">今日暂无签到记录</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left">
               <thead>
-                <tr className="border-b border-slate-800/60 text-slate-500 text-xs uppercase tracking-wider">
+                <tr className="border-b border-slate-800/60 text-slate-400 text-xs uppercase tracking-wider">
                   <th className="pb-3 font-semibold px-4">工人</th>
                   <th className="pb-3 font-semibold">工号</th>
                   <th className="pb-3 font-semibold">岗位</th>

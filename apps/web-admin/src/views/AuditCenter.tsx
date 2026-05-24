@@ -182,7 +182,7 @@ export default function AuditCenter() {
             </div>
             {pendingUserCount > 0 && (
               <div className="ml-auto">
-                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 text-xs font-medium">
+                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-amber-500/20 text-white text-xs font-medium">
                   <AlertTriangle size={12} /> 待处理
                 </span>
               </div>
@@ -207,7 +207,7 @@ export default function AuditCenter() {
             </div>
             {pendingBaseCount > 0 && (
               <div className="ml-auto">
-                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-blue-500/20 text-blue-300 text-xs font-medium">
+                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-blue-500/20 text-white text-xs font-medium">
                   <AlertTriangle size={12} /> 待处理
                 </span>
               </div>
@@ -240,7 +240,7 @@ export default function AuditCenter() {
                 <div className="overflow-x-auto">
                   <table className="w-full text-left">
                     <thead>
-                      <tr className="border-b border-slate-800/60 text-slate-500 text-xs uppercase tracking-wider">
+                      <tr className="border-b border-slate-800/60 text-slate-400 text-xs uppercase tracking-wider">
                         <th className="px-6 py-4 font-semibold">用户</th>
                         <th className="px-6 py-4 font-semibold">UID</th>
                         <th className="px-6 py-4 font-semibold">角色</th>
@@ -263,7 +263,7 @@ export default function AuditCenter() {
                           <td className="px-6 py-4 text-slate-400 text-sm font-mono">{u.uid}</td>
                           <td className="px-6 py-4 text-slate-400 text-sm">{ROLE_MAP[u.roleKey] || u.roleKey}</td>
                           <td className="px-6 py-4 text-slate-400 text-sm">{u.phone}</td>
-                          <td className="px-6 py-4 text-slate-500 text-sm">{u.createdAt?.slice(0, 10)}</td>
+                          <td className="px-6 py-4 text-slate-400 text-sm">{u.createdAt?.slice(0, 10)}</td>
                           <td className="px-6 py-4">
                             <div className="flex items-center justify-end gap-2">
                               <button
@@ -296,7 +296,7 @@ export default function AuditCenter() {
                 </div>
                 {userTotalPages > 1 && (
                   <div className="flex items-center justify-between px-6 py-4 border-t border-slate-800/60">
-                    <span className="text-sm text-slate-500">共 {userTotal} 条</span>
+                    <span className="text-sm text-slate-400">共 {userTotal} 条</span>
                     <div className="flex items-center gap-2">
                       <button disabled={userPage <= 1} onClick={() => setUserPage((p) => p - 1)} className="p-2 rounded-lg bg-slate-800 text-slate-400 hover:text-white disabled:opacity-30">
                         <ChevronLeft size={16} />
@@ -328,7 +328,7 @@ export default function AuditCenter() {
                 <div className="overflow-x-auto">
                   <table className="w-full text-left">
                     <thead>
-                      <tr className="border-b border-slate-800/60 text-slate-500 text-xs uppercase tracking-wider">
+                      <tr className="border-b border-slate-800/60 text-slate-400 text-xs uppercase tracking-wider">
                         <th className="px-6 py-4 font-semibold">基地名称</th>
                         <th className="px-6 py-4 font-semibold">类型</th>
                         <th className="px-6 py-4 font-semibold">地址</th>
@@ -344,7 +344,7 @@ export default function AuditCenter() {
                           <td className="px-6 py-4 text-slate-400 text-sm">{CATEGORY_MAP[b.category] || '其他'}</td>
                           <td className="px-6 py-4 text-slate-400 text-sm max-w-[200px] truncate">{b.address || '-'}</td>
                           <td className="px-6 py-4 text-slate-400 text-sm">{b.contactPerson || '-'}</td>
-                          <td className="px-6 py-4 text-slate-500 text-sm">{b.createdAt?.slice(0, 10)}</td>
+                          <td className="px-6 py-4 text-slate-400 text-sm">{b.createdAt?.slice(0, 10)}</td>
                           <td className="px-6 py-4">
                             <div className="flex items-center justify-end gap-2">
                               <button
@@ -377,7 +377,7 @@ export default function AuditCenter() {
                 </div>
                 {baseTotalPages > 1 && (
                   <div className="flex items-center justify-between px-6 py-4 border-t border-slate-800/60">
-                    <span className="text-sm text-slate-500">共 {baseTotal} 条</span>
+                    <span className="text-sm text-slate-400">共 {baseTotal} 条</span>
                     <div className="flex items-center gap-2">
                       <button disabled={basePage <= 1} onClick={() => setBasePage((p) => p - 1)} className="p-2 rounded-lg bg-slate-800 text-slate-400 hover:text-white disabled:opacity-30">
                         <ChevronLeft size={16} />

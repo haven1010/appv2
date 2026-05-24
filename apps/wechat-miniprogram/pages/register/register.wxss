@@ -289,11 +289,11 @@
 }
 
 .picker-field.placeholder {
-  color: #b0aac0;
+  color: #8e96a8;
 }
 
 .placeholder {
-  color: #b0aac0;
+  color: #8e96a8;
   font-size: 26rpx;
 }
 
@@ -333,9 +333,9 @@
 }
 
 .register-btn[disabled] {
-  background: #d4d0e0;
+  background: #b8b4c8;
   box-shadow: none;
-  color: #9a94a8;
+  color: #ffffff;
 }
 
 /* ─── 底部 ─── */

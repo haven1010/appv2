@@ -33,7 +33,7 @@
     <view class="profile-tip card-in" wx:if="{{showProfileTip}}" bindtap="goToProfileComplete">
       <text class="profile-tip-icon">📝</text>
       <text class="profile-tip-text">您还未完善个人信息，点击前往补充</text>
-      <text class="profile-tip-arrow">&gt;</text>
+      <text class="profile-tip-arrow">></text>
     </view>
 
     <!-- ── Service Panel ── -->
