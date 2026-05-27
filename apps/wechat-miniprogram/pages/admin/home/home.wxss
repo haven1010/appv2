@@ -185,7 +185,7 @@
 
 .filter-chip.active {
   background: var(--brand-gradient);
-  color: #ffffff;
+  color: #1a1a2e;
   box-shadow: 0 4rpx 12rpx rgba(102, 126, 234, 0.25);
 }
 
@@ -273,7 +273,7 @@
 
 .action-pass {
   background: var(--brand-gradient);
-  color: #ffffff;
+  color: #1a1a2e;
   box-shadow: 0 4rpx 12rpx rgba(102, 126, 234, 0.2);
 }
 
@@ -366,7 +366,7 @@
 .submit-btn {
   margin-top: 18rpx;
   background: var(--brand-gradient);
-  color: #ffffff;
+  color: #1a1a2e;
   box-shadow: 0 8rpx 24rpx rgba(102, 126, 234, 0.3);
 }
 
@@ -378,7 +378,7 @@
 .submit-btn[disabled] {
   background: #b8b4c8;
   box-shadow: none;
-  color: #ffffff;
+  color: #1a1a2e;
 }
 
 /* ── Notice List ── */

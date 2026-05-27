@@ -1,0 +1,59 @@
+<view class="page search-page">
+  <view class="search-header">
+    <view class="search-input-wrap">
+      <text class="search-input-icon">🔍</text>
+      <input
+        class="search-input"
+        placeholder="搜索岗位/基地/政策"
+        value="{{keyword}}"
+        bindinput="onInput"
+        focus="{{true}}"
+        confirm-type="search"
+      />
+      <text class="search-clear" wx:if="{{keyword}}" bindtap="onClear">✕</text>
+    </view>
+  </view>
+
+  <view class="search-body">
+    <!-- Loading -->
+    <view wx:if="{{loading}}" class="search-hint">
+      <text>加载数据中...</text>
+    </view>
+
+    <!-- Empty keyword -->
+    <view wx:elif="{{!keyword}}" class="search-hint">
+      <text class="search-hint-icon">🔍</text>
+      <text class="search-hint-title">输入关键词搜索</text>
+      <text class="search-hint-desc">支持搜索岗位名称、基地名称、政策标题</text>
+    </view>
+
+    <!-- No results -->
+    <view wx:elif="{{results.length === 0}}" class="search-hint">
+      <text class="search-hint-icon">📭</text>
+      <text class="search-hint-title">未找到相关结果</text>
+      <text class="search-hint-desc">换个关键词试试</text>
+    </view>
+
+    <!-- Results -->
+    <view wx:else class="search-results">
+      <view
+        wx:for="{{results}}"
+        wx:key="type-id"
+        class="search-result-item"
+        data-item="{{item}}"
+        bindtap="onTapResult"
+      >
+        <view class="result-type-tag result-tag-{{item.type}}">
+          <text>{{item.section}}</text>
+        </view>
+        <view class="result-body">
+          <text class="result-title">{{item.title}}</text>
+          <text class="result-desc" wx:if="{{item.type === 'job'}}">{{item.baseName}} · {{item.salary}}</text>
+          <text class="result-desc" wx:elif="{{item.type === 'base'}}">{{item.address}}</text>
+          <text class="result-desc" wx:else>{{item.summary}}</text>
+        </view>
+        <text class="result-arrow">></text>
+      </view>
+    </view>
+  </view>
+</view>

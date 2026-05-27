@@ -2,6 +2,7 @@
   "pages": [
     "pages/index/index",
     "pages/index/services/services",
+    "pages/search/search",
     "pages/login/login",
     "pages/boss/dashboard/dashboard",
     "pages/boss/profile/profile",
@@ -89,9 +90,6 @@
       }
     ]
   },
-  "requiredPrivateInfos": [
-    "getLocation"
-  ],
   "darkmode": false,
   "style": "v2",
   "sitemapLocation": "sitemap.json",

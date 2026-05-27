@@ -30,7 +30,7 @@
 
     <view class="profile-menu card-in delay-2">
       <view class="profile-menu-item strong" hover-class="profile-menu-press" hover-stay-time="100" bindtap="goSalary">
-        <view class="profile-menu-icon icon-blue">薪</view>
+        <view class="profile-menu-icon icon-blue">薪资</view>
         <view class="profile-menu-copy">
           <text class="profile-menu-title">收入与工资</text>
           <text class="profile-menu-desc">查看工资、确认金额、发起申诉</text>
@@ -39,7 +39,7 @@
       </view>
 
       <view class="profile-menu-item strong" hover-class="profile-menu-press" hover-stay-time="100" bindtap="goMySignups">
-        <view class="profile-menu-icon icon-green">报</view>
+        <view class="profile-menu-icon icon-green">报名</view>
         <view class="profile-menu-copy">
           <text class="profile-menu-title">我的报名</text>
           <text class="profile-menu-desc">查看岗位报名、进度和状态</text>
@@ -57,7 +57,7 @@
       </view>
 
       <view class="profile-menu-item" hover-class="profile-menu-press" hover-stay-time="100" bindtap="goBasicInfo">
-        <view class="profile-menu-icon icon-indigo">档</view>
+        <view class="profile-menu-icon icon-indigo">信息</view>
         <view class="profile-menu-copy">
           <text class="profile-menu-title">基本信息</text>
           <text class="profile-menu-desc">姓名、电话、地址和实名资料</text>
@@ -66,7 +66,7 @@
       </view>
 
       <view class="profile-menu-item" hover-class="profile-menu-press" hover-stay-time="100" bindtap="showWorkHistory">
-        <view class="profile-menu-icon icon-orange">史</view>
+        <view class="profile-menu-icon icon-orange">历史</view>
         <view class="profile-menu-copy">
           <text class="profile-menu-title">工作历史</text>
           <text class="profile-menu-desc">查看签到记录和工作时间线</text>

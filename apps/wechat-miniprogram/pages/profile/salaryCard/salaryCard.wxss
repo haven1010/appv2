@@ -53,8 +53,8 @@ swiper-item {
   border-radius: var(--radius-lg);
   box-sizing: border-box;
   padding: 30rpx 28rpx;
-  box-shadow: 0 14rpx 30rpx rgba(102, 126, 234, 0.18);
-  color: #ffffff;
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.06);
+  color: #1a1a2e;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -81,7 +81,7 @@ swiper-item {
   font-size: 22rpx;
   padding: 6rpx 14rpx;
   border-radius: var(--radius-pill);
-  background: rgba(255, 255, 255, 0.18);
+  background: rgba(0, 0, 0, 0.06);
 }
 
 .card-no {
@@ -105,7 +105,7 @@ swiper-item {
 .bottom-label {
   display: block;
   font-size: 22rpx;
-  color: rgba(255, 255, 255, 0.82);
+  color: #8a94a6;
 }
 
 .bottom-value {
@@ -164,7 +164,7 @@ swiper-item {
 
 .action-primary,
 .save-btn {
-  color: #ffffff;
+  color: #1a1a2e;
   background: var(--brand-purple);
 }
 

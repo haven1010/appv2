@@ -202,7 +202,7 @@
 
 .approve-btn {
   background: var(--brand-purple);
-  color: #ffffff;
+  color: #1a1a2e;
   box-shadow: 0 4rpx 12rpx rgba(102, 126, 234, 0.2);
 }
 

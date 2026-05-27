@@ -63,7 +63,7 @@
 
 .star {
   font-size: 64rpx;
-  color: #e8e4f0;
+  color: #999999;
   transition: all 0.2s;
 }
 
@@ -109,7 +109,7 @@
 
 .star-small {
   font-size: 36rpx;
-  color: #e8e4f0;
+  color: #999999;
   transition: all 0.2s;
 }
 

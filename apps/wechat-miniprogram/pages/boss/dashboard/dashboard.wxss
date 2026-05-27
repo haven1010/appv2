@@ -271,8 +271,8 @@
   width: 34rpx;
   height: 34rpx;
   border-radius: 50%;
-  background: rgba(26, 29, 38, 0.45);
-  color: #ffffff;
+  background: #FFE5E5;
+  color: #CC0000;
   font-size: 22rpx;
   display: flex;
   align-items: center;
@@ -309,7 +309,7 @@
   height: 90rpx;
   line-height: 90rpx;
   background: var(--brand-purple);
-  color: #ffffff;
+  color: #1a1a2e;
   font-size: 30rpx;
   box-shadow: 0 10rpx 18rpx rgba(102, 126, 234, 0.16);
 }
@@ -324,7 +324,7 @@
 .payroll-primary-btn[disabled] {
   background: #b8b4c8;
   box-shadow: none;
-  color: #ffffff;
+  color: #1a1a2e;
 }
 
 .action-btn,

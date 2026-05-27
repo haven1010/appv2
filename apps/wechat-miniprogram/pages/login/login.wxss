@@ -99,7 +99,7 @@
   height: 100rpx;
   border-radius: 28rpx;
   background: #07c160;
-  color: #ffffff;
+  color: #1a1a2e;
   font-size: 34rpx;
   font-weight: 800;
   box-shadow: 0 6rpx 20rpx rgba(7, 193, 96, 0.3);
@@ -121,8 +121,8 @@
   line-height: 48rpx;
   text-align: center;
   border-radius: 14rpx;
-  background: rgba(255, 255, 255, 0.2);
-  color: #ffffff;
+  background: rgba(0, 0, 0, 0.08);
+  color: #1a1a2e;
   font-size: 28rpx;
   font-weight: 800;
 }
@@ -263,8 +263,8 @@
 }
 
 .role-icon.active {
-  background: rgba(255, 255, 255, 0.2);
-  color: #ffffff;
+  background: rgba(0, 0, 0, 0.08);
+  color: #1a1a2e;
 }
 
 .role-label {
@@ -275,7 +275,7 @@
 }
 
 .role-pill.active .role-label {
-  color: #ffffff;
+  color: #1a1a2e;
 }
 
 /* ─── 表单 ─── */
@@ -349,7 +349,7 @@
   border-radius: 28rpx;
   border: none;
   background: var(--brand-purple);
-  color: #ffffff;
+  color: #1a1a2e;
   font-size: 34rpx;
   font-weight: 800;
   box-shadow: 0 6rpx 16rpx rgba(90, 108, 214, 0.25);
@@ -367,7 +367,7 @@
 .login-btn[disabled] {
   background: #b8b4c8;
   box-shadow: none;
-  color: #ffffff;
+  color: #1a1a2e;
 }
 
 /* ─── 注册入口 ─── */
@@ -489,7 +489,7 @@
   border-radius: 20rpx;
   border: none;
   background: var(--brand-purple);
-  color: #ffffff;
+  color: #1a1a2e;
   font-size: 26rpx;
   font-weight: 700;
   box-shadow: 0 4rpx 8rpx rgba(90, 108, 214, 0.15);

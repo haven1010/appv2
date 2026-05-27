@@ -52,7 +52,7 @@
   padding: 20rpx 24rpx;
   border-radius: 28rpx;
   background: var(--brand-gradient);
-  color: #ffffff;
+  color: #1a1a2e;
   font-size: 30rpx;
   line-height: 1.5;
   font-weight: 700;
@@ -203,7 +203,7 @@
   line-height: 86rpx;
   border-radius: var(--radius-pill);
   background: var(--brand-purple);
-  color: #ffffff;
+  color: #1a1a2e;
   font-size: 30rpx;
   font-weight: 800;
   box-shadow: 0 8rpx 24rpx rgba(102, 126, 234, 0.25);

@@ -257,7 +257,7 @@
   border-radius: 28rpx;
   border: none;
   background: var(--brand-purple);
-  color: #ffffff;
+  color: #1a1a2e;
   font-size: 34rpx;
   font-weight: 900;
   letter-spacing: 2rpx;

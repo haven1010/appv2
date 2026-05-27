@@ -195,7 +195,7 @@
   padding: 12rpx 28rpx;
   font-size: 26rpx;
   font-weight: 800;
-  color: #ffffff;
+  color: #1a1a2e;
   background: var(--brand-purple);
   box-shadow: 0 8rpx 24rpx rgba(102, 126, 234, 0.3);
   transition: all 0.2s;

@@ -15,12 +15,12 @@
   padding: 28rpx 26rpx;
   border-radius: var(--radius-lg);
   background: var(--brand-gradient);
-  box-shadow: 0 16rpx 34rpx rgba(102, 126, 234, 0.2);
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.06);
 }
 
 .services-title {
   display: block;
-  color: #ffffff;
+  color: #1a1a2e;
   font-size: 40rpx;
   font-weight: 900;
 }
@@ -28,7 +28,7 @@
 .services-subtitle {
   display: block;
   margin-top: 12rpx;
-  color: rgba(255, 255, 255, 0.86);
+  color: #8a94a6;
   font-size: 24rpx;
   line-height: 1.6;
 }

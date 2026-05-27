@@ -2,10 +2,6 @@
   <view class="page-body worker-home-body">
     <!-- ── Top Bar ── -->
     <view class="top-bar card-in">
-      <view class="location-chip" bindtap="onLocationTap">
-        <text class="location-dot"></text>
-        <text class="location-text">{{currentLocation}}</text>
-      </view>
       <view class="search-pill" bindtap="onSearchTap">
         <text class="search-icon">🔍</text>
         <text class="search-text">搜索岗位/企业/政策等</text>
@@ -25,7 +21,7 @@
       <text class="hero-subtitle">数字赋能就业 · 服务成就未来</text>
       <view class="hero-actions">
         <view class="hero-action-btn" bindtap="goToJobList">找工作</view>
-        <view class="hero-action-btn" bindtap="onSearchTap">查政策</view>
+        <view class="hero-action-btn" bindtap="goToPolicyConsult">查政策</view>
       </view>
     </view>
 

@@ -2,8 +2,6 @@ const app = getApp();
 const { resolveRole, isAdminRole } = require('../../utils/role');
 
 const DEFAULT_AVATAR = '/images/zhihui-logo.jpg';
-const DEFAULT_LOCATION_TEXT = '陕西商洛';
-const DEFAULT_HOT_ADDRESS = '陕西省商洛市商州区协作产业园';
 
 const HOME_SERVICE_ITEMS = [
   { key: 'job', title: '找工作', subtitle: '岗位速配', icon: '🔍', badgeClass: 'job' },
@@ -196,9 +194,9 @@ function pickFieldManagerContact(base) {
 
 function normalizeBaseAddress(address) {
   const text = toText(address);
-  if (!text) return DEFAULT_HOT_ADDRESS;
+  if (!text) return '地址待补充';
   if (/测试基地地址|测试地址|西安市测试|陕西省西安市测试/i.test(text)) {
-    return DEFAULT_HOT_ADDRESS;
+    return '地址待补充';
   }
   return text;
 }
@@ -233,7 +231,6 @@ Page({
       registerStage: 'complete',
     },
     showProfileTip: false,
-    currentLocation: DEFAULT_LOCATION_TEXT,
     serviceItems: HOME_SERVICE_ITEMS,
     bases: [],
     featuredBase: null,
@@ -373,15 +370,11 @@ Page({
   },
 
   onSearchTap() {
-    this.goToJobList();
+    wx.navigateTo({ url: '/pages/search/search' });
   },
 
   onNoticeTap() {
     this.goToMySignups();
-  },
-
-  onLocationTap() {
-    wx.showToast({ title: '当前定位：陕西商洛', icon: 'none' });
   },
 
   onServiceTap(e) {

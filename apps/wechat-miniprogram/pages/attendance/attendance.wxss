@@ -202,7 +202,7 @@
   border-radius: 50%;
   font-size: 22rpx;
   font-weight: 800;
-  color: #ffffff;
+  color: #1a1a2e;
   background: var(--brand-gradient);
   display: flex;
   align-items: center;

@@ -70,7 +70,7 @@
 
 .tab-active {
   background: var(--brand-gradient);
-  color: #ffffff;
+  color: #1a1a2e;
   border-color: transparent;
   box-shadow: 0 6rpx 20rpx rgba(102, 126, 234, 0.25);
 }

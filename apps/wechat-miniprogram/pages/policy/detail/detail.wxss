@@ -21,7 +21,7 @@
   border-radius: var(--radius-lg);
   padding: 32rpx 28rpx;
   margin-bottom: 20rpx;
-  box-shadow: 0 16rpx 40rpx rgba(102, 126, 234, 0.2);
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.06);
   position: relative;
   overflow: hidden;
 }
@@ -34,14 +34,14 @@
   width: 180rpx;
   height: 180rpx;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.03);
 }
 
 .policy-title {
   display: block;
   font-size: 38rpx;
   font-weight: 900;
-  color: #ffffff;
+  color: #1a1a2e;
   line-height: 1.45;
   margin-bottom: 18rpx;
   position: relative;
@@ -58,8 +58,8 @@
 
 .meta-item {
   padding: 8rpx 20rpx;
-  background: rgba(255, 255, 255, 0.18);
-  color: #ffffff;
+  background: rgba(0, 0, 0, 0.06);
+  color: #1a1a2e;
   border-radius: var(--radius-pill);
   font-size: 22rpx;
   font-weight: 700;
@@ -103,7 +103,7 @@
   height: 88rpx;
   line-height: 88rpx;
   background: var(--brand-purple);
-  color: #ffffff;
+  color: #1a1a2e;
   border-radius: var(--radius-pill);
   font-size: 30rpx;
   font-weight: 800;

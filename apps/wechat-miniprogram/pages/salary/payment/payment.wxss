@@ -131,7 +131,7 @@
 }
 
 .timeline-icon {
-  color: #FFFFFF;
+  color: #1a1a2e;
   font-size: 28rpx;
   font-weight: 700;
 }

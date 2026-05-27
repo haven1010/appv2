@@ -139,7 +139,7 @@
   border-radius: var(--radius-pill);
   border: none;
   background: var(--brand-purple);
-  color: #ffffff;
+  color: #1a1a2e;
   font-size: 28rpx;
   font-weight: 800;
   box-shadow: 0 8rpx 24rpx rgba(102, 126, 234, 0.3);
@@ -154,7 +154,7 @@
 .section-btn[disabled] {
   background: #b8b4c8;
   box-shadow: none;
-  color: #ffffff;
+  color: #1a1a2e;
 }
 
 .section-btn::after {

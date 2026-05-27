@@ -101,7 +101,7 @@
 }
 
 .segment-item.active {
-  color: #ffffff;
+  color: #1a1a2e;
   background: var(--brand-purple);
   box-shadow: 0 8rpx 24rpx rgba(102, 126, 234, 0.3);
 }

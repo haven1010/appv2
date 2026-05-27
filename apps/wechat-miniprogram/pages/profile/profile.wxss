@@ -212,17 +212,19 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #ffffff;
+  color: #1a1a2e;
   font-size: 28rpx;
   font-weight: 800;
   flex-shrink: 0;
 }
 
-.icon-blue { background: var(--brand-gradient); }
-.icon-green { background: linear-gradient(145deg, #2f9e78 0%, #4dbf97 100%); }
-.icon-cyan { background: linear-gradient(145deg, #1795ff 0%, #4db8ff 100%); }
-.icon-indigo { background: linear-gradient(145deg, #5f6fff 0%, #8592ff 100%); }
-.icon-orange { background: linear-gradient(145deg, #f49a39 0%, #ffb35c 100%); }
+.icon-blue {
+  background: #E0EEFF;
+}
+.icon-green { background: #D4F0E5; }
+.icon-cyan { background: #D5EEFF; }
+.icon-indigo { background: #E5E0FF; }
+.icon-orange { background: #FDECD5; }
 
 .profile-menu-copy {
   flex: 1;

@@ -89,7 +89,7 @@
   line-height: 72rpx;
   border-radius: var(--radius-pill);
   background: linear-gradient(135deg, #07c160 0%, #06ad56 100%);
-  color: #ffffff;
+  color: #1a1a2e;
   font-size: 26rpx;
   font-weight: 700;
   border: none;
@@ -133,7 +133,7 @@
   border-radius: var(--radius-pill);
   border: none;
   background: var(--brand-purple);
-  color: #ffffff;
+  color: #1a1a2e;
   font-size: 34rpx;
   font-weight: 900;
   box-shadow: 0 14rpx 28rpx rgba(102, 126, 234, 0.24);
@@ -152,7 +152,7 @@
 .submit-btn[disabled] {
   background: #b8b4c8;
   box-shadow: none;
-  color: #ffffff;
+  color: #1a1a2e;
 }
 
 .skip-text {
@@ -161,4 +161,60 @@
   margin-top: 32rpx;
   color: var(--ink-sub);
   font-size: 28rpx;
+}
+
+
+/* 表单项 - 改为左右布局 */
+.form-item {
+  display: flex;
+  flex-direction: row;      /* 水平排列 */
+  align-items: flex-start;  /* 顶部对齐（因为手机号那行有个按钮） */
+  margin-bottom: 30rpx;
+}
+
+/* 标签样式 - 固定宽度 */
+.field-label {
+  width: 120rpx;            /* 固定标签宽度 */
+  flex-shrink: 0;           /* 防止被压缩 */
+  font-size: 30rpx;
+  font-weight: 500;
+  color: #333;
+  padding-top: 20rpx;       /* 与输入框对齐 */
+}
+
+/* 右侧内容区域 - 包裹输入框外壳和按钮 */
+.input-shell {
+  flex: 1;                  /* 占据剩余宽度 */
+  display: flex;
+  align-items: center;
+  background: #f5f5f5;
+  border-radius: 12rpx;
+  padding: 0 20rpx;
+  min-height: 80rpx;
+}
+
+.input-icon {
+  margin-right: 12rpx;
+  font-size: 28rpx;
+  color: #999;
+}
+
+.field-input {
+  flex: 1;
+  height: 80rpx;
+  font-size: 28rpx;
+  background: transparent;
+}
+
+/* 微信一键获取手机号按钮 - 单独处理位置 */
+.wechat-phone-btn {
+  margin-left: 20rpx;
+  flex-shrink: 0;
+  font-size: 26rpx;
+  padding: 0 20rpx;
+  height: 70rpx;
+  line-height: 70rpx;
+  background: #07c160;
+  color: #1a1a2e;
+  border-radius: 8rpx;
 }

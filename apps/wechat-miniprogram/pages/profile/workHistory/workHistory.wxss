@@ -93,7 +93,7 @@
   bottom: 0;
   width: 4rpx;
   border-radius: var(--radius-pill);
-  background: linear-gradient(180deg, var(--brand-purple) 0%, #764ba2 62%, rgba(102, 126, 234, 0.4) 100%);
+  background: #f5f5f7;
 }
 
 .timeline-item {

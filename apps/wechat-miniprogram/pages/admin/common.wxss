@@ -172,7 +172,7 @@
 }
 
 .btn-primary {
-  color: #ffffff;
+  color: #1a1a2e;
   background: var(--brand-gradient);
   box-shadow: 0 8rpx 24rpx rgba(102, 126, 234, 0.3);
 }
@@ -192,9 +192,9 @@
 }
 
 .btn-danger {
-  color: #ffffff;
-  background: linear-gradient(90deg, var(--accent-red) 0%, #ee7b88 100%);
-  box-shadow: 0 8rpx 24rpx rgba(228, 92, 109, 0.25);
+  color: #1a1a2e;
+  background: #FFE5E5;
+  box-shadow: 0 4rpx 16rpx rgba(228, 92, 109, 0.15);
 }
 
 .btn-danger:active {
@@ -234,10 +234,10 @@
   flex: 0 0 auto;
   align-items: center;
   justify-content: center;
-  color: #ffffff !important;
-  background: linear-gradient(90deg, var(--accent-red) 0%, #ee7b88 100%) !important;
+  color: #1a1a2e !important;
+  background: #FFE5E5 !important;
   border: none !important;
-  box-shadow: 0 4rpx 12rpx rgba(228, 92, 109, 0.2);
+  box-shadow: 0 4rpx 12rpx rgba(228, 92, 109, 0.15);
 }
 
 .btn-delete-mini::after {

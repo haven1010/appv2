@@ -112,7 +112,7 @@
   line-height: 72rpx;
   border-radius: var(--radius-pill);
   background: var(--brand-purple);
-  color: #ffffff;
+  color: #1a1a2e;
   font-size: 24rpx;
   font-weight: 800;
   padding: 0 28rpx;
@@ -186,7 +186,7 @@
   width: 32rpx;
   height: 32rpx;
   background: var(--brand-gradient);
-  color: #ffffff;
+  color: #1a1a2e;
   border-radius: 50%;
   font-size: 18rpx;
   display: flex;

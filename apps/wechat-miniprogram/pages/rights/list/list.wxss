@@ -28,7 +28,7 @@
   font-size: 24rpx;
   font-weight: 800;
   background: var(--brand-purple);
-  color: #ffffff;
+  color: #139d7f;
   box-shadow: 0 6rpx 18rpx rgba(102, 126, 234, 0.25);
   transition: all 0.2s;
 }
@@ -78,7 +78,7 @@
   font-size: 28rpx;
   font-weight: 800;
   background: var(--brand-purple);
-  color: #ffffff;
+  color: #1a1a2e;
   box-shadow: 0 8rpx 24rpx rgba(102, 126, 234, 0.25);
 }
 

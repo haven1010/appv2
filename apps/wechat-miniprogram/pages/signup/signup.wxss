@@ -189,7 +189,7 @@
   height: 88rpx;
   line-height: 88rpx;
   border-radius: var(--radius-pill);
-  color: #ffffff;
+  color: #1a1a2e;
   font-size: 32rpx;
   font-weight: 900;
   background: var(--brand-purple);
