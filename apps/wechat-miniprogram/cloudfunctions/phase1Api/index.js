@@ -8,211 +8,6 @@ cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 
 const db = cloud.database();
 const _ = db.command;
-const BUILTIN_USERS = [
-  {
-    id: 1,
-    uid: 'U001',
-    name: '测试工人',
-    phone: '13800000001',
-    idCard: '610101199901010001',
-    role: 'worker',
-    roleKey: 'worker',
-    faceImgUrl: '',
-    avatarUrl: '',
-    headImgUrl: '',
-    photoUrl: '',
-    gender: 'male',
-    isPoorHousehold: false,
-    assignedBaseId: null,
-    homeAddress: '陕西省西安市测试地址',
-    bankName: '中国农业银行',
-    bankCardNo: '6228480000000000',
-    emergencyContact: '李四-父亲',
-    emergencyPhone: '13900000000',
-    infoAuditStatus: 1,
-    registerMode: 'self',
-    accountOwnerVerified: true,
-    loginLockReason: null,
-    isDeleted: false,
-    createdAt: '2026-05-05T00:00:00.000Z',
-    updatedAt: '2026-05-05T00:00:00.000Z',
-    _builtin: true,
-  },
-  {
-    id: 2,
-    uid: 'B001',
-    name: '测试老板',
-    phone: '13800000002',
-    idCard: '610101199801010002',
-    role: 'boss',
-    roleKey: 'boss',
-    faceImgUrl: '',
-    avatarUrl: '',
-    headImgUrl: '',
-    photoUrl: '',
-    gender: 'male',
-    isPoorHousehold: null,
-    assignedBaseId: null,
-    homeAddress: '陕西省西安市老板地址',
-    bankName: '中国建设银行',
-    bankCardNo: '6227000000000000',
-    emergencyContact: '王五-配偶',
-    emergencyPhone: '13900000002',
-    infoAuditStatus: 1,
-    registerMode: 'self',
-    accountOwnerVerified: true,
-    loginLockReason: null,
-    isDeleted: false,
-    createdAt: '2026-05-05T00:00:00.000Z',
-    updatedAt: '2026-05-05T00:00:00.000Z',
-    _builtin: true,
-  },
-  {
-    id: 3,
-    uid: 'SA001',
-    name: '测试超管',
-    phone: '13800000003',
-    idCard: '610101198701010003',
-    role: 'super_admin',
-    roleKey: 'super_admin',
-    faceImgUrl: '',
-    avatarUrl: '',
-    headImgUrl: '',
-    photoUrl: '',
-    gender: 'male',
-    isPoorHousehold: null,
-    assignedBaseId: null,
-    homeAddress: '陕西省西安市管理员地址1',
-    bankName: '中国工商银行',
-    bankCardNo: '6222000000000003',
-    emergencyContact: '赵六-家属',
-    emergencyPhone: '13900000013',
-    infoAuditStatus: 1,
-    registerMode: 'self',
-    accountOwnerVerified: true,
-    loginLockReason: null,
-    isDeleted: false,
-    createdAt: '2026-05-06T00:00:00.000Z',
-    updatedAt: '2026-05-06T00:00:00.000Z',
-    _builtin: true,
-  },
-  {
-    id: 4,
-    uid: 'BM001',
-    name: '测试基地管理员',
-    phone: '13800000004',
-    idCard: '610101198801010004',
-    role: 'base_manager',
-    roleKey: 'base_manager',
-    faceImgUrl: '',
-    avatarUrl: '',
-    headImgUrl: '',
-    photoUrl: '',
-    gender: 'male',
-    isPoorHousehold: null,
-    assignedBaseId: null,
-    homeAddress: '陕西省西安市管理员地址2',
-    bankName: '中国农业银行',
-    bankCardNo: '6228000000000004',
-    emergencyContact: '赵六-家属',
-    emergencyPhone: '13900000014',
-    infoAuditStatus: 1,
-    registerMode: 'self',
-    accountOwnerVerified: true,
-    loginLockReason: null,
-    isDeleted: false,
-    createdAt: '2026-05-06T00:00:00.000Z',
-    updatedAt: '2026-05-06T00:00:00.000Z',
-    _builtin: true,
-  },
-  {
-    id: 5,
-    uid: 'FM001',
-    name: '测试现场管理员',
-    phone: '13800000005',
-    idCard: '610101198901010005',
-    role: 'field_manager',
-    roleKey: 'field_manager',
-    faceImgUrl: '',
-    avatarUrl: '',
-    headImgUrl: '',
-    photoUrl: '',
-    gender: 'male',
-    isPoorHousehold: null,
-    assignedBaseId: 1,
-    homeAddress: '陕西省西安市管理员地址3',
-    bankName: '中国建设银行',
-    bankCardNo: '6227000000000005',
-    emergencyContact: '赵六-家属',
-    emergencyPhone: '13900000015',
-    infoAuditStatus: 1,
-    registerMode: 'self',
-    accountOwnerVerified: true,
-    loginLockReason: null,
-    isDeleted: false,
-    createdAt: '2026-05-06T00:00:00.000Z',
-    updatedAt: '2026-05-06T00:00:00.000Z',
-    _builtin: true,
-  },
-  {
-    id: 6,
-    uid: 'U006',
-    name: '测试工人乙',
-    phone: '13800000006',
-    idCard: '610101199601010006',
-    role: 'worker',
-    roleKey: 'worker',
-    faceImgUrl: '',
-    avatarUrl: '',
-    headImgUrl: '',
-    photoUrl: '',
-    gender: 'female',
-    isPoorHousehold: true,
-    assignedBaseId: null,
-    homeAddress: '陕西省西安市测试地址乙',
-    bankName: '中国农业银行',
-    bankCardNo: '6228480000000006',
-    emergencyContact: '家属甲',
-    emergencyPhone: '13900000016',
-    infoAuditStatus: 1,
-    registerMode: 'self',
-    accountOwnerVerified: true,
-    loginLockReason: null,
-    isDeleted: false,
-    createdAt: '2026-05-06T00:00:00.000Z',
-    updatedAt: '2026-05-06T00:00:00.000Z',
-    _builtin: true,
-  },
-  {
-    id: 7,
-    uid: 'U007',
-    name: '测试工人丙',
-    phone: '13800000007',
-    idCard: '610101199501010007',
-    role: 'worker',
-    roleKey: 'worker',
-    faceImgUrl: '',
-    avatarUrl: '',
-    headImgUrl: '',
-    photoUrl: '',
-    gender: 'male',
-    isPoorHousehold: false,
-    assignedBaseId: null,
-    homeAddress: '陕西省西安市测试地址丙',
-    bankName: '中国建设银行',
-    bankCardNo: '6227000000000007',
-    emergencyContact: '家属乙',
-    emergencyPhone: '13900000017',
-    infoAuditStatus: 1,
-    registerMode: 'self',
-    accountOwnerVerified: true,
-    loginLockReason: null,
-    isDeleted: false,
-    createdAt: '2026-05-06T00:00:00.000Z',
-    updatedAt: '2026-05-06T00:00:00.000Z',
-    _builtin: true,
-  },
-];
 
 function ok(data) {
   return { ok: true, data };
@@ -312,7 +107,8 @@ function compareByDateDesc(left, right, keyCandidates) {
 }
 
 function issueToken(user) {
-  const secret = trimText(process.env.JWT_SECRET) || 'phase1-cloud-jwt-secret';
+  const secret = trimText(process.env.JWT_SECRET);
+  if (!secret) throw new Error('JWT_SECRET environment variable is not configured');
   return jwt.sign(
     {
       username: user.name,
@@ -326,7 +122,8 @@ function issueToken(user) {
 }
 
 function decodeToken(token) {
-  const secret = trimText(process.env.JWT_SECRET) || 'phase1-cloud-jwt-secret';
+  const secret = trimText(process.env.JWT_SECRET);
+  if (!secret) throw new Error('JWT_SECRET environment variable is not configured');
   return jwt.verify(token, secret);
 }
 
@@ -340,37 +137,44 @@ function getCollection(name) {
   return db.collection(name);
 }
 
-function getBuiltinUserByField(field, value) {
-  const target = String(value == null ? '' : value).trim();
-  return BUILTIN_USERS.find((item) => String(item && item[field] != null ? item[field] : '').trim() === target) || null;
-}
-
 async function findOneByField(collectionName, field, value) {
-  const res = await getCollection(collectionName).where({ [field]: value }).limit(1).get();
-  const found = Array.isArray(res.data) && res.data.length ? res.data[0] : null;
-  if (found) return found;
-  if (collectionName === 'users') {
-    return getBuiltinUserByField(field, value);
-  }
+  const res = await getCollection(collectionName).where({ [field]: value, isDeleted: _.neq(true) }).limit(1).get();
+  if (Array.isArray(res.data) && res.data.length) return res.data[0];
   return null;
 }
 
 async function getAllDocuments(collectionName) {
   const res = await getCollection(collectionName).get();
-  const list = Array.isArray(res.data) ? res.data : [];
-  if (collectionName === 'users') {
-    return list.concat(BUILTIN_USERS.filter((item) => !list.some((row) => Number(row.id) === Number(item.id))));
-  }
-  return list;
+  return Array.isArray(res.data) ? res.data : [];
 }
 
 async function getNextNumericId(collectionName, field = 'id') {
-  const records = await getAllDocuments(collectionName);
-  const maxId = records.reduce((currentMax, item) => {
-    const nextValue = Number(item && item[field]);
-    return Number.isFinite(nextValue) && nextValue > currentMax ? nextValue : currentMax;
-  }, 0);
-  return maxId + 1;
+  const counterKey = `${collectionName}:${field}`;
+  try {
+    await getCollection('counters').doc(counterKey).update({
+      data: { seq: _.inc(1) },
+    });
+  } catch (_) {
+    const records = await getAllDocuments(collectionName);
+    const maxId = records.reduce((currentMax, item) => {
+      const nextValue = Number(item && item[field]);
+      return Number.isFinite(nextValue) && nextValue > currentMax ? nextValue : currentMax;
+    }, 0);
+    try {
+      await getCollection('counters').add({
+        data: { _id: counterKey, name: collectionName, field, seq: maxId },
+      });
+      await getCollection('counters').doc(counterKey).update({
+        data: { seq: _.inc(1) },
+      });
+    } catch (__) {
+      await getCollection('counters').doc(counterKey).update({
+        data: { seq: _.inc(1) },
+      });
+    }
+  }
+  const doc = await getCollection('counters').doc(counterKey).get();
+  return (doc.data && doc.data.seq) || 1;
 }
 
 async function getCurrentUser(event) {
@@ -659,9 +463,7 @@ async function updateProfile(user, data) {
   next.updatedAt = new Date().toISOString();
   delete next._id;
 
-  if (!user._builtin) {
-    await getCollection('users').doc(user._id).update({ data: next });
-  }
+  await getCollection('users').doc(user._id).update({ data: next });
   return normalizePublicUser(next);
 }
 
@@ -1241,7 +1043,8 @@ async function saveBaseNotice(baseId, data = {}) {
 async function listBaseNotices(baseId) {
   const res = await getCollection('baseNotices').where({
     baseId: Number(baseId),
-  }).get().catch(() => ({ data: [] }));
+    isDeleted: _.neq(true),
+  }).get();
   const list = Array.isArray(res.data) ? res.data : [];
   return list.sort((left, right) => compareByDateDesc(left, right, ['createdAt', 'updatedAt']));
 }
@@ -1637,7 +1440,7 @@ async function calculateSalaryFromSignup(signupId, data = {}) {
     baseId: Number(signup.baseId),
     jobId: Number(signup.jobId),
     workDate: trimText(signup.workDate),
-  }).limit(1).get().catch(() => ({ data: [] }));
+  }).limit(1).get();
 
   if (Array.isArray(existed.data) && existed.data.length) {
     return { ok: true, id: Number(existed.data[0].id || 0), duplicate: true };
@@ -1685,7 +1488,7 @@ async function calculateSalaryFromSignup(signupId, data = {}) {
     pieceCount,
     unitPriceSnapshot,
     totalAmount: Number(totalAmount.toFixed(2)),
-    bankCard: user?.bankCardNumber || '',
+    bankCard: user?.bankCardNo || '',
   });
 }
 
@@ -1773,7 +1576,7 @@ async function completeWorklog(data = {}) {
 
 async function listWorkArchives(query = {}) {
   const userId = query.userId ? Number(query.userId) : null;
-  const res = await getCollection('workArchives').get().catch(() => ({ data: [] }));
+  const res = await getCollection('workArchives').get();
   let list = Array.isArray(res.data) ? res.data : [];
   if (userId != null) {
     list = list.filter((item) => Number(item.userId) === userId);
@@ -1782,7 +1585,7 @@ async function listWorkArchives(query = {}) {
 }
 
 async function listOperationLogs() {
-  const res = await getCollection('operationLogs').get().catch(() => ({ data: [] }));
+  const res = await getCollection('operationLogs').get();
   const list = Array.isArray(res.data) ? res.data : [];
   return {
     list: list.sort((left, right) => compareByDateDesc(left, right, ['createdAt', 'updatedAt'])).slice(0, 20),
@@ -1853,7 +1656,8 @@ async function auditBase(baseId, data) {
 async function getBaseCooperations(baseId) {
   const res = await getCollection('cooperations').where({
     baseId: Number(baseId),
-  }).get().catch(() => ({ data: [] }));
+    isDeleted: _.neq(true),
+  }).get();
   return Array.isArray(res.data) ? res.data : [];
 }
 
@@ -1861,7 +1665,7 @@ async function listSalaryRecords(query = {}) {
   const baseId = query.baseId ? Number(query.baseId) : null;
   const dateFrom = trimText(query.dateFrom);
   const dateTo = trimText(query.dateTo);
-  const res = await getCollection('workerSalaries').get().catch(() => ({ data: [] }));
+  const res = await getCollection('workerSalaries').get();
   let list = Array.isArray(res.data) ? res.data : [];
 
   if (baseId != null) {
@@ -1881,7 +1685,7 @@ async function listSalaryRecords(query = {}) {
 }
 
 async function listSubmittedSalaryReports(query = {}) {
-  const res = await getCollection('salaryReports').get().catch(() => ({ data: [] }));
+  const res = await getCollection('salaryReports').get();
   let list = Array.isArray(res.data) ? res.data : [];
   const baseId = query.baseId ? String(query.baseId) : '';
   const keyword = trimText(query.keyword).toLowerCase();
@@ -1960,7 +1764,7 @@ async function submitSalaryReport(data = {}) {
     baseId,
     dateFrom,
     dateTo,
-  }).limit(1).get().catch(() => ({ data: [] }));
+  }).limit(1).get();
 
   const payload = {
     baseId,
@@ -2034,90 +1838,17 @@ async function getAttendanceQrCode(user) {
   };
 }
 
-function getMockPolicies() {
-  return [
-    {
-      id: 1,
-      title: '就业困难人员社保补贴政策',
-      category: '就业补贴',
-      publishDate: '2026-04-01',
-      department: '渭南市人力资源和社会保障局',
-      summary: '对符合条件的就业困难人员给予社会保险补贴，补贴标准为实际缴纳社会保险费的60%',
-      content: '为帮助就业困难人员实现稳定就业，对符合条件的就业困难人员给予社会保险补贴。补贴标准为实际缴纳社会保险费的60%，补贴期限最长不超过3年。',
-      requirements: '1. 持有就业创业证或就业失业登记证\n2. 属于就业困难人员范围\n3. 已实现灵活就业并缴纳社会保险费',
-      applyMethod: '携带相关材料到户籍所在地或常住地街道乡镇人力资源社会保障服务中心申请',
-    },
-    {
-      id: 2,
-      title: '职业技能培训补贴实施办法',
-      category: '培训补贴',
-      publishDate: '2026-03-15',
-      department: '渭南市人力资源和社会保障局',
-      summary: '参加职业技能培训并取得证书的劳动者，可申请培训补贴，最高可达3000元',
-      content: '参加职业技能培训并取得职业资格证书、职业技能等级证书、专项职业能力证书的劳动者，可申请职业技能培训补贴。',
-      requirements: '1. 参加政府补贴培训目录内的职业技能培训\n2. 取得相应职业资格证书或技能等级证书',
-      applyMethod: '通过培训机构统一申报或个人到当地人社部门申请',
-    },
-    {
-      id: 3,
-      title: '创业担保贷款及贴息政策',
-      category: '创业扶持',
-      publishDate: '2026-02-20',
-      department: '渭南市人力资源和社会保障局',
-      summary: '符合条件的创业人员可申请最高30万元的创业担保贷款，并享受贴息支持',
-      content: '符合条件的创业人员可申请最高30万元的创业担保贷款，合伙创业的可适当提高贷款额度。',
-      requirements: '1. 具有完全民事行为能力\n2. 个人信用记录良好\n3. 有创业意愿和创业能力',
-      applyMethod: '向创业地人社部门提出申请，经审核后由经办银行发放贷款',
-    },
-  ];
-}
+// Policies are now stored in CloudBase collection 'policies'
+// Use listPolicies() and getPolicyDetail() to read from the database
 
-function getMockTrainingCourses() {
-  return [
-    {
-      id: 1,
-      title: '采摘技能培训',
-      category: '采摘技能',
-      duration: '2小时',
-      status: 1,
-      enrolled: false,
-      instructor: '张老师',
-      location: '线上培训',
-      startTime: '2026-05-10 09:00',
-      description: '本课程将教授采摘的基本技能，包括水果识别、采摘技巧、安全注意事项等内容。',
-    },
-    {
-      id: 2,
-      title: '安全生产培训',
-      category: '安全培训',
-      duration: '3小时',
-      status: 1,
-      enrolled: false,
-      instructor: '李老师',
-      location: '线上培训',
-      startTime: '2026-05-12 14:00',
-      description: '学习农业生产安全知识，包括防暑降温、农药使用安全、应急处理等内容。',
-    },
-    {
-      id: 3,
-      title: '职业素养提升',
-      category: '职业素养',
-      duration: '1.5小时',
-      status: 0,
-      enrolled: false,
-      instructor: '王老师',
-      location: '线上培训',
-      startTime: '2026-05-15 10:00',
-      description: '提升职业素养，学习职场礼仪、沟通技巧、团队协作等内容。',
-    },
-  ];
-}
+// Training courses are now stored in CloudBase collection 'trainingCourses'
+// Use listTrainingCourses() and getTrainingCourseDetail() to read from the database
 
 async function listPolicies(query = {}) {
-  const keyword = trimText(query.keyword).toLowerCase();
-  const category = Number(query.category || 0);
-  let list = getMockPolicies();
+  const collection = getCollection('policies');
+  let dbQuery = collection.where({ isDeleted: { $ne: true } });
 
+  const category = Number(query.category || 0);
   if (category > 0) {
     const categoryMap = {
       1: '就业补贴',
@@ -2125,36 +1856,62 @@ async function listPolicies(query = {}) {
       3: '创业扶持',
       4: '社保政策',
     };
-    list = list.filter((item) => item.category === categoryMap[category]);
+    const catName = categoryMap[category];
+    if (catName) {
+      dbQuery = dbQuery.where({ category: catName });
+    }
   }
 
+  const keyword = trimText(query.keyword).toLowerCase();
   if (keyword) {
-    list = list.filter((item) =>
+    const res = await dbQuery.get();
+    const list = Array.isArray(res.data) ? res.data : [];
+    return list.filter((item) =>
       String(item.title).toLowerCase().includes(keyword)
       || String(item.summary).toLowerCase().includes(keyword)
       || String(item.content).toLowerCase().includes(keyword));
   }
 
-  return list;
+  const res = await dbQuery.orderBy('publishDate', 'desc').get();
+  return Array.isArray(res.data) ? res.data : [];
 }
 
 async function getPolicyDetail(policyId) {
-  const list = getMockPolicies();
-  return list.find((item) => Number(item.id) === Number(policyId)) || list[0];
+  if (!policyId) return null;
+  try {
+    const res = await getCollection('policies').where({ _id: policyId, isDeleted: _.neq(true) }).limit(1).get();
+    if (Array.isArray(res.data) && res.data.length) return res.data[0];
+  } catch (e) {
+    console.error('getPolicyDetail error:', e);
+  }
+  try {
+    const res = await getCollection('policies').where({ id: Number(policyId), isDeleted: _.neq(true) }).limit(1).get();
+    if (Array.isArray(res.data) && res.data.length) return res.data[0];
+  } catch (e) {
+    console.error('getPolicyDetail fallback error:', e);
+  }
+  return null;
 }
 
 async function listTrainingCourses(query = {}) {
+  const collection = getCollection('trainingCourses');
+  let dbQuery = collection.where({ isDeleted: { $ne: true } });
+
   const category = Number(query.category || 0);
-  let list = getMockTrainingCourses();
   if (category > 0) {
     const categoryMap = {
       1: '采摘技能',
       2: '安全培训',
       3: '职业素养',
     };
-    list = list.filter((item) => item.category === categoryMap[category]);
+    const catName = categoryMap[category];
+    if (catName) {
+      dbQuery = dbQuery.where({ category: catName });
+    }
   }
-  return list;
+
+  const res = await dbQuery.orderBy('startTime', 'desc').get();
+  return Array.isArray(res.data) ? res.data : [];
 }
 
 async function enrollTrainingCourse(user, courseId) {
@@ -2181,7 +1938,23 @@ async function enrollTrainingCourse(user, courseId) {
 }
 
 async function getTrainingCourseDetail(user, courseId) {
-  const course = getMockTrainingCourses().find((item) => Number(item.id) === Number(courseId));
+  if (!courseId) throw createHttpError(400, '课程ID不能为空');
+
+  let course = null;
+  try {
+    const res = await getCollection('trainingCourses').where({ _id: courseId, isDeleted: _.neq(true) }).limit(1).get();
+    if (Array.isArray(res.data) && res.data.length) course = res.data[0];
+  } catch (e) {
+    console.error('getTrainingCourseDetail error:', e);
+  }
+  if (!course) {
+    try {
+      const res = await getCollection('trainingCourses').where({ id: Number(courseId), isDeleted: _.neq(true) }).limit(1).get();
+      if (Array.isArray(res.data) && res.data.length) course = res.data[0];
+    } catch (e) {
+      console.error('getTrainingCourseDetail fallback error:', e);
+    }
+  }
   if (!course) {
     throw createHttpError(404, '课程不存在');
   }
@@ -2229,6 +2002,7 @@ async function submitPolicyApplication(user, data) {
 async function listRightsConsultations(user) {
   const res = await getCollection('rightsConsultations').where({
     userId: Number(user.id),
+    isDeleted: _.neq(true),
   }).get();
   const list = Array.isArray(res.data) ? res.data : [];
   return list.sort((left, right) => compareByDateDesc(left, right, ['createdAt', 'updatedAt']));

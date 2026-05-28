@@ -17,7 +17,7 @@ const PHASE1_ROUTE_PATTERNS = [
   { method: 'POST', pattern: /^\/auth\/wechat-login$/ },
   { method: 'POST', pattern: /^\/user\/register$/ },
   { method: 'POST', pattern: /^\/user\/register\/boss$/ },
-  { method: 'POST', pattern: /^\/user\/register\/ocr$/ },
+
   { method: 'GET', pattern: /^\/user\/profile$/ },
   { method: 'PATCH', pattern: /^\/user\/profile$/ },
   { method: 'GET', pattern: /^\/base(?:\?.*)?$/ },
@@ -75,8 +75,6 @@ const PHASE1_ROUTE_PATTERNS = [
   { method: 'GET', pattern: /^\/operation-log\/list(?:\?.*)?$/ },
   { method: 'POST', pattern: /^\/worklog\/complete$/ },
   { method: 'GET', pattern: /^\/worklog\/archive(?:\?.*)?$/ },
-  { method: 'GET', pattern: /^\/rating\/credit-score\/worker\/[^/]+$/ },
-  { method: 'GET', pattern: /^\/rating\/credit-score\/base\/\d+$/ },
 ];
 
 function isTemporaryImageUrl(value) {
