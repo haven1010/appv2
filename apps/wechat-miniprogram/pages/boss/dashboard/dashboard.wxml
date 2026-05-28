@@ -1,6 +1,11 @@
 <view class="page page-enter">
   <view class="paper-bg"></view>
   <view class="container">
+    <view class="back-bar" bindtap="goBack">
+      <view class="back-arrow"></view>
+      <text class="back-text">返回</text>
+    </view>
+
     <view class="hero-card">
       <view class="hero-head">
         <view>

@@ -71,6 +71,25 @@
   </view>
 
   <view class="section-card">
+    <view class="section-title">岗位发布审核</view>
+    <view class="section-sub">待审核岗位：{{pendingJobList.length}}</view>
+
+    <view class="empty-text" wx:if="{{!pendingJobList.length}}">暂无待审核岗位</view>
+    <view class="list-item" wx:for="{{pendingJobList}}" wx:key="id">
+      <view class="item-title">{{item.jobTitle}}</view>
+      <view class="item-sub">基地：{{item.baseName}}（ID:{{item.baseId}}）</view>
+      <view class="item-sub">薪资：{{item.salaryText}}</view>
+      <view class="item-sub">工作时长：{{item.workHours}} · 日期：{{item.workDateRange}}</view>
+      <view class="item-sub">需要人数：{{item.recruitCount}} · 已报名：{{item.applicantCount}}</view>
+      <view class="item-sub">发布时间：{{item.createdAtText}}</view>
+      <view class="actions-row">
+        <button class="btn-secondary" data-id="{{item.id}}" data-status="1" bindtap="auditJob">审核通过</button>
+        <button class="btn-danger" data-id="{{item.id}}" data-status="2" bindtap="auditJob">审核驳回</button>
+      </view>
+    </view>
+  </view>
+
+  <view class="section-card">
     <view class="section-title">全量信息检索</view>
     <view class="form-label">关键字（姓名 / UID）</view>
     <input class="input" value="{{userKeyword}}" bindinput="onUserKeywordInput" placeholder="请输入关键字" />

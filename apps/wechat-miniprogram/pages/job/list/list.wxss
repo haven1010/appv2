@@ -211,6 +211,21 @@
   color: var(--ink-muted);
 }
 
+/* ───── Job Thumbnails ───── */
+.job-thumbs {
+  margin-top: 12rpx;
+  display: flex;
+  gap: 10rpx;
+}
+
+.job-thumb {
+  width: 120rpx;
+  height: 90rpx;
+  border-radius: 10rpx;
+  flex-shrink: 0;
+  background: rgba(102, 126, 234, 0.06);
+}
+
 /* ───── Boss Bottom Nav ───── */
 .boss-bottom-nav {
   position: fixed;
@@ -581,6 +596,19 @@
 .audit-pending {
   background: rgba(102, 126, 234, 0.1);
   color: var(--brand-purple);
+}
+
+.audit-reject {
+  background: rgba(228, 92, 109, 0.1);
+  color: var(--accent-red);
+}
+
+.audit-badge {
+  font-size: 22rpx;
+  font-weight: 700;
+  border-radius: var(--radius-pill);
+  padding: 4rpx 14rpx;
+  flex-shrink: 0;
 }
 
 .base-card-meta {

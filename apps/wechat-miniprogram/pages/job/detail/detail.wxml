@@ -69,6 +69,24 @@
         </view>
       </view>
 
+      <view class="section-card ds-card card-in delay-2" wx:if="{{jobInfo.workplaceImages && jobInfo.workplaceImages.length}}">
+        <text class="section-title">工作环境</text>
+        <scroll-view class="env-scroll" scroll-x enable-flex>
+          <view class="env-img-row">
+            <image
+              wx:for="{{jobInfo.workplaceImages}}"
+              wx:key="index"
+              class="env-img"
+              src="{{item}}"
+              mode="aspectFill"
+              data-index="{{index}}"
+              data-urls="{{jobInfo.workplaceImages}}"
+              bindtap="previewEnvImage"
+            />
+          </view>
+        </scroll-view>
+      </view>
+
       <view class="section-card ds-card card-in delay-2" wx:if="{{jobInfo.jobDescription}}">
         <text class="section-title">工作内容</text>
         <view class="note-card">

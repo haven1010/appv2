@@ -170,6 +170,8 @@ function normalizeJob(raw, fallbackBase) {
     workDateRange: `${startDate} ~ ${endDate}`,
     payModeText: payModeText(item.payType || item.pay_type, item.workCycle || item.work_cycle),
     salaryText: salaryText(item),
+    auditStatus: Number(item.auditStatus ?? item.audit_status ?? 0),
+    auditText: auditText(item.auditStatus ?? item.audit_status),
     statusText: statusText(item.status),
     statusClass: statusClass(item.status),
   };
@@ -705,5 +707,13 @@ Page({
     wx.navigateTo({
       url: `/pages/signup/signup?jobId=${jobId}&baseId=${baseId}&baseName=${encodeURIComponent(baseName)}&jobTitle=${encodeURIComponent(jobTitle)}`,
     });
+  },
+
+  previewEnvImage(e) {
+    const urls = e.currentTarget.dataset.urls;
+    const index = Number(e.currentTarget.dataset.index || 0);
+    if (urls && urls.length) {
+      wx.previewImage({ urls, current: urls[index] || urls[0] });
+    }
   },
 });

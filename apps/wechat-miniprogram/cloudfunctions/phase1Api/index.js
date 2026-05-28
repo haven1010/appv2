@@ -144,8 +144,18 @@ async function findOneByField(collectionName, field, value) {
 }
 
 async function getAllDocuments(collectionName) {
-  const res = await getCollection(collectionName).get();
-  return Array.isArray(res.data) ? res.data : [];
+  const MAX_LIMIT = 100;
+  let all = [];
+  let offset = 0;
+  let hasMore = true;
+  while (hasMore) {
+    const res = await getCollection(collectionName).skip(offset).limit(MAX_LIMIT).get();
+    const batch = Array.isArray(res.data) ? res.data : [];
+    all = all.concat(batch);
+    offset += batch.length;
+    hasMore = batch.length >= MAX_LIMIT;
+  }
+  return all;
 }
 
 async function getNextNumericId(collectionName, field = 'id') {
@@ -154,27 +164,16 @@ async function getNextNumericId(collectionName, field = 'id') {
     await getCollection('counters').doc(counterKey).update({
       data: { seq: _.inc(1) },
     });
-  } catch (_) {
+    const doc = await getCollection('counters').doc(counterKey).get();
+    return (doc.data && doc.data.seq) || 1;
+  } catch (err) {
     const records = await getAllDocuments(collectionName);
     const maxId = records.reduce((currentMax, item) => {
       const nextValue = Number(item && item[field]);
       return Number.isFinite(nextValue) && nextValue > currentMax ? nextValue : currentMax;
     }, 0);
-    try {
-      await getCollection('counters').add({
-        data: { _id: counterKey, name: collectionName, field, seq: maxId },
-      });
-      await getCollection('counters').doc(counterKey).update({
-        data: { seq: _.inc(1) },
-      });
-    } catch (__) {
-      await getCollection('counters').doc(counterKey).update({
-        data: { seq: _.inc(1) },
-      });
-    }
+    return maxId + 1;
   }
-  const doc = await getCollection('counters').doc(counterKey).get();
-  return (doc.data && doc.data.seq) || 1;
 }
 
 async function getCurrentUser(event) {
@@ -622,9 +621,93 @@ function normalizeJobRecord(job = {}) {
   };
 }
 
+async function createJob(user, baseId, data) {
+  const roleKey = user.roleKey || user.role || 'worker';
+  if (!['super_admin', 'region_admin', 'boss', 'base_manager'].includes(roleKey)) {
+    throw createHttpError(403, '当前角色无权限发布岗位');
+  }
+
+  const base = await findOneByField('bases', 'id', Number(baseId));
+  if (!base || base.isDeleted) {
+    throw createHttpError(404, '基地不存在');
+  }
+
+  if (Number(base.auditStatus) !== 1) {
+    throw createHttpError(409, '基地未审核通过，暂不可发布岗位');
+  }
+
+  const payload = data && typeof data === 'object' ? data : {};
+  const jobTitle = trimText(payload.jobTitle);
+  if (!jobTitle) throw createHttpError(400, '请输入岗位名称');
+
+  const workAddress = trimText(payload.workAddress);
+  if (!workAddress) throw createHttpError(400, '请输入工作地址');
+
+  const recruitCount = Number(payload.recruitCount);
+  if (!Number.isFinite(recruitCount) || recruitCount <= 0) throw createHttpError(400, '请填写需要人数');
+
+  const payType = Number(payload.payType || 1);
+  let salaryAmount = null;
+  let unitPrice = null;
+  let targetCount = 0;
+
+  if (payType === 3) {
+    unitPrice = Number(payload.unitPrice || payload.amount || 0);
+    if (!Number.isFinite(unitPrice) || unitPrice <= 0) throw createHttpError(400, '请填写有效的计件单价');
+    targetCount = Number(payload.targetCount || recruitCount || 1);
+  } else {
+    salaryAmount = Number(payload.salaryAmount || payload.amount || 0);
+    if (!Number.isFinite(salaryAmount) || salaryAmount <= 0) throw createHttpError(400, '请填写有效的工资金额');
+  }
+
+  const workHours = trimText(payload.workHours);
+  const workStartDate = trimText(payload.workStartDate);
+  const workEndDate = trimText(payload.workEndDate);
+  if (!workStartDate || !workEndDate) throw createHttpError(400, '请选择工作日期');
+  if (workStartDate > workEndDate) throw createHttpError(400, '开始日期不能晚于结束日期');
+
+  const requirements = trimText(payload.requirements);
+  if (!requirements) throw createHttpError(400, '请填写岗位要求');
+
+  const workContent = trimText(payload.workContent);
+  if (!workContent) throw createHttpError(400, '请填写岗位描述');
+
+  const jobId = await getNextNumericId('jobs');
+  const now = new Date().toISOString();
+  const jobRecord = {
+    id: jobId,
+    baseId: Number(baseId),
+    jobTitle,
+    workAddress,
+    recruitCount,
+    payType,
+    workCycle: Number(payload.workCycle || 1),
+    salaryAmount: salaryAmount || 0,
+    unitPrice: unitPrice || 0,
+    targetCount,
+    workHours,
+    workStartDate,
+    workEndDate,
+    validUntil: trimText(payload.validUntil) || `${workEndDate} 23:59:59`,
+    requirements,
+    workContent,
+    benefits: trimText(payload.benefits || ''),
+    workplaceImages: Array.isArray(payload.workplaceImages) ? payload.workplaceImages.slice(0, 3) : [],
+    status: 1,
+    auditStatus: 0,
+    isActive: true,
+    isDeleted: false,
+    createdAt: now,
+    updatedAt: now,
+  };
+
+  await getCollection('jobs').add({ data: jobRecord });
+  return jobRecord;
+}
+
 async function listJobsByBase(baseId, query = {}) {
-  const res = await getCollection('jobs').where({ baseId: Number(baseId), isDeleted: _.neq(true) }).get();
-  const jobs = (res.data || []).map(normalizeJobRecord);
+  const allJobs = await getAllDocuments('jobs');
+  const jobs = allJobs.filter((job) => !job.isDeleted && Number(job.baseId) === Number(baseId)).map(normalizeJobRecord);
 
   let filtered = jobs;
   if (!query.showAll && query.showAll !== '1' && query.showAll !== 'true') {
@@ -639,8 +722,8 @@ async function listJobsByBase(baseId, query = {}) {
 }
 
 async function listBases(query = {}) {
-  const res = await getCollection('bases').where({ isDeleted: _.neq(true) }).get();
-  let bases = (res.data || []).map(normalizeBaseRecord);
+  const allBases = await getAllDocuments('bases');
+  let bases = allBases.filter((base) => !base.isDeleted).map(normalizeBaseRecord);
 
   if (!query.showAll && query.showAll !== '1' && query.showAll !== 'true') {
     bases = bases.filter((base) => Number(base.auditStatus) === 1);
@@ -662,8 +745,8 @@ async function listBases(query = {}) {
   }
 
   if (query.withOpenJobs === '1' || query.withOpenJobs === 'true') {
-    const jobsRes = await getCollection('jobs').where({ isDeleted: _.neq(true) }).get();
-    const jobs = (jobsRes.data || []).map(normalizeJobRecord).filter((job) => isActiveJob(job));
+    const allJobs = await getAllDocuments('jobs');
+    const jobs = allJobs.filter((job) => !job.isDeleted).map(normalizeJobRecord).filter((job) => isActiveJob(job));
     const grouped = new Map();
     jobs.forEach((job) => {
       const existed = grouped.get(job.baseId);
@@ -1189,15 +1272,17 @@ async function getAttendanceBaseStats(query = {}) {
 async function getPendingWorkers(query = {}) {
   const targetBaseId = query.baseId ? Number(query.baseId) : null;
   const targetDate = trimText(query.date);
-  const applications = await getAllDocuments('applications');
+  const signups = await getAllDocuments('signups');
   const users = await getAllDocuments('users');
   const jobs = await getAllDocuments('jobs');
 
-  return applications
+  return signups
     .filter((item) =>
       !item.isDeleted
-      && Number(item.status) === 1
-      && (targetBaseId == null || Number(item.baseId) === targetBaseId))
+      && Number(item.status) === 0
+      && (targetBaseId == null || Number(item.baseId) === targetBaseId)
+      && (!targetDate || trimText(item.workDate) === targetDate))
+    .sort((left, right) => compareByDateDesc(left, right, ['createdAt', 'updatedAt']))
     .map((item) => {
       const user = users.find((row) => Number(row.id) === Number(item.userId)) || {};
       const job = jobs.find((row) => Number(row.id) === Number(item.jobId)) || {};
@@ -1206,7 +1291,7 @@ async function getPendingWorkers(query = {}) {
         userId: Number(item.userId || 0),
         baseId: Number(item.baseId || 0),
         jobId: Number(item.jobId || 0),
-        workDate: targetDate || item.workDate || job.workStartDate || '',
+        workDate: item.workDate || '',
         workerName: user.name || '未知工人',
         workerUid: user.uid || '-',
         workerPhone: user.phone || '-',
@@ -1281,10 +1366,19 @@ async function checkin(user, data) {
   }
 
   const signups = await getAllDocuments('signups');
+  const today = new Date().toISOString().slice(0, 10);
+
   const target = signups.find((item) =>
-    Number(item.userId) === Number(worker.id)
+    !item.isDeleted
+    && Number(item.userId) === Number(worker.id)
     && Number(item.baseId) === Number(baseId)
-    && Number(item.status) === 0);
+    && Number(item.status) === 0
+    && trimText(item.workDate) === today)
+    || signups.find((item) =>
+      !item.isDeleted
+      && Number(item.userId) === Number(worker.id)
+      && Number(item.baseId) === Number(baseId)
+      && Number(item.status) === 0);
 
   if (!target) {
     throw createHttpError(404, '未找到待签到报名记录');
@@ -1668,6 +1762,23 @@ async function auditUser(userId, data) {
   delete user._id;
   await getCollection('users').doc(docId).update({ data: user });
   return user;
+}
+
+async function auditJob(jobId, data) {
+  const job = await findOneByField('jobs', 'id', Number(jobId));
+  if (!job || job.isDeleted) {
+    throw createHttpError(404, '岗位不存在');
+  }
+  const status = Number(data && data.status);
+  if (![1, 2].includes(status)) {
+    throw createHttpError(400, '审核状态无效');
+  }
+  job.auditStatus = status;
+  job.updatedAt = new Date().toISOString();
+  const docId = job._id;
+  delete job._id;
+  await getCollection('jobs').doc(docId).update({ data: job });
+  return job;
 }
 
 async function getBaseCooperations(baseId) {
@@ -2100,8 +2211,23 @@ async function routeRequest(event) {
   }
 
   const baseJobsMatch = pathname.match(/^\/base\/(\d+)\/jobs$/);
+  if (method === 'POST' && baseJobsMatch) {
+    const user = await getCurrentUser(event);
+    return createJob(user, Number(baseJobsMatch[1]), data);
+  }
   if (method === 'GET' && baseJobsMatch) {
     return listJobsByBase(Number(baseJobsMatch[1]), query);
+  }
+
+  if (method === 'GET' && pathname === '/base/jobs') {
+    const allJobs = await getAllDocuments('jobs');
+    const activeJobs = allJobs.filter((job) => !job.isDeleted).map(normalizeJobRecord);
+    return activeJobs.sort((l, r) => compareByDateDesc(l, r, ['createdAt', 'updatedAt']));
+  }
+
+  const jobAuditMatch = pathname.match(/^\/base\/jobs\/(\d+)\/audit$/);
+  if (method === 'PATCH' && jobAuditMatch) {
+    return auditJob(Number(jobAuditMatch[1]), data);
   }
 
   const baseApplicationsMatch = pathname.match(/^\/base\/(\d+)\/applications$/);

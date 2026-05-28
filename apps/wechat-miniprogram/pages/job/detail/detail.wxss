@@ -307,6 +307,25 @@
 .delay-2 { animation-delay: 140ms; }
 .delay-3 { animation-delay: 200ms; }
 
+/* ───── Work Environment Images ───── */
+.env-scroll {
+  margin-top: 16rpx;
+  white-space: nowrap;
+}
+
+.env-img-row {
+  display: inline-flex;
+  gap: 14rpx;
+}
+
+.env-img {
+  width: 280rpx;
+  height: 200rpx;
+  border-radius: 16rpx;
+  flex-shrink: 0;
+  background: rgba(102, 126, 234, 0.06);
+}
+
 .page-bottom-gap {
   height: 8rpx;
 }

@@ -89,6 +89,7 @@ Page({
 
     pendingBaseList: [],
     pendingUserList: [],
+    pendingJobList: [],
 
     userKeyword: '',
 
@@ -246,9 +247,10 @@ Page({
   async loadAuditData() {
     this.setData({ loading: true });
     try {
-      const [baseRes, pendingUserRes] = await Promise.all([
+      const [baseRes, pendingUserRes, pendingJobRes] = await Promise.all([
         app.request({ url: '/base?showAll=true', method: 'GET' }).catch(() => []),
         app.request({ url: '/user/list?status=0&page=1&pageSize=200', method: 'GET' }).catch(() => ({ list: [] })),
+        app.request({ url: '/base/jobs?showAll=1', method: 'GET' }).catch(() => []),
       ]);
 
       const baseRawList = normalizeArray(baseRes);
@@ -276,7 +278,31 @@ Page({
           createdAtText: formatDateTime(item.createdAt),
         }));
 
-      this.setData({ pendingBaseList, pendingUserList, baseRawList });
+      const pendingJobList = normalizeArray(pendingJobRes)
+        .filter((item) => Number(item.auditStatus) === 0)
+        .map((item) => {
+          const payType = Number(item.payType || 0);
+          let salaryText = '-';
+          if (payType === 3) salaryText = `${Number(item.unitPrice || 0).toFixed(2)} 元/件`;
+          else if (payType === 2) salaryText = `${Number(item.salaryAmount || 0).toFixed(2)} 元/小时`;
+          else if (payType === 1) salaryText = `${Number(item.salaryAmount || 0).toFixed(2)} 元/天`;
+          const startDate = item.workStartDate || '';
+          const endDate = item.workEndDate || '';
+          return {
+            id: Number(item.id || 0),
+            baseId: Number(item.baseId || 0),
+            baseName: item.baseName || item.base_name || '-',
+            jobTitle: item.jobTitle || '未命名岗位',
+            salaryText,
+            workHours: item.workHours || '-',
+            workDateRange: startDate && endDate ? `${startDate} ~ ${endDate}` : '-',
+            recruitCount: Number(item.recruitCount || 0),
+            applicantCount: Number(item.applicantCount || 0),
+            createdAtText: formatDateTime(item.createdAt),
+          };
+        });
+
+      this.setData({ pendingBaseList, pendingUserList, pendingJobList, baseRawList });
       await this.loadAllUsers(baseRawList);
     } catch (err) {
       wx.showToast({ title: err.message || '加载审核数据失败', icon: 'none' });
@@ -434,6 +460,24 @@ Page({
       this.loadAuditData();
     } catch (err) {
       wx.showToast({ title: err.message || '信息审核失败', icon: 'none' });
+    }
+  },
+
+  async auditJob(e) {
+    const id = Number(e.currentTarget.dataset.id);
+    const status = Number(e.currentTarget.dataset.status);
+    if (!id || ![1, 2].includes(status)) return;
+
+    try {
+      await app.request({
+        url: `/base/jobs/${id}/audit`,
+        method: 'PATCH',
+        data: { status },
+      });
+      wx.showToast({ title: status === 1 ? '审核通过' : '审核驳回', icon: 'success' });
+      this.loadAuditData();
+    } catch (err) {
+      wx.showToast({ title: err.message || '岗位审核失败', icon: 'none' });
     }
   },
 

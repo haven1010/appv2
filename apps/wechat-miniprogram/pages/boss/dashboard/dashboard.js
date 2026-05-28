@@ -628,6 +628,15 @@ Page({
     wx.redirectTo({ url: '/pages/boss/profile/profile' });
   },
 
+  goBack() {
+    const pages = getCurrentPages();
+    if (pages.length > 1) {
+      wx.navigateBack({ delta: 1 });
+    } else {
+      wx.reLaunch({ url: '/pages/login/login' });
+    }
+  },
+
   logout() {
     wx.removeStorageSync('token');
     wx.removeStorageSync('userInfo');

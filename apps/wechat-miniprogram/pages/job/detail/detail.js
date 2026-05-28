@@ -206,6 +206,14 @@ Page({
     }
   },
 
+  previewEnvImage(e) {
+    const urls = e.currentTarget.dataset.urls;
+    const index = Number(e.currentTarget.dataset.index || 0);
+    if (urls && urls.length) {
+      wx.previewImage({ urls, current: urls[index] || urls[0] });
+    }
+  },
+
   openWorkAddress() {
     const info = this.data.jobInfo;
     if (!info) return;

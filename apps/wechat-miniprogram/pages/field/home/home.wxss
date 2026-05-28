@@ -292,6 +292,34 @@
   color: #b8860b;
 }
 
+/* ── Stats Summary ── */
+.stats-summary {
+  margin-top: 20rpx;
+  text-align: center;
+  padding-top: 18rpx;
+  border-top: 1rpx solid rgba(0, 0, 0, 0.05);
+}
+
+.summary-text {
+  font-size: 24rpx;
+  color: var(--ink-sub);
+}
+
+.summary-num {
+  font-weight: 800;
+  color: var(--brand-purple);
+}
+
+/* ── Section Count ── */
+.section-count {
+  font-size: 22rpx;
+  color: var(--ink-sub);
+  background: rgba(102, 126, 234, 0.06);
+  padding: 4rpx 16rpx;
+  border-radius: var(--radius-pill);
+  font-weight: 700;
+}
+
 .empty-box {
   text-align: center;
   color: var(--ink-sub);

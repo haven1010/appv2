@@ -238,6 +238,21 @@
   color: var(--accent-green);
 }
 
+.record-status.pending {
+  background: rgba(242, 184, 75, 0.15);
+  color: #b8860b;
+}
+
+.record-status.absent {
+  background: rgba(228, 92, 109, 0.1);
+  color: var(--accent-red);
+}
+
+.record-status.cancelled {
+  background: rgba(153, 153, 153, 0.12);
+  color: #888888;
+}
+
 /* ── Empty ── */
 .empty-box {
   text-align: center;
@@ -255,4 +270,11 @@
 .empty-text {
   font-size: 28rpx;
   color: var(--ink-sub);
+}
+
+.empty-hint {
+  font-size: 22rpx;
+  color: var(--ink-sub);
+  margin-top: 12rpx;
+  opacity: 0.6;
 }

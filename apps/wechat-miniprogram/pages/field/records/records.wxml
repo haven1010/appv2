@@ -1,7 +1,7 @@
 <view class="page page-enter">
   <view class="records-header">
     <text class="records-title">签到表</text>
-    <text class="records-base">现场管理员可查看当日签到名单并直接导出</text>
+    <text class="records-base">查看各日期的报名与签到记录，支持导出Excel</text>
     <picker mode="selector" value="{{baseIndex}}" range="{{managedBases}}" range-key="baseName" bindchange="onBaseChange" wx:if="{{managedBases.length}}">
       <view class="records-picker">{{baseName || '请选择基地'}}</view>
     </picker>
@@ -19,8 +19,8 @@
   </view>
 
   <view class="count-bar">
-    <text class="count-text">共 <text class="count-num">{{totalCount}}</text> 人已生成签到记录</text>
-    <button class="export-btn" bindtap="exportRecords" loading="{{exporting}}" disabled="{{exporting || !totalCount}}">导出签到表</button>
+    <text class="count-text">共 <text class="count-num">{{totalCount}}</text> 条记录</text>
+    <button class="export-btn" bindtap="exportRecords" loading="{{exporting}}" disabled="{{exporting}}">导出签到表</button>
   </view>
 
   <view class="loading-box" wx:if="{{loading}}">
@@ -35,12 +35,12 @@
       </view>
       <view class="record-center">
         <text class="record-name">{{item.displayName}}</text>
-        <text class="record-detail">UID：{{item.displayUid}}</text>
-        <text class="record-detail">岗位：{{item.displayJob}}</text>
+        <text class="record-detail">UID：{{item.displayUid}} ｜ 岗位：{{item.displayJob}}</text>
+        <text class="record-detail">工作日期：{{item.displayWorkDate}}</text>
       </view>
       <view class="record-right">
         <text class="record-time">{{item.displayTime}}</text>
-        <text class="record-status checked">{{item.statusText}}</text>
+        <view class="record-status {{item.statusClass}}">{{item.statusText}}</view>
       </view>
     </view>
   </view>
@@ -48,5 +48,6 @@
   <view class="empty-box" wx:elif="{{!loading}}">
     <text class="empty-icon">签</text>
     <text class="empty-text">{{dateLabel}}暂无签到记录</text>
+    <text class="empty-hint">工人报名后需现场管理员扫码完成签到</text>
   </view>
 </view>

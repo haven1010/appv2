@@ -148,6 +148,12 @@ Page({
 
       const records = normalizeArray(res).map((item, index) => {
         const name = item.workerName || item.user?.name || '未命名工人';
+        const status = Number(item.status || 0);
+        let statusText = '待签到';
+        let statusClass = 'pending';
+        if (status === 1) { statusText = '已签到'; statusClass = 'checked'; }
+        if (status === 2) { statusText = '缺勤'; statusClass = 'absent'; }
+        if (status === 3) { statusText = '已取消'; statusClass = 'cancelled'; }
         return {
           id: item.id || `record-${index}`,
           displayAvatar: String(name).slice(0, 1),
@@ -155,7 +161,9 @@ Page({
           displayUid: item.workerUid || item.user?.uid || '--',
           displayJob: item.jobTitle || item.job?.title || '-',
           displayTime: formatTime(item.checkinTime || item.createdAt),
-          statusText: Number(item.status) === 1 ? '已签到' : '未签到',
+          displayWorkDate: item.workDate || '-',
+          statusText,
+          statusClass,
         };
       });
 

@@ -214,8 +214,22 @@
               <view class="job-meta">
                 <text class="meta-item">{{item.workDateRange}}</text>
               </view>
+              <view class="job-thumbs" wx:if="{{item.workplaceImages && item.workplaceImages.length}}">
+                <image
+                  wx:for="{{item.workplaceImages}}"
+                  wx:for-item="img"
+                  wx:key="index"
+                  class="job-thumb"
+                  src="{{img}}"
+                  mode="aspectFill"
+                  data-index="{{index}}"
+                  data-urls="{{item.workplaceImages}}"
+                  catchtap="previewEnvImage"
+                />
+              </view>
               <view class="job-bottom">
                 <text class="status {{item.statusClass}}">{{item.statusText}}</text>
+                <text class="audit-badge {{item.auditStatus === 1 ? 'audit-ok' : item.auditStatus === 2 ? 'audit-reject' : 'audit-pending'}}">{{item.auditText}}</text>
                 <text class="boss-tip">点击查看详情</text>
               </view>
             </view>

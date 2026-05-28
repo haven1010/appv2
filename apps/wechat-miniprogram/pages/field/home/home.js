@@ -82,6 +82,7 @@ Page({
       const checkedIn = statsData.checkedIn || statsData.present || 0;
       const total = statsData.total || 0;
       const pending = statsData.pending || 0;
+      const absent = statsData.absent || 0;
       const rate = total > 0 ? Math.round((checkedIn / total) * 100) + '%' : '0%';
 
       this.setData({
@@ -90,11 +91,12 @@ Page({
         stats: {
           checkedIn,
           pending,
-          absent: statsData.absent || 0,
+          absent,
+          total,
           rate,
         },
-        recentRecords: normalizeArray(records).slice(0, 5),
-        pendingWorkers: normalizeArray(pendingWorkers).slice(0, 6),
+        recentRecords: normalizeArray(records),
+        pendingWorkers: normalizeArray(pendingWorkers),
         loading: false,
       });
     } catch (err) {

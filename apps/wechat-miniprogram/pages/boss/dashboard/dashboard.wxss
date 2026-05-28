@@ -39,6 +39,31 @@
   padding: 24rpx 22rpx;
 }
 
+/* ── Back Bar ── */
+.back-bar {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  padding: 4rpx 0;
+  cursor: pointer;
+  width: fit-content;
+}
+
+.back-arrow {
+  width: 16rpx;
+  height: 16rpx;
+  border-left: 4rpx solid var(--brand-purple);
+  border-bottom: 4rpx solid var(--brand-purple);
+  transform: rotate(45deg);
+  margin-left: 4rpx;
+}
+
+.back-text {
+  color: var(--brand-purple);
+  font-size: 26rpx;
+  font-weight: 700;
+}
+
 /* ── Hero ── */
 .hero-head {
   display: flex;
