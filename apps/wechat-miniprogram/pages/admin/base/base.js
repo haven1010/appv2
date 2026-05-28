@@ -41,6 +41,7 @@ Page({
     loading: true,
     role: 'worker',
     roleText: '',
+    activeNav: 'base',
     canSuperAdmin: false,
     currentBase: null,
     baseOptions: [],
@@ -64,6 +65,7 @@ Page({
       remark: '',
     },
     noticeSubmitting: false,
+    showNoticeForm: false,
     activeFilter: 'pending',
     filters: [
       { key: 'pending', label: '待审核' },
@@ -318,5 +320,28 @@ Page({
 
   goToPayroll() {
     wx.navigateTo({ url: '/pages/admin/system/system' });
+  },
+
+  toggleNoticeForm() {
+    this.setData({ showNoticeForm: !this.data.showNoticeForm });
+  },
+
+  goBack() {
+    wx.redirectTo({ url: '/pages/admin/home/home' });
+  },
+
+  switchAdminNav(e) {
+    const target = e.currentTarget.dataset.target;
+    const map = {
+      home: '/pages/admin/home/home',
+      base: '/pages/admin/base/base',
+      scan: '/pages/admin/attendance/attendance',
+      audit: '/pages/admin/users/users',
+      payroll: '/pages/admin/system/system',
+      me: '/pages/admin/profile/profile',
+    };
+    const url = map[target];
+    if (!url || target === this.data.activeNav) return;
+    wx.redirectTo({ url });
   },
 });

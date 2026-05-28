@@ -343,18 +343,18 @@ Page({
   },
 
   goToBossDashboard() {
-    wx.navigateTo({ url: '/pages/boss/dashboard/dashboard' });
+    wx.redirectTo({ url: '/pages/boss/dashboard/dashboard' });
   },
 
   goToBossBaseList() {
-    wx.navigateTo({ url: '/pages/base/list/list' });
+    wx.redirectTo({ url: '/pages/base/list/list' });
   },
 
   goToBossJobList() {
-    wx.navigateTo({ url: '/pages/job/list/list' });
+    wx.redirectTo({ url: '/pages/job/list/list' });
   },
 
   goToBossProfile() {
-    wx.navigateTo({ url: '/pages/boss/profile/profile' });
+    wx.redirectTo({ url: '/pages/boss/profile/profile' });
   },
 });

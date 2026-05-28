@@ -240,3 +240,379 @@
 .boss-bottom-item.active {
   color: var(--brand-purple);
 }
+
+/* ───── Boss Back Row ───── */
+.back-row {
+  margin-bottom: 20rpx;
+  display: inline-flex;
+  align-items: center;
+}
+
+.back-row:active {
+  opacity: 0.6;
+}
+
+.back-link {
+  font-size: 26rpx;
+  color: var(--brand-purple);
+  font-weight: 700;
+}
+
+/* ───── Section Card ───── */
+.section-card {
+  margin-top: 20rpx;
+  background: var(--card-bg);
+  border-radius: var(--radius-lg);
+  padding: 24rpx;
+  box-shadow: var(--shadow-md);
+  border: var(--border-soft);
+}
+
+.section-title {
+  display: block;
+  font-size: 30rpx;
+  font-weight: 800;
+  color: var(--ink-main);
+}
+
+.section-sub {
+  display: block;
+  margin-top: 6rpx;
+  font-size: 24rpx;
+  color: var(--ink-sub);
+}
+
+/* ───── Section Head ───── */
+.section-head {
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+}
+
+/* ───── Filter Row ───── */
+.filter-row {
+  display: flex;
+  gap: 10rpx;
+  flex-wrap: wrap;
+}
+
+.filter-chip {
+  padding: 8rpx 16rpx;
+  border-radius: var(--radius-pill);
+  font-size: 22rpx;
+  font-weight: 700;
+  color: var(--brand-purple);
+  background: rgba(102, 126, 234, 0.08);
+  transition: all 0.2s;
+}
+
+.filter-chip.active {
+  background: var(--brand-purple);
+  color: #1a1a2e;
+}
+
+/* ───── Lock Notice ───── */
+.lock-notice {
+  margin-top: 20rpx;
+  background: rgba(228, 92, 109, 0.06);
+  border: 1rpx solid rgba(228, 92, 109, 0.14);
+  border-radius: var(--radius-lg);
+  padding: 24rpx;
+  text-align: center;
+}
+
+.lock-text {
+  display: block;
+  font-size: 26rpx;
+  color: var(--accent-red);
+  line-height: 1.6;
+}
+
+.lock-btn {
+  margin-top: 16rpx;
+  display: inline-block;
+  padding: 14rpx 32rpx;
+  border-radius: var(--radius-pill);
+  background: var(--brand-purple);
+  color: #1a1a2e;
+  font-size: 26rpx;
+  font-weight: 700;
+}
+
+/* ───── Form Fields ───── */
+.field {
+  margin-top: 18rpx;
+}
+
+.field-row {
+  display: flex;
+  gap: 16rpx;
+}
+
+.field-half {
+  flex: 1;
+  min-width: 0;
+}
+
+.label {
+  display: block;
+  margin-bottom: 8rpx;
+  font-size: 26rpx;
+  color: #4a4d5e;
+  font-weight: 700;
+}
+
+.input,
+.textarea,
+.picker-box {
+  width: 100%;
+  box-sizing: border-box;
+  border-radius: 18rpx;
+  border: var(--border-soft);
+  background: var(--card-bg-soft);
+  color: var(--ink-main);
+  font-size: 28rpx;
+  padding: 18rpx;
+  min-height: 84rpx;
+  line-height: 1.5;
+  transition: all 0.25s;
+}
+
+.input:focus,
+.textarea:focus {
+  border-color: var(--brand-purple);
+  background: #ffffff;
+  box-shadow: 0 0 0 6rpx rgba(102, 126, 234, 0.1);
+}
+
+.textarea {
+  min-height: 132rpx;
+}
+
+/* ───── Salary Mode Chips ───── */
+.chip-row {
+  display: flex;
+  gap: 10rpx;
+  flex-wrap: wrap;
+}
+
+.mode-chip {
+  padding: 12rpx 24rpx;
+  border-radius: var(--radius-pill);
+  font-size: 26rpx;
+  font-weight: 700;
+  color: var(--brand-purple);
+  background: rgba(102, 126, 234, 0.08);
+  transition: all 0.2s;
+}
+
+.mode-chip.active {
+  background: var(--brand-purple);
+  color: #1a1a2e;
+}
+
+/* ───── Stepper ───── */
+.stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+  border-radius: var(--radius-pill);
+  border: var(--border-soft);
+  background: var(--card-bg-soft);
+  overflow: hidden;
+}
+
+.stepper-btn {
+  width: 72rpx;
+  height: 72rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36rpx;
+  font-weight: 800;
+  color: var(--brand-purple);
+  background: rgba(102, 126, 234, 0.06);
+}
+
+.stepper-btn:active {
+  background: rgba(102, 126, 234, 0.15);
+}
+
+.stepper-value {
+  min-width: 80rpx;
+  text-align: center;
+  font-size: 30rpx;
+  font-weight: 800;
+  color: var(--ink-main);
+  padding: 0 16rpx;
+}
+
+/* ───── Env Images ───── */
+.env-row {
+  display: flex;
+  gap: 12rpx;
+  flex-wrap: wrap;
+}
+
+.env-thumb {
+  width: 150rpx;
+  height: 150rpx;
+  border-radius: 16rpx;
+  overflow: hidden;
+  position: relative;
+}
+
+.env-img {
+  width: 100%;
+  height: 100%;
+}
+
+.env-remove {
+  position: absolute;
+  top: 6rpx;
+  right: 6rpx;
+  width: 36rpx;
+  height: 36rpx;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.5);
+  color: #fff;
+  font-size: 24rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.env-add {
+  width: 150rpx;
+  height: 150rpx;
+  border-radius: 16rpx;
+  border: 2rpx dashed rgba(102, 126, 234, 0.24);
+  background: var(--card-bg-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.env-add-text {
+  font-size: 52rpx;
+  color: var(--brand-purple);
+  font-weight: 300;
+  line-height: 1;
+}
+
+/* ───── Submit Button ───── */
+.submit-btn {
+  margin-top: 22rpx;
+  height: 90rpx;
+  line-height: 90rpx;
+  border-radius: var(--radius-pill);
+  background: var(--brand-purple);
+  color: #1a1a2e;
+  font-size: 30rpx;
+  font-weight: 800;
+  border: none;
+  box-shadow: 0 10rpx 18rpx rgba(102, 126, 234, 0.16);
+}
+
+.submit-btn::after {
+  border: none;
+}
+
+.submit-btn:active {
+  transform: scale(0.97);
+  opacity: 0.92;
+}
+
+.submit-btn[disabled] {
+  background: #b8b4c8;
+  box-shadow: none;
+}
+
+/* ───── Base List ───── */
+.base-list {
+  margin-top: 16rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 14rpx;
+}
+
+.base-card {
+  background: var(--card-bg-soft);
+  border: var(--border-soft);
+  border-radius: var(--radius-md);
+  padding: 20rpx;
+  position: relative;
+  transition: all 0.2s;
+}
+
+.base-card:active {
+  transform: scale(0.98);
+}
+
+.base-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12rpx;
+}
+
+.base-card-name {
+  font-size: 30rpx;
+  font-weight: 800;
+  color: var(--ink-main);
+  flex: 1;
+  min-width: 0;
+}
+
+.base-card-audit {
+  font-size: 22rpx;
+  font-weight: 700;
+  border-radius: var(--radius-pill);
+  padding: 4rpx 14rpx;
+  flex-shrink: 0;
+}
+
+.audit-ok {
+  background: rgba(49, 164, 124, 0.1);
+  color: var(--accent-green);
+}
+
+.audit-pending {
+  background: rgba(102, 126, 234, 0.1);
+  color: var(--brand-purple);
+}
+
+.base-card-meta {
+  margin-top: 12rpx;
+  display: flex;
+  gap: 24rpx;
+}
+
+.base-card-stat {
+  font-size: 24rpx;
+  color: var(--ink-sub);
+}
+
+.base-card-action {
+  margin-top: 16rpx;
+  padding-top: 14rpx;
+  border-top: 1rpx dashed rgba(102, 126, 234, 0.12);
+  display: flex;
+  justify-content: flex-end;
+}
+
+.publish-btn {
+  display: inline-block;
+  padding: 12rpx 32rpx;
+  border-radius: var(--radius-pill);
+  background: var(--brand-purple);
+  color: #1a1a2e;
+  font-size: 26rpx;
+  font-weight: 700;
+}
+
+.publish-btn:active {
+  transform: scale(0.96);
+  opacity: 0.92;
+}

@@ -190,6 +190,8 @@
   color: var(--ink-main);
   font-size: 28rpx;
   padding: 18rpx;
+  min-height: 84rpx;
+  line-height: 1.5;
   transition: all 0.25s;
 }
 

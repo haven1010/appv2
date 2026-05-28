@@ -681,25 +681,29 @@ Page({
   },
 
   goToBossDashboard() {
-    wx.navigateTo({ url: '/pages/boss/dashboard/dashboard' });
+    wx.redirectTo({ url: '/pages/boss/dashboard/dashboard' });
   },
 
   goToBossBaseList() {
-    wx.navigateTo({ url: '/pages/base/list/list' });
+    wx.redirectTo({ url: '/pages/base/list/list' });
   },
 
   goToBossProfile() {
-    wx.navigateTo({ url: '/pages/boss/profile/profile' });
+    wx.redirectTo({ url: '/pages/boss/profile/profile' });
   },
 
   applyJob(e) {
     if (this.data.isBossView) return;
     const jobId = Number(e.currentTarget.dataset.id || 0);
     const baseId = Number(e.currentTarget.dataset.baseid || 0);
+    const baseName = e.currentTarget.dataset.basename || '';
+    const jobTitle = e.currentTarget.dataset.jobtitle || '';
     if (!jobId || !baseId) {
       wx.showToast({ title: '岗位信息无效', icon: 'none' });
       return;
     }
-    wx.navigateTo({ url: `/pages/signup/signup?jobId=${jobId}&baseId=${baseId}` });
+    wx.navigateTo({
+      url: `/pages/signup/signup?jobId=${jobId}&baseId=${baseId}&baseName=${encodeURIComponent(baseName)}&jobTitle=${encodeURIComponent(jobTitle)}`,
+    });
   },
 });

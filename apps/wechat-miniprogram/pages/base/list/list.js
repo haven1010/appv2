@@ -145,15 +145,15 @@ Page({
   },
 
   goToBossDashboard() {
-    wx.navigateTo({ url: '/pages/boss/dashboard/dashboard' });
+    wx.redirectTo({ url: '/pages/boss/dashboard/dashboard' });
   },
 
   goToBossJobList() {
-    wx.navigateTo({ url: '/pages/job/list/list' });
+    wx.redirectTo({ url: '/pages/job/list/list' });
   },
 
   goToBossProfile() {
-    wx.navigateTo({ url: '/pages/boss/profile/profile' });
+    wx.redirectTo({ url: '/pages/boss/profile/profile' });
   },
 
   filterByCategory(e) {

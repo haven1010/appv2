@@ -686,7 +686,8 @@ Page({
   },
 
   searchSuperUsers() {
-    this.loadSuperAdminHome();
+    wx.showLoading({ title: '搜索中...', mask: true });
+    this.loadSuperAdminHome().finally(() => wx.hideLoading());
   },
 
   async loadSuperAdminHome() {
@@ -719,8 +720,14 @@ Page({
       expanded: false,
     }));
 
+    const stats = statsRes || {};
     this.setData({
-      superStats: statsRes || {},
+      superStats: {
+        totalUsers: stats.total || 0,
+        totalAdmins: (stats.base_manager || 0) + (stats.field_manager || 0) + (stats.super_admin || 0) + (stats.region_admin || 0),
+        totalWorkers: stats.worker || 0,
+        pendingAudit: stats.pending || 0,
+      },
       superList: list,
       superTotal: Number(usersRes?.total || list.length),
     });

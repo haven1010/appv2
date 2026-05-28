@@ -1653,6 +1653,23 @@ async function auditBase(baseId, data) {
   return base;
 }
 
+async function auditUser(userId, data) {
+  const user = await findOneByField('users', 'id', Number(userId));
+  if (!user || user.isDeleted) {
+    throw createHttpError(404, '用户不存在');
+  }
+  const status = Number(data && data.status);
+  if (![1, 2].includes(status)) {
+    throw createHttpError(400, '审核状态无效');
+  }
+  user.infoAuditStatus = status;
+  user.updatedAt = new Date().toISOString();
+  const docId = user._id;
+  delete user._id;
+  await getCollection('users').doc(docId).update({ data: user });
+  return user;
+}
+
 async function getBaseCooperations(baseId) {
   const res = await getCollection('cooperations').where({
     baseId: Number(baseId),
@@ -2288,6 +2305,11 @@ async function routeRequest(event) {
 
   if (method === 'GET' && pathname === '/user/stats') {
     return getUserStats();
+  }
+
+  const userAuditMatch = pathname.match(/^\/user\/(\d+)\/audit$/);
+  if (method === 'PATCH' && userAuditMatch) {
+    return auditUser(Number(userAuditMatch[1]), data);
   }
 
   if (method === 'GET' && pathname === '/operation-log/list') {

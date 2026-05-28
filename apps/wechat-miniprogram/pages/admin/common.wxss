@@ -119,6 +119,8 @@
   width: 100%;
   box-sizing: border-box;
   margin-top: 10rpx;
+  line-height: 1.4;
+  min-height: 76rpx;
   background: var(--card-bg-soft);
   border: 2rpx solid rgba(102, 126, 234, 0.12);
   border-radius: var(--radius-sm);

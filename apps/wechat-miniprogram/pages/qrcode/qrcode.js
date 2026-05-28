@@ -194,7 +194,7 @@ Page({
     if (!this.ensureLoggedIn()) return;
     if (this.redirectIfRoleNotWorker()) return;
 
-    const applicationId = options.applicationId;
+    const applicationId = options.applicationId || app.globalData.qrApplicationId;
     if (applicationId) {
       this.loadWorkInfo(applicationId);
     }
@@ -206,6 +206,11 @@ Page({
   onShow() {
     if (!this.ensureLoggedIn()) return;
     if (this.redirectIfRoleNotWorker()) return;
+
+    const applicationId = app.globalData.qrApplicationId;
+    if (applicationId && !this.data.workInfo) {
+      this.loadWorkInfo(applicationId);
+    }
 
     this.initUserInfo();
   },

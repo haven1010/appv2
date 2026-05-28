@@ -1,40 +1,155 @@
 /* ═══════════════════════════════════════════
-   Admin Base — Claude Purple Theme
+   Admin Base — consistent with admin common
    ═══════════════════════════════════════════ */
 
 @import "../common.wxss";
 
-.person-head-row {
+/* ── Back Bar ── */
+.back-bar {
+  display: inline-flex;
+  align-items: center;
+  gap: 6rpx;
+  padding: 0 0 20rpx;
+}
+
+.back-bar:active {
+  opacity: 0.6;
+}
+
+.back-arrow {
+  width: 18rpx;
+  height: 18rpx;
+  border-left: 4rpx solid var(--brand-purple);
+  border-bottom: 4rpx solid var(--brand-purple);
+  transform: rotate(45deg);
+  flex-shrink: 0;
+}
+
+.back-text {
+  font-size: 28rpx;
+  color: var(--brand-purple);
+  font-weight: 700;
+}
+
+/* ── Section Head ── */
+.section-head {
   display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+}
+
+.notice-section-head {
+  flex-direction: row;
   align-items: center;
   justify-content: space-between;
-  gap: 16rpx;
 }
 
-.person-head-main {
-  flex: 1;
-  min-width: 0;
+.section-head-left {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
 }
 
-/* ── Base Name Card ── */
-.base-name-card {
-  margin-top: 12rpx;
-  background: var(--card-bg-soft);
-  border: 2rpx solid rgba(102, 126, 234, 0.14);
-  border-radius: 22rpx;
-  padding: 16rpx;
-  transition: all 0.2s;
+/* ── Notice Toggle Arrow ── */
+.notice-toggle-arrow {
+  width: 14rpx;
+  height: 14rpx;
+  border-right: 3rpx solid var(--ink-sub);
+  border-top: 3rpx solid var(--ink-sub);
+  transform: rotate(45deg);
+  transition: transform 0.2s;
+  flex-shrink: 0;
 }
 
-.base-name-card.active {
-  border-color: var(--brand-purple);
-  box-shadow: 0 8rpx 18rpx rgba(102, 126, 234, 0.14);
-  background: rgba(102, 126, 234, 0.04);
+.notice-toggle-arrow.expanded {
+  transform: rotate(135deg);
 }
 
-.base-name-top {
+/* ── Notice Summary ── */
+.notice-summary-row {
+  margin-top: 16rpx;
+}
+
+.notice-summary-text {
+  display: block;
+  margin-top: 10rpx;
+  font-size: 26rpx;
+  line-height: 1.5;
+  color: var(--ink-main);
+  font-weight: 700;
+}
+
+.notice-list-title {
+  display: block;
+  margin-top: 18rpx;
+  font-size: 28rpx;
+  color: var(--ink-main);
+  font-weight: 800;
+}
+
+/* ── Applicant Card ── */
+.applicant-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12rpx;
+}
+
+/* ── Status Badge ── */
+.status-badge {
+  padding: 4rpx 14rpx;
+  border-radius: var(--radius-pill);
+  font-size: 20rpx;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.status-badge.pending {
+  background: rgba(102, 126, 234, 0.1);
+  color: var(--brand-purple);
+}
+
+.status-badge.ok {
+  background: rgba(49, 164, 124, 0.1);
+  color: var(--accent-green);
+}
+
+.status-badge.warn {
+  background: rgba(228, 92, 109, 0.1);
+  color: var(--accent-red);
+}
+
+.status-badge.muted {
+  background: rgba(176, 170, 192, 0.1);
+  color: var(--ink-muted);
+}
+
+/* ── Entry Cards ── */
+.entry-card {
+  border-radius: var(--radius-lg);
+  background: var(--card-bg);
+  border: var(--border-soft);
+  box-shadow: var(--shadow-md);
+  padding: 20rpx 18rpx;
+  transition: all 0.2s;
+}
+
+.entry-card:active {
+  transform: scale(0.97);
+  box-shadow: var(--shadow-sm);
+}
+
+.entry-title {
+  display: block;
+  font-size: 30rpx;
+  color: var(--ink-main);
+  font-weight: 800;
+}
+
+.entry-desc {
+  display: block;
+  margin-top: 8rpx;
+  font-size: 24rpx;
+  line-height: 1.55;
+  color: var(--ink-sub);
 }

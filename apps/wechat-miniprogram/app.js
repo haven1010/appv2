@@ -20,6 +20,7 @@ const PHASE1_ROUTE_PATTERNS = [
 
   { method: 'GET', pattern: /^\/user\/profile$/ },
   { method: 'PATCH', pattern: /^\/user\/profile$/ },
+  { method: 'PATCH', pattern: /^\/user\/\d+\/audit$/ },
   { method: 'GET', pattern: /^\/base(?:\?.*)?$/ },
   { method: 'POST', pattern: /^\/base$/ },
   { method: 'GET', pattern: /^\/base\/\d+$/ },

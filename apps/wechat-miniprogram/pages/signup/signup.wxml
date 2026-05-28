@@ -7,11 +7,11 @@
 
       <view class="hero-stats">
         <view class="hero-stat">
-          <text class="hero-stat-value">基地名称</text>
+          <text class="hero-stat-value">{{baseName}}</text>
           <text class="hero-stat-label">报名基地</text>
         </view>
         <view class="hero-stat">
-          <text class="hero-stat-value">岗位名称</text>
+          <text class="hero-stat-value">{{jobTitle}}</text>
           <text class="hero-stat-label">报名岗位</text>
         </view>
       </view>
@@ -23,34 +23,36 @@
       <view class="form-field">
         <text class="field-label">姓名</text>
         <view class="input-wrapper">
-          <input class="input-field" placeholder="请输入您的姓名" placeholder-class="placeholder" />
+          <input class="input-field" value="{{name}}" bindinput="onInputName" placeholder="请输入您的姓名" placeholder-class="placeholder" />
         </view>
       </view>
 
       <view class="form-field">
         <text class="field-label">联系电话</text>
         <view class="input-wrapper">
-          <input class="input-field" type="number" placeholder="请输入联系电话" placeholder-class="placeholder" />
+          <input class="input-field" type="number" value="{{phone}}" bindinput="onInputPhone" placeholder="请输入联系电话" placeholder-class="placeholder" />
         </view>
       </view>
 
       <view class="form-field">
         <text class="field-label">身份证号</text>
         <view class="input-wrapper">
-          <input class="input-field" type="idcard" placeholder="请输入身份证号" placeholder-class="placeholder" />
+          <input class="input-field" type="idcard" value="{{idCard}}" bindinput="onInputIdCard" placeholder="请输入身份证号" placeholder-class="placeholder" />
         </view>
       </view>
 
       <view class="form-field">
         <text class="field-label">工作日期</text>
-        <view class="picker-field">
-          <text class="picker-placeholder">请选择工作日期</text>
-        </view>
+        <picker mode="date" value="{{workDate}}" bindchange="onDateChange">
+          <view class="picker-field">
+            <text class="{{workDate ? 'picker-text' : 'picker-placeholder'}}">{{workDate || '请选择工作日期'}}</text>
+          </view>
+        </picker>
       </view>
 
       <view class="form-field">
         <text class="field-label">备注</text>
-        <textarea class="textarea-field" placeholder="如有特殊需求或说明请在此填写" placeholder-class="placeholder" />
+        <textarea class="textarea-field" value="{{note}}" bindinput="onInputNote" placeholder="如有特殊需求或说明请在此填写" placeholder-class="placeholder" />
       </view>
     </view>
 
@@ -59,7 +61,7 @@
       <text class="form-hint">提交报名即表示您已阅读并同意相关服务条款。工作人员将在审核后与您联系确认。</text>
 
       <view class="submit-area">
-        <button class="submit-btn">提交报名信息</button>
+        <button class="submit-btn" bindtap="onSubmit" loading="{{submitting}}" disabled="{{submitting}}">{{submitting ? '提交中...' : '提交报名信息'}}</button>
       </view>
     </view>
 

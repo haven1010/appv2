@@ -613,19 +613,19 @@ Page({
   },
 
   goToApplicants() {
-    wx.navigateTo({ url: '/pages/boss/applicants/applicants' });
+    wx.redirectTo({ url: '/pages/boss/applicants/applicants' });
   },
 
   goToBaseList() {
-    wx.navigateTo({ url: '/pages/base/list/list' });
+    wx.redirectTo({ url: '/pages/base/list/list' });
   },
 
   goToJobList() {
-    wx.navigateTo({ url: '/pages/job/list/list' });
+    wx.redirectTo({ url: '/pages/job/list/list' });
   },
 
   goToBossProfile() {
-    wx.navigateTo({ url: '/pages/boss/profile/profile' });
+    wx.redirectTo({ url: '/pages/boss/profile/profile' });
   },
 
   logout() {

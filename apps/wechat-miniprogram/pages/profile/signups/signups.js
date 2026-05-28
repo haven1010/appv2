@@ -265,7 +265,8 @@ Page({
   onViewQRCode(e) {
     const signupId = Number(e.currentTarget.dataset.signupId || 0);
     if (!signupId) return;
-    wx.navigateTo({ url: `/pages/qrcode/qrcode?applicationId=${signupId}` });
+    app.globalData.qrApplicationId = signupId;
+    wx.switchTab({ url: '/pages/qrcode/qrcode' });
   },
 
   onViewAttendance(e) {
