@@ -987,6 +987,7 @@ async function getMyApplications(user) {
   const bases = await getAllDocuments('bases');
   const jobs = await getAllDocuments('jobs');
   const signups = await getAllDocuments('signups');
+  const salaries = await getAllDocuments('workerSalaries');
 
   const filtered = applications
     .filter((item) => Number(item.userId) === Number(user.id) && !item.isDeleted)
@@ -995,11 +996,29 @@ async function getMyApplications(user) {
   return filtered.map((item) => {
     const base = bases.find((baseItem) => Number(baseItem.id) === Number(item.baseId)) || {};
     const job = jobs.find((jobItem) => Number(jobItem.id) === Number(item.jobId)) || {};
-    const signup = signups.find((signupItem) =>
-      Number(signupItem.userId) === Number(item.userId)
-      && Number(signupItem.baseId) === Number(item.baseId)
-      && Number(signupItem.jobId) === Number(item.jobId)
-      && Number(signupItem.status) !== 3) || {};
+
+    // Find matching signup, preferring one with a checkoutTime
+    const userSignups = signups
+      .filter((signupItem) =>
+        Number(signupItem.userId) === Number(item.userId)
+        && Number(signupItem.baseId) === Number(item.baseId)
+        && Number(signupItem.jobId) === Number(item.jobId)
+        && Number(signupItem.status) !== 3)
+      .sort((a, b) => {
+        if (a.checkoutTime && !b.checkoutTime) return -1;
+        if (!a.checkoutTime && b.checkoutTime) return 1;
+        const aDate = a.workDate || '';
+        const bDate = b.workDate || '';
+        return bDate.localeCompare(aDate);
+      });
+    const signup = userSignups[0] || {};
+
+    // Check if salary has been settled (paid) for this application
+    const salarySettled = salaries.some((sal) =>
+      Number(sal.userId) === Number(item.userId)
+      && Number(sal.baseId) === Number(item.baseId)
+      && Number(sal.jobId) === Number(item.jobId)
+      && Number(sal.status) === 2);
 
     return {
       id: Number(item.id || 0),
@@ -1013,6 +1032,8 @@ async function getMyApplications(user) {
       updatedAt: item.updatedAt || '',
       workDate: signup.workDate || job.workStartDate || '',
       checkinTime: signup.checkinTime || null,
+      checkoutTime: signup.checkoutTime || null,
+      salarySettled,
       baseName: base.baseName || '未知基地',
       jobTitle: job.jobTitle || '未命名岗位',
     };
@@ -1038,11 +1059,21 @@ async function getApplicationsByBase(baseId, query = {}) {
       const base = bases.find((baseItem) => Number(baseItem.id) === Number(item.baseId)) || {};
       const job = jobs.find((jobItem) => Number(jobItem.id) === Number(item.jobId)) || {};
       const user = users.find((userItem) => Number(userItem.id) === Number(item.userId)) || {};
-      const signup = signups.find((signupItem) =>
-        Number(signupItem.userId) === Number(item.userId)
-        && Number(signupItem.baseId) === Number(item.baseId)
-        && Number(signupItem.jobId) === Number(item.jobId)
-        && Number(signupItem.status) !== 3) || {};
+      // Find matching signup, preferring one with a checkoutTime
+      const userSignups = signups
+        .filter((signupItem) =>
+          Number(signupItem.userId) === Number(item.userId)
+          && Number(signupItem.baseId) === Number(item.baseId)
+          && Number(signupItem.jobId) === Number(item.jobId)
+          && Number(signupItem.status) !== 3)
+        .sort((a, b) => {
+          if (a.checkoutTime && !b.checkoutTime) return -1;
+          if (!a.checkoutTime && b.checkoutTime) return 1;
+          const aDate = a.workDate || '';
+          const bDate = b.workDate || '';
+          return bDate.localeCompare(aDate);
+        });
+      const signup = userSignups[0] || {};
 
       return {
         id: Number(item.id || 0),
@@ -1057,6 +1088,7 @@ async function getApplicationsByBase(baseId, query = {}) {
         reviewedAt: item.reviewedAt || null,
         workDate: signup.workDate || job.workStartDate || '',
         checkinTime: signup.checkinTime || null,
+        checkoutTime: signup.checkoutTime || null,
         baseName: base.baseName || '未知基地',
         jobTitle: job.jobTitle || '未命名岗位',
         user: {
@@ -1224,6 +1256,55 @@ async function getAttendanceRecords(query = {}) {
     });
 }
 
+async function getAttendanceDetail(applicationId) {
+  const app = await findOneByField('applications', 'id', Number(applicationId));
+  if (!app || app.isDeleted) {
+    throw createHttpError(404, '未找到申请记录');
+  }
+
+  const base = await findOneByField('bases', 'id', Number(app.baseId));
+  const job = await findOneByField('jobs', 'id', Number(app.jobId));
+
+  // find matching signup
+  const signups = await getAllDocuments('signups');
+  const signup = signups.find(s =>
+    !s.isDeleted
+    && Number(s.userId) === Number(app.userId)
+    && Number(s.baseId) === Number(app.baseId)
+    && Number(s.jobId) === Number(app.jobId)
+    && Number(s.status) !== 3) || {};
+
+  // find salary record for this work date
+  let salary = null;
+  if (signup.workDate) {
+    try {
+      const salaryRes = await getCollection('workerSalaries').where({
+        userId: Number(app.userId),
+        baseId: Number(app.baseId),
+        jobId: Number(app.jobId),
+        workDate: trimText(signup.workDate),
+      }).limit(1).get();
+      salary = Array.isArray(salaryRes.data) && salaryRes.data.length ? salaryRes.data[0] : null;
+    } catch (_) { /* no salary yet */ }
+  }
+
+  return {
+    status: Number(signup.status || 0),
+    baseName: base?.baseName || '未知基地',
+    jobTitle: job?.jobTitle || '未命名岗位',
+    workDate: signup.workDate || job?.workStartDate || '',
+    checkinTime: signup.checkinTime || null,
+    checkoutTime: signup.checkoutTime || null,
+    workDuration: salary ? String(salary.workDuration || '') : '',
+    pieceCount: salary ? String(salary.pieceCount || '') : '',
+    notes: signup.notes || '',
+    salary: salary ? {
+      status: Number(salary.status || 0),
+      totalAmount: Number(salary.totalAmount || 0),
+    } : null,
+  };
+}
+
 async function getAttendanceStats(query = {}) {
   const records = await getAttendanceRecords(query);
   const checkedIn = records.filter((item) => Number(item.status) === 1).length;
@@ -1384,6 +1465,19 @@ async function checkin(user, data) {
     throw createHttpError(404, '未找到待签到报名记录');
   }
 
+  // 检查工人岗位申请是否已被管理员通过
+  const apps = await getAllDocuments('applications');
+  const isApproved = apps.some(a =>
+    !a.isDeleted
+    && Number(a.userId) === Number(worker.id)
+    && Number(a.baseId) === Number(baseId)
+    && Number(a.jobId) === Number(target.jobId)
+    && Number(a.status) === 1
+  );
+  if (!isApproved) {
+    throw createHttpError(403, '岗位申请未被通过，请联系管理员审核');
+  }
+
   target.status = 1;
   target.checkinTime = new Date().toISOString();
   target.updatedAt = new Date().toISOString();
@@ -1402,6 +1496,57 @@ async function checkin(user, data) {
   };
 }
 
+async function checkout(data) {
+  const signupId = Number(data.signupId || 0);
+  if (!signupId) {
+    throw createHttpError(400, '缺少签到记录ID');
+  }
+
+  const signup = await findOneByField('signups', 'id', signupId);
+  if (!signup || signup.isDeleted) {
+    throw createHttpError(404, '签到记录不存在');
+  }
+  if (Number(signup.status) !== 1) {
+    throw createHttpError(400, '工人尚未签到，无法结束务工');
+  }
+  if (signup.checkoutTime) {
+    throw createHttpError(400, '该工人已结束务工，请勿重复操作');
+  }
+
+  const now = new Date().toISOString();
+  const checkinMs = new Date(signup.checkinTime).getTime();
+  const checkoutMs = new Date(now).getTime();
+  const workDuration = Math.max(0.5, Math.round((checkoutMs - checkinMs) / 3600000 * 10) / 10);
+
+  // update signup with checkout info
+  signup.checkoutTime = now;
+  signup.workDuration = workDuration;
+  signup.updatedAt = now;
+  const docId = signup._id;
+  delete signup._id;
+  await getCollection('signups').doc(docId).update({ data: signup });
+
+  // generate salary draft based on actual work duration
+  let salaryGenerated = false;
+  try {
+    const result = await calculateSalaryFromSignup(signupId, { duration: workDuration });
+    salaryGenerated = result && result.ok;
+  } catch (e) {
+    console.error('[checkout] generate salary error:', e.message);
+  }
+
+  const user = await findOneByField('users', 'id', Number(signup.userId));
+
+  return {
+    ok: true,
+    workerName: user?.name || '',
+    checkinTime: signup.checkinTime,
+    checkoutTime: now,
+    workDuration,
+    salaryGenerated,
+  };
+}
+
 async function getWorkerPendingSalaryList(user) {
   const collection = getCollection('workerSalaries');
   const res = await collection.where({
@@ -1414,21 +1559,37 @@ async function getWorkerPendingSalaryList(user) {
 }
 
 async function getWorkerSalaryStats(user) {
-  const list = await getWorkerPendingSalaryList(user);
+  const allSalaries = await getAllDocuments('workerSalaries');
+  const userSalaries = allSalaries.filter((item) => Number(item.userId) === Number(user.id));
+
   let totalEarned = 0;
   let pendingAmount = 0;
 
-  list.forEach((item) => {
+  userSalaries.forEach((item) => {
     const amount = toNumber(item.totalAmount, 0);
     totalEarned += amount;
     if (Number(item.status) === 0) pendingAmount += amount;
   });
 
   return {
-    totalDays: list.length,
+    totalDays: userSalaries.length,
     totalEarned: Number(totalEarned.toFixed(2)),
     pendingAmount: Number(pendingAmount.toFixed(2)),
   };
+}
+
+async function listWorkerPaidSalaries(user, query = {}) {
+  const limit = Math.min(Number(query.limit || 50), 100);
+  try {
+    const res = await getCollection('workerSalaries').where({
+      userId: Number(user.id),
+      status: 2,
+    }).orderBy('paidAt', 'desc').limit(limit).get();
+    return Array.isArray(res.data) ? res.data : [];
+  } catch (e) {
+    console.error('[listWorkerPaidSalaries] error:', e);
+    return [];
+  }
 }
 
 async function getWorkerSalaryDetail(user, salaryId) {
@@ -1642,40 +1803,194 @@ async function settleSalary(salaryId, data = {}) {
   const docId = item._id;
   delete item._id;
   await getCollection('workerSalaries').doc(docId).update({ data: item });
+
+  // create work archive for worker's work history
+  try {
+    const user = await findOneByField('users', 'id', Number(item.userId));
+    const archive = {
+      id: await getNextNumericId('workArchives'),
+      userId: Number(item.userId),
+      name: item.workerName || '',
+      phone: user?.phone || '',
+      baseName: item.baseName || '',
+      jobTitle: item.jobTitle || '',
+      idCard: user?.idCard || '',
+      workStartDate: item.workDate || '',
+      workEndDate: item.workDate || '',
+      totalAmount: Number(item.totalAmount || 0),
+      salaryStatus: 'paid',
+      completedAt: item.paidTime,
+      remark: '',
+      createdAt: item.paidTime,
+      updatedAt: item.paidTime,
+    };
+    await getCollection('workArchives').add({ data: archive });
+  } catch (e) {
+    console.error('[settleSalary] create workArchive error:', e);
+  }
+
+  // auto-submit salary report for super admin view
+  try {
+    await syncSalaryReport(item.baseId, item.workDate);
+  } catch (e) {
+    console.error('[settleSalary] sync salary report error:', e);
+  }
+
   return { ok: true, id: Number(salaryId), status: 2 };
 }
 
-async function completeWorklog(data = {}) {
-  const id = await getNextNumericId('workArchives');
+async function syncSalaryReport(baseId, workDate) {
+  const baseIdNum = Number(baseId);
+  const dateStr = trimText(workDate);
+  if (!baseIdNum || !dateStr) return;
+
+  // get all paid salaries for this base + workDate
+  const allSalaries = await getAllDocuments('workerSalaries');
+  const paid = allSalaries.filter((sal) =>
+    Number(sal.baseId) === baseIdNum
+    && trimText(sal.workDate) === dateStr
+    && Number(sal.status) === 2);
+
+  if (!paid.length) return;
+
+  const users = await getAllDocuments('users');
+  const base = await findOneByField('bases', 'id', baseIdNum);
+  const baseName = base ? base.baseName : (paid[0]?.baseName || '未知基地');
+  const boss = base
+    ? (users.find((u) => Number(u.id) === Number(base.ownerId)) || {})
+    : {};
+  const bossName = boss.name || boss.companyName || (base ? '-' : '系统同步');
+  const now = new Date().toISOString();
+
+  const rows = paid.map((item, index) => {
+    const worker = users.find((u) => Number(u.id) === Number(item.userId)) || {};
+    return {
+      serial: index + 1,
+      salaryId: Number(item.id || 0),
+      userId: Number(item.userId || 0),
+      name: worker.name || item.workerName || '-',
+      gender: worker.gender || '-',
+      idCard: worker.idCard || '-',
+      address: worker.homeAddress || '-',
+      poorHousehold: worker.isPoorHousehold ? '是' : '否',
+      totalIncome: Number(item.totalAmount || 0),
+      signature: '',
+      workDate: item.workDate || '',
+      jobTitle: item.jobTitle || '',
+    };
+  });
+
+  const totalIncome = rows.reduce((sum, row) => sum + Number(row.totalIncome || 0), 0);
+  const workerCount = new Set(paid.map((item) => Number(item.userId)).filter((id) => id > 0)).size;
+  const fileName = `salary-report-auto-${baseIdNum}-${dateStr}.json`;
+
+  const reportCollection = getCollection('salaryReports');
+  const existed = await reportCollection.where({
+    baseId: baseIdNum,
+    dateFrom: dateStr,
+    dateTo: dateStr,
+  }).get();
+
   const payload = {
-    id,
-    userId: Number(data.userId || 0),
-    name: trimText(data.name),
-    phone: trimText(data.phone),
-    baseName: trimText(data.baseName),
-    jobTitle: trimText(data.jobTitle),
-    idCard: trimText(data.idCard).toUpperCase(),
-    workStartDate: trimText(data.workStartDate),
-    workEndDate: trimText(data.workEndDate),
-    totalAmount: Number(data.totalAmount || 0),
-    salaryStatus: trimText(data.salaryStatus) || 'pending',
-    completedAt: new Date().toISOString(),
-    remark: trimText(data.remark),
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    baseId: baseIdNum,
+    baseName,
+    bossName,
+    fileName,
+    dateFrom: dateStr,
+    dateTo: dateStr,
+    workerCount,
+    salaryRecordCount: paid.length,
+    totalIncome: Number(totalIncome.toFixed(2)),
+    rows,
+    updatedAt: now,
   };
-  await getCollection('workArchives').add({ data: payload });
-  return { ok: true, id };
+
+  if (Array.isArray(existed.data) && existed.data.length) {
+    // update the first match
+    const doc = existed.data[0];
+    payload.id = Number(doc.id || 0);
+    payload.createdAt = doc.createdAt || now;
+    await reportCollection.doc(doc._id).update({ data: payload });
+
+    // remove any extras (race-condition duplicates)
+    for (let i = 1; i < existed.data.length; i++) {
+      try { await reportCollection.doc(existed.data[i]._id).remove(); } catch (_) {}
+    }
+  } else {
+    const id = await getNextNumericId('salaryReports');
+    payload.id = id;
+    payload.createdAt = now;
+    await reportCollection.add({ data: payload });
+  }
+}
+
+async function completeWorklog(data = {}) {
+  try {
+    const id = await getNextNumericId('workArchives');
+    const payload = {
+      id,
+      userId: Number(data.userId || 0),
+      name: trimText(data.name),
+      phone: trimText(data.phone),
+      baseName: trimText(data.baseName),
+      jobTitle: trimText(data.jobTitle),
+      idCard: trimText(data.idCard).toUpperCase(),
+      workStartDate: trimText(data.workStartDate),
+      workEndDate: trimText(data.workEndDate),
+      totalAmount: Number(data.totalAmount || 0),
+      salaryStatus: trimText(data.salaryStatus) || 'pending',
+      completedAt: new Date().toISOString(),
+      remark: trimText(data.remark),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    await getCollection('workArchives').add({ data: payload });
+    return { ok: true, id };
+  } catch (e) {
+    console.error('[completeWorklog] error:', e);
+    throw createHttpError(500, '工作记录保存失败');
+  }
 }
 
 async function listWorkArchives(query = {}) {
   const userId = query.userId ? Number(query.userId) : null;
-  const res = await getCollection('workArchives').get();
-  let list = Array.isArray(res.data) ? res.data : [];
-  if (userId != null) {
-    list = list.filter((item) => Number(item.userId) === userId);
+  try {
+    const res = await getCollection('workArchives').get();
+    let list = Array.isArray(res.data) ? res.data : [];
+    if (userId != null) {
+      list = list.filter((item) => Number(item.userId) === userId);
+    }
+    return list.sort((left, right) => compareByDateDesc(left, right, ['completedAt', 'createdAt', 'updatedAt']));
+  } catch (e) {
+    console.error('[listWorkArchives] error:', e);
   }
-  return list.sort((left, right) => compareByDateDesc(left, right, ['completedAt', 'createdAt', 'updatedAt']));
+
+  // fallback: query paid workerSalaries as work history
+  if (userId) {
+    try {
+      const paid = await getCollection('workerSalaries').where({
+        userId,
+        status: 2,
+      }).orderBy('paidTime', 'desc').get();
+      const list = Array.isArray(paid.data) ? paid.data : [];
+      return list.map((item) => ({
+        id: Number(item.id || 0),
+        userId: Number(item.userId || 0),
+        name: item.workerName || '',
+        baseName: item.baseName || '',
+        jobTitle: item.jobTitle || '',
+        workStartDate: item.workDate || '',
+        workEndDate: item.workDate || '',
+        totalAmount: Number(item.totalAmount || 0),
+        salaryStatus: 'paid',
+        completedAt: item.paidTime || item.updatedAt || '',
+      })).sort((l, r) => compareByDateDesc(l, r, ['completedAt']));
+    } catch (e2) {
+      console.error('[listWorkArchives] fallback error:', e2);
+    }
+  }
+
+  return [];
 }
 
 async function listOperationLogs() {
@@ -1812,9 +2127,62 @@ async function listSalaryRecords(query = {}) {
   };
 }
 
+async function backfillSalaryReports() {
+  console.log('[backfillSalaryReports] starting...');
+  const allSalaries = await getAllDocuments('workerSalaries');
+  const paid = allSalaries.filter((sal) => Number(sal.status) === 2);
+  if (!paid.length) {
+    console.log('[backfillSalaryReports] no paid salaries found');
+    return { ok: true, count: 0 };
+  }
+
+  // collect unique (baseId, workDate) pairs
+  const pairs = new Set();
+  paid.forEach((sal) => {
+    const baseId = Number(sal.baseId);
+    const date = trimText(sal.workDate);
+    if (baseId && date) pairs.add(`${baseId}::${date}`);
+  });
+
+  let count = 0;
+  for (const pair of pairs) {
+    const [baseId, workDate] = pair.split('::');
+    try {
+      await syncSalaryReport(Number(baseId), workDate);
+      count += 1;
+    } catch (e) {
+      console.error(`[backfillSalaryReports] error for base=${baseId} date=${workDate}:`, e);
+    }
+  }
+
+  console.log(`[backfillSalaryReports] done, synced ${count} reports`);
+  return { ok: true, count };
+}
+
 async function listSubmittedSalaryReports(query = {}) {
   const res = await getCollection('salaryReports').get();
   let list = Array.isArray(res.data) ? res.data : [];
+
+  // auto-backfill if empty
+  if (!list.length) {
+    try {
+      await backfillSalaryReports();
+      const retry = await getCollection('salaryReports').get();
+      list = Array.isArray(retry.data) ? retry.data : [];
+    } catch (e) {
+      console.error('[listSubmittedSalaryReports] backfill error:', e);
+    }
+  }
+
+  // deduplicate by (baseId, dateFrom, dateTo) — prevents race-condition duplicates
+  const seen = new Set();
+  list = list.filter((item) => {
+    const key = `${item.baseId}::${item.dateFrom}::${item.dateTo}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+
   const baseId = query.baseId ? String(query.baseId) : '';
   const keyword = trimText(query.keyword).toLowerCase();
   const dateFrom = trimText(query.dateFrom);
@@ -1956,13 +2324,32 @@ async function getAttendanceQrCode(user) {
     width: 300,
   });
 
+  // query actual checkin status for today
+  let checkedIn = false;
+  let lastCheckinTime = null;
+  try {
+    const today = new Date().toISOString().slice(0, 10);
+    const signups = await getAllDocuments('signups');
+    const todaySignup = signups.find(s =>
+      !s.isDeleted
+      && Number(s.userId) === Number(user.id)
+      && s.workDate && s.workDate.slice(0, 10) === today
+      && Number(s.status) === 1);
+    if (todaySignup) {
+      checkedIn = true;
+      lastCheckinTime = todaySignup.checkinTime || null;
+    }
+  } catch (e) {
+    console.error('[getAttendanceQrCode] query error:', e);
+  }
+
   return {
     content,
     validDuration: '24h',
     qrImageBase64,
-    lastCheckinTime: null,
-    checkedIn: false,
-    checkinStatus: 'not_checked_in',
+    lastCheckinTime,
+    checkedIn,
+    checkinStatus: checkedIn ? 'checked_in' : 'not_checked_in',
   };
 }
 
@@ -2273,6 +2660,45 @@ async function routeRequest(event) {
     return getJobById(Number(jobIdMatch[1]));
   }
 
+  // --- Routes that don't require auth ---
+
+  if (method === 'GET' && pathname === '/policy/list') {
+    return listPolicies(query);
+  }
+
+  if (method === 'POST' && pathname === '/salary/reports/backfill') {
+    return backfillSalaryReports();
+  }
+
+  if (method === 'GET' && pathname === '/salary/reports/submitted') {
+    return listSubmittedSalaryReports(query);
+  }
+
+  if (method === 'POST' && pathname === '/salary/reports/submit') {
+    return submitSalaryReport(data);
+  }
+
+  const salaryReportMatch = pathname.match(/^\/salary\/reports\/(\d+)$/);
+  if (method === 'GET' && salaryReportMatch) {
+    return getSalaryReportDetail(Number(salaryReportMatch[1]));
+  }
+
+  const salaryReportExportMatch = pathname.match(/^\/salary\/reports\/(\d+)\/export$/);
+  if (method === 'GET' && salaryReportExportMatch) {
+    return exportSalaryReport(Number(salaryReportExportMatch[1]));
+  }
+
+  const policyMatch = pathname.match(/^\/policy\/(\d+)$/);
+  if (method === 'GET' && policyMatch) {
+    return getPolicyDetail(Number(policyMatch[1]));
+  }
+
+  if (method === 'GET' && pathname === '/training/courses') {
+    return listTrainingCourses(query);
+  }
+
+  // --- Routes below require authentication ---
+
   const user = await getCurrentUser(event);
 
   if (method === 'GET' && pathname === '/user/profile') {
@@ -2293,6 +2719,10 @@ async function routeRequest(event) {
 
   if (method === 'POST' && pathname === '/attendance/checkin') {
     return checkin(user, data);
+  }
+
+  if (method === 'POST' && pathname === '/attendance/checkout') {
+    return checkout(data);
   }
 
   if (method === 'GET' && pathname === '/base/applications/me') {
@@ -2331,6 +2761,11 @@ async function routeRequest(event) {
     return getAttendanceQrCode(user);
   }
 
+  const attendanceDetailMatch = pathname.match(/^\/attendance\/detail\/(\d+)$/);
+  if (method === 'GET' && attendanceDetailMatch) {
+    return getAttendanceDetail(Number(attendanceDetailMatch[1]));
+  }
+
   if (method === 'GET' && pathname === '/base/managed') {
     return getManagedBases(user);
   }
@@ -2341,6 +2776,10 @@ async function routeRequest(event) {
 
   if (method === 'GET' && pathname === '/salary/worker/pending') {
     return getWorkerPendingSalaryList(user);
+  }
+
+  if (method === 'GET' && pathname === '/salary/worker/paid') {
+    return listWorkerPaidSalaries(user, query);
   }
 
   if (method === 'GET' && pathname === '/salary/list') {
@@ -2365,37 +2804,6 @@ async function routeRequest(event) {
   const salaryWorkerPaymentMatch = pathname.match(/^\/salary\/worker\/(\d+)\/payment$/);
   if (method === 'GET' && salaryWorkerPaymentMatch) {
     return getWorkerSalaryPayment(user, Number(salaryWorkerPaymentMatch[1]));
-  }
-
-  if (method === 'GET' && pathname === '/policy/list') {
-    return listPolicies(query);
-  }
-
-  if (method === 'GET' && pathname === '/salary/reports/submitted') {
-    return listSubmittedSalaryReports(query);
-  }
-
-  if (method === 'POST' && pathname === '/salary/reports/submit') {
-    return submitSalaryReport(data);
-  }
-
-  const salaryReportMatch = pathname.match(/^\/salary\/reports\/(\d+)$/);
-  if (method === 'GET' && salaryReportMatch) {
-    return getSalaryReportDetail(Number(salaryReportMatch[1]));
-  }
-
-  const salaryReportExportMatch = pathname.match(/^\/salary\/reports\/(\d+)\/export$/);
-  if (method === 'GET' && salaryReportExportMatch) {
-    return exportSalaryReport(Number(salaryReportExportMatch[1]));
-  }
-
-  const policyMatch = pathname.match(/^\/policy\/(\d+)$/);
-  if (method === 'GET' && policyMatch) {
-    return getPolicyDetail(Number(policyMatch[1]));
-  }
-
-  if (method === 'GET' && pathname === '/training/courses') {
-    return listTrainingCourses(query);
   }
 
   const trainingDetailMatch = pathname.match(/^\/training\/courses\/(\d+)$/);

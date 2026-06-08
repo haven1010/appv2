@@ -10,6 +10,7 @@ const STATUS_MAP = {
   1: { key: 'approved', text: '已通过', className: 'status-ok' },
   2: { key: 'rejected', text: '已拒绝', className: 'status-warn' },
   3: { key: 'cancelled', text: '已取消', className: 'status-muted' },
+  4: { key: 'completed', text: '已结束', className: 'status-completed' },
 };
 
 function toStatusInfo(status) {
@@ -54,6 +55,7 @@ Page({
       { key: 'all', label: '全部' },
       { key: 'pending', label: '待审核' },
       { key: 'approved', label: '已通过' },
+      { key: 'completed', label: '已结束' },
       { key: 'rejected', label: '已拒绝' },
       { key: 'cancelled', label: '已取消' },
     ],
@@ -151,9 +153,12 @@ Page({
 
       const rows = Array.isArray(res) ? res : [];
       const records = rows.map((item, index) => {
-        const statusInfo = toStatusInfo(item.status);
         const applicationId = Number(item.id) || 0;
-        const status = Number(item.status);
+        const rawStatus = Number(item.status);
+        const isCompleted = rawStatus === 1 && item.salarySettled;
+        const displayStatus = isCompleted ? 4 : rawStatus;
+        const statusInfo = toStatusInfo(displayStatus);
+        const status = displayStatus;
         return {
           id: applicationId || `record-${index}`,
           signupId: applicationId,
@@ -169,14 +174,14 @@ Page({
           statusKey: statusInfo.key,
           statusText: statusInfo.text,
           statusClass: statusInfo.className,
-          canCancel: status === 0,
+          canCancel: false,
           canViewQR: status === 1,
-          canViewAttendance: status === 1 && item.checkinTime,
+          canViewAttendance: (rawStatus === 1 || isCompleted) && item.checkinTime,
         };
       });
 
       const signedUp = records.filter((item) => item.statusKey === 'pending').length;
-      const checkedIn = records.filter((item) => item.statusKey === 'approved').length;
+      const checkedIn = records.filter((item) => item.statusKey === 'approved' || item.statusKey === 'completed').length;
 
       this.setData(
         {

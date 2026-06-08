@@ -111,6 +111,7 @@
 
       <view class="actions-row">
         <button class="btn-secondary" bindtap="goScanCenter">进入签到页面</button>
+        <button class="btn-ghost" bindtap="goFieldRecords">签到表</button>
         <button class="btn-ghost" bindtap="refreshFieldAttendance" wx:if="{{fieldSelectedBaseId}}">刷新签到信息</button>
       </view>
 

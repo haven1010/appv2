@@ -195,30 +195,40 @@
 }
 
 .status-badge {
-  padding: 6rpx 14rpx;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 100rpx;
+  padding: 8rpx 22rpx;
   border-radius: var(--radius-pill);
-  font-size: 22rpx;
-  font-weight: 700;
+  font-size: 26rpx;
+  font-weight: 800;
+  letter-spacing: 0.5rpx;
 }
 
 .status-pending {
-  background: rgba(102, 126, 234, 0.1);
+  background: rgba(102, 126, 234, 0.15);
   color: var(--brand-purple);
 }
 
 .status-ok {
-  background: rgba(49, 164, 124, 0.1);
+  background: rgba(49, 164, 124, 0.15);
   color: var(--accent-green);
 }
 
 .status-warn {
-  background: rgba(228, 92, 109, 0.1);
+  background: rgba(228, 92, 109, 0.15);
   color: var(--accent-red);
 }
 
 .status-muted {
-  background: rgba(142, 150, 168, 0.1);
+  background: rgba(142, 150, 168, 0.15);
   color: var(--ink-sub);
+}
+
+.status-completed {
+  background: rgba(49, 164, 124, 0.15);
+  color: var(--accent-green);
 }
 
 .record-job {

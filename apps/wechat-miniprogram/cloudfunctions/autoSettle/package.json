@@ -1,0 +1,9 @@
+{
+  "name": "autoSettle",
+  "version": "1.0.0",
+  "description": "自动结算云函数 — 每天凌晨检查已签到且岗位已结束的工人，自动生成工资草稿",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "latest"
+  }
+}

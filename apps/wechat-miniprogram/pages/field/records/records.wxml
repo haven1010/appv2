@@ -41,6 +41,7 @@
       <view class="record-right">
         <text class="record-time">{{item.displayTime}}</text>
         <view class="record-status {{item.statusClass}}">{{item.statusText}}</view>
+        <button class="checkout-btn" wx:if="{{item.canCheckout}}" data-id="{{item.id}}" bindtap="checkoutRecord" loading="{{checkoutingId === item.id}}" disabled="{{checkoutingId > 0}}">结束务工</button>
       </view>
     </view>
   </view>

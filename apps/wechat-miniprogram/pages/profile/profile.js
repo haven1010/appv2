@@ -181,9 +181,10 @@ Page({
     this.setData({ loading: true });
 
     try {
-      const [profile, records] = await Promise.all([
+      const [profile, records, salaryStats] = await Promise.all([
         app.request({ url: '/user/profile', method: 'GET' }).catch(() => null),
         app.request({ url: '/attendance/worker/records?limit=200', method: 'GET' }).catch(() => []),
+        app.request({ url: '/salary/worker/stats', method: 'GET' }).catch(() => null),
       ]);
 
       sanitizeAvatarInCache();
@@ -191,7 +192,7 @@ Page({
       const mergedUser = Object.assign({}, cachedUser, profile || {});
       const name = mergedUser.name || '未登录用户';
       const workDays = Array.isArray(records) ? records.length : 0;
-      const totalIncome = 0;
+      const totalIncome = salaryStats && salaryStats.totalEarned ? Number(salaryStats.totalEarned) : 0;
       const signupCount = Array.isArray(records) ? records.length : 0;
 
       wx.setStorageSync('userInfo', mergedUser);

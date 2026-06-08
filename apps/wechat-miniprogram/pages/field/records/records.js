@@ -47,6 +47,7 @@ Page({
     records: [],
     loading: true,
     exporting: false,
+    checkoutingId: 0,
     totalCount: 0,
   },
 
@@ -154,16 +155,18 @@ Page({
         if (status === 1) { statusText = '已签到'; statusClass = 'checked'; }
         if (status === 2) { statusText = '缺勤'; statusClass = 'absent'; }
         if (status === 3) { statusText = '已取消'; statusClass = 'cancelled'; }
+        const canCheckout = status === 1 && !item.checkoutTime;
         return {
           id: item.id || `record-${index}`,
           displayAvatar: String(name).slice(0, 1),
           displayName: name,
           displayUid: item.workerUid || item.user?.uid || '--',
           displayJob: item.jobTitle || item.job?.title || '-',
-          displayTime: formatTime(item.checkinTime || item.createdAt),
+          displayTime: item.checkinTime ? formatTime(item.checkinTime) : '--:--',
           displayWorkDate: item.workDate || '-',
           statusText,
           statusClass,
+          canCheckout,
         };
       });
 
@@ -176,6 +179,38 @@ Page({
       this.setData({ records: [], totalCount: 0, loading: false });
       wx.showToast({ title: err.message || '加载签到表失败', icon: 'none' });
     }
+  },
+
+  async checkoutRecord(e) {
+    const signupId = Number(e.currentTarget.dataset.id || 0);
+    if (!signupId || this.data.checkoutingId) return;
+
+    wx.showModal({
+      title: '结束务工',
+      content: '确认该工人已完成今日工作？将根据签到时间自动计算工时并生成工资。',
+      confirmText: '确认结束',
+      cancelText: '取消',
+      success: async (res) => {
+        if (!res.confirm) return;
+        this.setData({ checkoutingId: signupId });
+        try {
+          const result = await app.request({
+            url: '/attendance/checkout',
+            method: 'POST',
+            data: { signupId },
+          });
+          wx.showToast({
+            title: result.salaryGenerated ? '务工结束，工资已生成' : '务工结束',
+            icon: 'success',
+          });
+          await this.loadRecords();
+        } catch (err) {
+          wx.showToast({ title: err.message || '操作失败', icon: 'none' });
+        } finally {
+          this.setData({ checkoutingId: 0 });
+        }
+      },
+    });
   },
 
   async exportRecords() {

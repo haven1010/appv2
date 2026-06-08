@@ -974,6 +974,10 @@ Page({
     wx.navigateTo({ url: '/pages/admin/attendance/attendance' });
   },
 
+  goFieldRecords() {
+    wx.navigateTo({ url: '/pages/field/records/records' });
+  },
+
   goAuditCenter() {
     wx.navigateTo({ url: '/pages/admin/users/users' });
   },
