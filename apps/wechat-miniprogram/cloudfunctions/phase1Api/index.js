@@ -53,6 +53,13 @@ function trimText(value) {
   return String(value || '').trim();
 }
 
+function getNextDateStr(dateStr, offsetDays = 1) {
+  const d = new Date(dateStr);
+  if (Number.isNaN(d.getTime())) return dateStr;
+  d.setDate(d.getDate() + offsetDays);
+  return d.toISOString().slice(0, 10);
+}
+
 function digitsOnly(value) {
   return String(value || '').replace(/\D/g, '');
 }
@@ -1368,21 +1375,37 @@ async function checkin(user, data) {
   const signups = await getAllDocuments('signups');
   const today = new Date().toISOString().slice(0, 10);
 
-  const target = signups.find((item) =>
+  // 诊断分步排查：该工人是否有任何 signup
+  const mySignups = signups.filter((item) =>
     !item.isDeleted
-    && Number(item.userId) === Number(worker.id)
-    && Number(item.baseId) === Number(baseId)
-    && Number(item.status) === 0
-    && trimText(item.workDate) === today)
-    || signups.find((item) =>
-      !item.isDeleted
-      && Number(item.userId) === Number(worker.id)
-      && Number(item.baseId) === Number(baseId)
-      && Number(item.status) === 0);
+    && Number(item.userId) === Number(worker.id));
 
-  if (!target) {
-    throw createHttpError(404, '未找到待签到报名记录');
+  if (mySignups.length === 0) {
+    throw createHttpError(404, `该工人(${uid})无任何报名记录，请先在岗位广场报名`);
   }
+
+  // 诊断：管理员选的基地是否有该工人的报名
+  const baseMatch = mySignups.filter((item) =>
+    Number(item.baseId) === Number(baseId));
+
+  if (baseMatch.length === 0) {
+    const workerBases = [...new Set(mySignups.map((s) => Number(s.baseId)))];
+    throw createHttpError(404, `基地不匹配：该工人在基地[${workerBases.join(',')}]有报名，当前扫码基地为${baseId}，请切换基地`);
+  }
+
+  // 诊断：是否还有 status=0 的待签到记录
+  const pendingMatch = baseMatch.filter((item) =>
+    Number(item.status) === 0);
+
+  if (pendingMatch.length === 0) {
+    const statuses = baseMatch.map((s) => `#${s.id}=${s.status}(${s.workDate || '?'})`);
+    throw createHttpError(404, `该工人今日报名记录状态异常：${statuses.join(', ')}（0待签到/1已签到/2缺勤/3已取消）`);
+  }
+
+  // 优先匹配今天日期的记录，备选任意日期
+  const target = pendingMatch.find((item) =>
+    trimText(item.workDate) === today)
+    || pendingMatch[0];
 
   target.status = 1;
   target.checkinTime = new Date().toISOString();
@@ -1390,6 +1413,47 @@ async function checkin(user, data) {
   const docId = target._id;
   delete target._id;
   await getCollection('signups').doc(docId).update({ data: target });
+
+  // 一次报名多日签到：自动为次日生成待签到记录
+  try {
+    const job = await findOneByField('jobs', 'id', Number(target.jobId));
+    if (job && !job.isDeleted && job.workEndDate) {
+      const currentDate = trimText(target.workDate) || today;
+      const nextDate = getNextDateStr(currentDate, 1);
+      if (nextDate <= trimText(job.workEndDate)) {
+        const existingSignups = await getAllDocuments('signups');
+        const alreadyExists = existingSignups.some((s) =>
+          !s.isDeleted
+          && Number(s.userId) === Number(target.userId)
+          && Number(s.jobId) === Number(target.jobId)
+          && trimText(s.workDate) === nextDate
+          && Number(s.status) !== 3);
+        if (!alreadyExists) {
+          const nextSignupId = await getNextNumericId('signups');
+          const nowStr = new Date().toISOString();
+          await getCollection('signups').add({
+            data: {
+              id: nextSignupId,
+              userId: Number(target.userId),
+              baseId: Number(target.baseId),
+              jobId: Number(target.jobId),
+              workDate: nextDate,
+              status: 0,
+              checkinTime: null,
+              isProxy: false,
+              proxyUserId: null,
+              isOfflineSync: false,
+              isDeleted: false,
+              createdAt: nowStr,
+              updatedAt: nowStr,
+            },
+          });
+        }
+      }
+    }
+  } catch (_) {
+    // 次日记录生成失败不影响本次签到结果
+  }
 
   return {
     user: {
