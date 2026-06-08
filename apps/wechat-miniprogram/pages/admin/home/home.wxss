@@ -259,12 +259,14 @@
 .action-btn,
 .submit-btn {
   height: 84rpx;
-  line-height: 84rpx;
   border-radius: var(--radius-pill);
   font-size: 28rpx;
   font-weight: 800;
   border: none;
   transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .action-btn {

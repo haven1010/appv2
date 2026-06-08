@@ -150,6 +150,9 @@ swiper-item {
 .action-btn {
   flex: 1;
   height: 86rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .action-btn::after,
@@ -285,7 +288,9 @@ swiper-item {
 .save-btn {
   margin-top: 24rpx;
   height: 88rpx;
-  line-height: 88rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 @keyframes pop {

@@ -148,12 +148,14 @@
   margin-top: 16rpx;
   border-radius: var(--radius-pill);
   height: 82rpx;
-  line-height: 82rpx;
   background: var(--brand-gradient);
   color: #1a1a2e;
   font-size: 30rpx;
   font-weight: 800;
   border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .takeover-btn::after {
@@ -237,8 +239,10 @@
   font-size: 32rpx;
   font-weight: 800;
   height: 88rpx;
-  line-height: 88rpx;
   box-shadow: 0 14rpx 28rpx rgba(102, 126, 234, 0.24);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .save-btn::after {

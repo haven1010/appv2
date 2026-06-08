@@ -313,8 +313,10 @@
 .register-btn {
   margin-top: 24rpx;
   height: 100rpx;
-  line-height: 100rpx;
   border-radius: 28rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border: none;
   background: var(--brand-purple);
   color: #1a1a2e;

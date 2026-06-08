@@ -187,7 +187,6 @@
 
 .submit-btn {
   height: 88rpx;
-  line-height: 88rpx;
   border-radius: var(--radius-pill);
   color: #1a1a2e;
   font-size: 32rpx;
@@ -195,6 +194,9 @@
   background: var(--brand-purple);
   box-shadow: 0 12rpx 24rpx rgba(102, 126, 234, 0.3);
   transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .submit-btn::after {

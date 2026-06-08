@@ -1,36 +1,78 @@
 <view class="page page-enter">
   <view class="page-body">
-    <view class="header-card">
+    <!-- 头部 -->
+    <view class="header-row">
       <text class="header-title">我的咨询</text>
-      <button class="btn-new" bindtap="goToConsult">+ 新建咨询</button>
     </view>
 
     <view wx:if="{{loading}}" class="loading-state">
       <text class="loading-text">加载中...</text>
     </view>
 
-    <view wx:elif="{{consultations.length}}" class="consultation-list">
-      <view
-        class="consultation-card"
-        wx:for="{{consultations}}"
-        wx:key="id"
-        style="animation-delay: {{item.delay}};"
-        bindtap="goToDetail"
-        data-id="{{item.id}}"
-      >
-        <view class="card-header">
-          <text class="issue-type">{{item.issueTypeText}}</text>
-          <text class="status-badge {{item.statusClass}}">{{item.statusText}}</text>
+    <block wx:elif="{{consultations.length}}">
+      <!-- 统计概览 -->
+      <view class="stats-row">
+        <view class="stat-item stat-total">
+          <text class="stat-num">{{consultations.length}}</text>
+          <text class="stat-label">全部</text>
         </view>
-        <text class="description">{{item.description}}</text>
-        <text class="created-time">提交时间：{{item.createdAt}}</text>
+        <view class="stat-item stat-pending-c">
+          <text class="stat-num">{{pendingCount}}</text>
+          <text class="stat-label">待受理</text>
+        </view>
+        <view class="stat-item stat-processing-c">
+          <text class="stat-num">{{processingCount}}</text>
+          <text class="stat-label">处理中</text>
+        </view>
+        <view class="stat-item stat-done">
+          <text class="stat-num">{{completedCount}}</text>
+          <text class="stat-label">已完成</text>
+        </view>
       </view>
-    </view>
 
+      <!-- 新建入口 -->
+      <view class="quick-consult" bindtap="goToConsult">
+        <text class="quick-icon">+</text>
+        <text class="quick-text">发起新的维权咨询</text>
+        <text class="quick-arrow">›</text>
+      </view>
+
+      <!-- 咨询列表 -->
+      <view class="consultation-list">
+        <view
+          class="consultation-card"
+          wx:for="{{consultations}}"
+          wx:key="id"
+          style="animation-delay: {{item.delay}};"
+          bindtap="goToDetail"
+          data-id="{{item.id}}"
+        >
+          <view class="card-top">
+            <view class="card-type-icon">{{item.typeIcon}}</view>
+            <view class="card-info">
+              <view class="card-header-row">
+                <text class="issue-type">{{item.issueTypeText}}</text>
+                <text class="status-badge {{item.statusClass}}">{{item.statusText}}</text>
+              </view>
+              <text class="description">{{item.description}}</text>
+            </view>
+          </view>
+          <view class="card-footer">
+            <text class="card-time">📅 {{item.createdAt}}</text>
+            <text class="card-arrow">›</text>
+          </view>
+        </view>
+      </view>
+    </block>
+
+    <!-- 空状态 -->
     <view wx:else class="empty-state">
-      <text class="empty-icon">📋</text>
-      <text class="empty-text">暂无咨询记录</text>
-      <button class="btn-consult" bindtap="goToConsult">立即咨询</button>
+      <view class="empty-card">
+        <text class="empty-icon">📋</text>
+        <text class="empty-title">暂无咨询记录</text>
+        <text class="empty-desc">您还没有提交过维权咨询，遇到劳动纠纷、工资拖欠等问题时，可以点击下方按钮发起咨询</text>
+        <button class="btn-consult" bindtap="goToConsult">立即咨询</button>
+      </view>
     </view>
 
     <view class="page-bottom-gap"></view>

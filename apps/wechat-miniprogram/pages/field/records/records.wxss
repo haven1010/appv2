@@ -109,7 +109,6 @@
   border: none;
   min-width: 200rpx;
   height: 72rpx;
-  line-height: 72rpx;
   border-radius: var(--radius-pill);
   background: var(--brand-purple);
   color: #1a1a2e;
@@ -118,6 +117,9 @@
   padding: 0 28rpx;
   box-shadow: 0 6rpx 18rpx rgba(102, 126, 234, 0.25);
   transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .export-btn:active {

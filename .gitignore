@@ -5,3 +5,5 @@ dist/
 .DS_Store
 uploads/
 exports/
+backups/
+*.gz

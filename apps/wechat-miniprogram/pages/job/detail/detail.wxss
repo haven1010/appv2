@@ -274,7 +274,6 @@
 
 .apply-btn {
   height: 96rpx;
-  line-height: 96rpx;
   border-radius: 28rpx;
   color: var(--ink-main);
   font-size: 34rpx;
@@ -282,6 +281,9 @@
   background: transparent;
   box-shadow: none;
   transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .apply-btn::after {

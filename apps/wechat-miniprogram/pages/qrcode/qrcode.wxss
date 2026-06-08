@@ -263,6 +263,9 @@
   letter-spacing: 2rpx;
   box-shadow: 0 8rpx 24rpx rgba(102, 126, 234, 0.35);
   transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .refresh-btn:active {

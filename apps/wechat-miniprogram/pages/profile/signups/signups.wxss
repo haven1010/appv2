@@ -249,13 +249,15 @@
   margin: 0;
   min-width: 180rpx;
   height: 68rpx;
-  line-height: 68rpx;
   padding: 0 24rpx;
   border-radius: var(--radius-pill);
   font-size: 24rpx;
   font-weight: 800;
   border: none;
   transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .record-cancel-btn {

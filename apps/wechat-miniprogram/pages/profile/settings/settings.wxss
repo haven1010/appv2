@@ -87,13 +87,15 @@
 .mini-btn {
   min-width: 104rpx;
   height: 60rpx;
-  line-height: 60rpx;
   border-radius: var(--radius-pill);
   font-size: 24rpx;
   font-weight: 700;
   color: #1a1a2e;
   background: var(--brand-purple);
   border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   padding: 0 20rpx;
 }
 

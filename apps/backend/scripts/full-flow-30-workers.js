@@ -22,6 +22,8 @@ const SUPER_ADMIN_IDCARD_LAST6 = String(process.env.SUPER_ADMIN_IDCARD_LAST6 || 
 const SUPER_ADMIN_IDCARD = String(process.env.SUPER_ADMIN_IDCARD || '').trim();
 const RUN_DATE = String(process.env.WORK_DATE || '').trim() || getTodayDate();
 const RUN_TAG = buildRunTag();
+// Unique serial base per run so repeated runs don't clash on ID cards
+const SERIAL_PREFIX = Number(RUN_TAG.slice(-4)) + 1000;
 
 function getTodayDate() {
   const d = new Date();
@@ -38,7 +40,8 @@ function buildRunTag() {
   const day = String(d.getDate()).padStart(2, '0');
   const hh = String(d.getHours()).padStart(2, '0');
   const mm = String(d.getMinutes()).padStart(2, '0');
-  return `${y}${m}${day}${hh}${mm}`;
+  const ss = String(d.getSeconds()).padStart(2, '0');
+  return `${y}${m}${day}${hh}${mm}${ss}`;
 }
 
 function toCsvCell(value) {
@@ -57,7 +60,7 @@ function extractMessage(payload, fallback = 'Unknown error') {
 
 function isDuplicateError(error) {
   const text = String(error?.message || '');
-  return /duplicate|already|已报名|已申请|重复|已存在|已被使用|已注册/i.test(text);
+  return /duplicate|already|已报名|已申请|重复|已存在|已被使用|已注册|已被/i.test(text);
 }
 
 function idCardFromSerial(serial) {
@@ -114,20 +117,28 @@ async function login(phone, idCardLike) {
 async function ensurePublicUser(user) {
   const endpoint = user.roleKey === 'boss' ? '/user/register/boss' : '/user/register';
   try {
+    const payload = {
+      name: user.name,
+      idCard: user.idCard,
+      phone: user.phone,
+      roleKey: user.roleKey,
+      homeAddress: user.homeAddress || '陕西省西安市雁塔区测试路1号',
+    };
+    if (user.gender) payload.gender = user.gender;
+    if (user.isPoorHousehold !== undefined) payload.isPoorHousehold = user.isPoorHousehold;
+    if (user.roleKey === 'boss') {
+      payload.bankName = user.bankName || '中国农业银行';
+      payload.bankCardNo = user.bankCardNo || `622848${String(Date.now()).slice(-10).padStart(10, '0')}`;
+    }
     await requestApi(endpoint, {
       method: 'POST',
-      data: {
-        name: user.name,
-        idCard: user.idCard,
-        phone: user.phone,
-        roleKey: user.roleKey,
-      },
+      data: payload,
     });
   } catch (error) {
     if (!isDuplicateError(error)) throw error;
   }
   const auth = await login(user.phone, user.idCard);
-  return Object.assign({}, user, { uid: auth.user?.uid, id: auth.user?.id, token: auth.token });
+  return Object.assign({}, user, { uid: auth.user?.uid, id: Number(auth.user?.id), token: auth.token });
 }
 
 async function ensureManagedUser(user, superToken) {
@@ -147,7 +158,7 @@ async function ensureManagedUser(user, superToken) {
     if (!isDuplicateError(error)) throw error;
   }
   const auth = await login(user.phone, user.idCard);
-  return Object.assign({}, user, { uid: auth.user?.uid, id: auth.user?.id, token: auth.token });
+  return Object.assign({}, user, { uid: auth.user?.uid, id: Number(auth.user?.id), token: auth.token });
 }
 
 async function safeCall(fn, onDuplicateFallback) {
@@ -200,37 +211,6 @@ async function createBaseWithBoss(bossToken, payload) {
   );
 }
 
-async function ensurePaymentFlowForSalary(superToken, salaryId) {
-  const existing = await requestApi(`/salary/${salaryId}/payments`, { token: superToken, method: 'GET' }).catch(() => []);
-  let payment = Array.isArray(existing) && existing.length ? existing[0] : null;
-
-  if (!payment) {
-    payment = await requestApi(`/salary/${salaryId}/payment`, {
-      method: 'POST',
-      token: superToken,
-      data: { paymentMethod: 'transfer' },
-    });
-  }
-
-  if (Number(payment.status) === 0) {
-    payment = await requestApi(`/salary/payment/${payment.id}/confirm`, {
-      method: 'PATCH',
-      token: superToken,
-      data: { confirmSignatureUrl: `https://example.com/signatures/salary-${salaryId}.png` },
-    });
-  }
-
-  if (Number(payment.status) === 1) {
-    payment = await requestApi(`/salary/payment/${payment.id}/complete`, {
-      method: 'PATCH',
-      token: superToken,
-      data: { paymentVoucherUrl: `https://example.com/vouchers/salary-${salaryId}.png` },
-    });
-  }
-
-  return payment;
-}
-
 async function main() {
   if (!SUPER_ADMIN_PHONE || (!SUPER_ADMIN_IDCARD_LAST6 && !SUPER_ADMIN_IDCARD)) {
     throw new Error('Missing SUPER_ADMIN_PHONE and SUPER_ADMIN_IDCARD_LAST6 (or SUPER_ADMIN_IDCARD).');
@@ -244,7 +224,7 @@ async function main() {
     roleKey: 'boss',
     name: `妯℃嫙鑰佹澘-${RUN_TAG.slice(-4)}`,
     phone: fixedPhone('176', Number(RUN_TAG.slice(-8))),
-    idCard: idCardFromSerial(9001),
+    idCard: idCardFromSerial(SERIAL_PREFIX + 1),
   };
   console.log(`[2/12] Ensure boss account: ${boss.phone}`);
   const bossUser = await ensurePublicUser(boss);
@@ -253,7 +233,7 @@ async function main() {
     roleKey: 'base_manager',
     name: `基地管理员${RUN_TAG.slice(-4)}`,
     phone: fixedPhone('177', Number(RUN_TAG.slice(-8))),
-    idCard: idCardFromSerial(9002),
+    idCard: idCardFromSerial(SERIAL_PREFIX + 2),
   };
   console.log(`[3/12] Ensure base manager account: ${baseManager.phone}`);
   const baseManagerUser = await ensureManagedUser(baseManager, superToken);
@@ -287,7 +267,7 @@ async function main() {
   const baseInfo = await createBaseWithBoss(bossAuth.token, basePayload);
   const baseId = Number(baseInfo.id);
 
-  console.log('[5/12] Super admin audit base and transfer owner to base manager');
+  console.log('[5/12] Super admin audit base');
   await requestApi(`/base/${baseId}/audit`, {
     method: 'PATCH',
     token: superToken,
@@ -295,44 +275,60 @@ async function main() {
   }).catch((error) => {
     if (!/(已审核|already|Conflict)/i.test(String(error.message))) throw error;
   });
-  await requestApi(`/base/${baseId}/owner`, {
-    method: 'PATCH',
-    token: superToken,
-    data: { ownerId: baseManagerUser.id },
-  });
 
   const fieldManager = {
     roleKey: 'field_manager',
     name: `现场管理员${RUN_TAG.slice(-4)}`,
     phone: fixedPhone('179', Number(RUN_TAG.slice(-8))),
-    idCard: idCardFromSerial(9003),
+    idCard: idCardFromSerial(SERIAL_PREFIX + 3),
     assignedBaseId: baseId,
   };
-  console.log(`[6/12] Ensure field manager account: ${fieldManager.phone}`);
+  console.log('[6/12] Ensure field manager account + assign supervisors for base');
   const fieldManagerUser = await ensureManagedUser(fieldManager, superToken);
+  await requestApi(`/base/${baseId}/supervisors`, {
+    method: 'PATCH',
+    token: superToken,
+    data: {
+      baseManagerIds: [Number(baseManagerUser.id)],
+      fieldManagerIds: [Number(fieldManagerUser.id)],
+    },
+  }).catch((error) => {
+    const msg = String(error.message || '');
+    if (!/(已分配|already|Conflict)/i.test(msg)) throw error;
+  });
 
-  console.log('[7/12] Base manager publish one recruiting job');
-  const baseManagerAuth = await login(baseManagerUser.phone, baseManagerUser.idCard);
+  console.log('[7/12] Boss publish one recruiting job -> Super admin review');
   const job = await requestApi(`/base/${baseId}/jobs`, {
     method: 'POST',
-    token: baseManagerAuth.token,
+    token: bossAuth.token,
     data: {
       jobTitle: `苹果采摘工${RUN_TAG.slice(-4)}`,
       recruitCount: WORKER_COUNT,
       workCycle: 1,
       workContent: 'Fruit picking, sorting and packing',
       workHours: '08:00-17:00',
-      workStartDate: RUN_DATE,
-      workEndDate: RUN_DATE,
+      workStartDate: '2026-01-01',
+      workEndDate: '2026-12-31',
       payType: 2,
       hourlyRate: 25,
       requirements: '40-60岁，身体健康',
       hasMeals: true,
       hasAccommodation: false,
-      validUntil: RUN_DATE,
+      validUntil: '2026-12-31',
     },
   });
   const jobId = Number(job.id);
+  console.log(`  Job published (id=${jobId}), super admin reviewing...`);
+  await requestApi(`/base/jobs/${jobId}/review`, {
+    method: 'PATCH',
+    token: superToken,
+    data: { status: 1, reason: '审核通过' },
+  }).catch((error) => {
+    const msg = String(error.message || '');
+    if (!/(已审核|already|Conflict)/i.test(msg)) throw error;
+  });
+
+  const baseManagerAuth = await login(baseManagerUser.phone, baseManagerUser.idCard);
 
   console.log(`[8/12] Ensure ${WORKER_COUNT} workers + signup`);
   const workers = [];
@@ -342,7 +338,9 @@ async function main() {
       roleKey: 'worker',
       name: `工人${String(i).padStart(2, '0')}`,
       phone: fixedPhone('139', workerSeed + Number(RUN_TAG.slice(-4))),
-      idCard: idCardFromSerial(1000 + i),
+      idCard: idCardFromSerial(SERIAL_PREFIX + 100 + i),
+      gender: i % 2 === 0 ? 'male' : 'female',
+      isPoorHousehold: false,
     };
     const ensured = await ensurePublicUser(worker);
 
@@ -372,6 +370,18 @@ async function main() {
     });
 
     workers.push(ensured);
+  }
+
+  console.log('  Auditing worker profiles...');
+  for (let i = 0; i < workers.length; i += 1) {
+    const worker = workers[i];
+    await requestApi(`/user/${worker.id}/audit`, {
+      method: 'PATCH',
+      token: superToken,
+      data: { status: 1 },
+    }).catch((error) => {
+      if (!/(已审核|already)/i.test(String(error.message))) throw error;
+    });
   }
 
   console.log('[9/12] Field manager scan-checkin for all workers');
@@ -424,7 +434,7 @@ async function main() {
     salaryDraftCount += 1;
   }
 
-  console.log('[11/12] Workers confirm salary, super admin finish payment');
+  console.log('[11/12] Workers confirm salary -> Boss settle -> Submit report to Super admin');
   let salaryListRes = await requestApi(
     `/salary/list?baseId=${baseId}&dateFrom=${encodeURIComponent(RUN_DATE)}&dateTo=${encodeURIComponent(RUN_DATE)}`,
     { method: 'GET', token: superToken },
@@ -450,18 +460,50 @@ async function main() {
     });
   }
 
+  const bossSettleAuth = await login(bossUser.phone, bossUser.idCard);
   salaryListRes = await requestApi(
     `/salary/list?baseId=${baseId}&dateFrom=${encodeURIComponent(RUN_DATE)}&dateTo=${encodeURIComponent(RUN_DATE)}`,
-    { method: 'GET', token: superToken },
+    { method: 'GET', token: bossSettleAuth.token },
   );
   salaryList = Array.isArray(salaryListRes?.list) ? salaryListRes.list : [];
 
-  let paidCount = 0;
+  let settledCount = 0;
   for (let i = 0; i < salaryList.length; i += 1) {
     const salary = salaryList[i];
-    if (Number(salary.status) !== 1 && Number(salary.status) !== 2) continue;
-    await ensurePaymentFlowForSalary(superToken, Number(salary.id));
-    paidCount += 1;
+    if (Number(salary.status) !== 1) continue;
+    await requestApi(`/salary/${salary.id}/settle`, {
+      method: 'POST',
+      token: bossSettleAuth.token,
+      data: { paymentMethod: 'transfer' },
+    }).catch((error) => {
+      const msg = String(error.message || '');
+      if (!/(已结算|already|Conflict)/i.test(msg)) throw error;
+    });
+    settledCount += 1;
+  }
+
+  console.log(`  Boss settled ${settledCount} salaries, submitting report...`);
+  const report = await requestApi('/salary/reports/submit', {
+    method: 'POST',
+    token: bossSettleAuth.token,
+    data: {
+      baseId,
+      dateFrom: RUN_DATE,
+      dateTo: RUN_DATE,
+    },
+  }).catch((error) => {
+    const msg = String(error.message || '');
+    if (!/(已提交|already|Conflict)/i.test(msg)) throw error;
+    return null;
+  });
+
+  let superReportView = [];
+  if (report) {
+    const reportId = Number(report.id);
+    superReportView = await requestApi(`/salary/reports/${reportId}`, {
+      method: 'GET',
+      token: superToken,
+    }).catch(() => []);
   }
 
   console.log('[12/12] Export signup/checkin/salary tables and verify worker history');
@@ -624,8 +666,9 @@ async function main() {
     workersCheckedIn: checkinRows.length,
     salaryDraftCount,
     salaryRecords: finalSalaryList.length,
-    paidSalaryRecords: finalSalaryList.filter((row) => Number(row.status) === 2).length,
-    paymentFlowTouched: paidCount,
+    bossSettledCount: settledCount,
+    reportSubmitted: Boolean(report),
+    reportDetailItems: Array.isArray(superReportView) ? superReportView.length : 0,
     superAdminVisible: Number(superView?.total || superView?.records?.length || 0),
     baseManagerVisible: Number(baseView?.total || baseView?.records?.length || 0),
     fieldManagerVisible: Number(fieldView?.total || fieldView?.records?.length || 0),

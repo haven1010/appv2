@@ -1,4 +1,8 @@
-/* === Policy List — Claude Purple === */
+/* === Policy List === */
+
+.page {
+  background: linear-gradient(180deg, #f0f7ff 0%, #e6f0ff 100%) !important;
+}
 
 .page-body {
   padding: 24rpx 28rpx;
@@ -23,8 +27,8 @@
 }
 
 .search-box:focus-within {
-  border-color: var(--brand-purple);
-  box-shadow: 0 0 0 6rpx rgba(102, 126, 234, 0.1), var(--shadow-md);
+  border-color: #2563EB;
+  box-shadow: 0 0 0 6rpx rgba(37, 99, 235, 0.1), var(--shadow-md);
 }
 
 .search-icon {
@@ -69,10 +73,10 @@
 }
 
 .tab-active {
-  background: var(--brand-gradient);
-  color: #1a1a2e;
+  background: linear-gradient(135deg, #4DA6FF 0%, #2563EB 100%);
+  color: #ffffff;
   border-color: transparent;
-  box-shadow: 0 6rpx 20rpx rgba(102, 126, 234, 0.25);
+  box-shadow: 0 6rpx 20rpx rgba(37, 99, 235, 0.25);
 }
 
 /* ── Loading / Empty ── */
@@ -152,8 +156,8 @@
 
 .policy-category {
   padding: 6rpx 18rpx;
-  background: rgba(102, 126, 234, 0.1);
-  color: var(--brand-purple);
+  background: rgba(37, 99, 235, 0.1);
+  color: #2563EB;
   border-radius: var(--radius-pill);
   font-size: 22rpx;
   font-weight: 700;

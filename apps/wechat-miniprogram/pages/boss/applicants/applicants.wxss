@@ -194,6 +194,9 @@
   font-weight: 800;
   border: none;
   transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .action-btn::after {

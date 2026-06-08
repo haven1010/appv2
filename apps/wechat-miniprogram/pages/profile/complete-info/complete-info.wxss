@@ -86,13 +86,15 @@
 .wechat-phone-btn {
   margin-top: 14rpx;
   height: 72rpx;
-  line-height: 72rpx;
   border-radius: var(--radius-pill);
   background: linear-gradient(135deg, #07c160 0%, #06ad56 100%);
   color: #1a1a2e;
   font-size: 26rpx;
   font-weight: 700;
   border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .wechat-phone-btn::after {
@@ -102,13 +104,15 @@
 .ocr-btn {
   margin-top: 8rpx;
   height: 80rpx;
-  line-height: 80rpx;
   border-radius: var(--radius-md);
   border: 2rpx dashed rgba(102, 126, 234, 0.3);
   background: rgba(102, 126, 234, 0.04);
   color: var(--brand-purple);
   font-size: 28rpx;
   font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .ocr-btn::after {
@@ -129,7 +133,6 @@
 .submit-btn {
   margin-top: 24rpx;
   height: 98rpx;
-  line-height: 98rpx;
   border-radius: var(--radius-pill);
   border: none;
   background: var(--brand-purple);
@@ -138,6 +141,9 @@
   font-weight: 900;
   box-shadow: 0 14rpx 28rpx rgba(102, 126, 234, 0.24);
   transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .submit-btn:active {

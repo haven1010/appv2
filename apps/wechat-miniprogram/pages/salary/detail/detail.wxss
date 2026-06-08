@@ -219,6 +219,9 @@
   font-weight: 700;
   border: none;
   transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .btn-primary {

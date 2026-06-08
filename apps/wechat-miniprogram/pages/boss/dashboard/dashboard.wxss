@@ -103,11 +103,13 @@
   margin: 0;
   min-width: 176rpx;
   height: 68rpx;
-  line-height: 68rpx;
   padding: 0 22rpx;
   background: rgba(102, 126, 234, 0.08);
   color: var(--brand-purple);
   font-size: 24rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .hero-logout-btn:active {
@@ -334,11 +336,13 @@
 .payroll-primary-btn {
   margin-top: 22rpx;
   height: 90rpx;
-  line-height: 90rpx;
   background: var(--brand-purple);
   color: #1a1a2e;
   font-size: 30rpx;
   box-shadow: 0 10rpx 18rpx rgba(102, 126, 234, 0.16);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .submit-btn:active,
@@ -357,11 +361,13 @@
 .action-btn,
 .secondary-action-btn {
   height: 82rpx;
-  line-height: 82rpx;
   padding: 0 24rpx;
   background: rgba(102, 126, 234, 0.08);
   color: var(--brand-purple);
   font-size: 26rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .action-btn:active,

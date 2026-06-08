@@ -1,11 +1,15 @@
-/* === Rights List — Claude Purple === */
+/* === Rights List === */
+
+.page {
+  background: linear-gradient(180deg, #f0f7ff 0%, #e6f0ff 100%) !important;
+}
 
 .page-body {
   padding: 24rpx 28rpx;
 }
 
-/* ── Header ── */
-.header-card {
+/* ─── 头部 ─── */
+.header-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -27,22 +31,50 @@
   line-height: 68rpx;
   font-size: 24rpx;
   font-weight: 800;
-  background: var(--brand-purple);
-  color: #139d7f;
-  box-shadow: 0 6rpx 18rpx rgba(102, 126, 234, 0.25);
+  background: #2563EB;
+  color: #ffffff;
+  box-shadow: 0 6rpx 18rpx rgba(37, 99, 235, 0.25);
   transition: all 0.2s;
 }
 
-.btn-new:active {
-  transform: scale(0.95);
-  opacity: 0.9;
+/* ─── 统计栏 ─── */
+.stats-row {
+  display: flex;
+  gap: 16rpx;
+  margin-bottom: 24rpx;
 }
 
-.btn-new::after {
-  border: none;
+.stat-item {
+  flex: 1;
+  text-align: center;
+  padding: 18rpx 8rpx;
+  border-radius: var(--radius-md);
+  background: #ffffff;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.04);
+  border: 1rpx solid rgba(0, 0, 0, 0.04);
 }
 
-/* ── Loading / Empty ── */
+.stat-num {
+  display: block;
+  font-size: 40rpx;
+  font-weight: 900;
+  line-height: 1.2;
+}
+
+.stat-label {
+  display: block;
+  font-size: 22rpx;
+  color: var(--ink-sub);
+  margin-top: 6rpx;
+  font-weight: 600;
+}
+
+.stat-total .stat-num { color: var(--ink-main); }
+.stat-pending-c .stat-num { color: #f59e0b; }
+.stat-processing-c .stat-num { color: #2563EB; }
+.stat-done .stat-num { color: var(--accent-green); }
+
+/* ─── 加载 / 空状态 ─── */
 .loading-state {
   text-align: center;
   padding: 120rpx 0;
@@ -54,32 +86,54 @@
 }
 
 .empty-state {
+  padding: 60rpx 0;
+}
+
+.empty-card {
+  background: #ffffff;
+  border-radius: var(--radius-lg);
+  padding: 60rpx 40rpx;
   text-align: center;
-  padding: 120rpx 0;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.05);
+  border: 1rpx solid rgba(0, 0, 0, 0.04);
 }
 
 .empty-icon {
   font-size: 80rpx;
-  margin-bottom: 18rpx;
+  display: block;
+  margin-bottom: 20rpx;
 }
 
-.empty-text {
+.empty-title {
+  display: block;
+  font-size: 32rpx;
+  font-weight: 800;
+  color: var(--ink-main);
+  margin-bottom: 16rpx;
+}
+
+.empty-desc {
+  display: block;
   font-size: 26rpx;
-  color: var(--ink-muted);
-  margin-bottom: 24rpx;
+  color: var(--ink-sub);
+  line-height: 1.8;
+  margin-bottom: 32rpx;
+  padding: 0 20rpx;
 }
 
 .btn-consult {
   border: none;
   border-radius: var(--radius-pill);
-  width: 280rpx;
+  width: 300rpx;
   height: 82rpx;
-  line-height: 82rpx;
   font-size: 28rpx;
   font-weight: 800;
-  background: var(--brand-purple);
-  color: #1a1a2e;
-  box-shadow: 0 8rpx 24rpx rgba(102, 126, 234, 0.25);
+  background: #2563EB;
+  color: #ffffff;
+  box-shadow: 0 8rpx 24rpx rgba(37, 99, 235, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .btn-consult:active {
@@ -91,7 +145,52 @@
   border: none;
 }
 
-/* ── Consultation List ── */
+/* ─── 快速发起 ─── */
+.quick-consult {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  padding: 24rpx 28rpx;
+  margin-bottom: 20rpx;
+  background: #ffffff;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.05);
+  border: 1rpx dashed rgba(37, 99, 235, 0.25);
+}
+
+.quick-consult:active {
+  transform: scale(0.98);
+  opacity: 0.85;
+}
+
+.quick-icon {
+  width: 52rpx;
+  height: 52rpx;
+  border-radius: 16rpx;
+  background: rgba(37, 99, 235, 0.1);
+  color: #2563EB;
+  font-size: 32rpx;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.quick-text {
+  flex: 1;
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #2563EB;
+}
+
+.quick-arrow {
+  font-size: 32rpx;
+  color: var(--ink-muted);
+  font-weight: 700;
+}
+
+/* ─── 咨询列表 ─── */
 .consultation-list {
   display: flex;
   flex-direction: column;
@@ -99,11 +198,11 @@
 }
 
 .consultation-card {
-  background: var(--card-bg);
+  background: #ffffff;
   border-radius: var(--radius-lg);
-  padding: 28rpx;
-  border: var(--border-soft);
-  box-shadow: var(--shadow-md);
+  padding: 24rpx 24rpx 20rpx;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.05);
+  border: 1rpx solid rgba(0, 0, 0, 0.04);
   animation: pageFadeIn 0.35s ease both;
   transition: transform 0.2s, box-shadow 0.2s;
 }
@@ -113,12 +212,36 @@
   box-shadow: var(--shadow-sm);
 }
 
-.card-header {
+.card-top {
+  display: flex;
+  gap: 16rpx;
+}
+
+.card-type-icon {
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: 16rpx;
+  background: rgba(37, 99, 235, 0.08);
+  color: #2563EB;
+  font-size: 28rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-weight: 800;
+}
+
+.card-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.card-header-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 14rpx;
-  margin-bottom: 14rpx;
+  margin-bottom: 8rpx;
 }
 
 .issue-type {
@@ -128,20 +251,21 @@
 }
 
 .status-badge {
-  padding: 6rpx 18rpx;
+  padding: 4rpx 16rpx;
   border-radius: var(--radius-pill);
   font-size: 22rpx;
   font-weight: 700;
+  flex-shrink: 0;
 }
 
 .status-pending {
-  background: rgba(102, 126, 234, 0.1);
-  color: var(--brand-purple);
+  background: rgba(245, 158, 11, 0.12);
+  color: #b8860b;
 }
 
 .status-processing {
-  background: rgba(102, 126, 234, 0.08);
-  color: var(--brand-purple);
+  background: rgba(37, 99, 235, 0.1);
+  color: #2563EB;
 }
 
 .status-completed {
@@ -153,8 +277,7 @@
   display: block;
   font-size: 26rpx;
   color: var(--ink-sub);
-  line-height: 1.8;
-  margin-bottom: 14rpx;
+  line-height: 1.7;
   overflow: hidden;
   text-overflow: ellipsis;
   display: -webkit-box;
@@ -162,13 +285,27 @@
   -webkit-box-orient: vertical;
 }
 
-.created-time {
-  display: block;
+.card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 16rpx;
+  padding-top: 16rpx;
+  border-top: 1rpx solid rgba(0, 0, 0, 0.04);
+}
+
+.card-time {
   font-size: 22rpx;
   color: var(--ink-muted);
 }
 
-/* ── Bottom ── */
+.card-arrow {
+  font-size: 32rpx;
+  color: var(--ink-muted);
+  font-weight: 700;
+}
+
+/* ─── 底部 ─── */
 .page-bottom-gap {
   height: 56rpx;
 }

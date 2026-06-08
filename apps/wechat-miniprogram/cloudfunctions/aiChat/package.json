@@ -1,7 +1,7 @@
 {
   "name": "aiChat",
   "version": "1.0.0",
-  "description": "小玉AI对话云函数",
+  "description": "小玉AI对话云函数 — 带 RAG 知识库",
   "main": "index.js",
   "dependencies": {
     "wx-server-sdk": "latest"

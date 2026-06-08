@@ -159,7 +159,6 @@
 
 .hero-action-btn {
   height: 76rpx;
-  line-height: 76rpx;
   padding: 0 34rpx;
   border-radius: var(--radius-pill);
   background: #ffffff;
@@ -170,6 +169,9 @@
   transition: all 0.2s;
   position: relative;
   z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .hero-action-btn:active {

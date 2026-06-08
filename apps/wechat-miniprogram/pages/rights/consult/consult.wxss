@@ -1,4 +1,8 @@
-/* === Rights Consult — Claude Purple === */
+/* === Rights Consult === */
+
+.page {
+  background: linear-gradient(180deg, #f0f7ff 0%, #e6f0ff 100%) !important;
+}
 
 .page-body {
   padding: 24rpx 28rpx;
@@ -8,10 +12,10 @@
 .header-card {
   padding: 40rpx 32rpx;
   margin-bottom: 24rpx;
-  background: var(--brand-gradient);
+  background: linear-gradient(135deg, #4DA6FF 0%, #2563EB 100%);
   border-radius: var(--radius-lg);
   text-align: center;
-  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.06);
+  box-shadow: 0 16rpx 40rpx rgba(37, 99, 235, 0.25);
   position: relative;
   overflow: hidden;
 }
@@ -48,7 +52,7 @@
 .header-subtitle {
   display: block;
   font-size: 24rpx;
-  color: #8a94a6;
+  color: #d8e8ff;
   position: relative;
   z-index: 1;
 }
@@ -93,7 +97,7 @@
 }
 
 .picker-box:active {
-  border-color: var(--brand-purple);
+  border-color: #2563EB;
 }
 
 .picker-text {
@@ -126,9 +130,9 @@
 }
 
 .form-textarea:focus {
-  border-color: var(--brand-purple);
+  border-color: #2563EB;
   background: #ffffff;
-  box-shadow: 0 0 0 6rpx rgba(102, 126, 234, 0.1);
+  box-shadow: 0 0 0 6rpx rgba(37, 99, 235, 0.1);
 }
 
 .form-input {
@@ -145,9 +149,9 @@
 }
 
 .form-input:focus {
-  border-color: var(--brand-purple);
+  border-color: #2563EB;
   background: #ffffff;
-  box-shadow: 0 0 0 6rpx rgba(102, 126, 234, 0.1);
+  box-shadow: 0 0 0 6rpx rgba(37, 99, 235, 0.1);
 }
 
 .char-count {
@@ -262,14 +266,16 @@
 .btn-primary {
   width: 100%;
   height: 88rpx;
-  line-height: 88rpx;
-  background: var(--brand-purple);
-  color: #1a1a2e;
+  background: #2563EB;
+  color: #ffffff;
   border-radius: var(--radius-pill);
   font-size: 30rpx;
-  font-weight: 800;
+  font-weight: 900;
   border: none;
-  box-shadow: 0 8rpx 24rpx rgba(102, 126, 234, 0.3);
+  box-shadow: 0 8rpx 24rpx rgba(37, 99, 235, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .btn-primary:active {
@@ -290,13 +296,15 @@
 .btn-ghost {
   width: 100%;
   height: 88rpx;
-  line-height: 88rpx;
   background: var(--card-bg);
-  color: var(--brand-purple);
+  color: #2563EB;
   border-radius: var(--radius-pill);
   font-size: 30rpx;
   font-weight: 800;
-  border: 2rpx solid rgba(102, 126, 234, 0.12);
+  border: 2rpx solid rgba(37, 99, 235, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .btn-ghost:active {

@@ -31,13 +31,16 @@ Page({
     this.loadPolicies();
   },
 
+  catMap: { 1: '就业补贴', 2: '培训补贴', 3: '创业扶持', 4: '社保政策' },
+
   onCategoryTap(e) {
     const categoryId = Number(e.currentTarget.dataset.id);
     this.setData({ activeCategory: categoryId });
-    this.loadPolicies();
+    this.loadPolicies(categoryId);
   },
 
-  async loadPolicies() {
+  async loadPolicies(categoryId) {
+    const catId = categoryId ?? this.data.activeCategory;
     this.setData({ loading: true });
     try {
       const res = await app.request({
@@ -45,11 +48,13 @@ Page({
         method: 'GET',
         data: {
           keyword: this.data.searchKeyword || undefined,
-          category: this.data.activeCategory || undefined,
+          category: catId || undefined,
         },
       });
 
-      const policies = (Array.isArray(res) ? res : res.list || []).map((item, index) => ({
+      const policies = (Array.isArray(res) ? res : res.list || [])
+        .filter(item => catId === 0 || item.category === this.catMap[catId])
+        .map((item, index) => ({
         id: item.id,
         title: item.title || '政策标题',
         category: item.category || '就业政策',
@@ -63,16 +68,21 @@ Page({
       console.error('加载政策失败:', err);
 
       // Mock数据
-      const mockPolicies = [
+      const mockAll = [
         { id: 1, title: '就业困难人员社保补贴政策', category: '就业补贴', publishDate: '2026-04-01', summary: '对符合条件的就业困难人员给予社会保险补贴，补贴标准为实际缴纳社会保险费的60%' },
         { id: 2, title: '职业技能培训补贴实施办法', category: '培训补贴', publishDate: '2026-03-15', summary: '参加职业技能培训并取得证书的劳动者，可申请培训补贴，最高可达2000元' },
         { id: 3, title: '创业担保贷款及贴息政策', category: '创业扶持', publishDate: '2026-02-20', summary: '符合条件的创业人员可申请最高20万元的创业担保贷款，并享受贴息支持' },
-      ].map((item, index) => ({
+      ];
+      const filtered = catId === 0
+        ? mockAll
+        : mockAll.filter(c => c.category === this.catMap[catId]);
+
+      const policies = filtered.map((item, index) => ({
         ...item,
         delay: `${index * 80}ms`,
       }));
 
-      this.setData({ policies: mockPolicies, loading: false });
+      this.setData({ policies, loading: false });
     }
   },
 

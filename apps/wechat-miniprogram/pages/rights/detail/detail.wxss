@@ -1,4 +1,8 @@
-/* === Rights Detail — Claude Purple === */
+/* === Rights Detail === */
+
+.page {
+  background: linear-gradient(180deg, #f0f7ff 0%, #e6f0ff 100%) !important;
+}
 
 .page-body {
   padding: 24rpx 28rpx;
@@ -50,13 +54,13 @@
 }
 
 .status-pending {
-  background: rgba(102, 126, 234, 0.1);
-  color: var(--brand-purple);
+  background: rgba(37, 99, 235, 0.1);
+  color: #2563EB;
 }
 
 .status-processing {
-  background: rgba(102, 126, 234, 0.08);
-  color: var(--brand-purple);
+  background: rgba(37, 99, 235, 0.08);
+  color: #2563EB;
 }
 
 .status-completed {
