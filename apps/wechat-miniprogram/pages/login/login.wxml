@@ -1,18 +1,14 @@
 <view class="login-page {{pageLeaving ? 'page-leave' : 'page-enter'}}">
-  <!-- 背景装饰 -->
-  <view class="bg-circle bg-circle-top"></view>
-  <view class="bg-circle bg-circle-bottom"></view>
-
   <view class="login-shell">
     <!-- ====== 欢迎视图（默认展示） ====== -->
     <block wx:if="{{!showPasswordLogin}}">
       <!-- 品牌头部 -->
       <view class="welcome-section">
         <view class="brand-logo-wrapper">
-          <image class="brand-logo" src="/images/zhihui-logo.jpg" mode="aspectFit" />
+          <image class="brand-logo" src="/images/zhihui-logo.webp" mode="aspectFit" />
         </view>
-        <text class="brand-name">智汇就业</text>
-        <text class="brand-desc">苏陕协作就业服务与劳务对接平台</text>
+        <text class="brand-name">智绘就业</text>
+        <text class="brand-desc">乡村振兴就业服务平台</text>
       </view>
 
       <!-- 微信一键登录 -->
@@ -55,7 +51,7 @@
             <view class="role-icon {{loginRole === 'worker' ? 'active' : ''}}">
               <text>工</text>
             </view>
-            <text class="role-label">我是员工</text>
+            <text class="role-label">我是工人</text>
           </view>
           <view class="role-pill {{loginRole === 'boss' ? 'active' : ''}}" data-role="boss" bindtap="onSwitchRole">
             <view class="role-icon {{loginRole === 'boss' ? 'active' : ''}}">
@@ -116,13 +112,13 @@
             loading="{{loading}}"
             disabled="{{loading || !canSubmit}}"
           >
-            {{loading ? '登录中...' : '进入智汇就业'}}
+            {{loading ? '登录中...' : '进入智绘就业'}}
           </button>
 
           <view class="entry-row">
             <view class="entry-link" bindtap="goToRegister">
-              <text class="entry-link-title">{{loginRole === 'boss' ? '老板注册' : '工人注册'}}</text>
-              <text class="entry-link-desc">首次使用先登记信息</text>
+              <text class="entry-link-title">新用户注册</text>
+              <text class="entry-link-desc">手机号验证码一键注册</text>
             </view>
             <view class="entry-link" bindtap="goToProxyRegister" wx:if="{{loginRole === 'worker'}}">
               <text class="entry-link-title">家人代注册</text>

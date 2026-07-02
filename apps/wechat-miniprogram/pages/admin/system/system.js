@@ -3,6 +3,7 @@
  * Responsibility: Lets super admins review payroll reports that the system auto-generates after settlement.
  */
 const app = getApp();
+const { requireAuth } = require('../../../utils/auth-guard');
 const { resolveRole, isSuperAdminRole, roleLabel } = require('../../../utils/role');
 
 function todayString() {
@@ -87,6 +88,7 @@ Page({
   },
 
   onLoad() {
+    if (!requireAuth()) return;
     if (!this.ensureSuperAdmin()) return;
     this.initPage();
   },

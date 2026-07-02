@@ -3,6 +3,7 @@
  * Responsibility: Admin profile page for personal info and logout.
  */
 const app = getApp();
+const { requireAuth } = require('../../../utils/auth-guard');
 const { resolveRole, isAdminRole, roleLabel } = require('../../../utils/role');
 
 function maskPhone(phone) {
@@ -69,6 +70,7 @@ Page({
   },
 
   onLoad() {
+    if (!requireAuth()) return;
     if (!this.ensureAdmin()) return;
     this.loadAll();
   },

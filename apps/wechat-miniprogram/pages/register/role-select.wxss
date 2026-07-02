@@ -1,0 +1,225 @@
+/* pages/register/role-select.wxss — 角色选择 */
+page {
+  --page-bg: #F0F9FF;
+  --primary: #0369A1;
+  --primary-light: #E0F2FE;
+  --primary-dark: #075985;
+  --cta: #16A34A;
+  --cta-light: #DCFCE7;
+  --ink-main: #0C4A6E;
+  --ink-sub: #64748B;
+  --ink-light: #94A3B8;
+  --card-bg: #FFFFFF;
+  background: var(--page-bg);
+}
+
+.role-page {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: var(--page-bg);
+  overflow: hidden;
+}
+
+.bg-blob {
+  position: fixed;
+  width: 600rpx;
+  height: 600rpx;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+}
+.bg-blob-top {
+  top: -200rpx;
+  right: -150rpx;
+  background: radial-gradient(circle, rgba(3,105,161,0.08) 0%, transparent 70%);
+}
+.bg-blob-bottom {
+  bottom: -300rpx;
+  left: -200rpx;
+  background: radial-gradient(circle, rgba(22,163,74,0.06) 0%, transparent 70%);
+}
+
+.role-shell {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 650rpx;
+  padding: 80rpx 32rpx 60rpx;
+  opacity: 0;
+  transform: translateY(40rpx);
+  transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.role-shell.anim-in {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ─── Header ─── */
+
+.role-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 48rpx;
+}
+
+.header-icon {
+  width: 80rpx;
+  height: 80rpx;
+  display: block;
+  margin: 0 auto 16rpx;
+}
+
+.header-title {
+  font-size: 44rpx;
+  font-weight: 900;
+  color: var(--ink-main);
+  text-align: center;
+}
+
+.header-desc {
+  font-size: 28rpx;
+  color: var(--ink-sub);
+  text-align: center;
+  margin-top: 12rpx;
+  line-height: 1.5;
+}
+
+/* ─── Role Cards ─── */
+
+.role-cards {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+  margin-bottom: 48rpx;
+}
+
+.role-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40rpx 32rpx;
+  background: var(--card-bg);
+  border-radius: 24rpx;
+  border: 3rpx solid rgba(3, 105, 161, 0.08);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+.role-card:active {
+  transform: scale(0.98);
+}
+
+.role-card.selected {
+  border-color: var(--primary);
+  background: linear-gradient(135deg, #F0F9FF 0%, #E0F2FE 100%);
+  box-shadow: 0 8rpx 32rpx rgba(3, 105, 161, 0.15);
+}
+
+.role-card-badge {
+  position: absolute;
+  top: 16rpx;
+  right: 16rpx;
+  padding: 6rpx 16rpx;
+  border-radius: 999rpx;
+  background: var(--primary);
+  color: #fff;
+  font-size: 22rpx;
+  font-weight: 800;
+}
+
+.role-card-icon-wrap {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16rpx;
+}
+
+.worker-icon {
+  background: var(--primary-light);
+}
+.boss-icon {
+  background: var(--cta-light);
+}
+
+.role-card-icon {
+  width: 60rpx;
+  height: 60rpx;
+  display: block;
+}
+
+.role-card-title {
+  font-size: 38rpx;
+  font-weight: 900;
+  color: var(--ink-main);
+  margin-bottom: 8rpx;
+}
+
+.role-card-desc {
+  font-size: 26rpx;
+  color: var(--ink-sub);
+  margin-bottom: 20rpx;
+}
+
+.role-features {
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+  align-items: center;
+}
+
+.role-feat {
+  font-size: 24rpx;
+  color: var(--ink-light);
+  display: flex;
+  align-items: center;
+  gap: 6rpx;
+}
+
+.feat-check {
+  width: 24rpx;
+  height: 24rpx;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+/* ─── Button ─── */
+
+.btn-confirm {
+  width: 100%;
+  height: 110rpx;
+  border-radius: 999rpx;
+  font-size: 36rpx;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  transition: all 0.3s;
+  line-height: 1;
+}
+
+.btn-active {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  color: #fff;
+  box-shadow: 0 6rpx 24rpx rgba(3, 105, 161, 0.3);
+}
+.btn-active:active {
+  transform: scale(0.97);
+  opacity: 0.9;
+}
+
+.btn-disabled {
+  background: rgba(3, 105, 161, 0.12);
+  color: rgba(3, 105, 161, 0.4);
+}

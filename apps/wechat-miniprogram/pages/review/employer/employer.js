@@ -1,4 +1,5 @@
 const app = getApp();
+const { requireAuth } = require('../../../utils/auth-guard');
 
 Page({
   data: {
@@ -9,13 +10,14 @@ Page({
     comment: '',
     submitting: false,
     categories: [
-      { key: 'environment', label: '工作环境', rating: 0 },
-      { key: 'management', label: '管理态度', rating: 0 },
-      { key: 'payment', label: '工资准时', rating: 0 },
+      { key: 'environment', label: '工作环境', desc: '现场条件、休息安排、工具情况', rating: 0 },
+      { key: 'management', label: '管理态度', desc: '沟通是否清楚，安排是否合理', rating: 0 },
+      { key: 'payment', label: '工资准时', desc: '工资说明和结算是否清晰', rating: 0 },
     ],
   },
 
   onLoad(options) {
+    if (!requireAuth()) return;
     const applicationId = Number(options.applicationId || 0);
     const baseName = options.baseName || '';
     const jobTitle = options.jobTitle || '';

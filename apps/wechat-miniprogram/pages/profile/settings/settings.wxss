@@ -1,102 +1,99 @@
-/* pages/profile/settings/settings.wxss — Claude Purple Theme */
+/* pages/profile/settings/settings.wxss — iOS-style settings */
+page {
+  background: #f5f5f7 !important;
+  color: #111111;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+}
+
 .page {
   min-height: 100vh;
-  padding: 24rpx;
+  padding: 28rpx 28rpx calc(188rpx + env(safe-area-inset-bottom));
   box-sizing: border-box;
-  background: var(--page-bg);
+  background: #f5f5f7;
 }
 
-.card {
-  background: var(--card-bg);
-  border: var(--border-soft);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-md);
+.settings-hero {
+  padding: 30rpx 4rpx 18rpx;
 }
 
-.brand-head {
-  padding: 24rpx;
-  margin-bottom: 20rpx;
+.hero-title {
+  display: block;
+  color: #111111;
+  font-size: 46rpx;
+  line-height: 1.1;
+  font-weight: 900;
 }
 
-.brand-row {
-  display: flex;
-  align-items: center;
-  gap: 12rpx;
-}
-
-.brand-logo {
-  width: 62rpx;
-  height: 62rpx;
-  border-radius: 14rpx;
-  border: 1rpx solid rgba(102, 126, 234, 0.2);
-}
-
-.brand-title {
-  font-size: 34rpx;
-  font-weight: 800;
-  color: var(--ink-main);
-}
-
-.brand-sub {
-  margin-top: 4rpx;
-  font-size: 22rpx;
-  color: var(--ink-sub);
+.hero-subtitle {
+  display: block;
+  margin-top: 12rpx;
+  color: #8e8e93;
+  font-size: 26rpx;
+  line-height: 1.35;
+  font-weight: 700;
 }
 
 .group-title {
-  margin: 18rpx 0 12rpx;
-  font-size: 28rpx;
-  color: var(--ink-main);
-  font-weight: 800;
+  margin: 30rpx 10rpx 14rpx;
+  color: #8e8e93;
+  font-size: 24rpx;
+  line-height: 1.2;
+  font-weight: 900;
 }
 
-.setting-list,
-.action-list {
+.setting-list {
   overflow: hidden;
+  border-radius: 30rpx;
+  background: rgba(255, 255, 255, 0.94);
+  border: 1rpx solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 14rpx 34rpx rgba(15, 23, 42, 0.05);
 }
 
 .setting-item {
+  min-height: 116rpx;
+  padding: 26rpx 28rpx;
+  box-sizing: border-box;
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  gap: 14rpx;
-  padding: 22rpx;
-  border-bottom: 1rpx solid rgba(102, 126, 234, 0.06);
+  justify-content: space-between;
+  gap: 18rpx;
+  border-bottom: 1rpx solid rgba(0, 0, 0, 0.06);
 }
 
 .setting-item:last-child {
   border-bottom: none;
 }
 
+.setting-item:active {
+  background: #f7f7f8;
+}
+
 .item-title {
-  font-size: 28rpx;
-  color: var(--ink-main);
-  font-weight: 700;
+  color: #111111;
+  font-size: 31rpx;
+  line-height: 1.22;
+  font-weight: 900;
 }
 
 .item-desc {
-  margin-top: 6rpx;
-  font-size: 22rpx;
-  color: var(--ink-sub);
-}
-
-.setting-item.plain {
-  background: transparent;
+  margin-top: 8rpx;
+  color: #8e8e93;
+  font-size: 24rpx;
+  line-height: 1.35;
+  font-weight: 700;
 }
 
 .mini-btn {
-  min-width: 104rpx;
+  min-width: 108rpx;
   height: 60rpx;
-  border-radius: var(--radius-pill);
-  font-size: 24rpx;
-  font-weight: 700;
-  color: #1a1a2e;
-  background: var(--brand-purple);
+  padding: 0 22rpx;
   border: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 20rpx;
+  border-radius: 999rpx;
+  background: #f2f2f4;
+  color: #111111;
+  font-size: 25rpx;
+  line-height: 60rpx;
+  font-weight: 900;
 }
 
 .mini-btn::after {
@@ -104,10 +101,17 @@
 }
 
 .arrow {
-  font-size: 28rpx;
-  color: var(--ink-muted);
+  color: #c7c7cc;
+  font-size: 42rpx;
+  line-height: 1;
+  font-weight: 700;
+}
+
+.danger-title,
+.danger-arrow {
+  color: #ff3b30;
 }
 
 switch {
-  --switch-color: var(--brand-purple);
+  transform: scale(0.82);
 }

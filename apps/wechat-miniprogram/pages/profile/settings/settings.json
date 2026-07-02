@@ -1,4 +1,6 @@
 {
-  "navigationBarTitleText": "璁剧疆",
+  "navigationBarTitleText": "账号设置",
+  "navigationBarBackgroundColor": "#F5F5F7",
+  "navigationBarTextStyle": "black",
   "usingComponents": {}
 }

@@ -1,4 +1,5 @@
 const app = getApp();
+const { requireAuth } = require('../../../utils/auth-guard');
 
 Page({
   data: {
@@ -8,6 +9,7 @@ Page({
   },
 
   onLoad(options) {
+    if (!requireAuth()) return;
     const policyId = Number(options.id || 0);
     if (!policyId) {
       wx.showToast({ title: '参数错误', icon: 'none' });

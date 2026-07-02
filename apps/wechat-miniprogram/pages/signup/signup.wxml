@@ -1,44 +1,49 @@
-<view class="page page-enter">
+<view class="page signup-page">
   <view class="page-body">
+    <view class="signup-hero">
+      <image class="signup-hero-img" src="/images/home-action-bg-2.png" mode="aspectFill"></image>
+      <view class="signup-hero-mask"></view>
+      <view class="signup-hero-copy">
+        <text class="hero-kicker">报名确认</text>
+        <text class="hero-title">确认信息后提交</text>
+        <text class="hero-desc">工作人员会根据报名记录安排上工</text>
+      </view>
+    </view>
 
-    <view class="header-card">
-      <text class="header-title">填写报名信息</text>
-      <text class="header-desc">请确认报名信息无误后提交</text>
-
-      <view class="hero-stats">
-        <view class="hero-stat">
-          <text class="hero-stat-value">{{baseName}}</text>
-          <text class="hero-stat-label">报名基地</text>
-        </view>
-        <view class="hero-stat">
-          <text class="hero-stat-value">{{jobTitle}}</text>
-          <text class="hero-stat-label">报名岗位</text>
-        </view>
+    <view class="summary-card">
+      <view class="summary-row">
+        <text class="summary-label">报名基地</text>
+        <text class="summary-value">{{baseName || '基地待确认'}}</text>
+      </view>
+      <view class="summary-row">
+        <text class="summary-label">报名岗位</text>
+        <text class="summary-value">{{jobTitle || '岗位待确认'}}</text>
       </view>
     </view>
 
     <view class="form-card">
-      <text class="form-card-title">个人信息</text>
-
-      <view class="form-field">
-        <text class="field-label">姓名</text>
-        <view class="input-wrapper">
-          <input class="input-field" value="{{name}}" bindinput="onInputName" placeholder="请输入您的姓名" placeholder-class="placeholder" />
-        </view>
+      <view class="section-head">
+        <text class="section-title">实名信息</text>
+        <text class="section-desc">用于报名核验，不会公开展示</text>
       </view>
 
-      <view class="form-field">
-        <text class="field-label">联系电话</text>
-        <view class="input-wrapper">
-          <input class="input-field" type="number" value="{{phone}}" bindinput="onInputPhone" placeholder="请输入联系电话" placeholder-class="placeholder" />
-        </view>
+      <view class="profile-line">
+        <text class="profile-label">姓名</text>
+        <text class="profile-value">{{name || '未完善'}}</text>
       </view>
+      <view class="profile-line">
+        <text class="profile-label">联系电话</text>
+        <text class="profile-value">{{phone || '未完善'}}</text>
+      </view>
+      <view class="profile-line">
+        <text class="profile-label">身份证</text>
+        <text class="profile-value">{{maskedIdCard || '未完善'}}</text>
+      </view>
+    </view>
 
-      <view class="form-field">
-        <text class="field-label">身份证号</text>
-        <view class="input-wrapper">
-          <input class="input-field" type="idcard" value="{{idCard}}" bindinput="onInputIdCard" placeholder="请输入身份证号" placeholder-class="placeholder" />
-        </view>
+    <view class="form-card">
+      <view class="section-head">
+        <text class="section-title">上工安排</text>
       </view>
 
       <view class="form-field">
@@ -52,18 +57,14 @@
 
       <view class="form-field">
         <text class="field-label">备注</text>
-        <textarea class="textarea-field" value="{{note}}" bindinput="onInputNote" placeholder="如有特殊需求或说明请在此填写" placeholder-class="placeholder" />
+        <textarea class="textarea-field" value="{{note}}" bindinput="onInputNote" placeholder="可填写到岗时间、身体情况等" placeholder-class="placeholder" />
       </view>
     </view>
 
-    <view class="form-card">
-      <text class="form-card-title">报名确认</text>
-      <text class="form-hint">提交报名即表示您已阅读并同意相关服务条款。工作人员将在审核后与您联系确认。</text>
-
-      <view class="submit-area">
-        <button class="submit-btn" bindtap="onSubmit" loading="{{submitting}}" disabled="{{submitting}}">{{submitting ? '提交中...' : '提交报名信息'}}</button>
-      </view>
+    <view class="confirm-card">
+      <text class="confirm-title">提交后可在“我的报名”查看进度</text>
+      <text class="confirm-desc">如需取消，可进入报名记录处理。</text>
+      <button class="submit-btn" bindtap="onSubmit" loading="{{submitting}}" disabled="{{submitting}}">{{submitting ? '提交中...' : '提交报名'}}</button>
     </view>
-
   </view>
 </view>

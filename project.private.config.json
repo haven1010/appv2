@@ -1,5 +1,6 @@
 {
   "libVersion": "3.16.1",
+  "miniprogramRoot": "apps/wechat-miniprogram/",
   "projectname": "appv2",
   "setting": {
     "urlCheck": true,

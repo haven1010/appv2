@@ -13,6 +13,24 @@ export class SmsService {
   constructor(private configService: ConfigService) {}
 
   /**
+   * 发送短信验证码（注册/登录用）
+   */
+  async sendCode(phone: string, code: string): Promise<boolean> {
+    try {
+      this.logger.log(`[短信验证码] 发送到 ${phone}: ${code}`);
+      // TODO: 集成真实的短信验证码服务
+      // const smsEnabled = this.configService.get<string>('SMS_ENABLED') === 'true';
+      // if (smsEnabled) {
+      //   await tencentSmsClient.SendSms({ PhoneNumberSet: [phone], TemplateParamSet: [code] });
+      // }
+      return true;
+    } catch (error) {
+      this.logger.error(`[短信验证码] 发送失败: ${error.message}`);
+      return false;
+    }
+  }
+
+  /**
    * 发送报名确认短信
    * @param phone 手机号
    * @param qrCodeUrl 二维码链接

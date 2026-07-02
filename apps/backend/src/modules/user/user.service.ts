@@ -645,6 +645,40 @@ export class UserService {
     return this.userRepository.save(user);
   }
 
+  /**
+   * 通过手机号创建最小账号（用于短信验证码注册）。
+   * 用户仅有手机号，无姓名/身份证等实名信息。
+   */
+  async createFromPhone(phone: string): Promise<SysUser> {
+    const phoneHash = this.securityService.hash(phone);
+
+    // Double-check phone uniqueness
+    const existing = await this.userRepository.findOne({ where: { phoneHash, isDeleted: false } });
+    if (existing) {
+      throw new ConflictException('手机号已被注册');
+    }
+
+    const uid = 'P' + Date.now().toString(36).toUpperCase() + crypto.randomBytes(2).toString('hex').toUpperCase();
+    const user = this.userRepository.create({
+      uid,
+      name: '',
+      roleKey: UserRole.WORKER,
+      idCard: '',
+      idCardHash: '',
+      phone,
+      phoneHash,
+      registerMode: RegisterMode.SELF,
+      accountOwnerVerified: false,
+      loginLockReason: null,
+    });
+
+    try {
+      return await this.userRepository.save(user);
+    } catch (error) {
+      this.rethrowDuplicateKey(error);
+    }
+  }
+
   async requestBankCardChangeChallenge(userId: number, bankCardNo: string) {
     const user = await this.userRepository.findOne({
       where: {

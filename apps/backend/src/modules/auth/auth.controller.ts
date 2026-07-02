@@ -7,6 +7,8 @@ import { Controller, Post, Body, UnauthorizedException, Req } from '@nestjs/comm
 import { AuthService } from './auth.service';
 import { ApiTags, ApiOperation, ApiOkResponse, ApiProperty } from '@nestjs/swagger'; // 🔥 引入 ApiOkResponse, ApiProperty
 import { LoginDto } from './dto/login.dto';
+import { SendCodeDto } from './dto/send-code.dto';
+import { RegisterByPhoneDto } from './dto/register-by-phone.dto';
 import { SysUser } from '../user/entities/sys-user.entity';
 
 // 🔥 定义返回数据的结构类
@@ -78,5 +80,17 @@ export class AuthController {
       },
       registerStage: result.registerStage,
     };
+  }
+
+  @Post('register-by-phone')
+  @ApiOperation({ summary: '手机号+验证码一键注册', description: '验证码通过 send-code 获取。新用户创建最小账号，老用户直接登录。' })
+  async registerByPhone(@Body() dto: RegisterByPhoneDto, @Req() req) {
+    return this.authService.registerByPhone(dto.phone, dto.code, req);
+  }
+
+  @Post('send-code')
+  @ApiOperation({ summary: '发送短信验证码' })
+  async sendCode(@Body() dto: SendCodeDto) {
+    return this.authService.sendCode(dto.phone);
   }
 }

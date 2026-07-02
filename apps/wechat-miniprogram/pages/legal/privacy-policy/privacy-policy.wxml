@@ -1,0 +1,58 @@
+<view class="legal-page">
+  <view class="legal-header">
+    <text class="legal-title">智绘就业隐私政策</text>
+    <text class="legal-date">生效日期：2026年6月21日</text>
+  </view>
+
+  <view class="legal-card">
+    <view class="section">
+      <text class="section-title">一、我们如何收集信息</text>
+      <text class="paragraph">为向您提供注册登录、岗位报名、实名认证、签到考勤、工资确认、银行卡管理和客服处理等功能，我们可能收集您的手机号、微信 OpenID、姓名、身份证件信息、联系地址、角色身份、报名记录、签到记录、工资记录、银行卡信息以及必要的设备和日志信息。</text>
+    </view>
+
+    <view class="section">
+      <text class="section-title">二、信息使用目的</text>
+      <text class="paragraph">我们会将上述信息用于账号识别、身份核验、岗位匹配、用工管理、考勤统计、工资发放、异常申诉处理、服务通知、安全风控和法律法规要求的用途。我们不会将您的个人信息用于与本服务无关的用途。</text>
+    </view>
+
+    <view class="section">
+      <text class="section-title">三、敏感个人信息提示</text>
+      <text class="paragraph">身份证件信息、银行卡信息、精确位置信息、工资收入信息等属于敏感个人信息。我们仅在实现实名认证、工资发放、考勤管理、权益保障等必要场景中处理，并会在相关页面向您说明或请求授权。</text>
+    </view>
+
+    <view class="section">
+      <text class="section-title">四、授权与拒绝</text>
+      <text class="paragraph">您可以拒绝提供非必要信息或关闭部分授权，但可能导致对应功能无法使用。例如，未完成实名认证可能无法报名部分岗位，未提供银行卡信息可能无法使用工资打款相关功能。</text>
+    </view>
+
+    <view class="section">
+      <text class="section-title">五、共享、委托处理和第三方服务</text>
+      <text class="paragraph">我们不会出售您的个人信息。为实现必要功能，我们可能在最小必要范围内向用工方、平台管理人员、云服务商、短信服务商、身份核验服务商或支付结算服务商提供相关信息。我们会要求合作方按照法律法规和本政策保护您的信息。</text>
+    </view>
+
+    <view class="section">
+      <text class="section-title">六、信息存储与保护</text>
+      <text class="paragraph">我们会在实现服务目的所需期限内保存您的个人信息，并采取访问控制、加密存储、权限分级、日志审计等措施保护数据安全。超过必要期限后，我们将依法删除或匿名化处理。</text>
+    </view>
+
+    <view class="section">
+      <text class="section-title">七、您的权利</text>
+      <text class="paragraph">您有权查询、更正、补充、删除您的个人信息，也可以撤回授权、注销账号或要求解释个人信息处理规则。您可通过小程序内“账号设置”、客服入口或平台公示联系方式提交申请。</text>
+    </view>
+
+    <view class="section">
+      <text class="section-title">八、未成年人保护</text>
+      <text class="paragraph">本服务主要面向具备劳动能力的成年人。如未成年人使用本服务，应在监护人同意和指导下进行。我们不会主动面向未成年人提供不适宜的用工服务。</text>
+    </view>
+
+    <view class="section">
+      <text class="section-title">九、政策更新</text>
+      <text class="paragraph">我们可能根据法律法规、平台规则或业务变化更新本政策。重大变更将通过小程序页面提示、公告或其他合理方式通知您。</text>
+    </view>
+
+    <view class="section last">
+      <text class="section-title">十、联系我们</text>
+      <text class="paragraph">如果您对个人信息保护有疑问、投诉或权利请求，可通过小程序内“账号设置”、客服入口或平台公示的联系方式与我们联系。</text>
+    </view>
+  </view>
+</view>

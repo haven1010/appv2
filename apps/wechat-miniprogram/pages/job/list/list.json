@@ -1,6 +1,6 @@
 {
   "navigationBarTitleText": "岗位广场",
-  "navigationBarBackgroundColor": "#F6F9FF",
+  "navigationBarBackgroundColor": "#F3F8F1",
   "navigationBarTextStyle": "black",
   "enablePullDownRefresh": true,
   "usingComponents": {}

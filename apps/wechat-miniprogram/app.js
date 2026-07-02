@@ -15,6 +15,8 @@ const PHASE1_CLOUD_FUNCTION = 'phase1Api';
 const PHASE1_ROUTE_PATTERNS = [
   { method: 'POST', pattern: /^\/auth\/login$/ },
   { method: 'POST', pattern: /^\/auth\/wechat-login$/ },
+  { method: 'POST', pattern: /^\/auth\/send-code$/ },
+  { method: 'POST', pattern: /^\/auth\/register-by-phone$/ },
   { method: 'POST', pattern: /^\/user\/register$/ },
   { method: 'POST', pattern: /^\/user\/register\/boss$/ },
 
@@ -84,6 +86,35 @@ const PHASE1_ROUTE_PATTERNS = [
   { method: 'GET', pattern: /^\/worklog\/archive(?:\?.*)?$/ },
 ];
 
+let storageSanitizing = false;
+
+function safeGetStorageSync(key, fallback = '') {
+  try {
+    const value = wx.getStorageSync(key);
+    return value === undefined ? fallback : value;
+  } catch (_) {
+    return fallback;
+  }
+}
+
+function safeSetStorageSync(key, value) {
+  try {
+    wx.setStorageSync(key, value);
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
+function safeRemoveStorageSync(key) {
+  try {
+    wx.removeStorageSync(key);
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
 function isTemporaryImageUrl(value) {
   const text = String(value || '').trim();
   if (!text) return false;
@@ -129,13 +160,13 @@ function safeSerialize(value) {
 }
 
 function sanitizeStorageEntry(key) {
-  const raw = wx.getStorageSync(key);
+  const raw = safeGetStorageSync(key, undefined);
   if (raw === undefined) return;
   const before = safeSerialize(raw);
   const cleaned = sanitizeTemporaryImageUrls(raw);
   const after = safeSerialize(cleaned);
   if (before !== after) {
-    wx.setStorageSync(key, cleaned);
+    safeSetStorageSync(key, cleaned);
   }
 }
 
@@ -149,6 +180,15 @@ function sanitizeLocalStorageImages() {
   } catch (_) {
     // Ignore storage clean failures and continue bootstrap.
   }
+}
+
+function scheduleStorageSanitization() {
+  if (storageSanitizing) return;
+  storageSanitizing = true;
+  setTimeout(() => {
+    sanitizeLocalStorageImages();
+    storageSanitizing = false;
+  }, 200);
 }
 
 function normalizeBaseUrl(url) {
@@ -194,8 +234,8 @@ function isCurrentLanUrl(url) {
   return normalizeBaseUrl(url) === currentLanUrl;
 }
 
-function isAuthLoginRequest(options, method) {
-  return method === 'POST' && options && options.url === '/auth/login';
+function isAuthFlowRequest(options, method) {
+  return method === 'POST' && /^\/auth\//.test(String(options?.url || ''));
 }
 
 function canRetryWithDevtoolsLoopback(baseUrl) {
@@ -263,8 +303,8 @@ function requestWithBaseUrl(context, options, method, token, baseUrl, hasRetried
         }
 
         if (res.statusCode === 401) {
-          wx.removeStorageSync('token');
-          wx.removeStorageSync('userInfo');
+          safeRemoveStorageSync('token');
+          safeRemoveStorageSync('userInfo');
           context.globalData.token = null;
           context.globalData.userInfo = null;
           wx.reLaunch({ url: '/pages/login/login' });
@@ -302,7 +342,7 @@ function requestWithBaseUrl(context, options, method, token, baseUrl, hasRetried
 
 function resolveBaseUrl() {
   const { platform, envVersion } = getRuntimeInfo();
-  const saved = normalizeBaseUrl(wx.getStorageSync(API_BASE_URL_KEY));
+  const saved = normalizeBaseUrl(safeGetStorageSync(API_BASE_URL_KEY, ''));
 
   if (isPackagedRuntime(envVersion)) {
     if (isConfiguredProductionUrl(PRODUCTION_BASE_URL)) {
@@ -314,7 +354,7 @@ function resolveBaseUrl() {
     }
 
     if (saved && isLocalNetworkUrl(saved)) {
-      wx.removeStorageSync(API_BASE_URL_KEY);
+      safeRemoveStorageSync(API_BASE_URL_KEY);
     }
 
     return '';
@@ -336,11 +376,11 @@ function resolveBaseUrl() {
 
 App({
   onLaunch() {
-    sanitizeLocalStorageImages();
+    scheduleStorageSanitization();
 
-    const token = wx.getStorageSync('token');
-    const userInfo = sanitizeTemporaryImageUrls(wx.getStorageSync('userInfo'));
-    if (userInfo) wx.setStorageSync('userInfo', userInfo);
+    const token = safeGetStorageSync('token', '');
+    const userInfo = sanitizeTemporaryImageUrls(safeGetStorageSync('userInfo', null));
+    if (userInfo) safeSetStorageSync('userInfo', userInfo);
 
     if (token && userInfo) {
       this.globalData.userInfo = userInfo;
@@ -352,17 +392,19 @@ App({
     console.log('[API] baseUrl =', resolvedBaseUrl);
     this.warnIfLoopbackOnRealDevice(resolvedBaseUrl);
 
-    const cloudState = cloudDb.initCloud();
-    this.globalData.cloud = cloudState;
-    if (cloudState.initialized) {
-      console.log('[CloudBase] initialized:', cloudState.envId);
-    } else if (cloudState.enabled) {
-      console.warn('[CloudBase] not initialized:', cloudState.reason);
-    }
+    setTimeout(() => {
+      const cloudState = cloudDb.initCloud();
+      this.globalData.cloud = cloudState;
+      if (cloudState.initialized) {
+        console.log('[CloudBase] initialized:', cloudState.envId);
+      } else if (cloudState.enabled) {
+        console.warn('[CloudBase] not initialized:', cloudState.reason);
+      }
+    }, 300);
   },
 
   onShow() {
-    sanitizeLocalStorageImages();
+    scheduleStorageSanitization();
     this.globalData.userInfo = sanitizeTemporaryImageUrls(this.globalData.userInfo || null);
   },
 
@@ -411,7 +453,7 @@ App({
     }
 
     this.globalData.baseUrl = normalized;
-    wx.setStorageSync(API_BASE_URL_KEY, normalized);
+    safeSetStorageSync(API_BASE_URL_KEY, normalized);
     console.log('[API] baseUrl updated to', normalized);
     return true;
   },
@@ -456,7 +498,7 @@ App({
   },
 
   getCurrentUser() {
-    return this.globalData.userInfo || wx.getStorageSync('userInfo') || null;
+    return this.globalData.userInfo || safeGetStorageSync('userInfo', null) || null;
   },
 
   getCurrentRole() {
@@ -475,7 +517,7 @@ App({
   },
 
   warnIfLoopbackOnRealDevice(baseUrl) {
-    const warned = wx.getStorageSync(LOOPBACK_WARNING_KEY);
+    const warned = safeGetStorageSync(LOOPBACK_WARNING_KEY, false);
     if (warned) return;
 
     let platform = '';
@@ -488,7 +530,7 @@ App({
     if (platform === 'devtools') return;
     if (!/(127\.0\.0\.1|localhost)/i.test(baseUrl)) return;
 
-    wx.setStorageSync(LOOPBACK_WARNING_KEY, true);
+    safeSetStorageSync(LOOPBACK_WARNING_KEY, true);
     wx.showModal({
       title: 'Network Setup Notice',
       content: 'Current API uses localhost/127.0.0.1. Real devices cannot access your computer backend via loopback.',
@@ -499,7 +541,7 @@ App({
   // Unified request helper
   request(options) {
     return new Promise((resolve, reject) => {
-      const token = wx.getStorageSync('token');
+      const token = safeGetStorageSync('token', '');
       const method = String(options.method || 'GET').toUpperCase();
       const routeToPhase1 = shouldUsePhase1CloudRoute(options.url, method);
 
@@ -527,11 +569,11 @@ App({
             const payload = res?.result || {};
             if (payload.ok === false) {
               if (payload.statusCode === 401) {
-                wx.removeStorageSync('token');
-                wx.removeStorageSync('userInfo');
+                safeRemoveStorageSync('token');
+                safeRemoveStorageSync('userInfo');
                 this.globalData.token = null;
                 this.globalData.userInfo = null;
-                if (!isAuthLoginRequest(options, method)) {
+                if (!isAuthFlowRequest(options, method)) {
                   wx.reLaunch({ url: '/pages/login/login' });
                 }
               }
@@ -577,8 +619,8 @@ App({
             const payload = res?.result || {};
             if (payload.ok === false) {
               if (payload.statusCode === 401) {
-                wx.removeStorageSync('token');
-                wx.removeStorageSync('userInfo');
+                safeRemoveStorageSync('token');
+                safeRemoveStorageSync('userInfo');
                 this.globalData.token = null;
                 this.globalData.userInfo = null;
                 wx.reLaunch({ url: '/pages/login/login' });
@@ -608,7 +650,7 @@ App({
 
   upload(options) {
     return new Promise((resolve, reject) => {
-      const token = wx.getStorageSync('token');
+      const token = safeGetStorageSync('token', '');
       const baseUrl = normalizeBaseUrl(this.globalData.baseUrl || resolveBaseUrl());
       const shouldUseCloudUpload = shouldProxyWithCloud(baseUrl);
 
@@ -692,8 +734,8 @@ App({
           }
 
           if (res.statusCode === 401) {
-            wx.removeStorageSync('token');
-            wx.removeStorageSync('userInfo');
+            safeRemoveStorageSync('token');
+            safeRemoveStorageSync('userInfo');
             this.globalData.token = null;
             this.globalData.userInfo = null;
             wx.reLaunch({ url: '/pages/login/login' });

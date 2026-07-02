@@ -1,4 +1,6 @@
 const app = getApp();
+const { requireAuth } = require('../../../utils/auth-guard');
+const { ensureRealNameReady } = require('../../../utils/realname');
 
 function isDuplicateApplyError(error) {
   if (!error) return false;
@@ -135,6 +137,7 @@ Page({
   },
 
   onLoad(options = {}) {
+    if (!requireAuth()) return;
     if (!options.id) {
       this.setData({ loading: false });
       return;
@@ -247,6 +250,12 @@ Page({
       wx.showToast({ title: '该岗位暂不可申请', icon: 'none' });
       return;
     }
+
+    const realNameReady = await ensureRealNameReady({
+      title: '完成实名后报名',
+      content: '报名岗位需要先完善实名信息，提交后即可继续报名。',
+    });
+    if (!realNameReady) return;
 
     const token = wx.getStorageSync('token');
     if (!token) {

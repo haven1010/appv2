@@ -1,4 +1,5 @@
 const app = getApp();
+const { requireAuth } = require('../../../utils/auth-guard');
 const { resolveRole } = require('../../../utils/role');
 
 const BASE_AUDIT_APPROVED = 1;
@@ -163,7 +164,8 @@ function normalizeJob(raw, fallbackBase) {
     id: Number(item.id || 0),
     baseId: Number(item.baseId || item.base_id || base.id || 0),
     baseName: toText(item.baseName || item.base_name || base.baseName, '未命名基地'),
-    workAddress: toText(item.workAddress || item.work_address || base.address),
+    baseInitial: toText(item.baseName || item.base_name || base.baseName, '基').slice(0, 1),
+    workAddress: toText(item.workAddress || item.work_address || base.address, '地点待补充'),
     jobTitle: toText(item.jobTitle || item.job_title, '未命名岗位'),
     recruitCount: normalizeInt(item.recruitCount || item.recruit_count, 0),
     applicantCount: normalizeInt(item.applicantCount || item.applicant_count, 0),
@@ -219,6 +221,7 @@ Page({
     isBossView: false,
 
     loading: true,
+    loadingSkeletonCards: [1, 2],
     loadError: '',
     keyword: '',
     statusFilter: 'all',
@@ -247,6 +250,7 @@ Page({
   },
 
   onLoad(options) {
+    if (!requireAuth()) return;
     this.syncRole();
     const baseId = Number(options?.baseId || options?.id || 0);
     const baseName = toText(options?.baseName ? decodeURIComponent(options.baseName) : '');

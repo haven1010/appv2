@@ -1,4 +1,5 @@
 const app = getApp();
+const { requireAuth } = require('../../../utils/auth-guard');
 const { resolveRole } = require('../../../utils/role');
 
 function toText(value, fallback = '') {
@@ -302,6 +303,7 @@ Page({
   },
 
   onLoad(options) {
+    if (!requireAuth()) return;
     const userInfo = wx.getStorageSync('userInfo') || {};
     const role = resolveRole(userInfo);
     const isBossView = role === 'boss';

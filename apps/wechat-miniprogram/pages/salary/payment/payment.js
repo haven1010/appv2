@@ -1,4 +1,5 @@
 const app = getApp();
+const { requireAuth } = require('../../../utils/auth-guard');
 
 function formatDateTime(value) {
   if (!value) return '-';
@@ -31,6 +32,7 @@ Page({
   },
 
   onLoad(options) {
+    if (!requireAuth()) return;
     const salaryId = Number(options.salaryId || 0);
     if (!salaryId) {
       wx.showToast({ title: '参数错误', icon: 'none' });

@@ -1,73 +1,67 @@
-<view class="page">
-  <view class="page-body page-enter">
-    <view class="card hero-card card-in">
-      <text class="header-icon">⭐</text>
-      <text class="header-title">评价雇主</text>
-      <text class="header-subtitle">{{baseName}} - {{jobTitle}}</text>
-    </view>
+<view class="page review-page">
+  <view class="review-hero">
+    <view class="review-visual"></view>
+    <text class="hero-kicker">劳动反馈</text>
+    <text class="hero-title">评价这次工作</text>
+    <text class="hero-desc">{{baseName}} · {{jobTitle}}</text>
+  </view>
 
-    <view class="card rating-card card-in delay-1">
-      <text class="section-title">总体评分</text>
-      <view class="star-row">
+  <view class="rating-card">
+    <text class="section-title">总体感受</text>
+    <view class="star-row">
+      <text
+        class="star {{rating >= item ? 'star-active' : ''}}"
+        wx:for="{{[1,2,3,4,5]}}"
+        wx:key="*this"
+        data-rating="{{item}}"
+        bindtap="onOverallRatingTap"
+      >★</text>
+    </view>
+    <text class="rating-text">{{rating > 0 ? rating + ' 分' : '请选择评分'}}</text>
+  </view>
+
+  <view class="category-card">
+    <text class="section-title">分项评价</text>
+    <view class="category-item" wx:for="{{categories}}" wx:key="key" wx:for-index="idx">
+      <view class="category-copy">
+        <text class="category-label">{{item.label}}</text>
+        <text class="category-desc">{{item.desc}}</text>
+      </view>
+      <view class="star-row-small">
         <text
-          class="star {{rating >= index ? 'star-active' : ''}}"
+          class="star-small {{item.rating >= star ? 'star-active' : ''}}"
           wx:for="{{[1,2,3,4,5]}}"
+          wx:for-item="star"
           wx:key="*this"
-          data-rating="{{item}}"
-          bindtap="onOverallRatingTap"
+          data-index="{{idx}}"
+          data-rating="{{star}}"
+          bindtap="onCategoryRatingTap"
         >★</text>
       </view>
-      <text class="rating-text" wx:if="{{rating > 0}}">{{rating}}分</text>
     </view>
+  </view>
 
-    <view class="card category-card card-in delay-2">
-      <text class="section-title">分项评分</text>
-      <view class="category-item" wx:for="{{categories}}" wx:key="key" wx:for-index="idx">
-        <text class="category-label">{{item.label}}</text>
-        <view class="star-row-small">
-          <text
-            class="star-small {{item.rating >= star ? 'star-active' : ''}}"
-            wx:for="{{[1,2,3,4,5]}}"
-            wx:for-item="star"
-            wx:key="*this"
-            data-index="{{idx}}"
-            data-rating="{{star}}"
-            bindtap="onCategoryRatingTap"
-          >★</text>
-        </view>
-      </view>
-    </view>
+  <view class="comment-card">
+    <text class="section-title">补充说明</text>
+    <textarea
+      class="comment-textarea"
+      placeholder="可以写写工作环境、工资结算、管理沟通等真实感受"
+      placeholder-class="placeholder"
+      value="{{comment}}"
+      bindinput="onCommentInput"
+      maxlength="300"
+      show-confirm-bar="{{false}}"
+    />
+    <text class="char-count">{{comment.length}}/300</text>
+  </view>
 
-    <view class="card comment-card card-in delay-3">
-      <text class="section-title">评价内容（选填）</text>
-      <textarea
-        class="comment-textarea"
-        placeholder="分享您的工作体验，帮助其他求职者了解这个雇主"
-        value="{{comment}}"
-        bindinput="onCommentInput"
-        maxlength="300"
-        show-confirm-bar="{{false}}"
-      />
-      <text class="char-count">{{comment.length}}/300</text>
-    </view>
+  <view class="tips-card">
+    <text class="tips-title">评价会帮助其他工友判断岗位是否合适</text>
+    <text class="tips-desc">请保持真实、客观，不发布与本次工作无关的内容。</text>
+  </view>
 
-    <view class="card tips-card card-in delay-4">
-      <text class="tips-title">💡 评价提示</text>
-      <text class="tips-item">• 客观真实的评价有助于其他求职者</text>
-      <text class="tips-item">• 评价提交后不可修改</text>
-      <text class="tips-item">• 请勿发布不实或恶意内容</text>
-    </view>
-
-    <view class="action-card card-in delay-5">
-      <button
-        class="btn-primary"
-        bindtap="onSubmit"
-        loading="{{submitting}}"
-        disabled="{{submitting}}"
-      >提交评价</button>
-      <button class="btn-ghost" bindtap="goBack">取消</button>
-    </view>
-
-    <view class="page-bottom-gap"></view>
+  <view class="action-card">
+    <button class="btn-primary" bindtap="onSubmit" loading="{{submitting}}" disabled="{{submitting}}">提交评价</button>
+    <button class="btn-ghost" bindtap="goBack">取消</button>
   </view>
 </view>

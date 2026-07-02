@@ -1,9 +1,5 @@
-/**
- * Layer: Mini Program Page
- * Responsibility: Implements the Attendance page lifecycle, local interaction state, and backend integration for the WeChat client.
- * Notes: Keep comments focused on intent, invariants, side effects, and cross-module contracts.
- */
-// pages/attendance/attendance.js
+const { requireAuth } = require('../../utils/auth-guard');
+
 function formatTodayInfo() {
   const now = new Date();
   const weekMap = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
@@ -11,7 +7,7 @@ function formatTodayInfo() {
   const date = now.getDate();
   const hour = now.getHours();
 
-  var periodText = '夜间';
+  let periodText = '夜间';
   if (hour >= 6 && hour < 12) periodText = '上午';
   if (hour >= 12 && hour < 18) periodText = '下午';
   if (hour >= 18 && hour < 24) periodText = '晚上';
@@ -32,6 +28,7 @@ Page({
   },
 
   onLoad() {
+    if (!requireAuth()) return;
     const today = formatTodayInfo();
     this.setData({
       dateText: today.dateText,

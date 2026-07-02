@@ -3,13 +3,15 @@
  * Responsibility: Implements the Auth application service for the Auth module, including business rules, side effects, and persistence coordination.
  * Notes: Keep comments focused on intent, invariants, side effects, and cross-module contracts.
  */
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, BadRequestException, ConflictException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { UserService } from '../user/user.service';
+import { SmsService } from '../common/services/sms.service';
 import { OperationLogService } from '../common/services/operation-log.service';
 import { OperationType, ResourceType } from '../common/entities/operation-log.entity';
 import * as https from 'https';
+import * as crypto from 'crypto';
 
 @Injectable()
 /**
@@ -17,12 +19,129 @@ import * as https from 'https';
  * 这里的注释重点放在认证前置条件、敏感字段处理方式，以及登录态载荷约定。
  */
 export class AuthService {
+  // In-memory SMS code store: phone → { code, expiresAt }
+  private readonly smsCodeStore = new Map<string, { code: string; expiresAt: number }>();
+  private readonly SMS_CODE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+
   constructor(
     private userService: UserService,
     private jwtService: JwtService,
     private operationLogService: OperationLogService,
     private configService: ConfigService,
+    private smsService: SmsService,
   ) { }
+
+  /**
+   * 生成并发送短信验证码。
+   * 同一手机号每分钟最多发送一次。
+   */
+  async sendCode(phone: string): Promise<{ ok: boolean; msg: string }> {
+    // Rate limit: 1 request per minute per phone
+    const existing = this.smsCodeStore.get(phone);
+    if (existing && existing.expiresAt > Date.now()) {
+      const elapsed = Date.now() - (existing.expiresAt - this.SMS_CODE_TTL_MS);
+      if (elapsed < 60_000) {
+        throw new BadRequestException('请勿频繁发送验证码，请稍后再试');
+      }
+    }
+
+    const code = String(Math.floor(100000 + Math.random() * 900000));
+    const expiresAt = Date.now() + this.SMS_CODE_TTL_MS;
+
+    this.smsCodeStore.set(phone, { code, expiresAt });
+
+    // Log the code for development
+    console.log(`[Auth] SMS code for ${phone}: ${code} (expires in 5 min)`);
+
+    // Try to send via SMS service
+    const sent = await this.smsService.sendCode(phone, code);
+
+    return {
+      ok: sent,
+      msg: sent ? '验证码已发送' : `验证码已发送（开发环境：${code}）`,
+    };
+  }
+
+  /**
+   * 检验验证码有效性。
+   */
+  private verifyCode(phone: string, code: string): boolean {
+    const stored = this.smsCodeStore.get(phone);
+    if (!stored) return false;
+    if (Date.now() > stored.expiresAt) {
+      this.smsCodeStore.delete(phone);
+      return false;
+    }
+    const valid = stored.code === code;
+    if (valid) {
+      this.smsCodeStore.delete(phone); // One-time use
+    }
+    return valid;
+  }
+
+  /**
+   * 手机号+验证码一键注册并登录。
+   * 创建最小账号（仅手机号），注册后直接颁发 JWT。
+   */
+  async registerByPhone(phone: string, code: string, request?: any) {
+    // Verify code
+    if (!this.verifyCode(phone, code)) {
+      throw new UnauthorizedException('验证码错误或已过期');
+    }
+
+    // Check if phone already registered
+    const existingUser = await this.userService.findByPhone(phone);
+    if (existingUser) {
+      // User already exists — just log them in
+      const payload = { username: existingUser.name || '', sub: existingUser.id, role: existingUser.roleKey, uid: existingUser.uid };
+      return {
+        access_token: this.jwtService.sign(payload),
+        user: {
+          id: existingUser.id,
+          name: existingUser.name || '',
+          role: existingUser.roleKey,
+          uid: existingUser.uid,
+          faceImgUrl: existingUser.faceImgUrl || null,
+          assignedBaseId: existingUser.assignedBaseId || null,
+        },
+        registerStage: existingUser.name ? 'complete' : 'phone_only',
+        isNewUser: false,
+      };
+    }
+
+    // Create minimal user from phone
+    const newUser = await this.userService.createFromPhone(phone);
+
+    // Generate JWT
+    const payload = { username: '', sub: newUser.id, role: newUser.roleKey, uid: newUser.uid };
+
+    await this.operationLogService.logWithContext({
+      operationType: OperationType.CREATE,
+      resourceType: ResourceType.USER,
+      resourceId: newUser.id,
+      userId: newUser.id,
+      request,
+      description: `手机号注册: ${phone} (${newUser.uid})`,
+      afterData: {
+        uid: newUser.uid,
+        roleKey: newUser.roleKey,
+      },
+    });
+
+    return {
+      access_token: this.jwtService.sign(payload),
+      user: {
+        id: newUser.id,
+        name: '',
+        role: newUser.roleKey,
+        uid: newUser.uid,
+        faceImgUrl: null,
+        assignedBaseId: null,
+      },
+      registerStage: 'phone_only',
+      isNewUser: true,
+    };
+  }
 
   /**
    * 使用手机号和身份证后六位完成轻量登录校验。

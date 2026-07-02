@@ -1,26 +1,18 @@
+/**
+ * Layer: Mini Program Page
+ * Responsibility: QR code check-in page for workers.
+ */
 const app = getApp();
+const { requireAuth } = require('../../utils/auth-guard');
 const { resolveRole, isAdminRole, roleLabel } = require('../../utils/role');
+const { ensureRealNameReady } = require('../../utils/realname');
 
 const QR_REFRESH_DELAY_MS = 220;
 const STAMP_HIT_MS = 450;
 const STAMP_HIDE_MS = 1450;
 
-const QR_IMAGE_KEYS = [
-  'qrImageUrl',
-  'qrCodeUrl',
-  'imageUrl',
-  'image',
-  'qrImage',
-  'qrcodeUrl',
-  'qrImageBase64',
-  'qrCodeBase64',
-  'qrBase64',
-  'imageBase64',
-  'base64',
-];
-
 function trimText(value) {
-  return typeof value === 'string' ? value.trim() : '';
+  return String(value || '').trim();
 }
 
 function isTemporaryImageUrl(value) {
@@ -41,26 +33,23 @@ function hasLoginSession() {
 }
 
 function pickAvatarUrl(userInfo) {
-  if (!userInfo) return '/images/zhihui-logo.jpg';
+  if (!userInfo) return '/images/zhihui-logo.webp';
   const candidates = [
     userInfo.avatarUrl,
     userInfo.faceImgUrl,
     userInfo.headImgUrl,
     userInfo.photoUrl,
   ];
-
   for (let i = 0; i < candidates.length; i += 1) {
     const url = trimText(candidates[i]);
     if (url && !isTemporaryImageUrl(url)) return url;
   }
-
-  return '/images/zhihui-logo.jpg';
+  return '/images/zhihui-logo.webp';
 }
 
 function sanitizeAvatarInCache() {
   const cached = wx.getStorageSync('userInfo') || {};
   if (!cached || typeof cached !== 'object') return;
-
   const next = Object.assign({}, cached);
   let changed = false;
   ['avatarUrl', 'faceImgUrl', 'headImgUrl', 'photoUrl'].forEach((key) => {
@@ -69,7 +58,6 @@ function sanitizeAvatarInCache() {
       changed = true;
     }
   });
-
   if (!changed) return;
   wx.setStorageSync('userInfo', next);
   app.globalData.userInfo = next;
@@ -82,61 +70,17 @@ function pickJobType(userInfo) {
   return explicit || roleLabel(resolveRole(userInfo));
 }
 
-function asPositiveNumber(value) {
-  const num = Number(value);
-  return Number.isFinite(num) && num >= 0 ? num : null;
-}
-
-function pickStreakDays(userInfo) {
-  if (!userInfo) return '0';
-
-  const candidates = [
-    userInfo.workStreakDays,
-    userInfo.streakDays,
-    userInfo.continuousDays,
-    userInfo.totalWorkDays,
-  ];
-
-  for (let i = 0; i < candidates.length; i += 1) {
-    const num = asPositiveNumber(candidates[i]);
-    if (num !== null) return String(Math.floor(num));
-  }
-
-  return '0';
-}
-
-function pickTotalEarnings(userInfo) {
-  if (!userInfo) return '0.00';
-
-  const candidates = [
-    userInfo.totalEarnings,
-    userInfo.totalIncome,
-    userInfo.income,
-    userInfo.salaryTotal,
-  ];
-
-  for (let i = 0; i < candidates.length; i += 1) {
-    const num = asPositiveNumber(candidates[i]);
-    if (num !== null) return num.toFixed(2);
-  }
-
-  return '0.00';
-}
-
 function normalizeImageUrl(url) {
   const value = trimText(url);
   if (!value) return '';
-
   if (isTemporaryImageUrl(value)) return '';
   if (/^https?:\/\//i.test(value) || /^data:image\//i.test(value)) return value;
   if (value.startsWith('//')) return `https:${value}`;
-
   if (value.startsWith('/')) {
     const baseUrl = trimText(app && app.globalData && app.globalData.baseUrl);
     const match = baseUrl.match(/^(https?:\/\/[^/]+)/i);
     return match ? `${match[1]}${value}` : '';
   }
-
   return '';
 }
 
@@ -149,29 +93,24 @@ function normalizeBase64(value) {
 
 function pickQrCodeUrl(payload) {
   if (!payload || typeof payload !== 'object') return '';
-
-  for (let i = 0; i < QR_IMAGE_KEYS.length; i += 1) {
-    const key = QR_IMAGE_KEYS[i];
-    const raw = payload[key];
-    const imageUrl = /base64/i.test(key) ? normalizeBase64(raw) : normalizeImageUrl(raw);
+  const keys = [
+    'qrImageUrl', 'qrCodeUrl', 'imageUrl', 'image',
+    'qrImage', 'qrcodeUrl', 'qrImageBase64', 'qrCodeBase64',
+    'qrBase64', 'imageBase64', 'base64',
+  ];
+  for (let i = 0; i < keys.length; i += 1) {
+    const raw = payload[keys[i]];
+    const imageUrl = /base64/i.test(keys[i]) ? normalizeBase64(raw) : normalizeImageUrl(raw);
     if (imageUrl) return imageUrl;
   }
-
   return normalizeImageUrl(payload.content);
 }
 
-function formatTimeLabel(date = new Date()) {
-  const hh = String(date.getHours()).padStart(2, '0');
-  const mm = String(date.getMinutes()).padStart(2, '0');
+function formatTimeLabel(date) {
+  const d = date || new Date();
+  const hh = String(d.getHours()).padStart(2, '0');
+  const mm = String(d.getMinutes()).padStart(2, '0');
   return `${hh}:${mm}`;
-}
-
-function pickCheckinStatusText(payload) {
-  const statusRaw = trimText(payload?.checkinStatus || payload?.status || payload?.attendanceStatus).toLowerCase();
-  if (payload?.checkedIn === true || statusRaw === 'checked_in' || statusRaw === 'signed') {
-    return '✅ 今日已签到';
-  }
-  return '🕘 今日未签到';
 }
 
 Page({
@@ -179,40 +118,28 @@ Page({
     qrCodeUrl: '',
     name: '用户',
     job: '采摘工',
-    avatar: '/images/zhihui-logo.jpg',
+    avatar: '/images/zhihui-logo.webp',
+    checkedIn: false,
+    checkinStatusText: '未签到',
     showStamp: false,
     stampAnim: '',
     refreshing: false,
-    checkinStatusText: '🕘 今日未签到',
-    streakDays: '0',
-    totalEarnings: '0.00',
     lastRefreshTime: '--:--',
-    workInfo: null,
   },
 
-  onLoad(options) {
+  onLoad() {
+    if (!requireAuth()) return;
     if (!this.ensureLoggedIn()) return;
     if (this.redirectIfRoleNotWorker()) return;
-
-    const applicationId = options.applicationId || app.globalData.qrApplicationId;
-    if (applicationId) {
-      this.loadWorkInfo(applicationId);
-    }
-
     this.initUserInfo();
-    this.getQRCode();
+    this.loadQRCodeIfAllowed();
   },
 
   onShow() {
     if (!this.ensureLoggedIn()) return;
     if (this.redirectIfRoleNotWorker()) return;
-
-    const applicationId = app.globalData.qrApplicationId;
-    if (applicationId && !this.data.workInfo) {
-      this.loadWorkInfo(applicationId);
-    }
-
     this.initUserInfo();
+    if (!this.data.qrCodeUrl) this.loadQRCodeIfAllowed();
   },
 
   onPullDownRefresh() {
@@ -220,33 +147,22 @@ Page({
       wx.stopPullDownRefresh();
       return;
     }
-    this.getQRCode().finally(() => wx.stopPullDownRefresh());
+    this.loadQRCodeIfAllowed().finally(() => wx.stopPullDownRefresh());
+  },
+
+  async loadQRCodeIfAllowed() {
+    const ready = await ensureRealNameReady({
+      title: '完成实名后使用上工码',
+      content: '上工码用于现场签到，请先完善实名信息。',
+    });
+    if (!ready) return;
+    await this.loadQRCode();
   },
 
   ensureLoggedIn() {
     if (hasLoginSession()) return true;
     wx.reLaunch({ url: '/pages/login/login' });
     return false;
-  },
-
-  initUserInfo() {
-    sanitizeAvatarInCache();
-    const userInfo = wx.getStorageSync('userInfo');
-    if (!userInfo) return;
-
-    this.setData({
-      avatar: pickAvatarUrl(userInfo),
-      name: trimText(userInfo.name) || '用户',
-      job: pickJobType(userInfo),
-      streakDays: pickStreakDays(userInfo),
-      totalEarnings: pickTotalEarnings(userInfo),
-    });
-  },
-
-
-  onAvatarError() {
-    sanitizeAvatarInCache();
-    this.setData({ avatar: '/images/zhihui-logo.jpg' });
   },
 
   redirectIfRoleNotWorker() {
@@ -263,22 +179,34 @@ Page({
     return false;
   },
 
-  async getQRCode() {
-    if (!this.ensureLoggedIn()) return;
+  initUserInfo() {
+    sanitizeAvatarInCache();
+    const userInfo = wx.getStorageSync('userInfo');
+    if (!userInfo) return;
+    this.setData({
+      avatar: pickAvatarUrl(userInfo),
+      name: trimText(userInfo.name) || '用户',
+      job: pickJobType(userInfo),
+    });
+  },
 
+  onAvatarError() {
+    sanitizeAvatarInCache();
+    this.setData({ avatar: '/images/zhihui-logo.webp' });
+  },
+
+  async loadQRCode() {
     try {
-      const res = await app.request({
-        url: '/attendance/qrcode',
-        method: 'GET',
-      });
-
+      const res = await app.request({ url: '/attendance/qrcode', method: 'GET' });
       const qrCodeUrl = pickQrCodeUrl(res);
+      const statusRaw = trimText(res?.checkinStatus || res?.status || '').toLowerCase();
+      const checkedIn = res?.checkedIn === true || statusRaw === 'checked_in' || statusRaw === 'signed';
       this.setData({
         qrCodeUrl: qrCodeUrl || '',
         lastRefreshTime: formatTimeLabel(new Date()),
-        checkinStatusText: pickCheckinStatusText(res),
+        checkedIn,
+        checkinStatusText: checkedIn ? '已签到' : '未签到',
       });
-
       if (!qrCodeUrl) {
         wx.showToast({ title: '二维码加载失败', icon: 'none' });
       }
@@ -290,57 +218,18 @@ Page({
 
   refreshQR() {
     if (this.data.refreshing) return;
+    this.setData({ refreshing: true, showStamp: true, stampAnim: 'stamp-anim' });
 
-    this.setData({
-      refreshing: true,
-      showStamp: true,
-      stampAnim: 'stamp-anim-drop',
-    });
-
+    setTimeout(() => { this.loadQRCodeIfAllowed(); }, QR_REFRESH_DELAY_MS);
     setTimeout(() => {
-      this.getQRCode();
-    }, QR_REFRESH_DELAY_MS);
-
-    setTimeout(() => {
-      try {
-        wx.vibrateShort({ type: 'medium' });
-      } catch (_) {
-        wx.vibrateShort();
-      }
+      try { wx.vibrateShort({ type: 'medium' }); } catch (_) { wx.vibrateShort(); }
     }, STAMP_HIT_MS);
-
     setTimeout(() => {
-      this.setData({
-        showStamp: false,
-        stampAnim: '',
-        refreshing: false,
-      });
+      this.setData({ showStamp: false, stampAnim: '', refreshing: false });
     }, STAMP_HIDE_MS);
   },
 
-  onQrImageError() {
+  onQrError() {
     this.setData({ qrCodeUrl: '' });
-  },
-
-  async loadWorkInfo(applicationId) {
-    try {
-      const res = await app.request({
-        url: `/base/applications/${applicationId}`,
-        method: 'GET',
-      });
-
-      const workDate = res.workDate ? new Date(res.workDate).toLocaleDateString('zh-CN') : '';
-
-      this.setData({
-        workInfo: {
-          baseName: res.baseName || '未知基地',
-          jobTitle: res.jobTitle || '未命名岗位',
-          workDate: workDate,
-          location: res.location || '',
-        },
-      });
-    } catch (err) {
-      console.error('加载工作信息失败:', err);
-    }
   },
 });

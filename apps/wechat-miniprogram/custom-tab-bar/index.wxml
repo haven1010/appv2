@@ -1,7 +1,14 @@
-<!-- custom-tab-bar/index.wxml -->
-<view class="tab-shell {{role === 'boss' || role === 'field_manager' ? 'compact-shell' : ''}}">
-  <view class="tab-bar {{role === 'boss' || role === 'field_manager' ? 'compact-bar' : ''}}">
-    <block wx:if="{{role === 'field_manager'}}">
+<view wx:if="{{!hiddenForSplash}}" class="tab-shell">
+  <view class="tab-bar">
+    <block wx:if="{{!loggedIn}}">
+      <view class="tab-login-bar" bindtap="goToLogin">
+        <image class="tab-login-icon" src="{{lockIcon}}" mode="aspectFit" />
+        <text class="tab-login-text">请先登录</text>
+        <text class="tab-login-arrow">›</text>
+      </view>
+    </block>
+
+    <block wx:elif="{{role === 'field_manager'}}">
       <view
         wx:for="{{fieldList}}"
         wx:key="pagePath"
@@ -9,9 +16,7 @@
         data-path="{{item.pagePath}}"
         bindtap="switchTab"
       >
-        <view class="icon-wrap">
-          <text class="icon-text">{{item.icon}}</text>
-        </view>
+        <image class="tab-icon" src="{{selected === index ? item.iconActive : item.icon}}" mode="aspectFit" />
         <text class="tab-text">{{item.text}}</text>
       </view>
     </block>
@@ -24,9 +29,7 @@
         data-path="{{item.pagePath}}"
         bindtap="switchTab"
       >
-        <view class="icon-wrap">
-          <text class="icon-text">{{item.icon}}</text>
-        </view>
+        <image class="tab-icon" src="{{selected === index ? item.iconActive : item.icon}}" mode="aspectFit" />
         <text class="tab-text">{{item.text}}</text>
       </view>
     </block>
@@ -35,15 +38,15 @@
       <view
         wx:for="{{workerList}}"
         wx:key="pagePath"
-        class="tab-item {{item.center ? 'is-center' : ''}} {{selected === index ? 'active' : ''}}"
+        class="tab-item worker-tab-item {{item.isCenter ? 'center-tab' : ''}} {{selected === index ? 'active' : ''}}"
         data-path="{{item.pagePath}}"
         bindtap="switchTab"
       >
-        <view class="icon-wrap {{item.center ? 'center-wrap' : ''}}">
-          <view wx:if="{{item.center}}" class="center-glow"></view>
-          <text class="icon-text">{{item.icon}}</text>
+        <view class="tab-icon-wrap">
+          <image class="tab-icon" src="{{item.isCenter || selected === index ? item.iconActive : item.icon}}" mode="aspectFit" />
         </view>
         <text class="tab-text">{{item.text}}</text>
+        <text wx:if="{{item.desc}}" class="tab-desc">{{item.desc}}</text>
       </view>
     </block>
   </view>

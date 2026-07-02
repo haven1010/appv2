@@ -1,4 +1,5 @@
 const app = getApp();
+const { requireAuth } = require('../../../utils/auth-guard');
 const { resolveRole, roleLabel, isAdminRole } = require('../../../utils/role');
 
 function trimText(value) {
@@ -151,6 +152,7 @@ Page({
   },
 
   onLoad() {
+    if (!requireAuth()) return;
     if (!this.ensureBoss()) return;
     this.loadProfile();
   },

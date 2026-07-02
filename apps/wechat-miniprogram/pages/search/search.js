@@ -1,4 +1,5 @@
 const app = getApp();
+const { requireAuth } = require('../../utils/auth-guard');
 
 const SEARCH_DEBOUNCE_MS = 300;
 
@@ -17,6 +18,7 @@ Page({
   },
 
   onLoad() {
+    if (!requireAuth()) return;
     this.loadAllData();
   },
 

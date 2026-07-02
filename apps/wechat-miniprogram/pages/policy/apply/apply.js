@@ -1,4 +1,6 @@
 const app = getApp();
+const { requireAuth } = require('../../../utils/auth-guard');
+const { ensureRealNameReady } = require('../../../utils/realname');
 
 Page({
   data: {
@@ -12,6 +14,7 @@ Page({
   },
 
   onLoad(options) {
+    if (!requireAuth()) return;
     const policyId = Number(options.policyId || 0);
     const policyTitle = decodeURIComponent(options.title || '');
 
@@ -41,6 +44,12 @@ Page({
   },
 
   async onSubmit() {
+    const realNameReady = await ensureRealNameReady({
+      title: '完成实名后申请政策',
+      content: '政策申请需要使用实名信息，请先完成认证。',
+    });
+    if (!realNameReady) return;
+
     const name = String(this.data.name || '').trim();
     if (!name) {
       wx.showToast({ title: '请填写姓名', icon: 'none' });

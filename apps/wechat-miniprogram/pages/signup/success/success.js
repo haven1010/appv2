@@ -1,4 +1,5 @@
 ﻿const app = getApp();
+const { requireAuth } = require('../../../utils/auth-guard');
 
 function decodeText(value) {
   try {
@@ -40,6 +41,7 @@ Page({
   },
 
   onLoad(options = {}) {
+    if (!requireAuth()) return;
     const userInfo = wx.getStorageSync('userInfo') || {};
     const workDate = formatDateText(decodeText(options.workDate));
     const baseId = Number(options.baseId) || 0;

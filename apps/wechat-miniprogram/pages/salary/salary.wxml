@@ -1,51 +1,66 @@
 <view class="page">
 
   <view class="page-body page-enter">
-    <view class="summary-card ds-card card-in">
-      <text class="summary-title">我的收入</text>
-      <text class="summary-time">更新于 {{lastUpdated || '--:--'}}</text>
+    <!-- ── 收入总览 ── -->
+    <view class="summary-card card-in">
+      <view class="summary-head">
+        <view>
+          <text class="summary-title">我的收入</text>
+          <text class="summary-time">更新于 {{lastUpdated || '--:--'}}</text>
+        </view>
+        <button class="refresh-btn" bindtap="refreshData">刷新</button>
+      </view>
+      <text class="summary-label">累计收入</text>
       <text class="summary-amount">¥{{stats ? stats.totalEarned : '0.00'}}</text>
 
       <view class="summary-row">
         <view class="summary-item">
-          <text class="summary-icon">🧺</text>
-          <text class="summary-text">{{stats ? stats.totalDays : 0}}天</text>
+          <text class="summary-icon">天</text>
+          <text class="summary-label-small">累计上工</text>
+          <text class="summary-text">{{stats ? stats.totalDays : 0}} 天</text>
         </view>
         <view class="summary-item">
-          <text class="summary-icon">💰</text>
+          <text class="summary-icon">收</text>
+          <text class="summary-label-small">累计收入</text>
           <text class="summary-text">¥{{stats ? stats.totalEarned : '0.00'}}</text>
         </view>
         <view class="summary-item">
-          <text class="summary-icon">⏳</text>
+          <text class="summary-icon">待</text>
+          <text class="summary-label-small">待确认</text>
           <text class="summary-text">¥{{stats ? stats.pendingAmount : '0.00'}}</text>
         </view>
       </view>
-
-      <button class="refresh-btn" bindtap="refreshData">刷新数据</button>
     </view>
 
+    <!-- ── 工资确认 ── -->
     <view class="section-head card-in delay-1">
       <view class="section-copy">
         <text class="section-title">工资确认</text>
-        <text class="section-note">基地管理员生成工资单后，您可以确认工资；如果金额、工时或计件有异议，也可以先提交申诉</text>
+        <text class="section-note">管理员生成工资单后，您可以确认；如有异议可提交申诉</text>
       </view>
-      <text class="section-count">{{pendingList.length}}</text>
+      <text class="section-count">{{pendingList.length}} 笔</text>
     </view>
 
-    <view wx:if="{{loading}}" class="state-card ds-card card-in delay-1">
-      <text class="state-title">正在加载薪资数据...</text>
-      <text class="state-desc">请稍候</text>
+    <!-- ── 加载/空状态 ── -->
+    <view wx:if="{{loading}}" class="state-card card-in delay-1">
+      <view class="loading-pulse"></view>
+      <text class="state-title">正在同步工资单</text>
+      <text class="state-desc">请稍候，正在读取最新收入数据</text>
     </view>
 
-    <view wx:elif="{{pendingList.length === 0}}" class="empty-card ds-card card-in delay-1">
-      <text class="empty-icon">💼</text>
+    <view wx:elif="{{pendingList.length === 0}}" class="empty-card card-in delay-1">
+      <view class="empty-icon">
+        <view></view>
+      </view>
       <text class="state-title">暂无工资单</text>
-      <text class="state-desc">完成工作并由基地管理员生成工资单后，会显示在这里</text>
+      <text class="state-desc">完成工作并由管理员生成工资单后，会显示在这里</text>
       <button class="go-job-btn" bindtap="goFindJobs">去找工作</button>
     </view>
 
+    <!-- ── 工资单列表 ── -->
     <view wx:else class="pending-list">
-      <view wx:for="{{pendingList}}" wx:key="id" class="pending-card ds-card card-in" style="animation-delay: {{index * 70}}ms;">
+      <view wx:for="{{pendingList}}" wx:key="id" class="pending-card card-in" style="animation-delay: {{index * 70}}ms;">
+        <!-- 顶部：基地 + 金额 -->
         <view class="pending-top">
           <view class="pending-main">
             <text class="pending-base">{{item.baseName || '基地'}}</text>
@@ -54,23 +69,25 @@
           <text class="pending-amount">¥{{item.amountText}}</text>
         </view>
 
+        <!-- 标签 -->
         <view class="pending-meta">
-          <text wx:if="{{item.jobTitle}}" class="meta-chip">岗位 {{item.jobTitle}}</text>
-          <text wx:if="{{item.workDuration > 0}}" class="meta-chip">工时 {{item.workDurationText}}h</text>
+          <text wx:if="{{item.jobTitle}}" class="meta-chip">{{item.jobTitle}}</text>
+          <text wx:if="{{item.workDuration > 0}}" class="meta-chip">{{item.workDurationText}}h</text>
           <text wx:if="{{item.pieceCount}}" class="meta-chip">计件 {{item.pieceCount}}</text>
         </view>
 
+        <!-- 申诉信息 -->
         <view wx:if="{{item.appealStatusText || item.workerAppealReason || item.appealReply}}" class="appeal-panel">
           <view class="appeal-head">
             <text wx:if="{{item.appealStatusText}}" class="appeal-chip {{item.appealStatusClass}}">{{item.appealStatusText}}</text>
-            <text wx:if="{{item.appealedAtText}}" class="appeal-time">申诉时间 {{item.appealedAtText}}</text>
+            <text wx:if="{{item.appealedAtText}}" class="appeal-time">{{item.appealedAtText}}</text>
           </view>
-          <text wx:if="{{item.workerAppealReason}}" class="appeal-line">申诉原因：{{item.workerAppealReason}}</text>
-          <text wx:if="{{item.expectedAmountText}}" class="appeal-line">期望金额：¥{{item.expectedAmountText}}</text>
-          <text wx:if="{{item.appealReply}}" class="appeal-line">管理员处理：{{item.appealReply}}</text>
-          <text wx:if="{{item.handledAtText}}" class="appeal-time">处理时间 {{item.handledAtText}}</text>
+          <text wx:if="{{item.workerAppealReason}}" class="appeal-line">原因：{{item.workerAppealReason}}</text>
+          <text wx:if="{{item.expectedAmountText}}" class="appeal-line">期望：¥{{item.expectedAmountText}}</text>
+          <text wx:if="{{item.appealReply}}" class="appeal-line">处理：{{item.appealReply}}</text>
         </view>
 
+        <!-- 底部：状态 + 操作 -->
         <view class="pending-foot">
           <text class="status-chip {{item.statusClass}}">{{item.statusText}}</text>
           <view class="action-group">
@@ -84,25 +101,24 @@
             <button
               wx:if="{{item.canConfirm}}"
               class="confirm-btn"
-              hover-class="confirm-btn-press"
-              hover-stay-time="100"
               bindtap="confirmSalary"
               data-id="{{item.id}}"
             >确认工资</button>
           </view>
         </view>
 
+        <!-- 申诉编辑器 -->
         <view wx:if="{{appealDraftId === item.id}}" class="appeal-editor">
           <textarea
             class="appeal-textarea"
-            placeholder="请写明有异议的内容，例如工时少算、计件数量不对、金额不符等"
+            placeholder="请写明有异议的内容"
             value="{{appealReasonInput}}"
             bindinput="onAppealReasonInput"
           />
           <input
             class="appeal-input"
             type="digit"
-            placeholder="可填写您认为合理的金额（选填）"
+            placeholder="您认为合理的金额（选填）"
             value="{{appealExpectedAmountInput}}"
             bindinput="onAppealExpectedAmountInput"
           />

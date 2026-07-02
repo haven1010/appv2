@@ -1,4 +1,5 @@
 const app = getApp();
+const { requireAuth } = require('../../../utils/auth-guard');
 
 function toText(value) {
   return String(value || '').trim();
@@ -73,6 +74,7 @@ Page({
   },
 
   async onLoad() {
+    if (!requireAuth()) return;
     wx.setNavigationBarTitle({ title: '报名管理' });
     await this.loadBases();
     if (this.data.baseId) {

@@ -1,4 +1,5 @@
 const app = getApp();
+const { requireAuth } = require('../../../utils/auth-guard');
 
 function normalizeArray(res) {
   if (Array.isArray(res)) return res;
@@ -52,6 +53,7 @@ Page({
   },
 
   onLoad() {
+    if (!requireAuth()) return;
     const today = formatDate(new Date());
     this.setData({
       selectedDate: today,

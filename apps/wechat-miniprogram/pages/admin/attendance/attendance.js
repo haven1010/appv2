@@ -3,6 +3,7 @@
  * Responsibility: Provides assistant scan-checkin operations for management roles.
  */
 const app = getApp();
+const { requireAuth } = require('../../../utils/auth-guard');
 const { resolveRole, isAdminRole, isSuperAdminRole, roleLabel } = require('../../../utils/role');
 
 function todayString() {
@@ -159,6 +160,7 @@ Page({
   },
 
   onLoad() {
+    if (!requireAuth()) return;
     if (!this.ensureAdmin()) return;
     this.loadAll();
   },

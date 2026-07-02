@@ -1,55 +1,71 @@
 <view class="page {{pageReady ? 'page-enter' : ''}}" bindtap="handleBlankTap">
-  <scroll-view class="scroll-wrap" scroll-y enhanced bounces bindscroll="onScroll">
-    <view class="sticky-shell">
-      <view class="sticky-glow" style="opacity: {{topShadeOpacity}};"></view>
-      <view class="brand-row">
-        <image class="brand-logo" src="/images/zhihui-logo.jpg" mode="aspectFit" />
-        <view>
-          <text class="sticky-title">工作历程</text>
-          <text class="sticky-sub">查看历次务工归档，点开后可核对工资与离场信息</text>
+  <view class="history-body">
+    <view class="history-hero">
+      <text class="history-title">工作历程</text>
+      <text class="history-subtitle">查看历次务工归档，核对工资与离场信息</text>
+
+      <view class="history-stats">
+        <view class="history-stat">
+          <text class="history-stat-value">{{historyStats.total}}</text>
+          <text class="history-stat-label">全部记录</text>
+        </view>
+        <view class="history-stat">
+          <text class="history-stat-value">{{historyStats.settled}}</text>
+          <text class="history-stat-label">已结算</text>
+        </view>
+        <view class="history-stat">
+          <text class="history-stat-value">{{historyStats.pending}}</text>
+          <text class="history-stat-label">待结算</text>
         </view>
       </view>
     </view>
 
     <view wx:if="{{loading}}" class="state-card">
-      <text class="state-title">正在加载工作历程...</text>
-      <text class="state-desc">请稍候</text>
+      <view class="state-pulse"></view>
+      <text class="state-title">正在同步工作历程</text>
+      <text class="state-desc">请稍候，正在读取最新务工归档</text>
     </view>
 
     <view wx:elif="{{records.length === 0}}" class="state-card">
+      <view class="empty-icon"></view>
       <text class="state-title">暂无工作归档</text>
       <text class="state-desc">结束一次务工后，这里会自动留档</text>
     </view>
 
-    <view wx:else class="timeline" catchtap="noop">
-      <view class="timeline-axis"></view>
+    <view wx:else class="history-list" catchtap="noop">
       <view
         wx:for="{{records}}"
         wx:key="id"
-        class="timeline-item pressable {{item.expanded ? 'open' : ''}}"
+        class="history-card {{item.expanded ? 'open' : ''}}"
         data-index="{{index}}"
         bindtap="toggleRecord"
         hover-class="pressing"
         hover-stay-time="110"
-        style="animation-delay: {{item.delay}}; transform: translateY({{parallaxOffsets[index] || 0}}rpx);"
+        style="animation-delay: {{item.delay}};"
       >
-        <view class="item-dot {{item.statusClass}}"></view>
-        <view class="item-card">
-          <view class="item-head">
-            <text class="item-time">{{item.workDateText}}</text>
-            <text class="item-action">{{item.expanded ? '收起详情' : '展开详情'}}</text>
+        <view class="history-card-top">
+          <view class="history-card-main">
+            <text class="history-date">{{item.workDateText}}</text>
+            <text class="history-base">{{item.baseName || '基地项目'}}</text>
+            <text class="history-job">{{item.jobTitle || '岗位待补充'}}</text>
           </view>
-          <text class="item-company">{{item.baseName || '基地项目'}}</text>
-          <text class="item-role">{{item.jobTitle || '岗位待补充'}}</text>
-          <view class="item-meta">
-            <text class="meta-pill {{item.statusClass}}">{{item.statusText}}</text>
-            <text class="meta-time">工资 ¥{{item.totalAmount}}</text>
-          </view>
-          <view class="item-detail">
-            <text class="detail-text">{{item.detailText}}</text>
-          </view>
+          <text class="history-status {{item.statusClass}}">{{item.statusText}}</text>
+        </view>
+
+        <view class="history-money-row">
+          <text class="history-money-label">本次工资</text>
+          <text class="history-money">¥{{item.totalAmount}}</text>
+        </view>
+
+        <view class="history-detail">
+          <text class="detail-text">{{item.detailText}}</text>
+        </view>
+
+        <view class="history-card-foot">
+          <text>{{item.expanded ? '收起详情' : '查看详情'}}</text>
+          <text class="foot-arrow">{{item.expanded ? '⌃' : '⌄'}}</text>
         </view>
       </view>
     </view>
-  </scroll-view>
+  </view>
 </view>

@@ -3,6 +3,7 @@
  * Responsibility: Displays worker signup records under Profile > My Signups.
  */
 const app = getApp();
+const { requireAuth } = require('../../../utils/auth-guard');
 const { resolveRole, isAdminRole } = require('../../../utils/role');
 
 const STATUS_MAP = {
@@ -69,6 +70,7 @@ Page({
   },
 
   onLoad() {
+    if (!requireAuth()) return;
     if (this.redirectIfRoleNotWorker()) return;
     this.loadRecords();
     this.readyTimer = setTimeout(() => {

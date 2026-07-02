@@ -3,6 +3,8 @@
  * Responsibility: Implements the Salary page lifecycle, local interaction state, and backend integration for the WeChat client.
  */
 const app = getApp();
+const { requireAuth } = require('../../utils/auth-guard');
+const { ensureRealNameReady } = require('../../utils/realname');
 
 function formatAmount(value) {
   const num = Number(value);
@@ -110,15 +112,18 @@ Page({
     appealSubmitting: false,
   },
 
-  onLoad() {
+  async onLoad() {
+    if (!requireAuth()) return;
+    if (!(await this.ensureSalaryAccess())) return;
     this.loadSalaryData();
   },
 
-  onShow() {
+  async onShow() {
     const tabBar = this.getTabBar && this.getTabBar();
     if (tabBar) {
       tabBar.setData({ selected: 1 });
     }
+    if (!(await this.ensureSalaryAccess())) return;
     this.loadSalaryData();
   },
 
@@ -129,6 +134,13 @@ Page({
 
   hasToken() {
     return Boolean(wx.getStorageSync('token'));
+  },
+
+  ensureSalaryAccess() {
+    return ensureRealNameReady({
+      title: '完成实名后查看工资',
+      content: '工资确认、申诉和发放记录需要先完善实名信息。',
+    });
   },
 
   setEmptyState() {
@@ -206,6 +218,7 @@ Page({
   async confirmSalary(e) {
     const salaryId = e.currentTarget.dataset.id;
     if (!salaryId) return;
+    if (!(await this.ensureSalaryAccess())) return;
 
     wx.showModal({
       title: '确认工资',
@@ -262,6 +275,7 @@ Page({
   async submitAppeal(e) {
     const salaryId = Number(e.currentTarget.dataset.id || this.data.appealDraftId || 0);
     if (!salaryId) return;
+    if (!(await this.ensureSalaryAccess())) return;
 
     const reason = String(this.data.appealReasonInput || '').trim();
     const expectedAmountText = String(this.data.appealExpectedAmountInput || '').trim();

@@ -1,0 +1,33 @@
+<view class="splash-page" bindtap="enterApp">
+  <view class="splash-stage">
+    <view class="float-token token-pencil">
+      <view class="pencil-tip"></view>
+    </view>
+    <view class="float-token token-star token-star-one">✦</view>
+    <view class="float-token token-star token-star-two">✦</view>
+    <view class="float-token token-card">
+      <view></view>
+    </view>
+
+    <view class="splash-mascot">
+      <view class="mascot-glow"></view>
+      <view class="mascot-eye eye-left"></view>
+      <view class="mascot-eye eye-right"></view>
+    </view>
+
+    <view class="float-token token-code">
+      <text>&lt;/&gt;</text>
+    </view>
+    <view class="float-token token-image">
+      <view class="image-star">✦</view>
+      <view class="image-mountain"></view>
+    </view>
+  </view>
+
+  <view class="splash-brand">
+    <image class="brand-logo" src="/images/zhihui-logo.webp" mode="aspectFit"></image>
+    <text class="brand-name">智绘就业</text>
+  </view>
+
+  <text class="splash-hint">乡村振兴就业服务平台</text>
+</view>

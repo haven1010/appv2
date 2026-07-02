@@ -1,4 +1,5 @@
 const app = getApp();
+const { requireAuth } = require('../../../utils/auth-guard');
 
 Page({
   data: {
@@ -10,6 +11,7 @@ Page({
   },
 
   onLoad(options) {
+    if (!requireAuth()) return;
     const salaryId = Number(options.salaryId || 0);
     const currentAmount = options.amount || '0.00';
 

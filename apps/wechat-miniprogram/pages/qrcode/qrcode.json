@@ -1,6 +1,7 @@
 {
   "usingComponents": {},
+  "navigationStyle": "custom",
   "navigationBarTitleText": "今日上工码",
-  "navigationBarBackgroundColor": "#F6F9FF",
+  "navigationBarBackgroundColor": "#F5F5F7",
   "navigationBarTextStyle": "black"
 }

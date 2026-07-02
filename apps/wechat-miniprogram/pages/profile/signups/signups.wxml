@@ -46,7 +46,7 @@
     </view>
 
     <view wx:elif="{{viewRecords.length === 0}}" class="ds-empty card-in delay-2">
-      <text class="ds-empty-icon">📝</text>
+      <view class="ds-empty-icon"></view>
       <text class="ds-empty-title">暂无匹配的报名记录</text>
       <text class="ds-empty-desc">你可以在广场先报名岗位，再回来查看进度</text>
     </view>

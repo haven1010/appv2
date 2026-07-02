@@ -3,6 +3,7 @@
  * Responsibility: Implements scan check-in flow for field manager.
  */
 const app = getApp();
+const { requireAuth } = require('../../../utils/auth-guard');
 
 function normalizeArray(res) {
   if (Array.isArray(res)) return res;
@@ -25,6 +26,7 @@ Page({
   },
 
   onLoad() {
+    if (!requireAuth()) return;
     this.resolveBaseId();
   },
 

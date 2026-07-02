@@ -1,7 +1,46 @@
-<view class="page">
+<view class="page job-square-page {{isBossView ? 'boss-job-page' : 'worker-job-page'}}">
   <block wx:if="{{loading}}">
-    <view class="state-panel">
-      <text class="state-title">正在加载页面...</text>
+    <view wx:if="{{!isBossView}}" class="worker-loading">
+      <view class="loading-search skeleton-block"></view>
+
+      <view class="loading-section-head">
+        <view>
+          <view class="loading-title skeleton-block"></view>
+          <view class="loading-subtitle skeleton-block"></view>
+        </view>
+        <view class="loading-count skeleton-block"></view>
+      </view>
+
+      <view class="loading-filter-row">
+        <view class="loading-chip skeleton-block"></view>
+        <view class="loading-chip skeleton-block"></view>
+        <view class="loading-chip skeleton-block"></view>
+      </view>
+
+      <view class="loading-job-card" wx:for="{{loadingSkeletonCards}}" wx:key="*this">
+        <view class="loading-card-top">
+          <view class="loading-card-title skeleton-block"></view>
+          <view class="loading-card-salary skeleton-block"></view>
+        </view>
+        <view class="loading-card-company skeleton-block"></view>
+        <view class="loading-card-tags">
+          <view class="loading-card-tag skeleton-block"></view>
+          <view class="loading-card-tag skeleton-block"></view>
+          <view class="loading-card-tag skeleton-block"></view>
+        </view>
+        <view class="loading-card-footer">
+          <view class="loading-avatar skeleton-block"></view>
+          <view class="loading-footer-copy">
+            <view class="loading-footer-line skeleton-block"></view>
+            <view class="loading-footer-line short skeleton-block"></view>
+          </view>
+          <view class="loading-action skeleton-block"></view>
+        </view>
+      </view>
+    </view>
+
+    <view wx:else class="state-panel">
+      <text class="state-title">正在加载...</text>
       <text class="state-desc">请稍候</text>
     </view>
   </block>
@@ -9,63 +48,100 @@
   <block wx:else>
     <block wx:if="{{loadError}}">
       <view class="state-panel">
-        <text class="state-title">页面加载失败</text>
+        <text class="state-title">加载失败</text>
         <text class="state-desc">{{loadError}}</text>
       </view>
     </block>
 
     <block wx:else>
-      <!-- ═══════════ Hero ═══════════ -->
-      <view class="hero-card">
-        <view class="hero-head">
-          <view>
-            <text class="hero-title">{{isBossView ? '岗位发布' : '岗位广场'}}</text>
-            <text class="hero-subtitle">{{isBossView ? '查看并发布岗位，统一管理招聘信息' : '浏览基地岗位，快速选择适合的工作'}}</text>
-          </view>
-          <text class="hero-badge">{{isBossView ? '老板视角' : '工人视角'}}</text>
-        </view>
-      </view>
-
-      <!-- ═══════════ Worker: Job List ═══════════ -->
+      <!-- Worker: Job List -->
       <block wx:if="{{!isBossView}}">
+        <view class="worker-search-card">
+          <view class="search-box">
+            <text class="search-icon">⌕</text>
+            <input
+              class="search-input"
+              placeholder="搜索岗位、基地、地点"
+              placeholder-class="search-placeholder"
+              value="{{keyword}}"
+              bindinput="onKeywordInput"
+            />
+          </view>
+        </view>
+
         <view class="job-section-card">
-          <text class="job-section-title">可报名岗位</text>
-          <view wx:if="{{viewJobs.length === 0}}" class="state-panel inner-state">
-            <text class="state-title">暂无可报名岗位</text>
-            <text class="state-desc">可调整筛选条件后重试</text>
+          <view class="job-section-head">
+            <view class="job-section-copy">
+              <text class="job-section-title">推荐岗位</text>
+              <text class="job-section-subtitle">优先展示正在招聘的基地岗位</text>
+            </view>
+            <text class="job-count">{{viewJobs.length}} 个</text>
+          </view>
+          <view class="job-filter-row">
+            <view class="filter-tab {{statusFilter === 'all' ? 'active' : ''}}" data-status="all" bindtap="onStatusChange">综合</view>
+            <view class="filter-tab {{statusFilter === 'open' ? 'active' : ''}}" data-status="open" bindtap="onStatusChange">招聘中</view>
+            <view class="filter-tab {{statusFilter === 'closed' ? 'active' : ''}}" data-status="closed" bindtap="onStatusChange">已关闭</view>
+          </view>
+          <view wx:if="{{viewJobs.length === 0}}" class="empty-job-card">
+            <view class="empty-job-icon">
+              <view></view>
+            </view>
+            <text class="empty-job-title">暂无可报名岗位</text>
+            <text class="empty-job-desc">当前筛选条件下没有匹配岗位，可以放宽条件后再看看。</text>
           </view>
           <view wx:else class="job-list">
             <view wx:for="{{viewJobs}}" wx:key="id" class="job-card pressable" bindtap="goToDetail" data-id="{{item.id}}" data-baseid="{{item.baseId}}" hover-class="pressing" hover-stay-time="100">
               <view class="job-top">
-                <text class="job-title">{{item.jobTitle}}</text>
+                <view class="job-title-row">
+                  <text class="job-title">{{item.jobTitle}}</text>
+                  <text class="urgent-badge">急聘</text>
+                </view>
                 <text class="job-salary">{{item.salaryText}}</text>
               </view>
-              <view class="job-meta">
-                <text class="meta-tag">{{item.baseName}}</text>
-                <text class="meta-item">{{item.payModeText}}</text>
-                <text class="meta-item">招聘 {{item.recruitCount}} 人</text>
-                <text class="meta-item">已报名 {{item.applicantCount}} 人</text>
+              <text class="job-company">{{item.baseName}}</text>
+              <view class="job-tags">
+                <text class="job-tag">{{item.payModeText}}</text>
+                <text class="job-tag">招{{item.recruitCount}}人</text>
+                <text class="job-tag">已报{{item.applicantCount}}人</text>
               </view>
-              <view class="job-meta">
-                <text class="meta-item">{{item.workDateRange}}</text>
+              <view class="job-footer">
+                <view class="job-contact">
+                  <view class="contact-avatar">{{item.baseInitial}}</view>
+                  <view class="contact-copy">
+                    <text class="contact-name">基地负责人</text>
+                    <text class="contact-note">工作日期 {{item.workDateRange}}</text>
+                  </view>
+                </view>
+                <text class="job-address">{{item.workAddress}}</text>
               </view>
               <view class="job-bottom">
                 <text class="status {{item.statusClass}}">{{item.statusText}}</text>
-                <view class="apply-btn pressable" catchtap="applyJob" data-id="{{item.id}}" data-baseid="{{item.baseId}}" data-basename="{{item.baseName}}" data-jobtitle="{{item.jobTitle}}">立即报名</view>
+                <view class="apply-btn" catchtap="applyJob" data-id="{{item.id}}" data-baseid="{{item.baseId}}" data-basename="{{item.baseName}}" data-jobtitle="{{item.jobTitle}}">立即报名</view>
               </view>
             </view>
           </view>
         </view>
       </block>
 
-      <!-- ═══════════ Boss: Base Selector ═══════════ -->
+      <!-- Boss: Hero -->
+      <view wx:if="{{isBossView}}" class="hero-card">
+        <view class="hero-head">
+          <view>
+            <text class="hero-title">岗位发布</text>
+            <text class="hero-subtitle">查看并发布岗位，统一管理招聘信息</text>
+          </view>
+          <text class="hero-badge">老板</text>
+        </view>
+      </view>
+
+      <!-- Boss: Base Selector -->
       <block wx:if="{{isBossView && !baseId}}">
         <view class="section-card">
           <text class="section-title">我的基地（{{approvedBaseCount}} 个已通过）</text>
           <text class="section-sub">选择一个基地进入岗位管理</text>
           <view wx:if="{{viewBossBases.length === 0}}" class="state-panel inner-state">
             <text class="state-title">暂无基地</text>
-            <text class="state-desc">请先在「工作台」完成企业入驻，审核通过后即可发布岗位</text>
+            <text class="state-desc">请先在「工作台」完成企业入驻</text>
           </view>
           <view wx:else class="base-list">
             <view wx:for="{{viewBossBases}}" wx:key="id" class="base-card">
@@ -75,8 +151,8 @@
               </view>
               <view class="base-card-meta">
                 <text class="base-card-stat">总岗位 {{item.totalJobs}}</text>
-                <text class="base-card-stat">开放中 {{item.openJobs}}</text>
-                <text class="base-card-stat">已关闭 {{item.closedJobs}}</text>
+                <text class="base-card-stat">开放 {{item.openJobs}}</text>
+                <text class="base-card-stat">关闭 {{item.closedJobs}}</text>
               </view>
               <view class="base-card-action">
                 <view class="publish-btn" data-id="{{item.id}}" catchtap="goToBasePublish">发布岗位</view>
@@ -86,18 +162,16 @@
         </view>
       </block>
 
-      <!-- ═══════════ Boss: Job Management for Selected Base ═══════════ -->
+      <!-- Boss: Job Management -->
       <block wx:if="{{isBossView && baseId > 0}}">
         <view class="back-row" bindtap="backToBaseSelector">
           <text class="back-link">← 返回基地列表</text>
         </view>
-        <!-- Locked Notice -->
         <view wx:if="{{lockUI}}" class="lock-notice">
           <text class="lock-text">{{lockReason}}</text>
           <view class="lock-btn" bindtap="goToAuditPage">去完成入驻审核</view>
         </view>
 
-        <!-- Job Creation Form -->
         <view class="section-card" wx:if="{{!lockUI}}">
           <text class="section-title">发布新岗位</text>
           <text class="section-sub">当前基地：{{baseName}}</text>
@@ -183,20 +257,19 @@
           </button>
         </view>
 
-        <!-- Existing Jobs -->
         <view class="section-card">
           <view class="section-head">
             <text class="section-title">已发布岗位（{{jobs.length}}）</text>
             <view class="filter-row">
               <view class="filter-chip {{statusFilter === 'all' ? 'active' : ''}}" data-status="all" bindtap="onStatusChange">全部</view>
-              <view class="filter-chip {{statusFilter === 'open' ? 'active' : ''}}" data-status="open" bindtap="onStatusChange">开放中（{{openCount}}）</view>
-              <view class="filter-chip {{statusFilter === 'closed' ? 'active' : ''}}" data-status="closed" bindtap="onStatusChange">已关闭（{{closedCount}}）</view>
+              <view class="filter-chip {{statusFilter === 'open' ? 'active' : ''}}" data-status="open" bindtap="onStatusChange">开放（{{openCount}}）</view>
+              <view class="filter-chip {{statusFilter === 'closed' ? 'active' : ''}}" data-status="closed" bindtap="onStatusChange">关闭（{{closedCount}}）</view>
             </view>
           </view>
 
           <view wx:if="{{viewJobs.length === 0}}" class="state-panel inner-state">
             <text class="state-title">暂无岗位</text>
-            <text class="state-desc">上方填写表单发布第一个岗位</text>
+            <text class="state-desc">上方发布第一个岗位</text>
           </view>
 
           <view wx:else class="job-list">
@@ -208,29 +281,19 @@
               <view class="job-meta">
                 <text class="meta-tag">{{item.baseName}}</text>
                 <text class="meta-item">{{item.payModeText}}</text>
-                <text class="meta-item">招聘 {{item.recruitCount}} 人</text>
-                <text class="meta-item">已报名 {{item.applicantCount}} 人</text>
+                <text class="meta-item">招{{item.recruitCount}}人</text>
+                <text class="meta-item">已报{{item.applicantCount}}人</text>
               </view>
               <view class="job-meta">
                 <text class="meta-item">{{item.workDateRange}}</text>
               </view>
               <view class="job-thumbs" wx:if="{{item.workplaceImages && item.workplaceImages.length}}">
-                <image
-                  wx:for="{{item.workplaceImages}}"
-                  wx:for-item="img"
-                  wx:key="index"
-                  class="job-thumb"
-                  src="{{img}}"
-                  mode="aspectFill"
-                  data-index="{{index}}"
-                  data-urls="{{item.workplaceImages}}"
-                  catchtap="previewEnvImage"
-                />
+                <image wx:for="{{item.workplaceImages}}" wx:for-item="img" wx:key="index" class="job-thumb" src="{{img}}" mode="aspectFill" data-index="{{index}}" data-urls="{{item.workplaceImages}}" catchtap="previewEnvImage" />
               </view>
               <view class="job-bottom">
                 <text class="status {{item.statusClass}}">{{item.statusText}}</text>
                 <text class="audit-badge {{item.auditStatus === 1 ? 'audit-ok' : item.auditStatus === 2 ? 'audit-reject' : 'audit-pending'}}">{{item.auditText}}</text>
-                <text class="boss-tip">点击查看详情</text>
+                <text class="boss-tip">点击查看</text>
               </view>
             </view>
           </view>
@@ -239,7 +302,6 @@
     </block>
   </block>
 
-  <!-- ═══════════ Boss Bottom Nav ═══════════ -->
   <view wx:if="{{isBossView}}" class="boss-bottom-nav">
     <view class="boss-bottom-item" bindtap="goToBossDashboard">工作台</view>
     <view class="boss-bottom-item" bindtap="goToBossBaseList">我的基地</view>

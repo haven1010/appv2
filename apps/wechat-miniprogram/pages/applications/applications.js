@@ -3,6 +3,7 @@
  * Responsibility: Worker-side AI assistant main tab page.
  */
 const { resolveRole, isAdminRole } = require('../../utils/role');
+const { requireAuth } = require('../../utils/auth-guard');
 
 Page({
   data: {
@@ -33,6 +34,7 @@ Page({
   },
 
   onLoad() {
+    if (!requireAuth()) return;
     if (this.redirectIfRoleNotWorker()) return;
     this.readyTimer = setTimeout(() => {
       this.setData({ pageReady: true });

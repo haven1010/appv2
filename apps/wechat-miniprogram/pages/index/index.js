@@ -1,25 +1,55 @@
+/**
+ * Layer: Mini Program Page
+ * Responsibility: Senior-friendly home page with 3 core actions.
+ */
 const app = getApp();
-const { resolveRole, isAdminRole } = require('../../utils/role');
+const { requireAuth, needsRealNameAuth } = require('../../utils/auth-guard');
+const { resolveRole, isAdminRole, roleLabel } = require('../../utils/role');
 
-const DEFAULT_AVATAR = '/images/zhihui-logo.jpg';
-
-const HOME_SERVICE_ITEMS = [
-  { key: 'job', title: '找工作', subtitle: '岗位速配', icon: '🔍', badgeClass: 'job' },
-  { key: 'signup', title: '我的报名', subtitle: '进度状态', icon: '📋', badgeClass: 'signup' },
-  { key: 'qrcode', title: '签到码', subtitle: '上岗打卡', icon: '✅', badgeClass: 'attend' },
-  { key: 'salary', title: '收入工资', subtitle: '确认申诉', icon: '💰', badgeClass: 'salary' },
-  { key: 'training', title: '技能培训', subtitle: '提升就业', icon: '📚', badgeClass: 'train' },
-  { key: 'policy', title: '政策资讯', subtitle: '补贴政策', icon: '📢', badgeClass: 'policy' },
-  { key: 'rights', title: '维权保障', subtitle: '权益护航', icon: '⚖️', badgeClass: 'rights' },
-  { key: 'more', title: '更多服务', subtitle: '银行卡等', icon: '☕', badgeClass: 'more' },
+const DEFAULT_AVATAR = '/images/zhihui-logo.webp';
+const HOME_ACTION_BACKGROUNDS = [
+  '/images/home-action-bg-1.png',
+  '/images/home-action-bg-2.png',
+  '/images/home-action-bg-3.png',
+  '/images/home-action-bg-4.png',
 ];
 
-function toText(value) {
+let storageReadFailed = false;
+
+function trimText(value) {
   return String(value || '').trim();
 }
 
+function safeGetStorageSync(key, fallback = '') {
+  try {
+    const value = wx.getStorageSync(key);
+    return value === undefined ? fallback : value;
+  } catch (_) {
+    storageReadFailed = true;
+    return fallback;
+  }
+}
+
+function safeSetStorageSync(key, value) {
+  try {
+    wx.setStorageSync(key, value);
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
+function safeRemoveStorageSync(key) {
+  try {
+    wx.removeStorageSync(key);
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
 function isTemporaryImageUrl(value) {
-  const text = toText(value);
+  const text = trimText(value);
   if (!text) return false;
   return (
     /^https?:\/\/127\.0\.0\.1:\d+\/__tmp__\//i.test(text)
@@ -37,19 +67,16 @@ function pickAvatar(userInfo) {
     userInfo.headImgUrl,
     userInfo.photoUrl,
   ];
-
   for (let i = 0; i < candidates.length; i += 1) {
-    const url = toText(candidates[i]);
+    const url = trimText(candidates[i]);
     if (url && !isTemporaryImageUrl(url)) return url;
   }
-
   return DEFAULT_AVATAR;
 }
 
 function sanitizeAvatarInCache() {
-  const cached = wx.getStorageSync('userInfo') || {};
+  const cached = safeGetStorageSync('userInfo', {}) || {};
   if (!cached || typeof cached !== 'object') return;
-
   const next = Object.assign({}, cached);
   let changed = false;
   ['faceImgUrl', 'avatarUrl', 'headImgUrl', 'photoUrl'].forEach((key) => {
@@ -58,450 +85,316 @@ function sanitizeAvatarInCache() {
       changed = true;
     }
   });
-
   if (!changed) return;
-  wx.setStorageSync('userInfo', next);
+  safeSetStorageSync('userInfo', next);
   app.globalData.userInfo = next;
 }
 
-function normalizeList(payload) {
-  if (Array.isArray(payload)) return payload;
-  if (Array.isArray(payload?.list)) return payload.list;
-  if (Array.isArray(payload?.records)) return payload.records;
-  return [];
+function hasLoginSession() {
+  storageReadFailed = false;
+  const token = safeGetStorageSync('token', '');
+  const userInfo = safeGetStorageSync('userInfo', null);
+  return Boolean(token && userInfo);
 }
 
-function isRecruitingJob(job = {}) {
-  const status = Number(job.status);
-  if (status === 1) return true;
-  return job.status === 'recruiting' || job.status === 'open';
+function isSelfVerifiedProfile(profile = {}) {
+  return Boolean(
+    trimText(profile.name)
+    && /^\d{17}[\dX]$/i.test(trimText(profile.idCard))
+    && /^1\d{10}$/.test(String(profile.phone || '').replace(/\D/g, ''))
+    && trimText(profile.homeAddress).length >= 5
+    && Number(profile.infoAuditStatus || 0) !== 2
+  );
 }
 
-function isJobOpenForSignup(job = {}) {
-  if (!job || job.isActive === false) return false;
-  if (!isRecruitingJob(job)) return false;
+function getUserIdentity(userInfo = {}) {
+  return {
+    id: trimText(userInfo.id),
+    uid: trimText(userInfo.uid),
+    phone: String(userInfo.phone || '').replace(/\D/g, ''),
+  };
+}
 
-  const auditStatus = Number(job.auditStatus);
-  if (Number.isFinite(auditStatus) && auditStatus !== 1) return false;
-
-  if (job.validUntil) {
-    const expiresAt = new Date(job.validUntil).getTime();
-    if (Number.isFinite(expiresAt) && expiresAt <= Date.now()) return false;
-  }
-
+function isSameUser(left = {}, right = {}) {
+  const a = getUserIdentity(left);
+  const b = getUserIdentity(right);
+  if (a.phone && a.phone !== b.phone) return false;
+  if (a.id && b.id && a.id !== b.id) return false;
+  if (a.uid && b.uid && a.uid !== b.uid) return false;
   return true;
 }
 
-function pickAvailableJob(jobList = []) {
-  if (!Array.isArray(jobList) || jobList.length === 0) return null;
-  return jobList.find((job) => isJobOpenForSignup(job)) || null;
-}
-
-function isDuplicateSignupError(error) {
-  if (!error) return false;
-  const message = String(error.message || '');
-  return (
-    error.statusCode === 400 || error.statusCode === 409
-  ) && /已报名|重复|请勿重复|already|duplicate/i.test(message);
-}
-
-function getConflictMessage(error) {
-  if (!error || Number(error.statusCode) !== 409) return '';
-
-  const message = String(error.message || '').trim();
-  if (message) return message;
-
-  const detail = error.data || error.response?.data || {};
-  const baseName = detail.conflictBaseName || '未知基地';
-  const jobTitle = detail.conflictJobTitle || '未知岗位';
-  return `您已报名【${baseName} / ${jobTitle}】，时间冲突。如需报名此工作，请先取消原报名。`;
-}
-
-function encodeText(value) {
-  return encodeURIComponent(String(value || ''));
+function getDisplayName(userInfo = {}) {
+  const name = trimText(userInfo.name);
+  if (name) return name;
+  const phone = String(userInfo.phone || '').replace(/\D/g, '');
+  if (phone.length === 11) return `用户${phone.slice(-4)}`;
+  return '用户';
 }
 
 function syncUserInfoCache(profile = {}) {
-  const cached = wx.getStorageSync('userInfo') || {};
-  const merged = Object.assign({}, cached, profile);
+  const cached = safeGetStorageSync('userInfo', {}) || {};
+  const base = isSameUser(cached, profile) ? cached : {};
+  const merged = Object.assign({}, base, profile);
   const avatar = pickAvatar(profile);
-
   if (avatar && avatar !== DEFAULT_AVATAR) {
     merged.avatarUrl = avatar;
     merged.faceImgUrl = avatar;
-  } else {
-    ['avatarUrl', 'faceImgUrl', 'headImgUrl', 'photoUrl'].forEach((key) => {
-      if (isTemporaryImageUrl(merged[key])) merged[key] = '';
-    });
   }
-
-  wx.setStorageSync('userInfo', merged);
+  if (isSelfVerifiedProfile(merged)) {
+    merged.infoAuditStatus = 1;
+  }
+  safeSetStorageSync('userInfo', merged);
   app.globalData.userInfo = merged;
   return merged;
 }
 
-function hasLoginSession() {
-  const token = wx.getStorageSync('token');
-  const userInfo = wx.getStorageSync('userInfo');
-  return Boolean(token && userInfo);
+function clearInvalidSession() {
+  safeRemoveStorageSync('token');
+  safeRemoveStorageSync('userInfo');
+  app.globalData.token = null;
+  app.globalData.userInfo = null;
 }
 
-function formatCategory(category) {
-  const value = Number(category);
-  if (value === 1) return '水果基地';
-  if (value === 2) return '蔬菜基地';
-  return '综合基地';
-}
-
-function formatDate(value) {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return '--';
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const d = String(date.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
-}
-
-function safeParseDescription(value) {
-  if (!value) return {};
-  if (typeof value === 'object') return value;
-  try {
-    return JSON.parse(String(value));
-  } catch (_) {
-    return {};
+function getHomeTimeCopy() {
+  const now = new Date();
+  const hour = now.getHours();
+  let greeting = '上午好';
+  if (hour >= 5 && hour < 9) {
+    greeting = '早上好';
+  } else if (hour >= 11 && hour < 13) {
+    greeting = '中午好';
+  } else if (hour >= 13 && hour < 18) {
+    greeting = '下午好';
+  } else if (hour >= 18 && hour < 23) {
+    greeting = '晚上好';
+  } else if (hour >= 23 || hour < 5) {
+    greeting = '夜深了';
   }
-}
 
-function pickFieldManagerContact(base) {
-  const meta = safeParseDescription(base && base.description);
-  const candidates = [
-    meta.fieldManagerPhone,
-    meta.fieldManagerContactPhone,
-    meta.fieldManagerContact && meta.fieldManagerContact.phone,
-    meta.siteManagerPhone,
-    meta.siteManagerContact && meta.siteManagerContact.phone,
-    meta.companyAdminContact && meta.companyAdminContact.phone,
-    base && base.fieldManagerPhone,
-    base && base.contactPhone,
-  ];
-
-  for (let i = 0; i < candidates.length; i += 1) {
-    const value = toText(candidates[i]);
-    if (value) return value;
-  }
-  return '待补充';
-}
-
-function normalizeBaseAddress(address) {
-  const text = toText(address);
-  if (!text) return '地址待补充';
-  if (/测试基地地址|测试地址|西安市测试|陕西省西安市测试/i.test(text)) {
-    return '地址待补充';
-  }
-  return text;
-}
-
-function mapBaseCard(base, index) {
-  const createdAt = base.openJobCreatedAt || base.createdAt || base.updatedAt;
-  const audited = Number(base.auditStatus) === 1;
-
-  return {
-    id: Number(base.id),
-    jobId: Number(base.openJobId || 0),
-    name: base.openJobTitle || base.baseName || '未命名基地',
-    baseName: base.baseName || '未命名基地',
-    categoryText: formatCategory(base.category),
-    address: normalizeBaseAddress(base.address),
-    createdAtText: formatDate(createdAt),
-    auditText: audited ? '已审核' : '待审核',
-    statusText: Number(base.status) === 0 ? '暂停' : '正常',
-    fieldManagerContact: pickFieldManagerContact(base),
-    salaryRange: base.salaryRange || '500-600元/天',
-    animDelay: `${index * 70}ms`,
-  };
+  const weekdays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+  const dateText = `${now.getMonth() + 1}月${now.getDate()}日，${weekdays[now.getDay()]}`;
+  return { greeting, dateText };
 }
 
 Page({
   data: {
+    showSplash: true,
     user: {
+      name: '',
       avatar: DEFAULT_AVATAR,
-      name: '未登录用户',
-      uid: '--',
-      verified: true,
-      registerStage: 'complete',
+      initial: '?',
+      roleText: '采摘工',
     },
-    showProfileTip: false,
-    serviceItems: HOME_SERVICE_ITEMS,
-    bases: [],
-    featuredBase: null,
-    loadingBases: false,
-    loadError: '',
-    applyingBaseId: 0,
+    checkedIn: false,
+    salaryHint: '查看收入与工资',
+    signupHint: '查看报名进度',
+    showVerifyBanner: false,
+    greetingLabel: '',
+    greetingName: '',
+    greetingText: '',
+    dateText: '',
+    actionCardBg: HOME_ACTION_BACKGROUNDS[0],
   },
 
   onLoad() {
+    this.pickActionCardBackground();
+    this.startSplashTimer();
+    setTimeout(() => this.syncTabBarSplash(this.data.showSplash), 120);
+    this.bootstrapTimer = setTimeout(() => {
+      this.bootstrapTimer = null;
+      this.bootstrapHome();
+    }, 80);
+  },
+
+  bootstrapHome() {
+    if (!requireAuth()) return;
     if (!this.ensureLoggedIn()) return;
     if (this.redirectIfRoleNotWorker()) return;
-    this.initUserInfo();
-    this.refreshUserProfile();
-    this.loadBaseData();
+    this.setData({ showVerifyBanner: needsRealNameAuth() });
+    this.loadUserData();
   },
 
   onShow() {
-    if (!this.ensureLoggedIn()) return;
-    if (this.redirectIfRoleNotWorker()) return;
-    this.initUserInfo();
-    this.refreshUserProfile();
-    this.loadBaseData();
+    setTimeout(() => this.syncTabBarSplash(this.data.showSplash), 80);
+    if (this.bootstrapTimer) return;
+    setTimeout(() => {
+      if (!this.ensureLoggedIn()) return;
+      if (this.redirectIfRoleNotWorker()) return;
+      this.loadUserData();
+    }, 80);
+  },
+
+  onUnload() {
+    if (this.bootstrapTimer) {
+      clearTimeout(this.bootstrapTimer);
+      this.bootstrapTimer = null;
+    }
+    if (this.splashTimer) {
+      clearTimeout(this.splashTimer);
+      this.splashTimer = null;
+    }
+    this.syncTabBarSplash(false);
+  },
+
+  onPullDownRefresh() {
+    this.loadUserData().finally(() => wx.stopPullDownRefresh());
   },
 
   ensureLoggedIn() {
     if (hasLoginSession()) return true;
+    if (storageReadFailed) {
+      if (!this.bootstrapTimer) {
+        this.bootstrapTimer = setTimeout(() => {
+          this.bootstrapTimer = null;
+          this.bootstrapHome();
+        }, 200);
+      }
+      return false;
+    }
     wx.reLaunch({ url: '/pages/login/login' });
     return false;
   },
 
-  initUserInfo() {
-    sanitizeAvatarInCache();
-    const userInfo = wx.getStorageSync('userInfo') || {};
-    const name = userInfo.name || '';
-    const registerStage = userInfo.registerStage || (name ? 'complete' : 'wechat_only');
-    this.setData({
-      showProfileTip: registerStage === 'wechat_only' || !name,
-      user: {
-        avatar: pickAvatar(userInfo),
-        name: name || '未登录用户',
-        uid: userInfo.uid || '--',
-        verified: true,
-        registerStage,
-      },
-    });
+  pickActionCardBackground() {
+    const index = Math.floor(Math.random() * HOME_ACTION_BACKGROUNDS.length);
+    this.actionBgIndex = index;
+    this.setData({ actionCardBg: HOME_ACTION_BACKGROUNDS[index] });
   },
 
-  onAvatarError() {
-    sanitizeAvatarInCache();
-    this.setData({
-      'user.avatar': DEFAULT_AVATAR,
-    });
+  onActionBgError() {
+    const currentIndex = typeof this.actionBgIndex === 'number' ? this.actionBgIndex : 0;
+    const nextIndex = (currentIndex + 1) % HOME_ACTION_BACKGROUNDS.length;
+    this.actionBgIndex = nextIndex;
+    this.setData({ actionCardBg: HOME_ACTION_BACKGROUNDS[nextIndex] });
   },
 
-  async refreshUserProfile() {
-    const token = wx.getStorageSync('token');
-    if (!token) return;
+  startSplashTimer() {
+    if (this.splashTimer) clearTimeout(this.splashTimer);
+    this.splashTimer = setTimeout(() => {
+      this.setData({ showSplash: false });
+      this.syncTabBarSplash(false);
+      this.splashTimer = null;
+    }, 1500);
+  },
 
-    try {
-      const profile = await app.request({
-        url: '/user/profile',
-        method: 'GET',
-      });
-
-      if (!profile) return;
-      syncUserInfoCache(profile);
-      this.initUserInfo();
-    } catch (error) {
-      if (error?.statusCode === 401 || /Login expired/i.test(String(error?.message || ''))) {
-        return;
-      }
-      console.error('[index] refresh user profile failed:', error);
+  hideSplash() {
+    if (this.splashTimer) {
+      clearTimeout(this.splashTimer);
+      this.splashTimer = null;
     }
+    this.setData({ showSplash: false });
+    this.syncTabBarSplash(false);
+  },
+
+  syncTabBarSplash(hidden) {
+    if (typeof this.getTabBar !== 'function') return;
+    const tabBar = this.getTabBar();
+    if (!tabBar) return;
+    tabBar.setData({ hiddenForSplash: Boolean(hidden) });
   },
 
   redirectIfRoleNotWorker() {
-    const userInfo = wx.getStorageSync('userInfo');
+    const userInfo = safeGetStorageSync('userInfo', null);
     const role = resolveRole(userInfo);
-
     if (role === 'boss') {
       wx.reLaunch({ url: '/pages/base/list/list' });
       return true;
     }
-
     if (isAdminRole(role)) {
       wx.reLaunch({ url: '/pages/admin/home/home' });
       return true;
     }
-
     return false;
   },
 
-  retryLoadBases() {
-    this.loadBaseData();
-  },
-
-  async loadBaseData() {
+  async loadUserData() {
+    sanitizeAvatarInCache();
+    const cached = safeGetStorageSync('userInfo', {}) || {};
+    const name = getDisplayName(cached);
+    const timeCopy = getHomeTimeCopy();
     this.setData({
-      loadingBases: true,
-      loadError: '',
+      'user.name': name,
+      'user.avatar': pickAvatar(cached),
+      'user.initial': name && name.length ? name[0] : '?',
+      'user.roleText': roleLabel(resolveRole(cached)),
+      greetingLabel: timeCopy.greeting,
+      greetingName: name,
+      greetingText: `${timeCopy.greeting}，${name}`,
+      dateText: timeCopy.dateText,
+      showVerifyBanner: needsRealNameAuth(),
     });
+
+    // Fetch fresh data silently
+    const token = safeGetStorageSync('token', '');
+    if (!token) return;
 
     try {
-      const bases = await app.request({
-        url: '/base?withOpenJobs=1',
-        method: 'GET',
-      });
-
-      const baseList = (Array.isArray(bases) ? bases : []).sort((a, b) => {
-        const at = new Date(a.openJobCreatedAt || a.createdAt || a.updatedAt || 0).getTime();
-        const bt = new Date(b.openJobCreatedAt || b.createdAt || b.updatedAt || 0).getTime();
-        return bt - at;
-      });
-
-      const baseCards = baseList.slice(0, 10).map((item, index) => mapBaseCard(item, index));
-
-      this.setData({
-        bases: baseCards,
-        featuredBase: baseCards[0] || null,
-        loadingBases: false,
-        loadError: baseCards.length ? '' : '暂无可报名岗位',
-      });
-    } catch (error) {
-      console.error('[index] load base data failed:', error);
-      const detail = String(error?.message || '').trim();
-      this.setData({
-        bases: [],
-        featuredBase: null,
-        loadingBases: false,
-        loadError: detail ? `基地信息加载失败：${detail}` : '基地信息加载失败，请稍后再试',
-      });
-    }
-  },
-
-  goToQrcode() {
-    wx.switchTab({ url: '/pages/qrcode/qrcode' });
-  },
-
-  onSearchTap() {
-    wx.navigateTo({ url: '/pages/search/search' });
-  },
-
-  onNoticeTap() {
-    this.goToMySignups();
-  },
-
-  onServiceTap(e) {
-    const key = e.currentTarget.dataset.key;
-    if (key === 'job') {
-      this.goToJobList();
-      return;
-    }
-    if (key === 'signup') {
-      this.goToMySignups();
-      return;
-    }
-    if (key === 'qrcode') {
-      this.goToQrcode();
-      return;
-    }
-    if (key === 'salary') {
-      this.goToSalary();
-      return;
-    }
-    if (key === 'training') {
-      this.goToTraining();
-      return;
-    }
-    if (key === 'policy') {
-      this.goToPolicyConsult();
-      return;
-    }
-    if (key === 'rights') {
-      this.goToRightsProtection();
-      return;
-    }
-    if (key === 'more') {
-      this.goToMoreServices();
-    }
-  },
-
-  goToBaseDetail(e) {
-    const baseId = Number(e.currentTarget.dataset.id);
-    this.goToBaseDetailById(baseId);
-  },
-
-  goToBaseDetailById(baseId) {
-    if (!baseId) {
-      wx.showToast({
-        title: '基地信息无效',
-        icon: 'none',
-      });
-      return;
-    }
-
-    wx.navigateTo({
-      url: `/pages/base/detail/detail?id=${baseId}`,
-    });
-  },
-
-  async fetchBaseRecruitingJob(baseId) {
-    const targetBaseId = Number(baseId);
-    if (!targetBaseId) return null;
-
-    const requests = [
-      `/base/${targetBaseId}/jobs?status=1`,
-      `/base/${targetBaseId}/jobs`,
-    ];
-
-    for (let i = 0; i < requests.length; i += 1) {
-      const url = requests[i];
-      try {
-        const payload = await app.request({ url, method: 'GET' });
-        const picked = pickAvailableJob(normalizeList(payload));
-        if (picked) return picked;
-      } catch (error) {
-        console.warn('[index] fetch base jobs failed:', url, error);
+      const profile = await app.request({ url: '/user/profile', method: 'GET' });
+      if (profile) {
+        const currentUser = safeGetStorageSync('userInfo', {}) || {};
+        if (!isSameUser(currentUser, profile)) {
+          clearInvalidSession();
+          wx.showToast({ title: '登录状态异常，请重新登录', icon: 'none' });
+          setTimeout(() => wx.reLaunch({ url: '/pages/login/login' }), 700);
+          return;
+        }
+        const mergedProfile = syncUserInfoCache(profile);
+        const freshName = getDisplayName(mergedProfile);
+        this.setData({
+          'user.name': freshName,
+          'user.avatar': pickAvatar(mergedProfile),
+          'user.initial': freshName && freshName.length ? freshName[0] : '?',
+          'user.roleText': roleLabel(resolveRole(mergedProfile)),
+          greetingName: freshName,
+          greetingText: `${timeCopy.greeting}，${freshName}`,
+          showVerifyBanner: needsRealNameAuth(),
+        });
       }
-    }
 
-    return null;
+      // Try to get check-in status
+      try {
+        const qrData = await app.request({ url: '/attendance/qrcode', method: 'GET' });
+        const statusRaw = trimText(qrData?.checkinStatus || qrData?.status || '').toLowerCase();
+        this.setData({
+          checkedIn: qrData?.checkedIn === true || statusRaw === 'checked_in' || statusRaw === 'signed',
+        });
+      } catch (_) { /* ignore */ }
+
+      // Try salary hint
+      try {
+        const salaryStats = await app.request({ url: '/salary/worker/stats', method: 'GET' });
+        if (salaryStats && salaryStats.pendingCount > 0) {
+          this.setData({ salaryHint: `${salaryStats.pendingCount} 笔待确认` });
+        } else if (salaryStats && salaryStats.totalEarned > 0) {
+          this.setData({ salaryHint: `累计收入 ¥${Number(salaryStats.totalEarned).toFixed(2)}` });
+        }
+      } catch (_) { /* ignore */ }
+
+      // Try signup hint
+      try {
+        const records = await app.request({ url: '/attendance/worker/records?limit=5', method: 'GET' });
+        const count = Array.isArray(records) ? records.length : 0;
+        this.setData({ signupHint: count > 0 ? `${count} 个进行中` : '暂无报名' });
+      } catch (_) { /* ignore */ }
+    } catch (_) { /* offline mode is fine */ }
   },
 
-  buildSignupSuccessUrl(payload = {}) {
-    const query = [
-      `signupId=${Number(payload.signupId) || 0}`,
-      `baseId=${Number(payload.baseId) || 0}`,
-      `jobId=${Number(payload.jobId) || 0}`,
-      `baseName=${encodeText(payload.baseName)}`,
-      `jobTitle=${encodeText(payload.jobTitle)}`,
-      `workDate=${encodeText(payload.workDate)}`,
-      `duplicate=${payload.duplicate ? '1' : '0'}`,
-    ].join('&');
-
-    return `/pages/signup/success/success?${query}`;
-  },
-
-  goToFeaturedBaseDetail() {
-    const baseId = Number(this.data.featuredBase && this.data.featuredBase.id);
-    if (!baseId) return;
-    wx.navigateTo({
-      url: `/pages/base/detail/detail?id=${baseId}`,
-    });
+  onAvatarError() {
+    sanitizeAvatarInCache();
+    this.setData({ 'user.avatar': DEFAULT_AVATAR });
   },
 
   goToJobList() {
     wx.navigateTo({ url: '/pages/job/list/list' });
   },
 
-  goToMySignups() {
-    wx.navigateTo({ url: '/pages/profile/signups/signups' });
-  },
-
   goToSalary() {
     wx.navigateTo({ url: '/pages/salary/salary' });
   },
 
-  goToProfile() {
-    wx.switchTab({ url: '/pages/profile/profile' });
-  },
-
-  goToProfileComplete() {
-    wx.navigateTo({ url: '/pages/profile/complete-info/complete-info' });
-  },
-
-  goToSalaryCard() {
-    wx.navigateTo({ url: '/pages/profile/salaryCard/salaryCard' });
-  },
-
-  goToWorkHistory() {
-    wx.navigateTo({ url: '/pages/profile/workHistory/workHistory' });
+  goToMySignups() {
+    wx.navigateTo({ url: '/pages/profile/signups/signups' });
   },
 
   goToPolicyConsult() {
@@ -512,131 +405,15 @@ Page({
     wx.navigateTo({ url: '/pages/training/list/list' });
   },
 
-  goToRightsProtection() {
-    wx.navigateTo({ url: '/pages/rights/list/list' });
-  },
-
   goToMoreServices() {
     wx.navigateTo({ url: '/pages/index/services/services' });
   },
 
-  async applyForBase(e) {
-    const baseId = Number(e.currentTarget.dataset.id);
-    if (!baseId) return;
+  goToProfile() {
+    wx.switchTab({ url: '/pages/profile/profile' });
+  },
 
-    const userInfo = wx.getStorageSync('userInfo') || {};
-    if (!userInfo.name) {
-      wx.showModal({
-        title: '请先完善信息',
-        content: '报名需要实名认证，是否前往完善个人信息？',
-        success: (res) => {
-          if (res.confirm) {
-            wx.navigateTo({ url: '/pages/profile/complete-info/complete-info' });
-          }
-        },
-      });
-      return;
-    }
-
-    const token = wx.getStorageSync('token');
-    if (!token) {
-      wx.showModal({
-        title: '提示',
-        content: '请先登录后再报名',
-        showCancel: false,
-        success: () => {
-          wx.reLaunch({ url: '/pages/login/login' });
-        },
-      });
-      return;
-    }
-
-    if (Number(this.data.applyingBaseId) === baseId) {
-      return;
-    }
-
-    if (typeof wx.vibrateShort === 'function') {
-      wx.vibrateShort({ type: 'light' });
-    }
-
-    this.setData({ applyingBaseId: baseId });
-    wx.showLoading({
-      title: '报名中',
-      mask: true,
-    });
-
-    try {
-      const matchedJob = await this.fetchBaseRecruitingJob(baseId);
-      if (!matchedJob) {
-        wx.showModal({
-          title: '暂不可报名',
-          content: '该基地暂未开放可报名岗位，可先查看基地详情。',
-          confirmText: '查看详情',
-          cancelText: '我知道了',
-          success: (res) => {
-            if (res.confirm) this.goToBaseDetailById(baseId);
-          },
-        });
-        return;
-      }
-
-      const jobId = Number(matchedJob.id);
-      const baseCard = (this.data.bases || []).find((item) => Number(item.id) === baseId);
-      const baseName = baseCard?.baseName || matchedJob.baseName || '基地';
-      const jobTitle = matchedJob.jobTitle || matchedJob.title || '岗位';
-
-      let signupRecord;
-      try {
-        signupRecord = await app.request({
-          url: '/attendance/signup',
-          method: 'POST',
-          data: {
-            baseId,
-            jobId,
-            note: '首页热门岗位报名',
-          },
-        });
-      } catch (error) {
-        const conflictMessage = getConflictMessage(error);
-        if (conflictMessage) {
-          wx.showModal({
-            title: '报名时间冲突',
-            content: conflictMessage,
-            showCancel: false,
-          });
-          return;
-        }
-
-        if (isDuplicateSignupError(error)) {
-          signupRecord = {
-            id: 0,
-            workDate: formatDate(new Date()),
-            duplicate: true,
-          };
-        } else {
-          throw error;
-        }
-      }
-
-      wx.navigateTo({
-        url: this.buildSignupSuccessUrl({
-          signupId: signupRecord?.id || 0,
-          baseId,
-          jobId,
-          baseName,
-          jobTitle,
-          workDate: signupRecord?.workDate || formatDate(new Date()),
-          duplicate: Boolean(signupRecord?.duplicate),
-        }),
-      });
-    } catch (error) {
-      wx.showToast({
-        title: error?.message || '报名失败，请稍后重试',
-        icon: 'none',
-      });
-    } finally {
-      wx.hideLoading();
-      this.setData({ applyingBaseId: 0 });
-    }
+  goToVerify() {
+    wx.navigateTo({ url: '/pages/verify/verify' });
   },
 });

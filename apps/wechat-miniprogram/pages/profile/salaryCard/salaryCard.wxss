@@ -1,8 +1,14 @@
-/* pages/profile/salaryCard/salaryCard.wxss — Claude Purple Theme */
+/* pages/profile/salaryCard/salaryCard.wxss — iOS-style bank card */
+page {
+  background: #f5f5f7 !important;
+  color: #111111;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+}
+
 .page {
   min-height: 100vh;
   position: relative;
-  background: var(--page-bg);
+  background: #f5f5f7;
   opacity: 0;
   transform: translateY(18rpx);
   transition: opacity 260ms ease, transform 260ms ease;
@@ -18,29 +24,27 @@
 }
 
 .container {
-  position: relative;
-  z-index: 1;
   min-height: 100vh;
   box-sizing: border-box;
-  padding: 30rpx 24rpx calc(42rpx + env(safe-area-inset-bottom));
+  padding: 30rpx 28rpx calc(188rpx + env(safe-area-inset-bottom));
   display: flex;
   flex-direction: column;
-  gap: 24rpx;
+  gap: 22rpx;
 }
 
 .card-zone,
 .salary-card,
 .empty-card,
 .edit-card {
-  background: var(--card-bg);
-  border-radius: var(--radius-lg);
-  padding: 24rpx;
-  border: var(--border-soft);
-  box-shadow: var(--shadow-md);
+  border-radius: 34rpx;
+  padding: 28rpx;
+  background: rgba(255, 255, 255, 0.94);
+  border: 1rpx solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 18rpx 44rpx rgba(15, 23, 42, 0.06);
 }
 
 .card-swiper {
-  height: 336rpx;
+  height: 338rpx;
 }
 
 swiper-item {
@@ -50,45 +54,78 @@ swiper-item {
 
 .bank-card {
   height: 320rpx;
-  border-radius: var(--radius-lg);
+  border-radius: 34rpx;
   box-sizing: border-box;
-  padding: 30rpx 28rpx;
-  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.06);
-  color: #1a1a2e;
+  padding: 30rpx;
+  color: #ffffff;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  overflow: hidden;
+  position: relative;
+  box-shadow: 0 20rpx 44rpx rgba(15, 23, 42, 0.16);
 }
 
-.bank-card.theme-abc,
-.bank-card.theme-ccb,
+.bank-card::before {
+  content: '';
+  position: absolute;
+  right: -110rpx;
+  top: -110rpx;
+  width: 310rpx;
+  height: 310rpx;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.13);
+}
+
+.bank-card.theme-abc {
+  background: linear-gradient(135deg, #111111 0%, #1f6f43 100%);
+}
+
+.bank-card.theme-ccb {
+  background: linear-gradient(135deg, #111111 0%, #1d5fd1 100%);
+}
+
 .bank-card.theme-default {
-  background: var(--brand-gradient);
+  background: linear-gradient(135deg, #111111 0%, #4a4a4f 100%);
+}
+
+.card-top,
+.card-bottom,
+.card-no {
+  position: relative;
+  z-index: 1;
 }
 
 .card-top {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 18rpx;
 }
 
 .bank-name {
-  font-size: 34rpx;
-  font-weight: 700;
+  color: #ffffff;
+  font-size: 33rpx;
+  line-height: 1.2;
+  font-weight: 900;
 }
 
 .card-tag {
+  padding: 8rpx 16rpx;
+  border-radius: 999rpx;
+  background: rgba(255, 255, 255, 0.14);
+  color: rgba(255, 255, 255, 0.86);
   font-size: 22rpx;
-  padding: 6rpx 14rpx;
-  border-radius: var(--radius-pill);
-  background: rgba(0, 0, 0, 0.06);
+  line-height: 1.2;
+  font-weight: 800;
 }
 
 .card-no {
-  font-size: 42rpx;
-  font-weight: 700;
-  letter-spacing: 2rpx;
+  color: #ffffff;
+  font-size: 40rpx;
   line-height: 1.2;
+  font-weight: 900;
+  letter-spacing: 2rpx;
   word-break: break-all;
 }
 
@@ -104,51 +141,56 @@ swiper-item {
 
 .bottom-label {
   display: block;
+  color: rgba(255, 255, 255, 0.58);
   font-size: 22rpx;
-  color: #8a94a6;
+  line-height: 1.2;
+  font-weight: 800;
 }
 
 .bottom-value {
   display: block;
   margin-top: 8rpx;
-  font-size: 28rpx;
-  font-weight: 600;
+  color: #ffffff;
+  font-size: 27rpx;
+  line-height: 1.2;
+  font-weight: 900;
 }
 
 .dot-row {
-  margin-top: 16rpx;
+  margin-top: 18rpx;
   display: flex;
   justify-content: center;
-  gap: 12rpx;
+  gap: 10rpx;
 }
 
 .dot {
-  width: 16rpx;
-  height: 16rpx;
+  width: 12rpx;
+  height: 12rpx;
   border-radius: 50%;
-  background: rgba(102, 126, 234, 0.18);
+  background: #d1d1d6;
 }
 
 .dot.active {
-  background: var(--brand-purple);
-  transform: scale(1.08);
+  width: 28rpx;
+  border-radius: 999rpx;
+  background: #111111;
 }
 
 .action-row {
-  display: flex;
-  gap: 16rpx;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14rpx;
 }
 
 .action-btn,
 .save-btn {
   border: none;
-  border-radius: var(--radius-pill);
-  font-size: 30rpx;
-  font-weight: 800;
+  border-radius: 999rpx;
+  font-size: 29rpx;
+  font-weight: 900;
 }
 
 .action-btn {
-  flex: 1;
   height: 86rpx;
   display: flex;
   align-items: center;
@@ -156,53 +198,63 @@ swiper-item {
 }
 
 .action-btn::after,
-.save-btn::after {
+.save-btn::after,
+.scan-card-btn::after {
   border: none;
 }
 
 .action-ghost {
-  color: var(--brand-purple);
-  background: rgba(102, 126, 234, 0.08);
+  color: #111111;
+  background: #ffffff;
+  border: 1rpx solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 12rpx 28rpx rgba(15, 23, 42, 0.04);
 }
 
 .action-primary,
 .save-btn {
-  color: #1a1a2e;
-  background: var(--brand-purple);
+  color: #ffffff;
+  background: #111111;
+  box-shadow: 0 12rpx 28rpx rgba(15, 23, 42, 0.12);
 }
 
 .salary-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  gap: 16rpx;
+  align-items: flex-start;
+  gap: 18rpx;
   flex-wrap: wrap;
 }
 
-.salary-title {
+.salary-title,
+.edit-title,
+.empty-title,
+.salary-empty-title {
+  color: #111111;
   font-size: 32rpx;
-  font-weight: 800;
-  color: var(--ink-main);
+  line-height: 1.22;
+  font-weight: 900;
 }
 
 .salary-link {
+  color: #8e8e93;
   font-size: 24rpx;
-  color: var(--brand-purple);
+  line-height: 1.35;
+  font-weight: 800;
 }
 
 .salary-body {
-  margin-top: 18rpx;
-  background: rgba(102, 126, 234, 0.08);
-  border-radius: var(--radius-md);
-  padding: 20rpx;
+  margin-top: 22rpx;
+  padding: 22rpx;
+  border-radius: 26rpx;
+  background: #f7f7f8;
 }
 
 .amount {
   display: block;
-  font-size: 56rpx;
-  line-height: 1.15;
+  color: #16853f;
+  font-size: 54rpx;
+  line-height: 1.1;
   font-weight: 900;
-  color: var(--brand-purple);
 }
 
 .amount-pop {
@@ -210,100 +262,126 @@ swiper-item {
 }
 
 .salary-meta {
-  margin-top: 12rpx;
   display: block;
-  font-size: 26rpx;
-  color: var(--ink-sub);
+  margin-top: 12rpx;
+  color: #8e8e93;
+  font-size: 25rpx;
+  line-height: 1.4;
+  font-weight: 700;
+}
+
+.salary-empty,
+.empty-card {
+  text-align: center;
 }
 
 .salary-empty {
-  margin-top: 18rpx;
-  border-radius: var(--radius-md);
-  padding: 30rpx 20rpx;
-  text-align: center;
-  background: var(--card-bg-soft);
+  margin-top: 20rpx;
+  padding: 34rpx 20rpx;
+  border-radius: 26rpx;
+  background: #f7f7f8;
 }
 
 .salary-empty-icon,
 .empty-icon {
-  display: block;
-  font-size: 56rpx;
+  width: 88rpx;
+  height: 88rpx;
+  margin: 0 auto 22rpx;
+  border-radius: 28rpx;
+  background: #f2f2f4;
+  position: relative;
 }
 
-.salary-empty-title,
-.empty-title {
-  display: block;
-  margin-top: 12rpx;
-  font-size: 30rpx;
-  font-weight: 800;
-  color: var(--ink-main);
+.salary-empty-icon::before,
+.empty-icon::before {
+  content: '';
+  position: absolute;
+  left: 26rpx;
+  top: 24rpx;
+  width: 36rpx;
+  height: 40rpx;
+  border-radius: 10rpx;
+  border: 6rpx solid #111111;
+  box-sizing: border-box;
 }
 
 .salary-empty-desc,
 .empty-desc {
   display: block;
-  margin-top: 8rpx;
-  font-size: 24rpx;
-  color: var(--ink-sub);
+  max-width: 480rpx;
+  margin: 10rpx auto 0;
+  color: #8e8e93;
+  font-size: 25rpx;
+  line-height: 1.45;
+  font-weight: 700;
 }
 
 .edit-title {
-  font-size: 30rpx;
-  color: var(--ink-main);
-  font-weight: 800;
-  margin-bottom: 18rpx;
+  margin-bottom: 22rpx;
+}
+
+.scan-card-btn {
+  width: 100%;
+  height: 82rpx;
+  margin: 0 0 22rpx;
+  padding: 0;
+  border: 1rpx solid rgba(0, 0, 0, 0.08);
+  border-radius: 22rpx;
+  background: #f7f7f8;
+  color: #111111;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10rpx;
+  font-size: 27rpx;
+  line-height: 1;
+  font-weight: 900;
+}
+
+.scan-card-icon {
+  width: 34rpx;
+  height: 34rpx;
 }
 
 .edit-item {
-  margin-top: 14rpx;
+  margin-top: 18rpx;
 }
 
 .edit-label {
   display: block;
-  font-size: 26rpx;
-  color: #4a4d5e;
-  margin-bottom: 8rpx;
-  font-weight: 700;
+  margin-bottom: 10rpx;
+  color: #8e8e93;
+  font-size: 24rpx;
+  line-height: 1.2;
+  font-weight: 900;
 }
 
 .edit-input {
   width: 100%;
   height: 88rpx;
   box-sizing: border-box;
-  border-radius: var(--radius-md);
-  background: #f5f2ff;
-  border: var(--border-soft);
-  padding: 0 20rpx;
-  font-size: 28rpx;
-  color: var(--ink-main);
-  transition: all 0.25s;
-}
-
-.edit-input:focus {
-  border-color: var(--brand-purple);
-  background: #ffffff;
-  box-shadow: 0 0 0 6rpx rgba(102, 126, 234, 0.1);
+  border: none;
+  border-radius: 24rpx;
+  background: #f2f2f4;
+  color: #111111;
+  padding: 0 22rpx;
+  font-size: 29rpx;
+  line-height: 88rpx;
+  font-weight: 800;
 }
 
 .save-btn {
-  margin-top: 24rpx;
+  width: 100%;
   height: 88rpx;
+  margin-top: 28rpx;
+  padding: 0;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 @keyframes pop {
-  0% {
-    transform: scale(0.8);
-    opacity: 0;
-  }
-  60% {
-    transform: scale(1.1);
-    opacity: 1;
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
+  0% { transform: scale(0.84); opacity: 0; }
+  60% { transform: scale(1.08); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
 }

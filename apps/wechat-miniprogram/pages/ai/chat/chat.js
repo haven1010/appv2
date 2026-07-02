@@ -1,4 +1,5 @@
 const app = getApp();
+const { requireAuth } = require('../../../utils/auth-guard');
 
 Page({
   data: {
@@ -14,6 +15,7 @@ Page({
   },
 
   onLoad() {
+    if (!requireAuth()) return;
     try {
       const rm = wx.getRecorderManager();
       rm.onStop((res) => this.onRecordStop(res));

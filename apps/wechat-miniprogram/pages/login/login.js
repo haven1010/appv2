@@ -350,6 +350,8 @@ Page({
         selectedLoginRole: selectedRole,
       });
 
+      wx.removeStorageSync('token');
+      wx.removeStorageSync('userInfo');
       wx.setStorageSync('token', res.access_token);
       wx.setStorageSync('userInfo', mergedUser);
 
@@ -408,16 +410,19 @@ Page({
   },
 
   goToRegister() {
-    const role = normalizeLoginRole(this.data.loginRole);
     wx.navigateTo({
-      url: `/pages/register/register?role=${role}`,
+      url: '/pages/register/register',
     });
   },
 
   goToProxyRegister() {
-    wx.navigateTo({
-      url: '/pages/register/register?role=worker&mode=proxy',
-    });
+    const app = getApp();
+    // Proxy registration still needs the full info flow — go directly to verify
+    // For now, redirect to the new SMS register
+    wx.showToast({ title: '请先用手机号注册，然后在个人中心完善信息', icon: 'none', duration: 2000 });
+    setTimeout(() => {
+      wx.navigateTo({ url: '/pages/register/register' });
+    }, 2000);
   },
 
   async handleWechatLogin() {
@@ -440,6 +445,8 @@ Page({
         registerStage: result.registerStage || 'wechat_only',
       });
 
+      wx.removeStorageSync('token');
+      wx.removeStorageSync('userInfo');
       wx.setStorageSync('token', result.access_token);
       wx.setStorageSync('userInfo', mergedUser);
       app.globalData.token = result.access_token;

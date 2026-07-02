@@ -2,6 +2,7 @@
  * User profile page.
  */
 const app = getApp();
+const { requireAuth } = require('../../../utils/auth-guard');
 const PHONE_REGEX = /^1[3-9]\d{9}$/;
 
 const ROLE_TEXT_MAP = {
@@ -166,6 +167,7 @@ Page({
   },
 
   onLoad() {
+    if (!requireAuth()) return;
     sanitizeAvatarInCache();
     this.loadData();
     setTimeout(() => {

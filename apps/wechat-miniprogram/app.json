@@ -4,10 +4,14 @@
     "pages/index/services/services",
     "pages/search/search",
     "pages/login/login",
+    "pages/legal/user-agreement/user-agreement",
+    "pages/legal/privacy-policy/privacy-policy",
     "pages/boss/dashboard/dashboard",
     "pages/boss/profile/profile",
     "pages/boss/applicants/applicants",
     "pages/register/register",
+    "pages/register/role-select",
+    "pages/verify/verify",
     "pages/profile/complete-info/complete-info",
     "pages/profile/profile",
     "pages/profile/settings/settings",
@@ -53,16 +57,17 @@
   "window": {
     "backgroundTextStyle": "dark",
     "navigationBarBackgroundColor": "#f5f5f7",
-    "navigationBarTitleText": "\u667a\u6c47\u5c31\u4e1a",
+    "navigationBarTitleText": "\u667a\u7ed8\u5c31\u4e1a",
     "navigationBarTextStyle": "black",
     "backgroundColor": "#f5f5f7",
     "enablePullDownRefresh": true
   },
   "tabBar": {
-    "color": "#8a94a6",
-    "selectedColor": "#667eea",
-    "backgroundColor": "#f5f5f7",
-    "borderStyle": "white",
+    "custom": true,
+    "color": "#B8B8B8",
+    "selectedColor": "#111111",
+    "backgroundColor": "#FBFBFA",
+    "borderStyle": "black",
     "list": [
       {
         "pagePath": "pages/index/index",
@@ -75,12 +80,6 @@
         "text": "签到码",
         "iconPath": "images/tabbar/qrcode.png",
         "selectedIconPath": "images/tabbar/qrcode-active.png"
-      },
-      {
-        "pagePath": "pages/ai/chat/chat",
-        "text": "小玉",
-        "iconPath": "images/tabbar/chat.png",
-        "selectedIconPath": "images/tabbar/chat-active.png"
       },
       {
         "pagePath": "pages/profile/profile",

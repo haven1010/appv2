@@ -1,205 +1,103 @@
 <view class="register-page">
-  <!-- 背景装饰 -->
-  <view class="bg-blob bg-blob-top"></view>
-  <view class="bg-blob bg-blob-bottom"></view>
+  <view class="steps-container">
+    <view class="step {{stepClasses[0]}}">
+      <view class="step-body">
+        <view class="brand-mark">
+          <image class="brand-logo" src="/images/zhihui-logo.webp" mode="aspectFit" />
+        </view>
+        <text class="brand-name">智绘就业</text>
+        <text class="step-title">注册账号</text>
+        <text class="step-desc">输入手机号，接收短信验证码</text>
 
-  <view class="register-shell page-enter">
-    <!-- 品牌头部 -->
-    <view class="brand-bar">
-      <view class="brand-icon">智</view>
-      <view class="brand-info">
-        <text class="brand-name">智汇就业</text>
-        <text class="brand-role">{{registerRole === 'boss' ? '创建老板账号' : (registerMode === 'proxy' ? '家人代注册' : '创建采摘工账号')}}</text>
+        <view class="step-input-area">
+          <view class="phone-row">
+            <text class="phone-prefix">+86</text>
+            <view class="input-wrapper {{phone ? 'has-value' : ''}}">
+              <input
+                class="input-field"
+                type="number"
+                maxlength="11"
+                placeholder="请输入手机号"
+                placeholder-class="placeholder"
+                value="{{phone}}"
+                bindinput="onInputPhone"
+                focus="{{currentStep === 0}}"
+              />
+            </view>
+          </view>
+        </view>
+
+        <view class="step-error" wx:if="{{error}}">
+          <text class="step-error-text">{{error}}</text>
+        </view>
+
+        <button
+          class="primary-btn {{phone.length === 11 && hasAgreed ? 'btn-active' : 'btn-disabled'}}"
+          disabled="{{phone.length !== 11 || loading}}"
+          bindtap="handleSendCode"
+        >
+          <text wx:if="{{!loading}}">获取验证码</text>
+          <text wx:else>发送中...</text>
+        </button>
+
+        <view class="agreement-row" bindtap="toggleAgreement">
+          <view class="agreement-check {{hasAgreed ? 'checked' : ''}}">
+            <text wx:if="{{hasAgreed}}">✓</text>
+          </view>
+          <view class="agreement-copy">
+            <text class="agreement-text">我已阅读并同意</text>
+            <text class="agreement-link" catchtap="openUserAgreement">《用户协议》</text>
+            <text class="agreement-text">和</text>
+            <text class="agreement-link" catchtap="openPrivacyPolicy">《隐私政策》</text>
+          </view>
+        </view>
+
+        <view class="login-link-row">
+          <text class="login-link-text">已有账号？</text>
+          <text class="login-link-btn" bindtap="goToLogin">去登录</text>
+        </view>
       </view>
     </view>
 
-    <!-- 身份标识 -->
-    <view class="identity-badge">
-      <view class="identity-icon">{{registerRole === 'boss' ? '企' : '工'}}</view>
-      <view class="identity-info">
-        <text class="identity-label">{{registerRole === 'boss' ? '老板注册' : '采摘工注册'}}</text>
-        <text class="identity-desc">{{registerRole === 'boss' ? '管理基地、发布岗位、工资结算' : '报名工作、签到打卡、领取工资'}}</text>
-      </view>
-    </view>
+    <view class="step {{stepClasses[1]}}">
+      <view class="step-body">
+        <view class="code-back" bindtap="goBackToPhone">修改手机号</view>
+        <text class="step-title">输入验证码</text>
+        <text class="step-desc">验证码已发送至 {{phone}}</text>
 
-    <!-- 注册卡片 -->
-    <view class="register-card">
-      <!-- 模式切换 -->
-      <view class="mode-bar" wx:if="{{registerRole === 'worker'}}">
-        <view class="mode-option {{registerMode === 'self' ? 'active' : ''}}" data-mode="self" bindtap="onSwitchRegisterMode">
-          <text class="mode-dot"></text>
-          <text>本人注册</text>
-        </view>
-        <view class="mode-option {{registerMode === 'proxy' ? 'active' : ''}}" data-mode="proxy" bindtap="onSwitchRegisterMode">
-          <text class="mode-dot"></text>
-          <text>家人代注册</text>
-        </view>
-      </view>
-
-      <!-- 基本信息 -->
-      <view class="section-card">
-        <view class="section-head">
-          <text class="section-title">📋 基本信息</text>
-          <text class="section-desc">先填写身份和联系方式</text>
-        </view>
-
-        <view class="form-group">
-          <view class="form-item">
-            <text class="field-label">真实姓名 <text class="required">*</text></text>
-            <view class="input-wrapper {{nameFocus ? 'focus' : ''}}">
-              <input class="input-field" type="text" placeholder="请输入真实姓名" placeholder-class="placeholder" value="{{name}}" bindinput="onInputName" bindfocus="onNameFocus" bindblur="onNameBlur" />
+        <view class="code-input-area">
+          <view class="code-row">
+            <view class="code-input-wrapper">
+              <input
+                class="code-field"
+                type="number"
+                maxlength="6"
+                placeholder="请输入验证码"
+                placeholder-class="placeholder"
+                value="{{code}}"
+                bindinput="onInputCode"
+                focus="{{currentStep === 1}}"
+              />
             </view>
           </view>
-
-          <view class="form-item">
-            <text class="field-label">身份证号 <text class="required">*</text></text>
-            <view class="input-wrapper {{idCardFocus ? 'focus' : ''}}">
-              <input class="input-field" type="idcard" placeholder="请输入18位身份证号" placeholder-class="placeholder" value="{{idCard}}" bindinput="onInputIdCard" bindfocus="onIdCardFocus" bindblur="onIdCardBlur" maxlength="18" />
-            </view>
-          </view>
-
-          <view class="form-item">
-            <text class="field-label">手机号 <text class="required">*</text></text>
-            <view class="input-wrapper {{phoneFocus ? 'focus' : ''}}">
-              <input class="input-field" type="number" placeholder="请输入11位手机号" placeholder-class="placeholder" value="{{phone}}" bindinput="onInputPhone" bindfocus="onPhoneFocus" bindblur="onPhoneBlur" maxlength="11" />
-            </view>
-          </view>
-
-          <view class="form-row">
-            <view class="form-item form-half" wx:if="{{registerRole === 'worker'}}">
-              <text class="field-label">性别 <text class="required">*</text></text>
-              <view class="input-wrapper">
-                <picker mode="selector" range="{{genderOptions}}" range-key="label" value="{{genderIndex}}" bindchange="onGenderChange">
-                  <view class="picker-field {{genderIndex === 0 ? 'placeholder' : ''}}">{{genderOptions[genderIndex].label}}</view>
-                </picker>
-              </view>
-            </view>
-
-            <view class="form-item form-half" wx:if="{{registerRole === 'worker'}}">
-              <text class="field-label">是否贫困户 <text class="required">*</text></text>
-              <view class="input-wrapper">
-                <picker mode="selector" range="{{povertyOptions}}" range-key="label" value="{{povertyIndex}}" bindchange="onPovertyChange">
-                  <view class="picker-field {{povertyIndex === 0 ? 'placeholder' : ''}}">{{povertyOptions[povertyIndex].label}}</view>
-                </picker>
-              </view>
-            </view>
-          </view>
-
-          <view class="form-item">
-            <text class="field-label">身份证地址 <text class="required">*</text></text>
-            <view class="input-wrapper input-wrapper-area">
-              <textarea class="input-field input-area" placeholder="请输入身份证地址（至少5个字）" placeholder-class="placeholder" value="{{homeAddress}}" bindinput="onInputHomeAddress" maxlength="120" auto-height />
-            </view>
+          <view class="code-hint-row">
+            <text class="code-hint" wx:if="{{countdown > 0}}">{{countdown}}秒后可重新发送</text>
+            <text class="code-resend" wx:else bindtap="handleResendCode">重新发送验证码</text>
           </view>
         </view>
-      </view>
 
-      <!-- 收款信息 -->
-      <view class="section-card">
-        <view class="section-head">
-          <text class="section-title">💳 收款信息</text>
-          <text class="section-desc">用于工资发放和账户结算</text>
+        <view class="step-error" wx:if="{{error}}">
+          <text class="step-error-text">{{error}}</text>
         </view>
 
-        <view class="form-group">
-          <view class="form-item">
-            <text class="field-label">
-              <text>开户银行 <text class="required">*</text></text>
-            </text>
-            <view class="input-wrapper" wx:if="{{registerRole === 'boss'}}">
-              <picker mode="selector" range="{{bossBankOptions}}" range-key="label" value="{{bossBankIndex}}" bindchange="onBossBankChange">
-                <view class="picker-field {{bossBankIndex === 0 ? 'placeholder' : ''}}">{{bossBankOptions[bossBankIndex].label}}</view>
-              </picker>
-            </view>
-            <view class="input-wrapper" wx:if="{{registerRole === 'worker'}}">
-              <input class="input-field" type="text" placeholder="如：中国农业银行" placeholder-class="placeholder" value="{{bankName}}" bindinput="onInputBankName" />
-            </view>
-          </view>
-
-          <view class="form-item">
-            <text class="field-label">银行卡号 <text class="required">*</text></text>
-            <view class="input-wrapper">
-              <input class="input-field" type="number" placeholder="{{registerRole === 'boss' ? '请输入16-19位银行卡号' : '请输入银行卡号'}}" placeholder-class="placeholder" value="{{bankCardNo}}" bindinput="onInputBankCardNo" maxlength="{{registerRole === 'boss' ? 19 : 30}}" />
-            </view>
-          </view>
-        </view>
-      </view>
-
-      <!-- 代办人信息 -->
-      <view class="section-card" wx:if="{{registerRole === 'worker' && registerMode === 'proxy'}}">
-        <view class="section-head">
-          <text class="section-title">👥 代办人信息</text>
-          <text class="section-desc">代办场景下必须补充</text>
-        </view>
-
-        <view class="form-group">
-          <view class="form-item">
-            <text class="field-label">代办人姓名 <text class="required">*</text></text>
-            <view class="input-wrapper">
-              <input class="input-field" type="text" placeholder="请输入代办人姓名" placeholder-class="placeholder" value="{{proxyName}}" bindinput="onInputProxyName" />
-            </view>
-          </view>
-
-          <view class="form-item">
-            <text class="field-label">代办人电话 <text class="required">*</text></text>
-            <view class="input-wrapper">
-              <input class="input-field" type="number" placeholder="请输入代办人11位手机号" placeholder-class="placeholder" value="{{proxyPhone}}" bindinput="onInputProxyPhone" maxlength="11" />
-            </view>
-          </view>
-
-          <view class="form-item">
-            <text class="field-label">与工人关系 <text class="required">*</text></text>
-            <view class="input-wrapper">
-              <input class="input-field" type="text" placeholder="如：父母、子女、配偶" placeholder-class="placeholder" value="{{relationToWorker}}" bindinput="onInputRelationToWorker" />
-            </view>
-          </view>
-        </view>
-      </view>
-
-      <!-- 紧急联系人 -->
-      <view class="section-card">
-        <view class="section-head">
-          <text class="section-title">📞 紧急联系人</text>
-          <text class="section-desc">选填，用于特殊情况联系</text>
-        </view>
-
-        <view class="form-group">
-          <view class="form-row">
-            <view class="form-item form-half">
-              <text class="field-label">联系人</text>
-              <view class="input-wrapper">
-                <input class="input-field" type="text" placeholder="如：李四-配偶" placeholder-class="placeholder" value="{{emergencyContact}}" bindinput="onInputEmergencyContact" />
-              </view>
-            </view>
-
-            <view class="form-item form-half">
-              <text class="field-label">联系电话</text>
-              <view class="input-wrapper">
-                <input class="input-field" type="number" placeholder="联系电话" placeholder-class="placeholder" value="{{emergencyPhone}}" bindinput="onInputEmergencyPhone" maxlength="11" />
-              </view>
-            </view>
-          </view>
-        </view>
-      </view>
-
-      <!-- 错误提示 -->
-      <view class="error-msg" wx:if="{{error}}">
-        <text>{{error}}</text>
-      </view>
-
-      <!-- 提交按钮 -->
-      <button
-        class="register-btn"
-        hover-class="register-btn-hover"
-        bindtap="handleRegister"
-        loading="{{loading}}"
-        disabled="{{loading}}"
-      >{{loading ? '提交中...' : (registerRole === 'boss' ? '创建老板账号' : (registerMode === 'proxy' ? '提交代注册' : '立即注册'))}}</button>
-
-      <!-- 底部链接 -->
-      <view class="footer-links">
-        <text class="footer-text">已有账号？</text>
-        <text class="footer-link" bindtap="goToLogin">返回登录</text>
+        <button
+          class="primary-btn {{code.length === 6 && hasAgreed ? 'btn-active' : 'btn-disabled'}}"
+          disabled="{{code.length !== 6 || loading}}"
+          bindtap="handleRegister"
+        >
+          <text wx:if="{{!loading}}">注册并登录</text>
+          <text wx:else>注册中...</text>
+        </button>
       </view>
     </view>
   </view>

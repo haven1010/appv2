@@ -3,6 +3,7 @@
  * Responsibility: Super-admin audit center with full base/user visibility, manager creation, and card-level delete actions.
  */
 const app = getApp();
+const { requireAuth } = require('../../../utils/auth-guard');
 const { resolveRole, isSuperAdminRole, roleLabel } = require('../../../utils/role');
 
 const CREATE_ROLE_OPTIONS = [
@@ -108,6 +109,7 @@ Page({
   },
 
   onLoad() {
+    if (!requireAuth()) return;
     if (!this.ensureSuperAdmin()) return;
     this.loadAuditData();
   },

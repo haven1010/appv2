@@ -1,4 +1,5 @@
 const app = getApp();
+const { requireAuth } = require('../../../utils/auth-guard');
 const { resolveRole } = require('../../../utils/role');
 
 function toText(value) {
@@ -69,6 +70,7 @@ Page({
   },
 
   onLoad(options) {
+    if (!requireAuth()) return;
     this.initRoleView();
     if (this.data.isBossView) {
       wx.setNavigationBarTitle({ title: '我的基地' });

@@ -5,6 +5,7 @@
  */
 // pages/profile/settings/settings.js
 const STORAGE_KEY = 'worker_settings';
+const { requireAuth } = require('../../../utils/auth-guard');
 
 Page({
   data: {
@@ -16,6 +17,7 @@ Page({
   },
 
   onLoad() {
+    if (!requireAuth()) return;
     this.loadSettings();
     this.calcCacheSize();
   },
@@ -95,6 +97,26 @@ Page({
       title: '\u6280\u672f\u652f\u6301',
       content: '\u5982\u9700\u5e2e\u52a9\uff0c\u8bf7\u8054\u7cfb\u7ba1\u7406\u5458\u6216\u63d0\u4ea4\u95ee\u9898\u53cd\u9988\u3002',
       showCancel: false,
+    });
+  },
+
+  logout() {
+    wx.showModal({
+      title: '退出账号',
+      content: '确定要退出当前账号吗？',
+      confirmText: '退出',
+      confirmColor: '#ff3b30',
+      success: (res) => {
+        if (!res.confirm) return;
+        const settings = wx.getStorageSync(STORAGE_KEY);
+        wx.clearStorageSync();
+        if (settings) wx.setStorageSync(STORAGE_KEY, settings);
+        const app = getApp();
+        if (app && app.globalData) {
+          app.globalData.userInfo = null;
+        }
+        wx.reLaunch({ url: '/pages/login/login' });
+      },
     });
   },
 });

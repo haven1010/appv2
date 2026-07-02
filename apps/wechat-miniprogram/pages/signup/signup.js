@@ -1,4 +1,11 @@
 const app = getApp();
+const { requireAuth } = require('../../utils/auth-guard');
+
+function maskIdCard(value) {
+  const text = String(value || '').trim();
+  if (text.length < 10) return text;
+  return `${text.slice(0, 4)}**********${text.slice(-4)}`;
+}
 
 Page({
   data: {
@@ -9,12 +16,14 @@ Page({
     name: '',
     phone: '',
     idCard: '',
+    maskedIdCard: '',
     workDate: '',
     note: '',
     submitting: false,
   },
 
   onLoad(options) {
+    if (!requireAuth()) return;
     const baseId = Number(options.baseId || 0);
     const jobId = Number(options.jobId || 0);
     this.setData({
@@ -35,6 +44,7 @@ Page({
           name: user.name || '',
           phone: user.phone || '',
           idCard: user.idCard || '',
+          maskedIdCard: maskIdCard(user.idCard || ''),
         });
       }
     } catch (_) {
@@ -54,8 +64,8 @@ Page({
   async onSubmit() {
     const { baseId, jobId, jobTitle, name, phone, idCard, workDate, note } = this.data;
 
-    if (!name.trim()) return wx.showToast({ title: '请输入姓名', icon: 'none' });
-    if (!phone.trim() || !/^1\d{10}$/.test(phone.trim())) return wx.showToast({ title: '请输入正确的手机号', icon: 'none' });
+    if (!name.trim() || !idCard.trim()) return wx.showToast({ title: '请先完成实名认证', icon: 'none' });
+    if (!phone.trim() || !/^1\d{10}$/.test(phone.trim())) return wx.showToast({ title: '联系电话不完整', icon: 'none' });
     if (!workDate) return wx.showToast({ title: '请选择工作日期', icon: 'none' });
 
     this.setData({ submitting: true });

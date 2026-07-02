@@ -1,0 +1,65 @@
+<view class="role-page">
+  <!-- 背景装饰 -->
+  <view class="bg-blob bg-blob-top"></view>
+  <view class="bg-blob bg-blob-bottom"></view>
+
+  <view class="role-shell {{animClass}}">
+    <!-- 头部 -->
+    <view class="role-header">
+      <image class="header-icon" src="/images/icons/sun.svg" mode="aspectFit" />
+      <text class="header-title">欢迎加入智绘就业</text>
+      <text class="header-desc">请选择你的身份，我们将为你展示对应的功能</text>
+    </view>
+
+    <!-- 角色选择卡片 -->
+    <view class="role-cards">
+      <!-- 工人 -->
+      <view
+        class="role-card {{selectedRole === 'worker' ? 'selected' : ''}}"
+        data-role="worker"
+        bindtap="onSelectRole"
+      >
+        <view class="role-card-badge" wx:if="{{selectedRole === 'worker'}}">已选</view>
+        <view class="role-card-icon-wrap worker-icon">
+          <image class="role-card-icon" src="/images/icons/users.svg" mode="aspectFit" />
+        </view>
+        <text class="role-card-title">我是工人</text>
+        <text class="role-card-desc">找活干、报名、签到、查工资</text>
+        <view class="role-features">
+          <text class="role-feat"><image class="feat-check" src="/images/icons/check.svg" mode="aspectFit" /> 浏览岗位并报名</text>
+          <text class="role-feat"><image class="feat-check" src="/images/icons/check.svg" mode="aspectFit" /> 现场扫码签到</text>
+          <text class="role-feat"><image class="feat-check" src="/images/icons/check.svg" mode="aspectFit" /> 查看考勤和工资</text>
+        </view>
+      </view>
+
+      <!-- 老板 -->
+      <view
+        class="role-card {{selectedRole === 'boss' ? 'selected' : ''}}"
+        data-role="boss"
+        bindtap="onSelectRole"
+      >
+        <view class="role-card-badge boss-badge" wx:if="{{selectedRole === 'boss'}}">已选</view>
+        <view class="role-card-icon-wrap boss-icon">
+          <image class="role-card-icon" src="/images/icons/briefcase.svg" mode="aspectFit" />
+        </view>
+        <text class="role-card-title">我是老板</text>
+        <text class="role-card-desc">管基地、招工人、发工资</text>
+        <view class="role-features">
+          <text class="role-feat"><image class="feat-check" src="/images/icons/check.svg" mode="aspectFit" /> 管理基地信息</text>
+          <text class="role-feat"><image class="feat-check" src="/images/icons/check.svg" mode="aspectFit" /> 发布招工岗位</text>
+          <text class="role-feat"><image class="feat-check" src="/images/icons/check.svg" mode="aspectFit" /> 结算发工资</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 确认按钮 -->
+    <button
+      class="btn-confirm {{selectedRole ? 'btn-active' : 'btn-disabled'}}"
+      disabled="{{!selectedRole || confirming}}"
+      loading="{{confirming}}"
+      bindtap="handleConfirm"
+    >
+      {{selectedRole ? (selectedRole === 'boss' ? '进入老板端 ›' : '进入工人端 ›') : '请先选择身份'}}
+    </button>
+  </view>
+</view>

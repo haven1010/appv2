@@ -308,8 +308,9 @@ async function getCurrentUser(event) {
 
   const payload = jwt.verify(token, getRequiredEnv('JWT_SECRET'));
   const [rows] = await getPool().execute(
-    `SELECT id, uid, name, role_key, face_img_url, assigned_base_id, phone_enc, id_card_enc,
-            home_address_enc, bank_name, bank_card_no_enc, info_audit_status, created_at, updated_at
+    `SELECT id, uid, name, role_key, face_img_url, gender, is_poor_household, assigned_base_id,
+            phone_enc, id_card_enc, home_address_enc, bank_name, bank_card_no_enc,
+            info_audit_status, register_mode, account_owner_verified, created_at, updated_at
        FROM sys_user
       WHERE id = ? AND is_deleted = 0
       LIMIT 1`,
@@ -330,7 +331,9 @@ function publicUser(user) {
     faceImgUrl: user.faceImgUrl || '',
     assignedBaseId: user.assignedBaseId || null,
     gender: user.gender || '',
-    isPoorHousehold: user.isPoorHousehold ?? null,
+    isPoorHousehold: user.isPoorHousehold === null || user.isPoorHousehold === undefined
+      ? null
+      : Boolean(user.isPoorHousehold),
     phone: decryptSensitiveValue(user.phoneEnc),
     idCard: decryptSensitiveValue(user.idCardEnc),
     homeAddress: decryptSensitiveValue(user.homeAddressEnc),
@@ -353,6 +356,9 @@ async function updateProfile(user, data) {
   const touchableKeys = [
     'name',
     'phone',
+    'idCard',
+    'gender',
+    'isPoorHousehold',
     'homeAddress',
     'emergencyContact',
     'emergencyPhone',
@@ -371,8 +377,9 @@ async function updateProfile(user, data) {
     await connection.beginTransaction();
 
     const [rows] = await connection.execute(
-      `SELECT id, uid, name, role_key, face_img_url, assigned_base_id, phone_enc, phone_hash, id_card_enc,
-              home_address_enc, emergency_contact_enc, emergency_phone_enc, emergency_phone_hash,
+      `SELECT id, uid, name, role_key, face_img_url, gender, is_poor_household, assigned_base_id,
+              phone_enc, phone_hash, id_card_enc, id_card_hash, home_address_enc,
+              emergency_contact_enc, emergency_phone_enc, emergency_phone_hash,
               bank_name, bank_card_no_enc, bank_card_no_hash, info_audit_status,
               created_at, updated_at
          FROM sys_user
@@ -389,7 +396,14 @@ async function updateProfile(user, data) {
     const lockedUser = toCamelRow(rows[0]);
     const setParts = [];
     const params = [];
-    let shouldResetInfoAudit = false;
+    let hasIdentityChange = false;
+
+    let mergedName = lockedUser.name || '';
+    let mergedPhone = decryptSensitiveValue(lockedUser.phoneEnc);
+    let mergedIdCard = decryptSensitiveValue(lockedUser.idCardEnc);
+    let mergedHomeAddress = decryptSensitiveValue(lockedUser.homeAddressEnc);
+    let mergedGender = lockedUser.gender || '';
+    let mergedIsPoorHousehold = lockedUser.isPoorHousehold;
 
     const assign = (column, value) => {
       setParts.push(`${column} = ?`);
@@ -402,6 +416,8 @@ async function updateProfile(user, data) {
         throw createHttpError(400, '姓名格式不正确');
       }
       assign('name', name);
+      mergedName = name;
+      hasIdentityChange = true;
     }
 
     if (hasOwn(payload, 'faceImgUrl')) {
@@ -429,19 +445,64 @@ async function updateProfile(user, data) {
 
       assign('phone_enc', encryptSensitiveValue(phone));
       assign('phone_hash', phoneHash);
-      shouldResetInfoAudit = true;
+      mergedPhone = phone;
+      hasIdentityChange = true;
+    }
+
+    if (hasOwn(payload, 'idCard')) {
+      const idCard = String(payload.idCard || '').trim().toUpperCase();
+      if (!/^\d{17}[\dX]$/.test(idCard)) {
+        throw createHttpError(400, '身份证格式不正确，请输入18位身份证号');
+      }
+
+      const idCardHash = hashSensitiveValue(idCard);
+      const [conflictRows] = await connection.execute(
+        `SELECT id
+           FROM sys_user
+          WHERE id_card_hash = ? AND id <> ? AND is_deleted = 0
+          LIMIT 1`,
+        [idCardHash, lockedUser.id],
+      );
+
+      if (conflictRows[0]) {
+        throw createHttpError(409, '身份证号已被使用');
+      }
+
+      assign('id_card_enc', encryptSensitiveValue(idCard));
+      assign('id_card_hash', idCardHash);
+      mergedIdCard = idCard;
+      hasIdentityChange = true;
     }
 
     if (hasOwn(payload, 'homeAddress')) {
       const homeAddress = normalizeNullableText(payload.homeAddress, 512);
       assign('home_address_enc', homeAddress ? encryptSensitiveValue(homeAddress) : null);
-      shouldResetInfoAudit = true;
+      mergedHomeAddress = homeAddress || '';
+      hasIdentityChange = true;
+    }
+
+    if (hasOwn(payload, 'gender')) {
+      const gender = String(payload.gender || '').trim().toLowerCase();
+      if (gender && gender !== 'male' && gender !== 'female') {
+        throw createHttpError(400, '请选择性别');
+      }
+      assign('gender', gender || null);
+      mergedGender = gender;
+      hasIdentityChange = true;
+    }
+
+    if (hasOwn(payload, 'isPoorHousehold')) {
+      if (typeof payload.isPoorHousehold !== 'boolean') {
+        throw createHttpError(400, '请选择是否贫困户');
+      }
+      assign('is_poor_household', payload.isPoorHousehold ? 1 : 0);
+      mergedIsPoorHousehold = payload.isPoorHousehold;
+      hasIdentityChange = true;
     }
 
     if (hasOwn(payload, 'emergencyContact')) {
       const emergencyContact = normalizeNullableText(payload.emergencyContact, 256);
       assign('emergency_contact_enc', emergencyContact ? encryptSensitiveValue(emergencyContact) : null);
-      shouldResetInfoAudit = true;
     }
 
     if (hasOwn(payload, 'emergencyPhone')) {
@@ -451,12 +512,10 @@ async function updateProfile(user, data) {
       }
       assign('emergency_phone_enc', emergencyPhone ? encryptSensitiveValue(emergencyPhone) : null);
       assign('emergency_phone_hash', emergencyPhone ? hashSensitiveValue(emergencyPhone) : null);
-      shouldResetInfoAudit = true;
     }
 
     if (hasOwn(payload, 'bankName')) {
       assign('bank_name', normalizeNullableText(payload.bankName, 100));
-      shouldResetInfoAudit = true;
     }
 
     if (hasOwn(payload, 'bankCardNo')) {
@@ -466,11 +525,23 @@ async function updateProfile(user, data) {
       }
       assign('bank_card_no_enc', bankCardNo ? encryptSensitiveValue(bankCardNo) : null);
       assign('bank_card_no_hash', bankCardNo ? hashSensitiveValue(bankCardNo) : null);
-      shouldResetInfoAudit = true;
     }
 
-    if (shouldResetInfoAudit) {
-      assign('info_audit_status', 0);
+    if (hasIdentityChange) {
+      const roleKey = lockedUser.roleKey || 'worker';
+      if (!mergedName || mergedName.length < 2 || mergedName.length > 20 || /\d/.test(mergedName)) {
+        throw createHttpError(400, '姓名格式不正确');
+      }
+      if (!/^\d{17}[\dX]$/.test(String(mergedIdCard || '').trim().toUpperCase())) {
+        throw createHttpError(400, '身份证格式不正确，请输入18位身份证号');
+      }
+      if (!/^1\d{10}$/.test(String(mergedPhone || '').replace(/\D/g, '').slice(0, 11))) {
+        throw createHttpError(400, '手机号格式不正确');
+      }
+      if (!mergedHomeAddress || String(mergedHomeAddress).trim().length < 5) {
+        throw createHttpError(400, '请填写身份证地址（至少5个字）');
+      }
+      assign('info_audit_status', 1);
     }
 
     if (setParts.length > 0) {
@@ -484,8 +555,9 @@ async function updateProfile(user, data) {
     }
 
     const [updatedRows] = await connection.execute(
-      `SELECT id, uid, name, role_key, face_img_url, assigned_base_id, phone_enc, id_card_enc,
-              home_address_enc, bank_name, bank_card_no_enc, info_audit_status,
+      `SELECT id, uid, name, role_key, face_img_url, gender, is_poor_household, assigned_base_id,
+              phone_enc, id_card_enc, home_address_enc, bank_name, bank_card_no_enc,
+              info_audit_status, register_mode, account_owner_verified,
               created_at, updated_at
          FROM sys_user
         WHERE id = ?

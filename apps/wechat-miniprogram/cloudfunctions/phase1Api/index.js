@@ -8,6 +8,11 @@ cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 
 const db = cloud.database();
 const _ = db.command;
+const smsCodeStore = new Map();
+const SMS_CODE_TTL_MS = 5 * 60 * 1000;
+const SMS_CODE_RESEND_MS = 60 * 1000;
+const DEV_SMS_CODE = '123456';
+const API_BUILD = 'phase1-identity-20260621-2';
 
 function ok(data) {
   return { ok: true, data };
@@ -113,6 +118,68 @@ function compareByDateDesc(left, right, keyCandidates) {
   return rightTs - leftTs;
 }
 
+function getSmsCode(phone) {
+  const stored = smsCodeStore.get(phone);
+  if (!stored) return null;
+  if (Date.now() > stored.expiresAt) {
+    smsCodeStore.delete(phone);
+    return null;
+  }
+  return stored;
+}
+
+async function findLatestSmsCode(phone) {
+  try {
+    const res = await getCollection('smsCodes')
+      .where({ phone, used: _.neq(true) })
+      .orderBy('createdAt', 'desc')
+      .limit(1)
+      .get();
+    const record = Array.isArray(res.data) && res.data.length ? res.data[0] : null;
+    if (!record) return null;
+    if (Date.now() > Number(record.expiresAt || 0)) return null;
+    return record;
+  } catch (_) {
+    return null;
+  }
+}
+
+async function sendPhoneCode(data) {
+  const phone = digitsOnly(data && data.phone).slice(0, 11);
+  if (!/^1\d{10}$/.test(phone)) {
+    throw createHttpError(400, '请输入正确的11位手机号');
+  }
+
+  const existing = getSmsCode(phone) || await findLatestSmsCode(phone);
+  if (existing && Date.now() - existing.createdAt < SMS_CODE_RESEND_MS) {
+    throw createHttpError(400, '请勿频繁发送验证码，请稍后再试');
+  }
+
+  const createdAt = Date.now();
+  const expiresAt = createdAt + SMS_CODE_TTL_MS;
+  smsCodeStore.set(phone, {
+    code: DEV_SMS_CODE,
+    createdAt,
+    expiresAt,
+  });
+  await getCollection('smsCodes').add({
+    data: {
+      phone,
+      code: DEV_SMS_CODE,
+      used: false,
+      createdAt,
+      expiresAt,
+    },
+  }).catch(() => {});
+
+  return {
+    ok: true,
+    msg: '验证码已发送',
+    expiresIn: 300,
+    apiBuild: API_BUILD,
+  };
+}
+
 function issueToken(user) {
   const secret = trimText(process.env.JWT_SECRET);
   if (!secret) throw new Error('JWT_SECRET environment variable is not configured');
@@ -120,6 +187,7 @@ function issueToken(user) {
     {
       username: user.name,
       sub: user.id,
+      docId: user._id || '',
       role: user.roleKey || user.role || 'worker',
       uid: user.uid || '',
     },
@@ -166,21 +234,12 @@ async function getAllDocuments(collectionName) {
 }
 
 async function getNextNumericId(collectionName, field = 'id') {
-  const counterKey = `${collectionName}:${field}`;
-  try {
-    await getCollection('counters').doc(counterKey).update({
-      data: { seq: _.inc(1) },
-    });
-    const doc = await getCollection('counters').doc(counterKey).get();
-    return (doc.data && doc.data.seq) || 1;
-  } catch (err) {
-    const records = await getAllDocuments(collectionName);
-    const maxId = records.reduce((currentMax, item) => {
-      const nextValue = Number(item && item[field]);
-      return Number.isFinite(nextValue) && nextValue > currentMax ? nextValue : currentMax;
-    }, 0);
-    return maxId + 1;
-  }
+  const records = await getAllDocuments(collectionName);
+  const maxId = records.reduce((currentMax, item) => {
+    const nextValue = Number(item && item[field]);
+    return Number.isFinite(nextValue) && nextValue > currentMax ? nextValue : currentMax;
+  }, 0);
+  return maxId + 1;
 }
 
 async function getCurrentUser(event) {
@@ -196,7 +255,21 @@ async function getCurrentUser(event) {
     throw createHttpError(401, 'Login expired, please sign in again.');
   }
 
-  const user = await findOneByField('users', 'id', Number(payload.sub));
+  let user = null;
+  if (payload.docId) {
+    try {
+      const doc = await getCollection('users').doc(payload.docId).get();
+      user = doc && doc.data ? doc.data : null;
+    } catch (_) {
+      user = null;
+    }
+  }
+  if (!user && payload.uid) {
+    user = await findOneByField('users', 'uid', payload.uid);
+  }
+  if (!user) {
+    user = await findOneByField('users', 'id', Number(payload.sub));
+  }
   if (!user || user.isDeleted) {
     throw createHttpError(401, 'Login expired, please sign in again.');
   }
@@ -233,6 +306,24 @@ function normalizePublicUser(user = {}) {
   };
 }
 
+function isWorkerRealNameReady(user = {}) {
+  const roleKey = user.roleKey || user.role || 'worker';
+  if (roleKey !== 'worker') return true;
+  return Boolean(
+    trimText(user.name)
+    && /^\d{17}[\dX]$/i.test(trimText(user.idCard))
+    && /^1\d{10}$/.test(digitsOnly(user.phone).slice(0, 11))
+    && trimText(user.homeAddress).length >= 5
+    && Number(user.infoAuditStatus || 0) === 1
+  );
+}
+
+function assertWorkerRealNameReady(user) {
+  if (!isWorkerRealNameReady(user)) {
+    throw createHttpError(403, '请先完成实名认证后再使用该功能');
+  }
+}
+
 async function login(data) {
   const phone = trimText(data && data.phone);
   const idCardLast6 = trimText(data && data.idCardLast6).toUpperCase();
@@ -256,15 +347,7 @@ async function login(data) {
 
   return {
     access_token: issueToken(user),
-    user: {
-      id: Number(user.id || 0),
-      name: user.name || '',
-      role: user.roleKey || user.role || 'worker',
-      roleKey: user.roleKey || user.role || 'worker',
-      uid: user.uid || '',
-      faceImgUrl: user.faceImgUrl || '',
-      assignedBaseId: user.assignedBaseId || null,
-    },
+    user: normalizePublicUser(user),
   };
 }
 
@@ -314,37 +397,112 @@ async function wechatLogin(event) {
   // 5. 签发 JWT
   return {
     access_token: issueToken(user),
-    user: {
-      id: Number(user.id || 0) || user._id,
-      name: user.name || '',
-      role: user.roleKey || user.role || 'worker',
-      roleKey: user.roleKey || user.role || 'worker',
-      uid: user.uid || '',
-      faceImgUrl: user.faceImgUrl || '',
-      assignedBaseId: user.assignedBaseId || null,
-    },
+    user: normalizePublicUser(user),
     registerStage: user.name ? 'complete' : 'wechat_only',
   };
 }
 
-async function ensureUniqueUserFields({ phone, idCard, bankCardNo }) {
+async function ensureUniqueUserFields({ phone, idCard, bankCardNo, excludeUserId = 0 }) {
   const users = await getAllDocuments('users');
-  const phoneExists = users.some((item) => !item.isDeleted && trimText(item.phone) === trimText(phone));
-  if (phoneExists) {
-    throw createHttpError(409, '手机号已被使用，请检查后重试');
+  if (phone) {
+    const phoneExists = users.some((item) =>
+      !item.isDeleted
+      && Number(item.id || 0) !== Number(excludeUserId || 0)
+      && trimText(item.phone) === trimText(phone));
+    if (phoneExists) {
+      throw createHttpError(409, '手机号已被使用，请检查后重试');
+    }
   }
 
-  const idCardExists = users.some((item) => !item.isDeleted && trimText(item.idCard).toUpperCase() === trimText(idCard).toUpperCase());
-  if (idCardExists) {
-    throw createHttpError(409, '身份证号已被使用，请检查后重试');
+  if (idCard) {
+    const idCardExists = users.some((item) =>
+      !item.isDeleted
+      && Number(item.id || 0) !== Number(excludeUserId || 0)
+      && trimText(item.idCard).toUpperCase() === trimText(idCard).toUpperCase());
+    if (idCardExists) {
+      throw createHttpError(409, '身份证号已被使用，请检查后重试');
+    }
   }
 
   if (bankCardNo) {
-    const bankCardExists = users.some((item) => !item.isDeleted && digitsOnly(item.bankCardNo) === digitsOnly(bankCardNo));
+    const bankCardExists = users.some((item) =>
+      !item.isDeleted
+      && Number(item.id || 0) !== Number(excludeUserId || 0)
+      && digitsOnly(item.bankCardNo) === digitsOnly(bankCardNo));
     if (bankCardExists) {
       throw createHttpError(409, '银行卡号已被使用，请检查后重试');
     }
   }
+}
+
+async function registerByPhone(data) {
+  const phone = digitsOnly(data && data.phone).slice(0, 11);
+  const code = trimText(data && data.code);
+  if (!/^1\d{10}$/.test(phone)) {
+    throw createHttpError(400, '请输入正确的11位手机号');
+  }
+  if (!/^\d{6}$/.test(code)) {
+    throw createHttpError(400, '请输入6位验证码');
+  }
+
+  const stored = getSmsCode(phone) || await findLatestSmsCode(phone);
+  if (!stored || stored.code !== code) {
+    throw createHttpError(401, '验证码错误或已过期');
+  }
+  smsCodeStore.delete(phone);
+  if (stored._id) {
+    await getCollection('smsCodes').doc(stored._id).update({
+      data: { used: true, usedAt: Date.now() },
+    }).catch(() => {});
+  }
+
+  let user = await findOneByField('users', 'phone', phone);
+  if (user) {
+    throw createHttpError(409, '该手机号已注册，请返回登录页登录');
+  }
+
+  const id = await getNextNumericId('users');
+  const now = new Date().toISOString();
+  user = {
+    id,
+    uid: buildUserUid('worker', id),
+    name: '',
+    phone,
+    idCard: '',
+    role: 'worker',
+    roleKey: 'worker',
+    faceImgUrl: '',
+    avatarUrl: '',
+    headImgUrl: '',
+    photoUrl: '',
+    gender: '',
+    isPoorHousehold: null,
+    assignedBaseId: null,
+    homeAddress: '',
+    bankName: '',
+    bankCardNo: '',
+    emergencyContact: '',
+    emergencyPhone: '',
+    infoAuditStatus: 0,
+    registerMode: 'self',
+    accountOwnerVerified: false,
+    loginLockReason: null,
+    isDeleted: false,
+    createdAt: now,
+    updatedAt: now,
+  };
+  const created = await getCollection('users').add({ data: user });
+  user = Object.assign({}, user, { _id: created._id });
+
+  if (user.loginLockReason) throw createHttpError(401, user.loginLockReason);
+
+  return {
+    access_token: issueToken(user),
+    user: normalizePublicUser(user),
+    registerStage: user.name ? 'complete' : 'phone_only',
+    isNewUser: true,
+    apiBuild: API_BUILD,
+  };
 }
 
 function buildUserUid(roleKey, id) {
@@ -371,13 +529,14 @@ async function registerUser(data, roleKey) {
   if (!homeAddress || homeAddress.length < 5) throw createHttpError(400, '请填写身份证地址（至少5个字）');
 
   if (roleKey === 'boss') {
-    if (!bankName) throw createHttpError(400, '请选择开户银行');
-    if (!/^\d{16,19}$/.test(bankCardNo)) throw createHttpError(400, '老板银行卡号需为16-19位数字');
+    if (bankCardNo && !/^\d{16,19}$/.test(bankCardNo)) throw createHttpError(400, '老板银行卡号需为16-19位数字');
   } else {
     if (gender !== 'male' && gender !== 'female') throw createHttpError(400, '请选择性别');
     if (typeof isPoorHousehold !== 'boolean') throw createHttpError(400, '请选择是否贫困户');
-    if (!bankName) throw createHttpError(400, '请输入开户银行');
-    if (bankCardNo.length < 12) throw createHttpError(400, '请输入正确的银行卡号');
+    if (bankCardNo && bankCardNo.length < 12) throw createHttpError(400, '请输入正确的银行卡号');
+  }
+  if (bankCardNo && !bankName) {
+    throw createHttpError(400, '请输入开户银行');
   }
 
   if (emergencyPhone && !/^1\d{10}$/.test(emergencyPhone)) {
@@ -434,6 +593,18 @@ async function updateProfile(user, data) {
   const next = Object.assign({}, user);
   const payload = data && typeof data === 'object' ? data : {};
 
+  if (Object.prototype.hasOwnProperty.call(payload, 'roleKey')) {
+    const roleKey = trimText(payload.roleKey);
+    if (roleKey !== 'worker' && roleKey !== 'boss') {
+      throw createHttpError(400, '请选择正确的身份');
+    }
+    if (trimText(next.name)) {
+      throw createHttpError(400, '已实名账号暂不支持修改身份');
+    }
+    next.role = roleKey;
+    next.roleKey = roleKey;
+  }
+
   if (Object.prototype.hasOwnProperty.call(payload, 'name')) {
     const name = trimText(payload.name);
     if (name.length < 2 || name.length > 20 || /\d/.test(name)) {
@@ -450,8 +621,39 @@ async function updateProfile(user, data) {
     next.phone = phone;
   }
 
+  if (Object.prototype.hasOwnProperty.call(payload, 'idCard')) {
+    const idCard = trimText(payload.idCard).toUpperCase();
+    if (!/^\d{17}[\dX]$/.test(idCard)) {
+      throw createHttpError(400, '身份证格式不正确，请输入18位身份证号');
+    }
+    next.idCard = idCard;
+  }
+
   if (Object.prototype.hasOwnProperty.call(payload, 'homeAddress')) {
     next.homeAddress = trimText(payload.homeAddress);
+  }
+
+  if (Object.prototype.hasOwnProperty.call(payload, 'gender')) {
+    const gender = trimText(payload.gender).toLowerCase();
+    if (gender && gender !== 'male' && gender !== 'female') {
+      throw createHttpError(400, '请选择性别');
+    }
+    next.gender = gender;
+  }
+
+  if (Object.prototype.hasOwnProperty.call(payload, 'isPoorHousehold')) {
+    if (typeof payload.isPoorHousehold !== 'boolean') {
+      throw createHttpError(400, '请选择是否贫困户');
+    }
+    next.isPoorHousehold = payload.isPoorHousehold;
+  }
+
+  if (Object.prototype.hasOwnProperty.call(payload, 'bankName')) {
+    next.bankName = trimText(payload.bankName);
+  }
+
+  if (Object.prototype.hasOwnProperty.call(payload, 'bankCardNo')) {
+    next.bankCardNo = digitsOnly(payload.bankCardNo);
   }
 
   if (Object.prototype.hasOwnProperty.call(payload, 'emergencyContact')) {
@@ -464,6 +666,58 @@ async function updateProfile(user, data) {
       throw createHttpError(400, '紧急联系人电话格式不正确');
     }
     next.emergencyPhone = emergencyPhone;
+  }
+
+  const roleKey = next.roleKey || next.role || 'worker';
+  const phone = digitsOnly(next.phone).slice(0, 11);
+  const idCard = trimText(next.idCard).toUpperCase();
+  const bankCardNo = digitsOnly(next.bankCardNo);
+
+  const hasRealNameSignal = Boolean(
+    next.name
+    || phone
+    || idCard
+    || next.homeAddress
+    || Object.prototype.hasOwnProperty.call(payload, 'gender')
+    || Object.prototype.hasOwnProperty.call(payload, 'isPoorHousehold')
+  );
+  const hasBankSignal = Boolean(
+    Object.prototype.hasOwnProperty.call(payload, 'bankName')
+    || Object.prototype.hasOwnProperty.call(payload, 'bankCardNo')
+  );
+
+  if (hasRealNameSignal) {
+    if (!next.name || next.name.length < 2 || next.name.length > 20 || /\d/.test(next.name)) {
+      throw createHttpError(400, '姓名格式不正确');
+    }
+    if (!/^\d{17}[\dX]$/.test(idCard)) {
+      throw createHttpError(400, '身份证格式不正确，请输入18位身份证号');
+    }
+    if (!/^1\d{10}$/.test(phone)) {
+      throw createHttpError(400, '请输入正确的11位手机号');
+    }
+    if (!trimText(next.homeAddress) || trimText(next.homeAddress).length < 5) {
+      throw createHttpError(400, '请填写身份证地址（至少5个字）');
+    }
+    await ensureUniqueUserFields({ phone, idCard, excludeUserId: next.id });
+    next.phone = phone;
+    next.idCard = idCard;
+    next.infoAuditStatus = 1;
+    next.accountOwnerVerified = true;
+  }
+
+  if (hasBankSignal) {
+    if (!trimText(next.bankName)) {
+      throw createHttpError(400, '请输入开户银行');
+    }
+    if (roleKey === 'boss' && !/^\d{16,19}$/.test(bankCardNo)) {
+      throw createHttpError(400, '老板银行卡号需为16-19位数字');
+    }
+    if (roleKey !== 'boss' && bankCardNo.length < 12) {
+      throw createHttpError(400, '请输入正确的银行卡号');
+    }
+    await ensureUniqueUserFields({ bankCardNo, excludeUserId: next.id });
+    next.bankCardNo = bankCardNo;
   }
 
   next.updatedAt = new Date().toISOString();
@@ -833,6 +1087,7 @@ async function signup(user, data) {
   if (roleKey !== 'worker') {
     throw createHttpError(403, '只有工人账号可以报名');
   }
+  assertWorkerRealNameReady(user);
   if (!Number.isFinite(baseId) || !Number.isFinite(jobId) || baseId <= 0 || jobId <= 0) {
     throw createHttpError(400, '缺少报名定位参数');
   }
@@ -1669,6 +1924,7 @@ async function getWorkerSalaryDetail(user, salaryId) {
 }
 
 async function confirmWorkerSalary(user, salaryId) {
+  assertWorkerRealNameReady(user);
   const item = await getWorkerSalaryDetail(user, salaryId);
   item.status = 1;
   item.updatedAt = new Date().toISOString();
@@ -1679,6 +1935,7 @@ async function confirmWorkerSalary(user, salaryId) {
 }
 
 async function appealWorkerSalary(user, salaryId, data) {
+  assertWorkerRealNameReady(user);
   const item = await getWorkerSalaryDetail(user, salaryId);
   const reason = trimText(data && data.reason);
   const expectedAmount = trimText(data && data.expectedAmount);
@@ -1698,6 +1955,7 @@ async function appealWorkerSalary(user, salaryId, data) {
 }
 
 async function getWorkerSalaryPayment(user, salaryId) {
+  assertWorkerRealNameReady(user);
   const item = await getWorkerSalaryDetail(user, salaryId);
   return {
     status: Number(item.status || 0),
@@ -2380,6 +2638,7 @@ async function exportSalaryReport(reportId) {
 }
 
 async function getAttendanceQrCode(user) {
+  assertWorkerRealNameReady(user);
   const issuedAt = new Date().toISOString();
   const content = `PICKPASS|${user.uid}|${issuedAt}`;
   const qrImageBase64 = await QRCode.toDataURL(content, {
@@ -2549,6 +2808,7 @@ async function getTrainingCourseDetail(user, courseId) {
 }
 
 async function submitPolicyApplication(user, data) {
+  assertWorkerRealNameReady(user);
   const name = trimText(data && data.name);
   const phone = digitsOnly(data && data.phone).slice(0, 11);
   const idCard = trimText(data && data.idCard).toUpperCase();
@@ -2588,6 +2848,7 @@ async function listRightsConsultations(user) {
 }
 
 async function createRightsConsultation(user, data) {
+  assertWorkerRealNameReady(user);
   const issueType = trimText(data && data.issueType) || 'other';
   const description = trimText(data && data.description);
   const contactPhone = trimText(data && data.contactPhone);
@@ -2642,6 +2903,14 @@ async function routeRequest(event) {
 
   if (method === 'POST' && pathname === '/auth/wechat-login') {
     return wechatLogin(event);
+  }
+
+  if (method === 'POST' && pathname === '/auth/send-code') {
+    return sendPhoneCode(data);
+  }
+
+  if (method === 'POST' && pathname === '/auth/register-by-phone') {
+    return registerByPhone(data);
   }
 
   if (method === 'POST' && pathname === '/user/register') {
@@ -2835,14 +3104,17 @@ async function routeRequest(event) {
   }
 
   if (method === 'GET' && pathname === '/salary/worker/stats') {
+    assertWorkerRealNameReady(user);
     return getWorkerSalaryStats(user);
   }
 
   if (method === 'GET' && pathname === '/salary/worker/pending') {
+    assertWorkerRealNameReady(user);
     return getWorkerPendingSalaryList(user);
   }
 
   if (method === 'GET' && pathname === '/salary/worker/paid') {
+    assertWorkerRealNameReady(user);
     return listWorkerPaidSalaries(user, query);
   }
 
@@ -2852,6 +3124,7 @@ async function routeRequest(event) {
 
   const salaryWorkerDetailMatch = pathname.match(/^\/salary\/worker\/(\d+)$/);
   if (method === 'GET' && salaryWorkerDetailMatch) {
+    assertWorkerRealNameReady(user);
     return getWorkerSalaryDetail(user, Number(salaryWorkerDetailMatch[1]));
   }
 

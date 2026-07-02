@@ -1,100 +1,70 @@
-<view class="page worker-home-page">
-  <view class="page-body worker-home-body">
-    <!-- ── Top Bar ── -->
-    <view class="top-bar card-in">
-      <view class="search-pill" bindtap="onSearchTap">
-        <text class="search-icon">🔍</text>
-        <text class="search-text">搜索岗位/企业/政策等</text>
-      </view>
-      <view class="notice-pill" bindtap="onNoticeTap">
-        <text class="notice-icon">🔔</text>
-      </view>
+<view class="page senior-home">
+  <view wx:if="{{showSplash}}" class="home-splash" bindtap="hideSplash">
+    <view class="home-splash-stage">
+      <image class="home-splash-hero" src="/images/splash-hero.png" mode="aspectFit"></image>
     </view>
 
-    <!-- ── Hero Banner ── -->
-    <view class="hero-banner card-in">
-      <view class="hero-badge">
-        <text class="hero-badge-dot"></text>
-        <text>苏陕协作</text>
+    <view class="home-splash-brand">
+      <image class="home-splash-logo" src="/images/zhihui-logo.webp" mode="aspectFit"></image>
+      <text class="home-splash-name">智绘就业</text>
+    </view>
+    <text class="home-splash-hint">乡村振兴就业服务平台</text>
+  </view>
+
+  <view class="page-body senior-home-body">
+
+    <view class="home-hero">
+      <view class="home-title-row">
+        <text class="home-title-greeting">{{greetingLabel}}</text>
+        <text class="home-title-name">{{greetingName}}</text>
       </view>
-      <text class="hero-title">苏陕协作<br/>智慧就业</text>
-      <text class="hero-subtitle">数字赋能就业 · 服务成就未来</text>
-      <view class="hero-actions">
-        <view class="hero-action-btn" bindtap="goToJobList">找工作</view>
-        <view class="hero-action-btn" bindtap="goToPolicyConsult">查政策</view>
-      </view>
+      <text class="home-date">{{dateText}}</text>
     </view>
 
-    <!-- ── Profile Tip ── -->
-    <view class="profile-tip card-in" wx:if="{{showProfileTip}}" bindtap="goToProfileComplete">
-      <text class="profile-tip-icon">📝</text>
-      <text class="profile-tip-text">您还未完善个人信息，点击前往补充</text>
-      <text class="profile-tip-arrow">></text>
+    <view class="home-rule"></view>
+
+    <!-- ── 实名认证提示横幅 ── -->
+    <view class="verify-banner {{showVerifyBanner ? 'visible' : ''}}" wx:if="{{showVerifyBanner}}" bindtap="goToVerify">
+      <view class="verify-dot"></view>
+      <view class="verify-banner-text">
+        <text class="verify-banner-title">完成实名认证</text>
+        <text class="verify-banner-desc">填写信息即可找活报名</text>
+      </view>
+      <text class="verify-banner-arrow">›</text>
     </view>
 
-    <!-- ── Service Panel ── -->
-    <view class="service-panel card-in delay-1">
-      <view class="panel-head">
-        <view class="panel-head-icon"></view>
-        <text class="panel-title-text">常用功能</text>
-      </view>
-      <text class="panel-subtitle">找工作、报名、签到更快一步</text>
-      <view class="service-grid">
-        <view
-          class="service-item"
-          wx:for="{{serviceItems}}"
-          wx:key="key"
-          data-key="{{item.key}}"
-          bindtap="onServiceTap"
-        >
-          <view class="service-icon service-icon-{{item.badgeClass}}">
-            <text class="service-icon-text">{{item.icon}}</text>
-          </view>
-          <text class="service-title">{{item.title}}</text>
-          <text class="service-subtitle">{{item.subtitle}}</text>
+    <!-- ── 主要行动 ── -->
+    <view class="primary-action-card" bindtap="goToJobList" hover-class="action-card-press">
+      <image class="primary-action-bg" src="{{actionCardBg}}" mode="aspectFill" binderror="onActionBgError"></image>
+      <view class="primary-action-mask"></view>
+      <view class="primary-action-copy">
+        <text class="primary-action-title">开始找活</text>
+        <text class="primary-action-desc">浏览附近基地岗位</text>
+        <view class="primary-action-button">
+          <text>找工作</text>
         </view>
       </view>
     </view>
 
-    <!-- ── Hot Section ── -->
-    <view class="hot-section card-in delay-2">
-      <view class="hot-head">
-        <view class="hot-head-left">
-          <view class="hot-head-icon"></view>
-          <text class="hot-title">热门岗位</text>
-        </view>
-        <text class="hot-more" bindtap="goToJobList">更多</text>
-      </view>
-
-      <view class="hot-divider"></view>
-
-      <view wx:if="{{loadingBases}}" class="ds-empty compact-empty">
-        <text class="ds-empty-title">正在加载岗位</text>
-        <text class="ds-empty-desc">请稍候一下</text>
-      </view>
-
-      <view wx:elif="{{featuredBase}}" class="hot-job-card" data-id="{{featuredBase.id}}" bindtap="goToFeaturedBaseDetail">
-        <view class="hot-job-head">
-          <text class="hot-job-title">{{featuredBase.name}}</text>
-          <view class="hot-job-tags">
-            <text class="hot-job-tag">{{featuredBase.categoryText}}</text>
-          </view>
-        </view>
-        <view class="hot-job-meta">
-          <text class="hot-job-address">{{featuredBase.address}}</text>
-        </view>
-        <view class="hot-job-foot">
-          <text class="hot-job-salary">{{featuredBase.salaryRange || '面议'}} <text class="hot-job-salary-unit">/月</text></text>
-          <button class="hot-job-btn" size="mini" data-id="{{featuredBase.id}}" catchtap="applyForBase">立即报名</button>
+    <view class="support-grid">
+      <view class="support-card" bindtap="goToSalary" hover-class="action-card-press">
+        <view class="support-card-icon">¥</view>
+        <view class="support-card-copy">
+          <text class="support-card-title">看工资</text>
+          <text class="support-card-desc">{{salaryHint}}</text>
         </view>
       </view>
-
-      <view wx:else class="ds-empty compact-empty">
-        <text class="ds-empty-title">暂无推荐岗位</text>
-        <text class="ds-empty-desc">{{loadError || '稍后再来看看，或去全部岗位里找一找'}}</text>
+      <view class="support-card" bindtap="goToMySignups" hover-class="action-card-press">
+        <view class="support-card-icon">+</view>
+        <view class="support-card-copy">
+          <text class="support-card-title">我的报名</text>
+          <text class="support-card-desc">{{signupHint}}</text>
+        </view>
       </view>
     </view>
 
+    <!-- ── 底部安全区 ── -->
     <view class="page-bottom-gap"></view>
+
   </view>
 </view>

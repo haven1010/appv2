@@ -1,4 +1,6 @@
 const app = getApp();
+const { requireAuth } = require('../../../utils/auth-guard');
+const { ensureRealNameReady } = require('../../../utils/realname');
 
 Page({
   data: {
@@ -15,6 +17,10 @@ Page({
       { value: 'discrimination', label: '就业歧视' },
       { value: 'other', label: '其他问题' },
     ],
+  },
+
+  onLoad() {
+    if (!requireAuth()) return;
   },
 
   onIssueTypeChange(e) {
@@ -53,6 +59,12 @@ Page({
   },
 
   async onSubmit() {
+    const realNameReady = await ensureRealNameReady({
+      title: '完成实名后提交咨询',
+      content: '维权咨询涉及个人劳动权益，请先完善实名信息。',
+    });
+    if (!realNameReady) return;
+
     if (!this.data.issueType) {
       wx.showToast({ title: '请选择问题类型', icon: 'none' });
       return;

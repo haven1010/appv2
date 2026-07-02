@@ -5,6 +5,7 @@
  */
 // pages/field/profile/profile.js
 const app = getApp();
+const { requireAuth } = require('../../../utils/auth-guard');
 const { resolveRole, isAdminRole, roleLabel } = require('../../../utils/role');
 
 function maskPhone(phone) {
@@ -23,6 +24,7 @@ Page({
   },
 
   onLoad() {
+    if (!requireAuth()) return;
     this.checkLogin();
   },
 

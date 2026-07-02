@@ -1,4 +1,6 @@
 const app = getApp();
+const { requireAuth } = require('../../../utils/auth-guard');
+const { ensureRealNameReady } = require('../../../utils/realname');
 
 const AUTO_HIDE_DELAY_MS = 3000;
 const ANIM_RESTART_DELAY_MS = 18;
@@ -17,6 +19,13 @@ function maskBankCard(cardNumber) {
   const digits = digitsOnly(cardNumber);
   if (!digits) return '**** **** **** ****';
   return `**** **** **** ${digits.slice(-4)}`;
+}
+
+function readBankOcrResult(result = {}) {
+  const data = result.data || result.result || result;
+  const bankName = String(data.bankName || data.bank || data.issuer || '').trim();
+  const bankCardNo = digitsOnly(data.bankCardNo || data.cardNo || data.cardNumber || data.number);
+  return { bankName, bankCardNo };
 }
 
 function resolveBankTheme(bankName) {
@@ -99,7 +108,9 @@ Page({
     },
   },
 
-  onLoad() {
+  async onLoad() {
+    if (!requireAuth()) return;
+    if (!(await this.ensureCardAccess())) return;
     this.loadCardData();
     setTimeout(() => {
       this.setData({ pageReady: true });
@@ -171,6 +182,13 @@ Page({
     }
   },
 
+  ensureCardAccess() {
+    return ensureRealNameReady({
+      title: '完成实名后管理银行卡',
+      content: '工资卡会用于工资发放，请先完善实名信息。',
+    });
+  },
+
   syncCurrentData(animate) {
     const { cards, currentIndex, salaryList } = this.data;
     const currentCard = cards[currentIndex] || null;
@@ -232,6 +250,60 @@ Page({
     this.setData({ 'form.bankCardNo': bankCardNo });
   },
 
+  async scanBankCard() {
+    if (this.data.loading || this.data.saving) return;
+
+    let media;
+    try {
+      media = await new Promise((resolve, reject) => {
+        wx.chooseMedia({
+          count: 1,
+          mediaType: ['image'],
+          sourceType: ['camera', 'album'],
+          success: resolve,
+          fail: reject,
+        });
+      });
+    } catch (_) {
+      return;
+    }
+
+    const filePath = media?.tempFiles?.[0]?.tempFilePath;
+    if (!filePath) return;
+
+    wx.showLoading({ title: '识别中...' });
+    try {
+      const uploadRes = await app.upload({
+        url: '/upload',
+        filePath,
+        name: 'file',
+      });
+      const ocrRes = await app.request({
+        url: '/user/profile/bank-card/ocr',
+        method: 'POST',
+        data: { imageUrl: uploadRes.url || uploadRes.fileId },
+      });
+      const { bankName, bankCardNo } = readBankOcrResult(ocrRes);
+      if (!bankName && !bankCardNo) {
+        throw new Error('未识别到银行卡信息');
+      }
+
+      const update = {};
+      if (bankName) update['form.bankName'] = bankName;
+      if (bankCardNo) update['form.bankCardNo'] = bankCardNo.slice(0, 30);
+      if (bankName) update.currentTheme = resolveBankTheme(bankName);
+      this.setData(update);
+      wx.hideLoading();
+      wx.showToast({ title: '识别成功', icon: 'success' });
+    } catch (err) {
+      wx.hideLoading();
+      wx.showToast({
+        title: err?.message === '未识别到银行卡信息' ? '未识别到卡号' : '暂未接入识别，请手动输入',
+        icon: 'none',
+      });
+    }
+  },
+
   toggleCard() {
     const { cards, showFull } = this.data;
     if (!cards.length) {
@@ -280,6 +352,8 @@ Page({
   },
 
   async saveCard() {
+    if (!(await this.ensureCardAccess())) return;
+
     const bankName = String(this.data.form.bankName || '').trim();
     const bankCardNo = digitsOnly(this.data.form.bankCardNo);
 

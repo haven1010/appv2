@@ -1,77 +1,57 @@
-<view class="page page-enter">
-  <!-- ── Main Container ── -->
-  <view class="container">
-    <!-- ── User Card ── -->
-    <view class="user-card">
-      <image class="avatar" src="{{avatar}}" mode="aspectFill" binderror="onAvatarError"></image>
-      <view class="user-meta">
-        <text class="name">{{name}}</text>
-        <text class="job">{{job}}</text>
-      </view>
-    </view>
+<view class="page scanner-page page-enter">
+  <view class="scanner-hero">
+    <view class="hero-orb hero-orb-one"></view>
+    <view class="hero-orb hero-orb-two"></view>
 
-    <!-- ── Work Info Card ── -->
-    <view class="work-info-card" wx:if="{{workInfo}}">
-      <view class="work-info-row">
-        <text class="work-info-label">📍 工作基地</text>
-        <text class="work-info-value">{{workInfo.baseName}}</text>
-      </view>
-      <view class="work-info-row">
-        <text class="work-info-label">💼 工作岗位</text>
-        <text class="work-info-value">{{workInfo.jobTitle}}</text>
-      </view>
-      <view class="work-info-row">
-        <text class="work-info-label">📅 工作日期</text>
-        <text class="work-info-value">{{workInfo.workDate}}</text>
-      </view>
-      <view class="work-info-row" wx:if="{{workInfo.location}}">
-        <text class="work-info-label">📌 当前位置</text>
-        <text class="work-info-value">{{workInfo.location}}</text>
-      </view>
-    </view>
+    <text class="hero-title">今日上工码</text>
+    <text class="hero-subtitle">出示给现场负责人扫码签到</text>
+  </view>
 
-    <!-- ── Ticket Card (QR Code) ── -->
-    <view class="ticket-card {{refreshing ? 'ticket-refreshing' : ''}}">
-      <view class="ticket-header">
-        <text class="ticket-title">🎫 今日上工码</text>
-        <text class="ticket-status">{{checkinStatusText}}</text>
-      </view>
-      <text class="ticket-time">最近更新：{{lastRefreshTime}}</text>
-
-      <view class="qr-card">
+  <view class="scanner-content">
+    <view class="qrcode-card {{refreshing ? 'card-refreshing' : ''}}">
+      <view class="qrcode-area {{refreshing ? 'refreshing' : ''}}">
         <image
           wx:if="{{qrCodeUrl}}"
-          class="qr-image {{refreshing ? 'qr-image-refresh' : ''}}"
+          class="qrcode-image {{refreshing ? 'qr-refresh' : ''}}"
           src="{{qrCodeUrl}}"
           mode="aspectFit"
-          binderror="onQrImageError"
+          binderror="onQrError"
         ></image>
-        <view wx:else class="qr-placeholder">二维码加载中...</view>
+        <view wx:else class="qrcode-placeholder">
+          <view class="placeholder-code">
+            <view></view>
+            <view></view>
+            <view></view>
+            <view></view>
+          </view>
+          <text class="placeholder-text">加载二维码...</text>
+        </view>
 
         <view wx:if="{{showStamp}}" class="stamp-overlay">
-          <view class="stamp-image {{stampAnim}}">
+          <view class="stamp-icon stamp-anim {{stampAnim}}">
             <text class="stamp-char">签</text>
           </view>
         </view>
       </view>
+
+      <text class="worker-name">{{name}}</text>
+      <text class="worker-role">{{job}}</text>
+      <text class="refresh-time">更新于 {{lastRefreshTime}}</text>
+
+      <button class="refresh-btn" bindtap="refreshQR" disabled="{{refreshing}}">
+        <block wx:if="{{refreshing}}">刷新中...</block>
+        <block wx:else>刷新签到码</block>
+      </button>
     </view>
 
-    <!-- ── Growth Card ── -->
-    <view class="growth-card">
-      <view class="growth-item">
-        <text class="growth-label">🌱 连续上工</text>
-        <text class="growth-value">{{streakDays}} 天</text>
-      </view>
-      <view class="growth-item">
-        <text class="growth-label">🍎 累计收入</text>
-        <text class="growth-value">¥{{totalEarnings}}</text>
+    <view class="metric-card">
+      <view class="metric-item status-item">
+        <text class="metric-title">签到状态</text>
+        <text class="metric-value status-value">{{checkinStatusText}}</text>
+        <view class="progress-track">
+          <view class="progress-fill {{checkedIn ? 'checked' : ''}}"></view>
+        </view>
       </view>
     </view>
-
-    <text class="tip">出示上工码给负责人扫码签到（盖章）</text>
-
-    <button class="refresh-btn" bindtap="refreshQR" disabled="{{refreshing}}">
-      {{refreshing ? '生成中...' : '刷新上工码'}}
-    </button>
   </view>
 </view>

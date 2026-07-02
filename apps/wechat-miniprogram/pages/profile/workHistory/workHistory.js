@@ -1,4 +1,5 @@
 const app = getApp();
+const { requireAuth } = require('../../../utils/auth-guard');
 
 function formatDate(dateValue) {
   if (!dateValue) return '待补充';
@@ -15,6 +16,23 @@ function formatMoney(value) {
   return Number.isFinite(amount) ? amount.toFixed(2) : '0.00';
 }
 
+function shouldMaskSensitiveInfo() {
+  const settings = wx.getStorageSync('worker_settings');
+  return !settings || settings.privacyMask !== false;
+}
+
+function maskPhone(value) {
+  const text = String(value || '');
+  if (text.length < 7) return text;
+  return text.replace(/^(\d{3})\d+(\d{4})$/, '$1****$2');
+}
+
+function maskIdCard(value) {
+  const text = String(value || '');
+  if (text.length < 8) return text;
+  return `${text.slice(0, 4)}********${text.slice(-4)}`;
+}
+
 function salaryStatusMeta(status) {
   if (status === 'paid') {
     return { text: '已发放', className: 'status-paid' };
@@ -27,12 +45,13 @@ function salaryStatusMeta(status) {
 
 function buildDetail(record) {
   const parts = [];
+  const maskSensitive = shouldMaskSensitiveInfo();
   if (record.workStartDate || record.workEndDate) {
     parts.push(`务工周期 ${record.workStartDate || '-'} 至 ${record.workEndDate || '-'}`);
   }
   parts.push(`本次工资 ¥${formatMoney(record.totalAmount)}`);
-  if (record.phone) parts.push(`联系电话 ${record.phone}`);
-  if (record.idCard) parts.push(`身份证 ${record.idCard}`);
+  if (record.phone) parts.push(`联系电话 ${maskSensitive ? maskPhone(record.phone) : record.phone}`);
+  if (record.idCard) parts.push(`身份证 ${maskSensitive ? maskIdCard(record.idCard) : record.idCard}`);
   if (record.remark) parts.push(`备注 ${record.remark}`);
   return parts.join('；');
 }
@@ -45,9 +64,15 @@ Page({
     records: [],
     parallaxOffsets: [],
     loading: true,
+    historyStats: {
+      total: 0,
+      settled: 0,
+      pending: 0,
+    },
   },
 
   onLoad() {
+    if (!requireAuth()) return;
     this.loadRecords();
     setTimeout(() => {
       this.setData({ pageReady: true });
@@ -111,15 +136,27 @@ Page({
           detailText: buildDetail(record),
         });
       });
+      const settled = records.filter((item) => item.statusClass === 'status-paid' || item.statusClass === 'status-ok').length;
+      const pending = records.filter((item) => item.statusClass === 'status-pending').length;
       this.setData({
         records,
         parallaxOffsets: records.map(() => 0),
+        historyStats: {
+          total: records.length,
+          settled,
+          pending,
+        },
         loading: false,
       });
     } catch (err) {
       this.setData({
         records: [],
         parallaxOffsets: [],
+        historyStats: {
+          total: 0,
+          settled: 0,
+          pending: 0,
+        },
         loading: false,
       });
       wx.showToast({ title: err?.message || '加载失败，请稍后重试', icon: 'none' });

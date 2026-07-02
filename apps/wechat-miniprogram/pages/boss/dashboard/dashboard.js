@@ -1,4 +1,5 @@
 const app = getApp();
+const { requireAuth } = require('../../../utils/auth-guard');
 const { resolveRole } = require('../../../utils/role');
 
 const CATEGORY_OPTIONS = [
@@ -214,6 +215,7 @@ Page({
   },
 
   async onLoad() {
+    if (!requireAuth()) return;
     const userInfo = wx.getStorageSync('userInfo') || {};
     const role = resolveRole(userInfo);
 

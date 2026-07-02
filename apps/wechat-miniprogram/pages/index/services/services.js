@@ -1,3 +1,5 @@
+const { requireAuth } = require('../../utils/auth-guard');
+
 Page({
   data: {
     items: [
@@ -19,13 +21,17 @@ Page({
         desc: '查看姓名、电话和实名资料',
         url: '/pages/profile/userInfo/userInfo',
       },
-      {
-        key: 'ai',
-        title: '小玉服务',
-        desc: '智能问答与就业辅助',
-        url: '/pages/ai/chat/chat',
-      },
+      // {
+      //   key: 'ai',
+      //   title: '小玉服务',
+      //   desc: '智能问答与就业辅助',
+      //   url: '/pages/ai/chat/chat',
+      // },
     ],
+  },
+
+  onLoad() {
+    if (!requireAuth()) return;
   },
 
   onItemTap(e) {

@@ -4,6 +4,7 @@
  * Collects name, phone, ID card with optional OCR auto-fill.
  */
 const app = getApp();
+const { requireAuth } = require('../../utils/auth-guard');
 
 function cleanPhone(value) {
   return String(value || '').replace(/\D/g, '').slice(0, 11);
@@ -21,6 +22,10 @@ Page({
     error: '',
     submitting: false,
     canSubmit: false,
+  },
+
+  onLoad() {
+    if (!requireAuth()) return;
   },
 
   onInputName(e) {

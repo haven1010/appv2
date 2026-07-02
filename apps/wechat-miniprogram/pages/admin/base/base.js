@@ -1,4 +1,5 @@
 const app = getApp();
+const { requireAuth } = require('../../../utils/auth-guard');
 const { resolveRole, isSuperAdminRole, roleLabel } = require('../../../utils/role');
 
 function normalizeArray(res) {
@@ -75,6 +76,7 @@ Page({
   },
 
   onLoad() {
+    if (!requireAuth()) return;
     if (!this.ensureRole()) return;
     this.initPage();
   },

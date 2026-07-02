@@ -3,6 +3,7 @@
  * Responsibility: Provides role-based admin home experiences for field, base, and super administrators.
  */
 const app = getApp();
+const { requireAuth } = require('../../../utils/auth-guard');
 const { resolveRole, isAdminRole, roleLabel } = require('../../../utils/role');
 
 const SUPER_ROLE_OPTIONS = [
@@ -212,6 +213,7 @@ Page({
   },
 
   onLoad() {
+    if (!requireAuth()) return;
     if (!this.ensureAdmin()) return;
     this.loadRoleHome();
   },

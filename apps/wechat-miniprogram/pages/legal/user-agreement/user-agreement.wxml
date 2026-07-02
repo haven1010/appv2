@@ -1,0 +1,53 @@
+<view class="legal-page">
+  <view class="legal-header">
+    <text class="legal-title">智绘就业用户协议</text>
+    <text class="legal-date">生效日期：2026年6月21日</text>
+  </view>
+
+  <view class="legal-card">
+    <view class="section">
+      <text class="section-title">一、服务说明</text>
+      <text class="paragraph">智绘就业为乡村振兴就业服务小程序，向工人、用工主体及平台管理人员提供岗位浏览、报名、签到、工资确认、账号资料管理等服务。具体功能以小程序实际展示为准。</text>
+    </view>
+
+    <view class="section">
+      <text class="section-title">二、账号注册与使用</text>
+      <text class="paragraph">您应使用本人手机号注册账号，并保证提交的信息真实、准确、完整。账号仅限本人使用，不得转让、出借或用于违法违规用途。因您保管不当导致的损失，由您自行承担。</text>
+    </view>
+
+    <view class="section">
+      <text class="section-title">三、实名认证与用工服务</text>
+      <text class="paragraph">为满足用工管理、考勤记录、工资发放和权益保障需要，部分功能可能要求您完成实名认证。您应提交本人真实身份信息；平台可根据业务规则进行系统校验、人工复核或补充核验。</text>
+    </view>
+
+    <view class="section">
+      <text class="section-title">四、报名、签到与工资确认</text>
+      <text class="paragraph">岗位信息、工作地点、工资标准、报名结果、签到记录和工资单以平台展示及用工方确认为准。您应按真实工作情况完成报名、签到和工资确认；如对工资或考勤有异议，可通过小程序内申诉或联系客服处理。</text>
+    </view>
+
+    <view class="section">
+      <text class="section-title">五、用户行为规范</text>
+      <text class="paragraph">您不得发布虚假信息、冒用他人身份、恶意报名、扰乱平台秩序、攻击系统、侵犯他人合法权益，或从事法律法规禁止的其他行为。平台有权根据违规情节限制、暂停或终止相关服务。</text>
+    </view>
+
+    <view class="section">
+      <text class="section-title">六、服务变更与中止</text>
+      <text class="paragraph">平台可能因业务调整、系统维护、网络故障、法律政策变化等原因变更、中止或终止部分服务，并将在合理范围内通过页面提示、公告或其他方式通知您。</text>
+    </view>
+
+    <view class="section">
+      <text class="section-title">七、责任限制</text>
+      <text class="paragraph">平台将尽力保障服务稳定和信息准确，但不对因不可抗力、第三方原因、网络异常、用户提交信息错误等导致的服务中断或损失承担超出法律规定范围的责任。</text>
+    </view>
+
+    <view class="section">
+      <text class="section-title">八、协议更新</text>
+      <text class="paragraph">平台可根据法律法规和业务变化更新本协议。更新后将通过小程序页面提示或公告展示。您继续使用服务，即表示接受更新后的协议。</text>
+    </view>
+
+    <view class="section last">
+      <text class="section-title">九、联系我们</text>
+      <text class="paragraph">如您对本协议或平台服务有疑问，可通过小程序内“账号设置”、客服入口或平台公示的联系方式与我们联系。</text>
+    </view>
+  </view>
+</view>
